@@ -13,7 +13,7 @@ class StructureTests(unittest.TestCase):
         project = load_project(path)
         self.assertEqual(project.id, "project_script_center")
         self.assertEqual(project.find("button_install").properties["text"], "Instalar um aplicativo")
-        self.assertEqual(project.to_dict()["format_version"], 2)
+        self.assertEqual(project.to_dict()["format_version"], 3)
 
     def test_move_keeps_ids_and_orders_insertions_before_and_after(self):
         project = Project.empty()

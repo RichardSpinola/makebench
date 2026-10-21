@@ -13,7 +13,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 
-FORMAT_VERSION = 2
+FORMAT_VERSION = 3
 FORMAT_NAME = "makebench.project"
 
 
@@ -240,9 +240,9 @@ def create_component(kind: ComponentKind) -> Component:
 
 @dataclass
 class Project:
-    """Documento visual e extensões preservadas para as próximas etapas.
+    """Documento visual com lógica portátil e extensões preservadas.
 
-    Workflows e metadados são somente dados nesta etapa. Abrir um projeto nunca
+    Workflows e metadados são somente dados. Abrir um projeto nunca
     importa funções Python nem dispara comandos ou scripts.
     """
 
@@ -294,11 +294,8 @@ class Project:
         if parent is None:
             raise ProjectError("A janela principal não pode ser excluída.")
         subtree = {node.id for node in self.find(component_id).walk()}
-        if self.workflows:
-            raise ProjectError(
-                "Este projeto contém lógica. A exclusão depende da validação de referências, "
-                "prevista para a etapa de blocos."
-            )
+        from .logic import guard_removal
+        guard_removal(self, subtree)
         self._check_last_page(parent)
         parent.children = [child for child in parent.children if child.id not in subtree]
         self._repair_initial_page(parent)
@@ -364,8 +361,9 @@ class Project:
         parent, node = self.parent_of(component_id), self.find(component_id)
         if parent is None or node is None:
             raise ProjectError("A janela principal não pode ser duplicada.")
-        if self.workflows:
-            raise ProjectError("A duplicação de projetos com lógica depende da etapa de blocos.")
+        from .logic import editable, duplicate_flows
+        if not editable(self):
+            raise ProjectError("Fluxos reservados impedem duplicação sem migração.")
         clone = deepcopy(node)
         identifiers = {}
         for item in clone.walk():
@@ -381,6 +379,7 @@ class Project:
                 break
         clone.geometry["x"] = min(20000, clone.geometry["x"] + 16)
         clone.geometry["y"] = min(20000, clone.geometry["y"] + 16)
+        duplicate_flows(self, identifiers)
         parent.children.insert(parent.children.index(node) + 1, clone)
         return clone
 
@@ -423,7 +422,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError("Este arquivo não é um projeto Makebench.")
         version = value.get("format_version")
-        if type(version) is not int or version not in (1, FORMAT_VERSION):
+        if type(version) is not int or version not in (1, 2, FORMAT_VERSION):
             raise ProjectError(
                 f"Versão de projeto não suportada: {version}. "
                 "Abra-o com uma versão compatível do Makebench."
@@ -443,7 +442,10 @@ class Project:
             raise ProjectError("A lista de fluxos de lógica é inválida.")
         if not isinstance(metadata, dict):
             raise ProjectError("Os metadados do projeto precisam ser um objeto.")
-        return cls(
+        project = cls(
             name=value["name"], id=value["id"], root=root,
             workflows=deepcopy(workflows), metadata=deepcopy(metadata),
         )
+        from .logic import validate
+        validate(project)
+        return project
