@@ -38,7 +38,7 @@ class EditorTests(unittest.TestCase):
         self.app.processEvents()
 
     def add(self, kind):
-        self.window.palette.setCurrentIndex(self.window.palette.findData(kind.value))
+        self.window.palette.setCurrentRow(self.window.palette.findData(kind.value))
         self.window.add_component()
         self.app.processEvents()
         return self.window.project.find(self.window.selected_id)
@@ -106,7 +106,7 @@ class EditorTests(unittest.TestCase):
             group = project.add(project.root.id, ComponentKind.CONTAINER)
             group.layout = mode
             for kind in ComponentKind:
-                if kind not in (ComponentKind.WINDOW, ComponentKind.CONTAINER):
+                if kind not in (ComponentKind.WINDOW, ComponentKind.CONTAINER, ComponentKind.PAGE):
                     project.add(group.id, kind)
         save_project(project, self.path)
         self.window._replace_project(load_project(self.path), self.path)

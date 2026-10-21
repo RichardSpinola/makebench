@@ -2,10 +2,11 @@
 
 Editor visual de aplicativos Linux em Qt e Python.
 
-**Estado atual:** primeira etapa funcional. É possível montar uma interface com
-componentes básicos, editar propriedades, usar layouts, desfazer/refazer e
-salvar/reabrir projetos. Blocos, execução de scripts e exportadores ainda serão
-implementados; esta entrega não é a primeira versão completa planejada.
+**Estado atual:** editor visual de interface (M2). Arraste componentes da paleta,
+reorganize pela tela ou árvore, duplique, monte páginas com abas e importe imagens.
+Layouts adaptáveis e áreas livres convivem no mesmo projeto, com desfazer/refazer
+e salvamento. Blocos, execução de scripts e exportadores são os próximos marcos;
+esta entrega ainda não é a primeira versão completa planejada.
 
 ## Executar
 
@@ -21,12 +22,23 @@ Se o sistema já fornece a versão indicada de PySide6, o inicializador também
 funciona diretamente, sem instalar o projeto no sistema:
 
 ```bash
-./run-makebench examples/script-center/project.makebench.json
+./run-makebench examples/welcome/project.makebench.json
 ```
 
-Selecione um componente na árvore ou na prévia para editar. Para inserir um
-grupo, escolha **Contêiner**. A organização **Livre** permite ajustar posição e
-tamanho nos campos de propriedades; o arraste com alças será uma próxima etapa.
+Arraste da paleta para inserir ou dê duplo clique no tipo escolhido. Use a árvore
+para transferir controles entre contêineres e páginas. O modo **Livre** oferece
+movimentação e oito alças para redimensionar; Ctrl+arraste transfere para outro
+contêiner. Esc cancela o gesto. As setas ajustam 1 pixel; Shift+setas, 10 pixels.
+Ctrl+D duplica; Alt+setas para cima/baixo reorganiza entre irmãos. O menu Editar
+também oferece alinhamento dentro da área livre. A grade pode ser desligada.
+
+Adicione **Páginas com abas** e depois use **Adicionar página** ou Ctrl+Shift+P.
+Mudar de aba no editor não altera a página inicial, definida nas propriedades do
+conjunto. Imagens PNG/JPEG/WebP são copiadas para `assets/` ao salvar, inclusive em
+**Salvar como**. Compartilhe a pasta contendo o JSON e seus recursos.
+
+O exemplo anterior da central de scripts continua em `examples/script-center/`.
+Arquivos do formato 1 continuam abrindo; salvamentos agora usam o formato 2.
 
 ## Verificar
 

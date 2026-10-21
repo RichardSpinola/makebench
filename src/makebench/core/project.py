@@ -9,10 +9,11 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 FORMAT_NAME = "makebench.project"
 
 
@@ -25,6 +26,9 @@ class ComponentKind(StrEnum):
 
     WINDOW = "window"
     CONTAINER = "container"
+    PAGES = "pages"
+    PAGE = "page"
+    IMAGE = "image"
     LABEL = "label"
     BUTTON = "button"
     TEXT_INPUT = "text_input"
@@ -42,10 +46,15 @@ class LayoutKind(StrEnum):
     FREE = "free"
 
 
-CONTAINER_KINDS = {ComponentKind.WINDOW, ComponentKind.CONTAINER}
+CONTAINER_KINDS = {
+    ComponentKind.WINDOW, ComponentKind.CONTAINER, ComponentKind.PAGES, ComponentKind.PAGE,
+}
 KIND_LABELS = {
     ComponentKind.WINDOW: "Janela",
     ComponentKind.CONTAINER: "Contêiner",
+    ComponentKind.PAGES: "Páginas com abas",
+    ComponentKind.PAGE: "Página",
+    ComponentKind.IMAGE: "Imagem",
     ComponentKind.LABEL: "Texto",
     ComponentKind.BUTTON: "Botão",
     ComponentKind.TEXT_INPUT: "Campo de texto",
@@ -87,6 +96,12 @@ class Component:
     def can_have_children(self) -> bool:
         """Indica se o editor pode inserir componentes dentro deste nó."""
         return self.kind in CONTAINER_KINDS
+
+    def accepts(self, kind: ComponentKind) -> bool:
+        """Respeita a estrutura de páginas e impede janelas dentro da interface."""
+        if self.kind == ComponentKind.PAGES:
+            return kind == ComponentKind.PAGE
+        return self.can_have_children and kind not in {ComponentKind.WINDOW, ComponentKind.PAGE}
 
     @property
     def display_name(self) -> str:
@@ -149,6 +164,25 @@ class Component:
             type(properties["value"]) is not int or not 0 <= properties["value"] <= 100
         ):
             raise ProjectError(f"O progresso de {component_id} precisa estar entre 0 e 100.")
+        if kind == ComponentKind.IMAGE and "source" in properties and not isinstance(properties["source"], str):
+            raise ProjectError("O caminho da imagem precisa ser texto.")
+        if kind == ComponentKind.IMAGE and properties.get("source"):
+            source = properties["source"]
+            if not isinstance(source, str):
+                raise ProjectError("O caminho da imagem precisa ser texto.")
+            path = PurePosixPath(source)
+            if (
+                path.is_absolute() or ".." in path.parts or "\\" in source
+                or len(path.parts) < 2 or path.parts[0] != "assets"
+            ):
+                raise ProjectError("A imagem precisa estar na pasta assets do projeto.")
+        for key in ("alt_text", "image_name"):
+            if key in properties and not isinstance(properties[key], str):
+                raise ProjectError("A descrição e o nome da imagem precisam ser texto.")
+        if "columns" in properties and (
+            type(properties["columns"]) is not int or not 1 <= properties["columns"] <= 12
+        ):
+            raise ProjectError("A grade precisa ter entre 1 e 12 colunas.")
         node = cls(
             id=component_id,
             kind=kind,
@@ -159,6 +193,15 @@ class Component:
         )
         if node.children and not node.can_have_children:
             raise ProjectError(f"{KIND_LABELS[node.kind]} não pode conter outros componentes.")
+        if any(not node.accepts(child.kind) for child in node.children):
+            raise ProjectError("Páginas devem ficar dentro de um conjunto de páginas.")
+        if kind == ComponentKind.PAGES:
+            if not node.children:
+                raise ProjectError("Um conjunto de páginas precisa de pelo menos uma página.")
+            initial = properties.get("initial_page", node.children[0].id)
+            if not isinstance(initial, str) or initial not in {child.id for child in node.children}:
+                raise ProjectError("A página inicial não pertence a este conjunto de páginas.")
+            node.properties["initial_page"] = initial
         if depth and node.kind == ComponentKind.WINDOW:
             raise ProjectError("Uma janela não pode ficar dentro de outro componente.")
         return node
@@ -170,6 +213,9 @@ def create_component(kind: ComponentKind) -> Component:
     defaults = {
         ComponentKind.WINDOW: {"title": "Meu aplicativo"},
         ComponentKind.CONTAINER: {},
+        ComponentKind.PAGES: {},
+        ComponentKind.PAGE: {"title": "Nova página"},
+        ComponentKind.IMAGE: {"source": "", "alt_text": "Imagem do aplicativo"},
         ComponentKind.LABEL: {"text": "Novo texto"},
         ComponentKind.BUTTON: {"text": "Novo botão"},
         ComponentKind.TEXT_INPUT: {"text": "", "placeholder": "Digite aqui"},
@@ -180,8 +226,15 @@ def create_component(kind: ComponentKind) -> Component:
     node = Component(id=new_id(kind.value), kind=kind, properties=defaults[kind].copy())
     if node.can_have_children:
         node.geometry.update(width=360, height=240)
+    elif kind == ComponentKind.IMAGE:
+        node.geometry.update(width=240, height=160)
     elif kind == ComponentKind.OUTPUT:
         node.geometry.update(width=360, height=140)
+    if kind == ComponentKind.PAGES:
+        page = create_component(ComponentKind.PAGE)
+        page.properties["title"] = "Página 1"
+        node.children.append(page)
+        node.properties["initial_page"] = page.id
     return node
 
 
@@ -222,10 +275,16 @@ class Project:
         parent = self.find(parent_id)
         if parent is None or not parent.can_have_children:
             raise ProjectError("Selecione uma janela ou um contêiner para inserir o componente.")
-        if ComponentKind(kind) == ComponentKind.WINDOW:
-            raise ProjectError("Use um contêiner para agrupar componentes dentro da janela.")
+        if not parent.accepts(ComponentKind(kind)):
+            raise ProjectError("Adicione páginas a um conjunto de páginas e controles a uma página ou contêiner.")
         child = create_component(kind)
-        child.geometry.update(x=16 + len(parent.children) * 16, y=16 + len(parent.children) * 16)
+        self._check_depth(parent, child)
+        if child.kind == ComponentKind.PAGE:
+            child.properties["title"] = f"Página {len(parent.children) + 1}"
+        child.geometry.update(
+            x=min(20000, 16 + len(parent.children) * 16),
+            y=min(20000, 16 + len(parent.children) * 16),
+        )
         parent.children.append(child)
         return child
 
@@ -240,8 +299,111 @@ class Project:
                 "Este projeto contém lógica. A exclusão depende da validação de referências, "
                 "prevista para a etapa de blocos."
             )
+        self._check_last_page(parent)
         parent.children = [child for child in parent.children if child.id not in subtree]
+        self._repair_initial_page(parent)
         return parent.id
+
+    def _check_last_page(self, parent: Component) -> None:
+        """Impede esvaziar um conjunto de páginas ao excluir ou transferir a última."""
+        if parent.kind == ComponentKind.PAGES and len(parent.children) == 1:
+            raise ProjectError("Mantenha pelo menos uma página neste conjunto.")
+
+    def _repair_initial_page(self, parent: Component) -> None:
+        """Seleciona a primeira página restante se a inicial foi removida."""
+        if parent.kind == ComponentKind.PAGES:
+            if parent.properties.get("initial_page") not in {node.id for node in parent.children}:
+                parent.properties["initial_page"] = parent.children[0].id
+
+    def _check_depth(self, parent: Component, child: Component) -> None:
+        """Valida o limite estrutural antes de inserir ou mover uma subárvore."""
+        depth = 0
+        ancestor = parent
+        while ancestor.id != self.root.id:
+            ancestor = self.parent_of(ancestor.id)
+            depth += 1
+
+        def height(node: Component) -> int:
+            """Conta a profundidade máxima da subárvore antes da inserção."""
+            return max((height(item) + 1 for item in node.children), default=0)
+
+        if depth + 1 + height(child) > 64:
+            raise ProjectError("A interface excede o limite de 64 níveis de contêineres.")
+
+    def move(self, component_id: str, parent_id: str, index: int | None = None) -> bool:
+        """Move uma subárvore sem alterar IDs, recusando ciclos e hierarquia inválida.
+
+        O índice é uma posição de inserção na lista de destino antes da remoção.
+        Isso representa os espaços antes/depois dos itens no arraste. Retorna
+        falso quando a posição não muda e não modifica nada em caso de erro.
+        """
+        node, parent = self.find(component_id), self.find(parent_id)
+        previous = self.parent_of(component_id)
+        if node is None or parent is None or previous is None:
+            raise ProjectError("A janela principal não pode ser movida.")
+        if parent.id in {child.id for child in node.walk()}:
+            raise ProjectError("Um componente não pode ficar dentro de si mesmo ou de seus filhos.")
+        if not parent.accepts(node.kind):
+            raise ProjectError("Este destino não aceita esse tipo de componente.")
+        self._check_depth(parent, node)
+        if previous.id != parent.id:
+            self._check_last_page(previous)
+        index = len(parent.children) if index is None else max(0, min(index, len(parent.children)))
+        previous_index = previous.children.index(node)
+        if previous is parent and previous_index < index:
+            index -= 1
+        if previous is parent and previous_index == index:
+            return False
+        previous.children.remove(node)
+        parent.children.insert(index, node)
+        self._repair_initial_page(previous)
+        return True
+
+    def duplicate(self, component_id: str) -> Component:
+        """Duplica uma subárvore com novos IDs e referências internas remapeadas."""
+        parent, node = self.parent_of(component_id), self.find(component_id)
+        if parent is None or node is None:
+            raise ProjectError("A janela principal não pode ser duplicada.")
+        if self.workflows:
+            raise ProjectError("A duplicação de projetos com lógica depende da etapa de blocos.")
+        clone = deepcopy(node)
+        identifiers = {}
+        for item in clone.walk():
+            old_id = item.id
+            item.id = new_id(item.kind.value)
+            identifiers[old_id] = item.id
+        for item in clone.walk():
+            if item.kind == ComponentKind.PAGES:
+                item.properties["initial_page"] = identifiers[item.properties["initial_page"]]
+        for key in ("title", "text"):
+            if clone.properties.get(key):
+                clone.properties[key] += " (cópia)"
+                break
+        clone.geometry["x"] = min(20000, clone.geometry["x"] + 16)
+        clone.geometry["y"] = min(20000, clone.geometry["y"] + 16)
+        parent.children.insert(parent.children.index(node) + 1, clone)
+        return clone
+
+    def set_geometry(self, component_id: str, geometry: dict[str, int]) -> bool:
+        """Confirma posição/tamanho de um gesto livre, em uma única alteração."""
+        node = self.find(component_id)
+        parent = self.parent_of(component_id)
+        if node is None or parent is None or parent.layout != LayoutKind.FREE or parent.kind == ComponentKind.PAGES:
+            raise ProjectError("Posição e tamanho manuais exigem um contêiner de organização livre.")
+        candidate = node.to_dict()
+        candidate["geometry"].update(geometry)
+        validated = Component.from_dict(candidate)
+        if node.geometry == validated.geometry:
+            return False
+        node.geometry = validated.geometry
+        return True
+
+    def asset_paths(self) -> set[str]:
+        """Retorna imagens referenciadas para preservar os recursos no Salvar como."""
+        return {
+            node.properties["source"] for node in self.root.walk()
+            if node.kind == ComponentKind.IMAGE and node.properties.get("source")
+        }
 
     def to_dict(self) -> dict[str, Any]:
         """Serializa um retrato independente do documento, mantendo extensões."""
@@ -261,7 +423,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError("Este arquivo não é um projeto Makebench.")
         version = value.get("format_version")
-        if type(version) is not int or version != FORMAT_VERSION:
+        if type(version) is not int or version not in (1, FORMAT_VERSION):
             raise ProjectError(
                 f"Versão de projeto não suportada: {version}. "
                 "Abra-o com uma versão compatível do Makebench."

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QFormLayout, QLabel, QLineEdit, QSpinBox, QWidget,
+    QCheckBox, QComboBox, QFormLayout, QLabel, QLineEdit, QPushButton, QSpinBox, QWidget,
 )
 
 from makebench.core.project import (
@@ -16,6 +16,8 @@ class Inspector(QWidget):
     """Exibe as propriedades pertinentes ao componente selecionado."""
 
     property_changed = Signal(str, str, object)
+    image_requested = Signal(str)
+    image_cleared = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Cria um formulário que será preenchido conforme a seleção."""
@@ -42,6 +44,18 @@ class Inspector(QWidget):
         for key, title in names.items():
             if key in node.properties:
                 self._text_field(title, node.id, key, node.properties[key])
+        if node.kind == ComponentKind.IMAGE:
+            self._text_field("Descrição", node.id, "alt_text", node.properties.get("alt_text", ""))
+            filename = QLabel(node.properties.get("image_name") or "Nenhuma imagem selecionada")
+            filename.setWordWrap(True)
+            self.form.addRow("Arquivo", filename)
+            button = QPushButton("Escolher imagem…")
+            button.clicked.connect(lambda: self.image_requested.emit(node.id))
+            self.form.addRow(button)
+            clear = QPushButton("Remover imagem")
+            clear.setEnabled(bool(node.properties.get("source")))
+            clear.clicked.connect(lambda: self.image_cleared.emit(node.id))
+            self.form.addRow(clear)
         if node.kind == ComponentKind.CHECKBOX:
             checkbox = QCheckBox("Selecionada inicialmente")
             checkbox.setChecked(node.properties.get("checked", False))
@@ -51,7 +65,16 @@ class Inspector(QWidget):
             self.form.addRow(checkbox)
         if node.kind == ComponentKind.PROGRESS:
             self._number_field("Progresso (%)", node.id, "value", node.properties.get("value", 0), 0, 100)
-        if node.can_have_children:
+        if node.kind == ComponentKind.PAGES:
+            pages = QComboBox()
+            for child in node.children:
+                pages.addItem(child.properties.get("title", "Página"), child.id)
+            pages.setCurrentIndex(pages.findData(node.properties["initial_page"]))
+            pages.currentIndexChanged.connect(
+                lambda _: self.property_changed.emit(node.id, "initial_page", pages.currentData())
+            )
+            self.form.addRow("Página inicial", pages)
+        if node.can_have_children and node.kind != ComponentKind.PAGES:
             combo = QComboBox()
             for mode, label in LAYOUT_LABELS.items():
                 combo.addItem(label, mode.value)
@@ -62,8 +85,10 @@ class Inspector(QWidget):
                 )
             )
             self.form.addRow("Organização", combo)
+            if node.layout == LayoutKind.GRID:
+                self._number_field("Colunas", node.id, "columns", node.properties.get("columns", 2), 1, 12)
         parent = project.parent_of(node.id)
-        if parent and parent.layout == LayoutKind.FREE:
+        if parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE:
             self.form.addRow(QLabel("Posição e tamanho"))
             for key, title in (("x", "X"), ("y", "Y"), ("width", "Largura"), ("height", "Altura")):
                 self._number_field(title, node.id, f"geometry.{key}", node.geometry[key], 1 if key in {"width", "height"} else 0, 20000)
