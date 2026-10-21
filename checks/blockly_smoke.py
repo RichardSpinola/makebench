@@ -1,0 +1,269 @@
+"""Integração real Qt/WebEngine/Blockly; execute separadamente dos testes sem browser."""
+import json
+import os
+from pathlib import Path
+import tempfile
+import time
+import unittest
+from unittest.mock import patch
+
+os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+os.environ.setdefault('QTWEBENGINE_CHROMIUM_FLAGS', '--disable-gpu')
+
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop, QTimer, Qt
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QApplication, QMessageBox
+
+from makebench.core.logic import create_flow
+from makebench.core.project import ComponentKind, Project
+from makebench.core.storage import load_project
+from makebench.core.source import source_path
+from makebench.editor.window import MainWindow
+
+
+class BlocklyTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+        cls.app.setQuitOnLastWindowClosed(False)
+        cls.window = MainWindow()
+        cls.window.show()
+        cls.window.tabs.setCurrentIndex(1)
+        deadline = time.monotonic() + 12
+        while not cls.window.logic.ready and time.monotonic() < deadline:
+            QTest.qWait(25)
+        if not cls.window.logic.ready:
+            raise AssertionError(cls.window.logic.diagnostics.text())
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.window.history.mark_saved(); cls.window.source.mark_saved()
+        cls.window.close()
+        # O perfil Chromium deve sobreviver à página que o utiliza.
+        cls.window.logic.page.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+        cls.window.deleteLater()
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+    def setUp(self):
+        project = Project.empty('Teste de blocos')
+        self.button = project.add(project.root.id, ComponentKind.BUTTON)
+        self.label = project.add(project.root.id, ComponentKind.LABEL)
+        self.flow = create_flow(project, self.button.id)
+        self.window._replace_project(project, None)
+        self.window.tabs.setCurrentIndex(1)
+        QTest.qWait(100)
+
+    def js(self, code):
+        loop = QEventLoop(); results = []
+        def done(result):
+            results.append(result); loop.quit()
+        self.window.logic.page.runJavaScript(code, done)
+        timer = QTimer(); timer.setSingleShot(True); timer.timeout.connect(loop.quit); timer.start(5000)
+        loop.exec(); timer.stop()
+        self.assertTrue(results, 'O JavaScript não respondeu.')
+        return results[0]
+
+    def install_log(self, text='Olá do Blockly'):
+        payload = json.dumps(text)
+        self.js('''(() => {
+          const ws=window.makebench.workspace;
+          const hat=ws.getTopBlocks(false).find(b=>b.type==='mb_event');
+          const log=ws.newBlock('mb_log','log_1');log.initSvg();log.render();
+          const text=ws.newBlock('text','text_1');text.setFieldValue('''+payload+''','TEXT');text.initSvg();text.render();
+          log.getInput('VALUE').connection.connect(text.outputConnection);
+          hat.getInput('DO').connection.connect(log.previousConnection);
+          log.setCommentText('Comentário do bloco');
+          const comment=new Blockly.comments.WorkspaceComment(ws,'note_1');
+          comment.setText('Nota solta preservada');comment.moveTo(new Blockly.utils.Coordinate(450,80));
+          return true;
+        })()''')
+
+    def test_01_offline_engine_and_comment_serialization(self):
+        self.assertEqual(self.js('Blockly.VERSION'), '13.4.0')
+        self.install_log()
+        self.assertTrue(self.window.logic.flush())
+        saved = self.window.project.workflows[0]
+        self.assertEqual(saved['body'][0]['value']['value'], 'Olá do Blockly')
+        self.assertEqual(saved['body'][0]['comment'], 'Comentário do bloco')
+        comments = saved['workspace'].get('workspaceComments')
+        self.assertIsNotNone(comments, 'Comentários de workspace precisam de serializador.')
+        self.assertEqual(comments[0]['text'], 'Nota solta preservada')
+        line = self.window.logic.generated.lines[(saved['id'], 'log_1')]
+        self.window.logic._select_block(saved['id'], 'log_1')
+        self.assertEqual(self.window.logic.code.textCursor().blockNumber() + 1, line)
+
+    def test_02_flush_save_reopen_and_source_is_never_executed(self):
+        self.install_log('Salvar imediatamente')
+        # Salvar antes dos 220 ms de debounce também deve capturar os blocos.
+        self.window.source_editor.setPlainText("raise RuntimeError('não executar')\ndef minha(ctx, valor):\n    return valor\n")
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'project.makebench.json'
+            self.assertTrue(self.window.save_to(path))
+            saved = load_project(path)
+            self.assertEqual(saved.workflows[0]['body'][0]['value']['value'], 'Salvar imediatamente')
+            self.assertIn('raise RuntimeError', source_path(path).read_text())
+            self.window._replace_project(saved, path)
+            QTest.qWait(100)
+            self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"), 'Salvar imediatamente')
+            self.assertEqual(self.js("Blockly.serialization.workspaces.save(window.makebench.workspace).workspaceComments[0].text"), 'Nota solta preservada')
+            self.assertFalse(self.window.source.dirty)
+
+    def test_03_undo_redo_restores_blocks_and_comments(self):
+        self.install_log(); self.window.logic.flush()
+        self.js("window.makebench.workspace.getBlockById('text_1').setFieldValue('Alterado','TEXT')")
+        self.window.logic.flush()
+        self.window.undo(); QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Olá do Blockly')
+        self.window.redo(); QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Alterado')
+
+    def test_04_incomplete_draft_is_saved_without_executable_handler(self):
+        self.js("const b=window.makebench.workspace.newBlock('mb_log'); b.initSvg();b.render();")
+        self.window.logic.flush()
+        self.assertIsNone(self.window.project.workflows[0]['body'])
+        self.assertIn('blocos soltos', self.window.logic.diagnostics.text())
+        self.assertNotIn('def on_event', self.window.logic.generated.text)
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'draft.makebench.json'
+            self.assertTrue(self.window.save_to(path))
+            self.window._replace_project(load_project(path),path);QTest.qWait(100)
+            self.assertEqual(self.js('window.makebench.workspace.getTopBlocks(false).length'),2)
+
+    def test_05_switching_events_and_stale_updates(self):
+        self.install_log()
+        self.window.edit_logic(self.window.project.root.id); QTest.qWait(100)
+        self.assertEqual(len(self.window.project.workflows),2)
+        self.assertEqual(self.window.project.workflows[0]['body'][0]['op'],'log')
+        before = self.window.project.to_dict()
+        self.window.logic._receive(json.dumps({'token':'old','flow':self.flow['id'],'body':[], 'workspace':{}}))
+        self.assertEqual(self.window.project.to_dict(),before)
+        self.window.logic.events.setCurrentIndex(0);QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Olá do Blockly')
+
+    def test_06_neutral_model_overrides_conflicting_visual_state(self):
+        self.install_log();self.window.logic.flush()
+        saved=self.window.project.to_dict()
+        visual=saved['workflows'][0]['workspace']['blocks']['blocks'][0]
+        visual['inputs']['DO']['block']['inputs']['VALUE']['block']['fields']['TEXT']='Estado conflitante'
+        model=Project.from_dict(saved)
+        self.window._replace_project(model,None);QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Olá do Blockly')
+
+    def test_07_source_dirty_cancel_conflict_and_separate_undo(self):
+        self.window.history.mark_saved()
+        self.window.tabs.setCurrentIndex(2)
+        self.window.source_editor.insertPlainText('# minha função\n')
+        self.assertTrue(self.window.source.dirty)
+        self.window.undo()
+        self.assertFalse(self.window.source.dirty)
+        self.window.redo()
+        self.assertTrue(self.window.source.dirty)
+        with patch('makebench.editor.window.QMessageBox.warning',return_value=QMessageBox.StandardButton.Cancel):
+            original=self.window.project.id; self.window.new_project()
+        self.assertEqual(self.window.project.id,original)
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'source.makebench.json'
+            self.assertTrue(self.window.save_to(path))
+            source_path(path).write_text('# edição externa\n')
+            with patch.object(self.window,'_show_error') as error:
+                self.assertFalse(self.window.save_to(path))
+            error.assert_called_once()
+            self.assertEqual(source_path(path).read_text(),'# edição externa\n')
+
+
+    def test_08_all_operations_roundtrip_and_clean_open(self):
+        project=load_project('examples/welcome/project.makebench.json')
+        flow=project.workflows[1]
+        self.window._replace_project(project,None)
+        self.window.logic.sync(flow['id'])
+        QTest.qWait(300)
+        self.assertTrue(self.window.logic.flush())
+        self.assertFalse(self.window.history.dirty, 'Só abrir um fluxo não deve alterar o documento.')
+        compiled=json.loads(self.js('JSON.stringify(window.makebench.compileWorkspace())'))
+        self.assertEqual(compiled['body'],flow['body'])
+        self.assertEqual(compiled['errors'],[])
+        self.assertIsNotNone(self.js("window.makebench.workspace.getBlockById('greet').getCommentText()"))
+
+    def test_09_duplicate_preserves_workspace_notes_and_internal_references(self):
+        self.install_log();self.window.logic.flush()
+        original=self.window.project.workflows[0]
+        clone=self.window.project.duplicate(self.button.id)
+        copied=self.window.project.workflows[1]
+        self.assertEqual(copied['event']['component'],clone.id)
+        self.window._refresh();self.window.logic.sync(copied['id']);QTest.qWait(100)
+        notes=self.js('Blockly.serialization.workspaces.save(window.makebench.workspace).workspaceComments[0].text')
+        self.assertEqual(notes,'Nota solta preservada')
+
+
+    def test_10_every_operation_converts_back_to_neutral_model(self):
+        project=self.window.project
+        progress=project.add(project.root.id,ComponentKind.PROGRESS)
+        pages=project.add(project.root.id,ComponentKind.PAGES)
+        checkbox=project.add(project.root.id,ComponentKind.CHECKBOX)
+        counter=0
+        def node(op,**values):
+            nonlocal counter
+            counter+=1
+            return {'id':f'node_{counter}','op':op,**values}
+        def value(item):return node('literal',value=item)
+        body=[
+            node('assign',name='contador',value=value(0)),
+            node('repeat',count=value(3),body=[node('assign',name='contador',value=node('binary',operator='+',left=node('variable',name='contador'),right=value(1)))]),
+            node('set_text',component=self.label.id,value=node('join',left=value('Número: '),right=node('variable',name='contador'))),
+            node('set_enabled',component=self.button.id,value=value(False)),
+            node('set_value',component=progress.id,value=value(50)),
+            node('show_page',component=pages.children[0].id),
+            node('log',value=node('read',component=progress.id,attribute='value')),
+            node('if',condition=node('binary',operator='and',left=node('read',component=checkbox.id,attribute='checked'),right=value(True)),then=[node('message',value=value('Sim'))],**{'else':[]}),
+            node('call',function='saudacao',value=node('read',component=self.button.id,attribute='text')),
+        ]
+        project.workflows[0]['body']=body
+        self.window._refresh();QTest.qWait(100)
+        compiled=json.loads(self.js('JSON.stringify(window.makebench.compileWorkspace())'))
+        self.assertEqual(compiled['errors'],[])
+        self.assertEqual(compiled['body'],body)
+        self.window.logic.flush()
+        self.assertEqual(project.workflows[0]['body'],body)
+
+
+    def test_11_keyboard_undo_and_save_include_pending_changes(self):
+        self.install_log();self.window.logic.flush()
+        self.window.history.mark_saved()
+        self.js("window.makebench.workspace.getBlockById('text_1').setFieldValue('Teclado','TEXT')")
+        QTest.qWait(30)
+        self.assertTrue(self.window.undo_action.isEnabled())
+        self.window.logic.view.setFocus()
+        target=self.window.logic.view.focusProxy() or self.window.logic.view
+        QTest.keyClick(target,Qt.Key.Key_Z,Qt.KeyboardModifier.ControlModifier)
+        QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Olá do Blockly')
+        QTest.keyClick(target,Qt.Key.Key_Z,Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+        QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Teclado')
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'keys.makebench.json'
+            self.window.path=path
+            QTest.keyClick(target,Qt.Key.Key_S,Qt.KeyboardModifier.ControlModifier)
+            QTest.qWait(100)
+            self.assertTrue(path.exists())
+            self.assertEqual(load_project(path).workflows[0]['body'][0]['value']['value'],'Teclado')
+
+    def test_12_flush_failure_allows_explicit_discard_without_false_save(self):
+        self.window.logic.ready=False
+        try:
+            with patch.object(self.window,'_show_error'):
+                with patch('makebench.editor.window.QMessageBox.warning',return_value=QMessageBox.StandardButton.Cancel):
+                    self.assertFalse(self.window._confirm_discard())
+                with patch('makebench.editor.window.QMessageBox.warning',return_value=QMessageBox.StandardButton.Discard):
+                    self.assertTrue(self.window._confirm_discard())
+                with tempfile.TemporaryDirectory() as temp:
+                    path=Path(temp)/'blocked.makebench.json'
+                    self.assertFalse(self.window.save_to(path))
+                    self.assertFalse(path.exists())
+        finally:
+            self.window.logic.ready=True
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

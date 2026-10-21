@@ -18,6 +18,7 @@ class Inspector(QWidget):
     property_changed = Signal(str, str, object)
     image_requested = Signal(str)
     image_cleared = Signal(str)
+    logic_requested = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Cria um formulário que será preenchido conforme a seleção."""
@@ -44,6 +45,10 @@ class Inspector(QWidget):
         for key, title in names.items():
             if key in node.properties:
                 self._text_field(title, node.id, key, node.properties[key])
+        if node.kind in {ComponentKind.WINDOW, ComponentKind.BUTTON}:
+            logic = QPushButton("Editar lógica deste evento…")
+            logic.clicked.connect(lambda: self.logic_requested.emit(node.id))
+            self.form.addRow(logic)
         if node.kind == ComponentKind.IMAGE:
             self._text_field("Descrição", node.id, "alt_text", node.properties.get("alt_text", ""))
             filename = QLabel(node.properties.get("image_name") or "Nenhuma imagem selecionada")

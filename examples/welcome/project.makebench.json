@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 2,
+  "format_version": 3,
   "id": "project_welcome",
   "name": "Boas-vindas",
   "ui": {
@@ -207,8 +207,112 @@
       }
     ]
   },
-  "workflows": [],
+  "workflows": [
+    {
+      "id": "flow_e249ec392f46",
+      "name": "Clique: Vamos começar",
+      "event": {
+        "kind": "click",
+        "component": "button_start"
+      },
+      "body": [
+        {
+          "id": "go_preferences",
+          "op": "show_page",
+          "component": "page_options",
+          "comment": "Abrir a segunda página quando o runtime estiver conectado."
+        }
+      ],
+      "workspace": {}
+    },
+    {
+      "id": "flow_5777d5d08711",
+      "name": "Clique: Concluir configuração",
+      "event": {
+        "kind": "click",
+        "component": "button_finish"
+      },
+      "body": [
+        {
+          "id": "remember_if",
+          "op": "if",
+          "condition": {
+            "id": "read_reminders",
+            "op": "read",
+            "component": "check_updates",
+            "attribute": "checked"
+          },
+          "then": [
+            {
+              "id": "log_reminders",
+              "op": "log",
+              "value": {
+                "id": "reminders_text",
+                "op": "literal",
+                "value": "Lembretes de atualização selecionados."
+              }
+            }
+          ],
+          "else": [
+            {
+              "id": "log_no_reminders",
+              "op": "log",
+              "value": {
+                "id": "no_reminders_text",
+                "op": "literal",
+                "value": "Lembretes não selecionados."
+              }
+            }
+          ],
+          "comment": "Esta etapa monta o fluxo; ainda não grava preferências no sistema."
+        },
+        {
+          "id": "greet",
+          "op": "call",
+          "function": "apresentar",
+          "value": {
+            "id": "read_name",
+            "op": "read",
+            "component": "field_name",
+            "attribute": "text"
+          },
+          "comment": "A função está no arquivo project.actions.py, editável na aba Código."
+        },
+        {
+          "id": "finish_message",
+          "op": "message",
+          "value": {
+            "id": "finish_text",
+            "op": "literal",
+            "value": "Seu aplicativo de boas-vindas está tomando forma!"
+          }
+        }
+      ],
+      "workspace": {}
+    },
+    {
+      "id": "flow_592f560aa6bd",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_welcome"
+      },
+      "body": [
+        {
+          "id": "start_log",
+          "op": "log",
+          "value": {
+            "id": "start_text",
+            "op": "literal",
+            "value": "Aplicativo iniciado."
+          }
+        }
+      ],
+      "workspace": {}
+    }
+  ],
   "metadata": {
-    "example": "Páginas e edição livre; botões ainda não executam ações."
+    "example": "Páginas e edição livre; botões ainda não executam ações.",
+    "logic_version": 1
   }
 }

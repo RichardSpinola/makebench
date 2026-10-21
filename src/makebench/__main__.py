@@ -34,7 +34,11 @@ def main() -> int:
         except ProjectError as exc:
             QMessageBox.critical(None, "Não foi possível abrir o projeto", str(exc))
             return 1
-    window = MainWindow(project, args.project)
+    try:
+        window = MainWindow(project, args.project)
+    except (ProjectError, OSError) as exc:
+        QMessageBox.critical(None, "Não foi possível abrir as funções", str(exc))
+        return 1
     window.show()
     return app.exec()
 

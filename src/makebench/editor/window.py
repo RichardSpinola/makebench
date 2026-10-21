@@ -1,18 +1,23 @@
-"""Janela principal da primeira etapa do Makebench."""
+"""Janela principal: interface visual, blocos e funções Python."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from collections.abc import Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QFileDialog, QLabel, QMainWindow,
     QMessageBox, QPushButton, QScrollArea, QSplitter, QToolBar,
-    QTreeWidgetItem, QVBoxLayout, QWidget,
+    QTreeWidgetItem, QVBoxLayout, QWidget, QTabWidget,
 )
 
+from copy import deepcopy
+from makebench.core.logic import create_flow, editable, validate
+from makebench.core.source import SourceBuffer
+from makebench.editor.code import CodeEditor
+from makebench.editor.logic import LogicPanel
 from makebench.core.history import History
 from makebench.core.project import (
     Component, ComponentKind, LayoutKind, Project, ProjectError,
@@ -29,14 +34,15 @@ class MainWindow(QMainWindow):
     """Coordena documento, histórico, seleção e comandos de arquivo.
 
     O documento é a fonte de verdade; árvore, prévia e propriedades são vistas.
-    A etapa inicial permite montar a interface, mas ainda não executa tarefas.
+    Interface e blocos geram dados/Python; esta etapa ainda não executa tarefas.
     """
 
     def __init__(self, project: Project | None = None, path: Path | None = None) -> None:
         """Abre um projeto fornecido ou inicia uma nova interface vazia."""
         super().__init__()
         self.project = project or Project.empty()
-        self.path = path
+        self.path = path.resolve() if path else None
+        self.source = SourceBuffer.load(self.path)
         self.history = History(self.project)
         self.assets = AssetStore(path.parent if path else None)
         self.selected_id = self.project.root.id
@@ -199,12 +205,61 @@ class MainWindow(QMainWindow):
         self.inspector.property_changed.connect(self._change_property)
         self.inspector.image_requested.connect(self.choose_image)
         self.inspector.image_cleared.connect(self.clear_image)
+        self.inspector.logic_requested.connect(self.edit_logic)
         inspector_scroll.setWidget(self.inspector)
         right_layout.addWidget(inspector_scroll)
         splitter.addWidget(right)
         splitter.setSizes([250, 700, 300])
         splitter.setStretchFactor(1, 1)
-        self.setCentralWidget(splitter)
+        self.tabs = QTabWidget()
+        self.tabs.addTab(splitter, "Interface")
+        self.logic = LogicPanel(lambda: self.project, lambda: self.source.text)
+        self.logic.add_requested.connect(self.edit_logic)
+        self.logic.remove_requested.connect(self.remove_flow)
+        self.logic.rename_requested.connect(self.rename_flow)
+        self.logic.flow_changed.connect(self._receive_flow)
+        self.logic.error.connect(self._show_error)
+        self.logic.save_requested.connect(self.save)
+        self.logic.undo_requested.connect(self.undo)
+        self.logic.redo_requested.connect(self.redo)
+        self.logic.pending_changed.connect(self._update_actions)
+        self.tabs.addTab(self.logic, "Lógica")
+        code_page = QWidget()
+        code_layout = QVBoxLayout(code_page)
+        hint = QLabel("Edite suas funções à direita. O Python à esquerda acompanha os blocos e não substitui suas funções. Execução será conectada na etapa M4.")
+        hint.setWordWrap(True)
+        code_layout.addWidget(hint)
+        code_splitter = QSplitter()
+        generated_box = QWidget()
+        generated_layout = QVBoxLayout(generated_box)
+        generated_layout.addWidget(QLabel("Python gerado · somente leitura"))
+        self.generated_editor = CodeEditor(True)
+        generated_layout.addWidget(self.generated_editor)
+        code_splitter.addWidget(generated_box)
+        own_box = QWidget()
+        own_layout = QVBoxLayout(own_box)
+        self.source_label = QLabel("Funções próprias · salvas em arquivo .actions.py")
+        self.source_label.setTextFormat(Qt.TextFormat.PlainText)
+        own_layout.addWidget(self.source_label)
+        self.source_editor = CodeEditor()
+        self.source_editor.setPlainText(self.source.text)
+        own_layout.addWidget(self.source_editor)
+        code_splitter.addWidget(own_box)
+        code_layout.addWidget(code_splitter, 1)
+        self.code_diagnostics = QLabel()
+        self.code_diagnostics.setWordWrap(True)
+        self.code_diagnostics.setTextFormat(Qt.TextFormat.PlainText)
+        code_layout.addWidget(self.code_diagnostics)
+        self.tabs.addTab(code_page, "Código")
+        self.source_timer = QTimer(self)
+        self.source_timer.setSingleShot(True)
+        self.source_timer.setInterval(250)
+        self.source_timer.timeout.connect(self._update_code)
+        self.source_editor.textChanged.connect(self._source_changed)
+        self.source_editor.undoAvailable.connect(lambda _: self._update_actions())
+        self.source_editor.redoAvailable.connect(lambda _: self._update_actions())
+        self.tabs.currentChanged.connect(self._tab_changed)
+        self.setCentralWidget(self.tabs)
 
     def _refresh(self) -> None:
         """Atualiza as vistas a partir do documento e preserva a seleção válida."""
@@ -233,6 +288,8 @@ class MainWindow(QMainWindow):
             self.selected_id = self.project.root.id
         self._refreshing = False
         self._select(self.selected_id)
+        self.logic.sync()
+        self._update_code()
         self._update_actions()
 
     def _select(self, component_id: str) -> None:
@@ -257,22 +314,25 @@ class MainWindow(QMainWindow):
 
     def _update_actions(self) -> None:
         """Atualiza comandos, título e indicador de alterações não salvas."""
-        self.undo_action.setEnabled(self.history.can_undo)
-        self.redo_action.setEnabled(self.history.can_redo)
-        self.remove_action.setEnabled(self.selected_id != self.project.root.id)
+        source_active = self.tabs.currentIndex() == 2
+        interface_active = self.tabs.currentIndex() == 0
+        self.snap_check.setEnabled(interface_active)
+        self.undo_action.setEnabled(self.source_editor.document().isUndoAvailable() if source_active else self.history.can_undo or self.logic.pending)
+        self.redo_action.setEnabled(self.source_editor.document().isRedoAvailable() if source_active else self.history.can_redo)
+        self.remove_action.setEnabled(interface_active and self.selected_id != self.project.root.id)
         node = self.project.find(self.selected_id)
         parent = self.project.parent_of(self.selected_id)
-        self.duplicate_action.setEnabled(parent is not None and not self.project.workflows)
-        self.up_action.setEnabled(parent is not None and parent.children[0] is not node)
-        self.down_action.setEnabled(parent is not None and parent.children[-1] is not node)
-        self.page_action.setEnabled(self._page_group(node) is not None)
+        self.duplicate_action.setEnabled(interface_active and parent is not None and editable(self.project))
+        self.up_action.setEnabled(interface_active and parent is not None and parent.children[0] is not node)
+        self.down_action.setEnabled(interface_active and parent is not None and parent.children[-1] is not node)
+        self.page_action.setEnabled(interface_active and self._page_group(node) is not None)
         free = parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE
         for action in self.align_actions:
-            action.setEnabled(bool(free))
+            action.setEnabled(interface_active and bool(free))
         self.setWindowTitle(f"{self.project.name}[*] — Makebench")
-        self.setWindowModified(self.history.dirty)
+        self.setWindowModified(self.history.dirty or self.source.dirty or self.logic.pending)
         count = len(list(self.project.root.walk())) - 1
-        state = "Alterações não salvas" if self.history.dirty else "Pronto"
+        state = "Alterações não salvas" if self.history.dirty or self.source.dirty or self.logic.pending else "Pronto"
         self.statusBar().showMessage(f"{state} · {count} componente(s)")
 
     def _change_property(self, component_id: str, key: str, value: object) -> None:
@@ -308,11 +368,12 @@ class MainWindow(QMainWindow):
         self.history.push(self.project)
         self._refresh()
 
-    def _finish_field_edit(self) -> None:
+    def _finish_field_edit(self) -> bool:
         """Confirma texto ainda em edição antes de salvar ou substituir o projeto."""
         focus = QApplication.focusWidget()
         if focus is not None:
             focus.clearFocus()
+        return self.logic.flush()
 
     def add_component(self) -> None:
         """Insere no contêiner ou página adequada à seleção atual."""
@@ -344,7 +405,8 @@ class MainWindow(QMainWindow):
 
     def _edit(self, change: Callable[[], None]) -> None:
         """Agrupa um comando em uma alteração e restaura o documento se falhar."""
-        self._finish_field_edit()
+        if not self._finish_field_edit():
+            return
         before = self.project.to_dict()
         selection = self.selected_id
         try:
@@ -476,7 +538,8 @@ class MainWindow(QMainWindow):
 
     def remove_component(self) -> None:
         """Remove a seleção, mantendo a exclusão disponível para desfazer."""
-        self._finish_field_edit()
+        if not self._finish_field_edit():
+            return
         if self.selected_id == self.project.root.id:
             return
         try:
@@ -489,13 +552,21 @@ class MainWindow(QMainWindow):
 
     def undo(self) -> None:
         """Restaura o documento anterior, incluindo propriedades e ordem dos nós."""
-        self._finish_field_edit()
+        if self.tabs.currentIndex() == 2:
+            self.source_editor.undo()
+            return
+        if not self._finish_field_edit():
+            return
         self.project = self.history.undo()
         self._refresh()
 
     def redo(self) -> None:
         """Reaplica uma alteração previamente desfeita."""
-        self._finish_field_edit()
+        if self.tabs.currentIndex() == 2:
+            self.source_editor.redo()
+            return
+        if not self._finish_field_edit():
+            return
         self.project = self.history.redo()
         self._refresh()
 
@@ -520,12 +591,22 @@ class MainWindow(QMainWindow):
         except ProjectError as exc:
             self._show_error(str(exc))
             return
-        self._replace_project(project, Path(filename))
+        try:
+            self._replace_project(project, Path(filename))
+        except (ProjectError, OSError) as exc:
+            self._show_error(str(exc))
 
     def _replace_project(self, project: Project, path: Path | None) -> None:
         """Troca o documento e inicia um histórico independente."""
+        path = path.resolve() if path else None
+        source = SourceBuffer.load(path)
         self.project = project
         self.path = path
+        self.source = source
+        self.source_editor.blockSignals(True)
+        self.source_editor.setPlainText(source.text)
+        self.source_editor.blockSignals(False)
+        self.logic.flow_id = None
         self.assets = AssetStore(path.parent if path else None)
         self.history = History(project)
         self.selected_id = project.root.id
@@ -533,14 +614,16 @@ class MainWindow(QMainWindow):
 
     def save(self) -> bool:
         """Salva o projeto ou solicita um destino quando ainda não tem caminho."""
-        self._finish_field_edit()
+        if not self._finish_field_edit():
+            return False
         if self.path is None:
             return self.save_as()
         return self.save_to(self.path)
 
     def save_as(self) -> bool:
         """Solicita um destino, sem mudar o caminho atual em caso de falha."""
-        self._finish_field_edit()
+        if not self._finish_field_edit():
+            return False
         filename, _ = QFileDialog.getSaveFileName(
             self, "Salvar projeto Makebench",
             str(self.path) if self.path else "projeto.makebench.json",
@@ -554,23 +637,35 @@ class MainWindow(QMainWindow):
 
     def save_to(self, path: Path) -> bool:
         """Persiste o documento e marca como salvo somente depois do sucesso."""
-        self._finish_field_edit()
+        if not self._finish_field_edit():
+            return False
+        path = path.resolve()
         try:
+            Project.from_dict(self.project.to_dict())
             self.assets.write_referenced(path.parent, self.project.asset_paths())
+            self.source.write(path)
             save_project(self.project, path)
-        except ProjectError as exc:
+        except (ProjectError, OSError) as exc:
             self._show_error(str(exc))
             return False
         self.path = path
         self.assets.root = path.parent.resolve()
         self.history.mark_saved()
+        self.source.mark_saved()
+        self._update_code()
         self._update_actions()
         return True
 
     def _confirm_discard(self) -> bool:
         """Oferece salvar alterações antes de fechar, abrir ou criar um projeto."""
-        self._finish_field_edit()
-        if not self.history.dirty:
+        if not self._finish_field_edit():
+            choice = QMessageBox.warning(
+                self, "Blocos não confirmados", "O editor de blocos não respondeu. Descartar pode perder as alterações mais recentes. Deseja descartar e continuar?",
+                QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            return choice == QMessageBox.StandardButton.Discard
+        if not self.history.dirty and not self.source.dirty:
             return True
         choice = QMessageBox.warning(
             self, "Salvar alterações?", "O projeto tem alterações que ainda não foram salvas.",
@@ -581,6 +676,83 @@ class MainWindow(QMainWindow):
             return self.save()
         return choice == QMessageBox.StandardButton.Discard
 
+    def _tab_changed(self, index):
+        """Confirma blocos ao sair e inicia WebEngine apenas quando necessário."""
+        if index != 1 and not self.logic.flush():
+            self.tabs.setCurrentIndex(1)
+            return
+        if index == 1:
+            self.logic.ensure_loaded()
+            self.logic.sync()
+        self._update_actions()
+
+    def _source_changed(self):
+        """Mantém fonte própria independente da geração e do histórico visual."""
+        self.source.text = self.source_editor.toPlainText()
+        self.source_timer.start()
+        self._update_actions()
+
+    def _update_code(self):
+        """Mostra código e diagnósticos sem importar o arquivo de funções."""
+        self.logic.update_code()
+        generated = self.logic.generated
+        if self.generated_editor.toPlainText() != generated.text:
+            self.generated_editor.setPlainText(generated.text)
+        self.code_diagnostics.setText('\n'.join(generated.diagnostics) or 'Funções recebem ctx e valor. Use o nome no bloco “chamar função”.')
+        label = self.source.path.name if self.source.path else 'arquivo .actions.py criado ao salvar'
+        self.source_label.setText(f'Funções próprias · {label}')
+
+    def edit_logic(self, component_id):
+        """Cria ou abre o fluxo do evento selecionado na interface."""
+        if not self._finish_field_edit():
+            return
+        try:
+            flow = create_flow(self.project, component_id)
+        except ProjectError as exc:
+            self._show_error(str(exc))
+            return
+        self.history.push(self.project)
+        self.logic.sync(flow['id'])
+        self.tabs.setCurrentIndex(1)
+        self._update_code()
+        self._update_actions()
+
+    def remove_flow(self, flow_id):
+        """Remove só o vínculo de lógica; desfazer recupera blocos e comentários."""
+        self._edit(lambda: setattr(self.project, 'workflows', [f for f in self.project.workflows if f['id'] != flow_id]))
+
+    def rename_flow(self, flow_id, name):
+        """Altera o rótulo do fluxo sem reidentificar seus blocos."""
+        flow = next((f for f in self.project.workflows if f['id'] == flow_id), None)
+        if flow and name.strip() and flow['name'] != name.strip():
+            flow['name'] = name.strip()
+            self.history.push(self.project)
+            self.logic.sync()
+            self._update_code()
+            self._update_actions()
+
+    def _receive_flow(self, data):
+        """Valida o modelo neutro recebido; blocos incompletos ficam como rascunho."""
+        flow = next((f for f in self.project.workflows if f['id'] == data.get('flow')), None)
+        if flow is None or not isinstance(data.get('workspace'), dict):
+            return
+        if data.get('body') == flow.get('body') and data['workspace'] == flow.get('workspace', {}) and data.get('errors', []) == flow.get('errors', []):
+            return
+        previous = deepcopy(flow)
+        flow.update(body=data.get('body'), workspace=data['workspace'], errors=data.get('errors', []))
+        try:
+            validate(self.project)
+        except ProjectError as exc:
+            flow.update(body=None, errors=[str(exc)])
+            try:
+                validate(self.project)
+            except ProjectError:
+                flow.clear(); flow.update(previous)
+                return
+        self.history.push(self.project)
+        self._update_code()
+        self._update_actions()
+
     def _show_error(self, message: str) -> None:
         """Apresenta falhas recuperáveis sem fechar o editor."""
         QMessageBox.critical(self, "Makebench", message)
@@ -590,8 +762,8 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self, "Sobre o Makebench",
             "<h2>Makebench</h2><p>Aplicativos Linux, construídos por você.</p>"
-            f"<p>Versão {__version__} — editor visual de interface.</p>"
-            "<p>Blocos, execução de scripts e empacotamento serão adicionados nas próximas etapas.</p>",
+            f"<p>Versão {__version__} — interface, blocos e funções Python.</p>"
+            "<p>Execução de scripts e empacotamento serão adicionados nas próximas etapas.</p>",
         )
 
     def closeEvent(self, event: QCloseEvent) -> None:
