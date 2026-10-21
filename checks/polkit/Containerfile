@@ -1,0 +1,7 @@
+FROM registry.fedoraproject.org/fedora:44
+RUN dnf -y install polkit dbus-daemon python3-dbus python3-gobject-base shadow-utils && dnf clean all
+ENV MAKEBENCH_POLKIT_CONTAINER_TEST=1
+RUN useradd -m tester
+COPY smoke.py /opt/smoke.py
+COPY cancel_agent.py /opt/cancel_agent.py
+CMD ["python3", "/opt/smoke.py"]
