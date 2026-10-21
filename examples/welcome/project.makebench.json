@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 3,
+  "format_version": 4,
   "id": "project_welcome",
   "name": "Boas-vindas",
   "ui": {
@@ -220,7 +220,7 @@
           "id": "go_preferences",
           "op": "show_page",
           "component": "page_options",
-          "comment": "Abrir a segunda página quando o runtime estiver conectado."
+          "comment": "Ao clicar, abrir a página de preferências."
         }
       ],
       "workspace": {}

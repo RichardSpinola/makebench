@@ -13,7 +13,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 
-FORMAT_VERSION = 3
+FORMAT_VERSION = 4
 FORMAT_NAME = "makebench.project"
 
 
@@ -422,7 +422,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError("Este arquivo não é um projeto Makebench.")
         version = value.get("format_version")
-        if type(version) is not int or version not in (1, 2, FORMAT_VERSION):
+        if type(version) is not int or version not in (1, 2, 3, FORMAT_VERSION):
             raise ProjectError(
                 f"Versão de projeto não suportada: {version}. "
                 "Abra-o com uma versão compatível do Makebench."

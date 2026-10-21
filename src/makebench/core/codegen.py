@@ -14,7 +14,7 @@ class GeneratedCode:
 
 
 def generate(project: Project, source: str = "") -> GeneratedCode:
-    """Gera handlers para o contrato ctx do futuro runtime; não exporta aplicativo.
+    """Gera handlers para o contrato ctx do runtime; não exporta aplicativo.
 
     A origem de cada instrução fica em lines. Nenhum campo livre vira Python
     sem escape: nomes de variáveis são chaves de dicionário e valores usam repr.
@@ -23,7 +23,7 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
     result = GeneratedCode("")
     lines = ["# Gerado pelo Makebench. Edite os blocos para alterar este arquivo.",
              "# Funções próprias ficam no arquivo .actions.py do projeto.",
-             "# Handlers aguardam o runtime de execução (etapa M4).", ""]
+             "# Executado em processo separado ao testar o aplicativo.", ""]
     functions, syntax_error = function_names(source)
     if syntax_error:
         result.diagnostics.append(syntax_error)
@@ -40,6 +40,8 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                 op = node["op"]
                 if op == "literal":
                     return repr(node["value"])
+                if op == "list":
+                    return "[" + ", ".join(expression(item) for item in node["items"]) + "]"
                 if op == "variable":
                     return f"variables.get({node['name']!r})"
                 if op == "read":
@@ -59,6 +61,9 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                             for key, child in value.items():
                                 if key not in {"then", "else", "body"}:
                                     mark(child)
+                        elif isinstance(value, list):
+                            for child in value:
+                                mark(child)
                     mark(node)
                 lines.append("    " * indent + text)
 
@@ -82,6 +87,13 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         if node["function"] not in functions:
                             result.diagnostics.append(f"{flow['name']}: função ‘{node['function']}’ não encontrada em .actions.py.")
                         emit(f"ctx.call_action({node['function']!r}, {expression(node['value'])})", node, indent)
+                    elif op in {"run", "script"}:
+                        method, key = ("run", "program") if op == "run" else ("run_script", "source")
+                        emit(f"ctx.{method}({expression(node[key])}, {expression(node['arguments'])}, admin={node['admin']!r})", node, indent)
+                    elif op == "ask":
+                        emit(f"variables[{node['name']!r}] = ctx.ask({node['kind']!r}, {expression(node['prompt'])}, {expression(node['options'])})", node, indent)
+                    elif op == "confirm":
+                        emit(f"ctx.confirm({expression(node['prompt'])})", node, indent)
                     elif op == "if":
                         emit(f"if {expression(node['condition'])}:", node, indent)
                         body(node["then"], indent + 1)

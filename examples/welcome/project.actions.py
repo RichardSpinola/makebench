@@ -1,4 +1,4 @@
-"""Funções do exemplo de boas-vindas. Execução será conectada em M4."""
+"""Funções do exemplo de boas-vindas. Teste o aplicativo com F5."""
 
 
 def apresentar(ctx, valor):

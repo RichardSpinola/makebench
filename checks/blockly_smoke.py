@@ -37,6 +37,7 @@ class BlocklyTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.window._finish_field_edit()
         cls.window.history.mark_saved(); cls.window.source.mark_saved()
         cls.window.close()
         # O perfil Chromium deve sobreviver à página que o utiliza.
@@ -74,7 +75,7 @@ class BlocklyTests(unittest.TestCase):
           log.getInput('VALUE').connection.connect(text.outputConnection);
           hat.getInput('DO').connection.connect(log.previousConnection);
           log.setCommentText('Comentário do bloco');
-          const comment=new Blockly.comments.WorkspaceComment(ws,'note_1');
+          const comment=ws.newComment('note_1');
           comment.setText('Nota solta preservada');comment.moveTo(new Blockly.utils.Coordinate(450,80));
           return true;
         })()''')
@@ -263,6 +264,70 @@ class BlocklyTests(unittest.TestCase):
                     self.assertFalse(path.exists())
         finally:
             self.window.logic.ready=True
+
+    def test_13_task_dialog_and_list_operations_roundtrip(self):
+        counter=0
+        def node(op,**values):
+            nonlocal counter
+            counter+=1;return {'id':f'new_{counter}','op':op,**values}
+        def value(item):return node('literal',value=item)
+        body=[node('ask',kind='choice',name='resposta',prompt=value('Escolha'),options=node('list',items=[value('A'),value('B')])),
+              node('confirm',prompt=value('Continuar?')),
+              node('run',program=value('uname'),arguments=node('list',items=[value('-a')]),admin=False),
+              node('script',source=value('printf "%s\\n" "$1"'),arguments=node('list',items=[value('Olá com espaços')]),admin=True)]
+        self.window.project.workflows[0]['body']=body
+        self.window._refresh();QTest.qWait(100)
+        compiled=json.loads(self.js('JSON.stringify(window.makebench.compileWorkspace())'))
+        self.assertEqual(compiled['body'],body);self.assertEqual(compiled['errors'],[])
+        self.window.logic.flush()
+        self.assertIn('ctx.run_script',self.window.logic.generated.text)
+        self.assertIn('admin=True',self.window.logic.generated.text)
+
+    def test_14_run_button_executes_unsaved_snapshot_and_locates_function_error(self):
+        from makebench.core.project import Project
+        self.window.source_editor.setPlainText('def fail(ctx, valor):\n    raise ValueError("Erro do exemplo")\n')
+        self.window.project.workflows[0]['body']=[{'id':'call_failure','op':'call','function':'fail','value':{'id':'argument','op':'literal','value':''}}]
+        self.window._refresh()
+        self.window.run_action.trigger()
+        runtime=self.window.runtime_window
+        try:
+            deadline=time.monotonic()+5
+            while (not runtime.session.active or runtime.session.busy) and time.monotonic()<deadline:QTest.qWait(20)
+            self.assertTrue(runtime.session.active)
+            runtime.view.widgets[self.button.id].click()
+            while runtime.session.busy and time.monotonic()<deadline:QTest.qWait(20)
+            self.assertEqual(runtime.last_error['block'],'call_failure')
+            runtime.locate.click();QTest.qWait(50)
+            self.assertEqual(self.window.tabs.currentIndex(),2)
+            self.assertEqual(self.window.source_editor.textCursor().blockNumber(),1)
+        finally:
+            runtime.stop()
+            deadline=time.monotonic()+3
+            while not runtime.session.closed and time.monotonic()<deadline:QTest.qWait(20)
+            runtime.close();QTest.qWait(50)
+
+    def test_15_multiline_editor_preserves_text_comments_and_roundtrip(self):
+        self.install_log();self.window.logic.flush()
+        script='window.makebench.setTextValue("text_1",'+json.dumps('primeira linha\nsegunda linha com "aspas"\n$1')+')'
+        result=self.js('(()=>{try{return '+script+';}catch(error){return error.stack;}})()')
+        self.assertEqual(result,True);self.window.logic.flush()
+        flow=self.window.project.workflows[0]
+        self.assertEqual(flow['body'][0]['value']['value'],'primeira linha\nsegunda linha com "aspas"\n$1')
+        self.assertEqual(flow['body'][0]['value']['id'],'text_1')
+        self.window._refresh();QTest.qWait(100)
+        text=json.loads(self.js('JSON.stringify(window.makebench.textValue("text_1"))'))
+        self.assertEqual(text['text'],flow['body'][0]['value']['value'])
+        self.window.undo();QTest.qWait(100)
+        self.assertEqual(self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),'Olá do Blockly')
+
+    def test_16_multiline_can_replace_shadow_literal_without_losing_connection(self):
+        state={'type':'mb_script','id':'script_shadow','inputs':{'SOURCE':{'shadow':{'type':'text','id':'source_shadow','fields':{'TEXT':'printf ok'}}},'ARGUMENTS':{'block':{'type':'lists_create_with','id':'args_shadow','extraState':{'itemCount':0}}}}}
+        self.js("""(()=>{const ws=window.makebench.workspace;const hat=ws.getTopBlocks(false).find(b=>b.type==='mb_event');const b=Blockly.serialization.blocks.append("""+json.dumps(state)+""",ws);hat.getInput('DO').connection.connect(b.previousConnection);return true;})()""")
+        result=self.js('(()=>{try{return window.makebench.setTextValue("source_shadow","printf one\\nprintf two");}catch(e){return e.stack;}})()')
+        self.assertEqual(result,True);self.window.logic.flush()
+        flow=self.window.project.workflows[0]
+        self.assertEqual(flow['body'][0]['source']['value'],'printf one\nprintf two')
+        self.assertEqual(flow['body'][0]['source']['id'],'source_shadow')
 
 
 if __name__ == '__main__':

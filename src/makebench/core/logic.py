@@ -119,6 +119,12 @@ def validate(project: Project) -> None:
                     item = value.get("value")
                     if type(item) not in {str, bool, int, float} or (type(item) is float and not math.isfinite(item)):
                         raise ProjectError("Valor literal inválido.")
+                elif op == "list":
+                    items = value.get("items")
+                    if not isinstance(items, list) or len(items) > 256:
+                        raise ProjectError("Uma lista de valores aceita até 256 itens.")
+                    for item in items:
+                        visit(item, True, depth + 1)
                 elif op == "variable":
                     text("name")
                 elif op == "read":
@@ -150,6 +156,16 @@ def validate(project: Project) -> None:
                 expr("count"); body("body")
             elif op == "call":
                 text("function", True); expr("value")
+            elif op in {"run", "script"}:
+                expr("program" if op == "run" else "source"); expr("arguments")
+                if type(value.get("admin")) is not bool:
+                    raise ProjectError("A permissão administrativa precisa ser declarada no bloco.")
+            elif op == "ask":
+                if value.get("kind") not in {"text", "choice", "file", "directory"}:
+                    raise ProjectError("Tipo de pergunta desconhecido.")
+                text("name"); expr("prompt"); expr("options")
+            elif op == "confirm":
+                expr("prompt")
             else:
                 raise ProjectError(f"Operação desconhecida: {op}.")
 

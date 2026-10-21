@@ -1,0 +1,197 @@
+"""Processo Python de execução. Só é iniciado por uma ação explícita do usuário.
+
+O protocolo JSON usa um descritor próprio; stdout/stderr do código são saída de
+usuário. Isto separa travamentos do editor, mas não é sandbox de código não confiável.
+"""
+from __future__ import annotations
+
+import io
+import json
+import os
+from pathlib import Path
+import sys
+import traceback
+
+from makebench.core.codegen import generate
+from makebench.core.project import Project
+
+
+class Cancelled(Exception):
+    """Interrompe o fluxo quando um diálogo é cancelado ou uma confirmação recusada."""
+
+
+class TaskError(Exception):
+    """Falha de tarefa externa; ações posteriores não são executadas."""
+
+
+class Context:
+    """API síncrona do aplicativo, com requisições atendidas pelo processo Qt."""
+    def __init__(self, send, receive):
+        """Recebe transporte JSON; todas as interações Qt ficam no outro processo."""
+        self.send, self.receive = send, receive
+        self.variables = {}
+        self.actions = {}
+        self.sequence = 0
+
+    def request(self, method, **values):
+        """Espera a resposta correspondente, abortando em cancelamento/falha."""
+        self.sequence += 1
+        identifier = self.sequence
+        self.send({'type':'request','id':identifier,'method':method,**values})
+        reply = self.receive()
+        if reply.get('type') != 'response' or reply.get('id') != identifier:
+            raise RuntimeError('Resposta inesperada do aplicativo.')
+        if reply.get('cancelled'):
+            raise Cancelled(reply.get('error', 'Operação cancelada.'))
+        if not reply.get('ok'):
+            raise TaskError(reply.get('error', 'A tarefa falhou.'))
+        return reply.get('value')
+
+    def read(self, component, attribute):
+        """Lê texto/seleção/progresso atuais, incluindo entradas alteradas pelo usuário."""
+        return self.request('read',component=component,attribute=attribute)
+
+    def set_text(self, component, value):
+        """Atualiza texto de um controle sem substituir o documento no editor."""
+        return self.request('set_text',component=component,value=str(value))
+
+    def set_enabled(self, component, value):
+        """Habilita/desabilita um controle da instância em execução."""
+        return self.request('set_enabled',component=component,value=bool(value))
+
+    def set_value(self, component, value):
+        """Atualiza progresso inteiro no intervalo 0–100."""
+        return self.request('set_value',component=component,value=int(value))
+
+    def show_page(self, component):
+        """Revela uma página e seus ancestrais na janela do aplicativo."""
+        return self.request('show_page',component=component)
+
+    def log(self, value):
+        """Envia saída textual imediatamente, sem bloquear o editor."""
+        self.send({'type':'log','channel':'stdout','text':str(value)+'\n'})
+
+    def message(self, value):
+        """Apresenta mensagem e aguarda o fechamento para continuar o fluxo."""
+        return self.request('message',prompt=str(value))
+
+    def ask(self, kind, prompt, options=None):
+        """Obtém entrada declarada; Cancelar encerra o fluxo antes da próxima ação."""
+        return self.request('ask',kind=kind,prompt=str(prompt),options=options or [])
+
+    def confirm(self, prompt):
+        """Continua apenas se o usuário responder Sim."""
+        return self.request('confirm',prompt=str(prompt))
+
+    def run(self, program, arguments=None, *, admin=False, check=True):
+        """Executa argv separado, com saída ao vivo; código não zero falha por padrão.
+
+        stderr não determina sucesso. admin solicita pkexec via aplicativo; o
+        editor nunca recebe senhas. check=False permite tratar explicitamente
+        um código não zero em funções próprias.
+        """
+        if arguments is None:arguments=[]
+        if not isinstance(arguments,list) or any(not isinstance(arg,str) for arg in arguments):
+            raise TypeError('Argumentos precisam ser uma lista de textos.')
+        result = self.request('run',program=program,arguments=arguments,admin=admin)
+        code = result['code']
+        if result.get('crashed') or (check and code != 0):
+            raise TaskError(f'Tarefa terminou com código {code}.')
+        return code
+
+    def run_script(self, source, arguments=None, *, admin=False, check=True):
+        """Executa Bash explícito; argumentos viram $1… e não são concatenados ao script."""
+        if not isinstance(source,str):
+            raise TypeError('O script precisa ser texto.')
+        if arguments is None:arguments=[]
+        if not isinstance(arguments,list) or any(not isinstance(arg,str) for arg in arguments):
+            raise TypeError('Argumentos precisam ser uma lista de textos.')
+        return self.run('/bin/bash',['-c',source,'makebench-script',*arguments],admin=admin,check=check)
+
+    def call_action(self, name, value):
+        """Resolve função própria somente nesta execução explícita."""
+        function = self.actions.get(name)
+        if not callable(function):
+            raise RuntimeError(f'Função não encontrada: {name}.')
+        return function(self,value)
+
+
+class Output(io.TextIOBase):
+    """Transforma print em mensagens de saída, preservando o canal JSON."""
+    def __init__(self, send, channel):
+        """Associa escrita textual a stdout ou stderr do aplicativo."""
+        self.send,self.channel=send,channel
+
+    def write(self, value):
+        """Divide saída grande em mensagens limitadas para o editor continuar responsivo."""
+        for offset in range(0,len(value),8192):
+            self.send({'type':'log','channel':self.channel,'text':value[offset:offset+8192]})
+        return len(value)
+
+    def flush(self):
+        """O transporte já grava imediatamente; não há buffer a descarregar."""
+
+
+
+def main():
+    """Inicializa um snapshot e atende eventos em sequência, fora do processo Qt."""
+    protocol = os.fdopen(os.dup(sys.stdout.fileno()),'w',encoding='utf-8',buffering=1)
+    os.dup2(sys.stderr.fileno(),sys.stdout.fileno())
+    def send(value):
+        """Serializa exclusivamente mensagens do protocolo em uma linha UTF-8."""
+        protocol.write(json.dumps(value,ensure_ascii=True,allow_nan=False)+'\n'); protocol.flush()
+    def receive():
+        """Lê uma mensagem; EOF encerra a instância para não deixar worker órfão."""
+        line=sys.stdin.readline()
+        if not line:raise EOFError('O aplicativo foi encerrado.')
+        return json.loads(line)
+    sys.stdout=Output(send,'stdout');sys.stderr=Output(send,'stderr')
+    context=Context(send,receive)
+    generated=None; source_filename='<makebench-actions>'; flow_id=None
+    def failure(exc):
+        """Localiza erro em bloco gerado e/ou linha da função própria."""
+        line=source_line=None
+        for frame in traceback.extract_tb(exc.__traceback__):
+            if frame.filename=='<makebench-generated>':line=frame.lineno
+            if frame.filename==source_filename:source_line=frame.lineno
+        block=next((block for (flow,block),number in (generated.lines.items() if generated else []) if flow==flow_id and number==line),None)
+        send({'type':'error','message':f'{type(exc).__name__}: {exc}', 'flow':flow_id,'block':block,'line':line,'source_line':source_line,'traceback':traceback.format_exc()})
+    try:
+        snapshot=receive()
+        project=Project.from_dict(snapshot['project'])
+        source=snapshot['source'];source_filename=snapshot.get('source_filename',source_filename)
+        generated=generate(project,source)
+        if generated.diagnostics:raise ValueError('\n'.join(generated.diagnostics))
+        root=Path(snapshot['root']).resolve();os.chdir(root);sys.path.insert(0,str(root))
+        namespace={'__name__':'makebench_project_actions','__file__':source_filename}
+        exec(compile(source,source_filename,'exec'),namespace)
+        context.actions=namespace
+        handlers={}
+        compiled={};exec(compile(generated.text,'<makebench-generated>','exec'),compiled)
+        for index,flow in enumerate(project.workflows,1):
+            handlers[flow['id']]=compiled[f'on_event_{index}']
+        send({'type':'ready'})
+        while True:
+            message=receive()
+            if message.get('type')=='shutdown':break
+            if message.get('type')!='event' or message.get('flow') not in handlers:continue
+            flow_id=message['flow'];send({'type':'busy','flow':flow_id})
+            outcome='success'
+            try:
+                handlers[flow_id](context)
+            except Cancelled as exc:
+                outcome='cancelled';send({'type':'log','channel':'status','text':str(exc)+'\n'})
+            except Exception as exc:
+                outcome='error';failure(exc)
+            send({'type':'done','flow':flow_id,'outcome':outcome})
+    except EOFError:
+        pass
+    except BaseException as exc:
+        failure(exc)
+    finally:
+        protocol.close()
+    return 0
+
+
+if __name__=='__main__':
+    raise SystemExit(main())

@@ -8,7 +8,7 @@ from uuid import uuid4
 from PySide6.QtCore import QObject, Signal, Slot, QUrl, QEventLoop, QTimer, Qt
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
-    QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSplitter,
+    QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSplitter, QDialog, QDialogButtonBox, QPlainTextEdit,
     QVBoxLayout, QWidget,
 )
 
@@ -111,6 +111,12 @@ class LogicPanel(QWidget):
         hint = QLabel('Encaixe os blocos em “fazer”. Botão direito adiciona comentários. Selecione um bloco para localizar sua linha Python.')
         hint.setWordWrap(True)
         layout.addWidget(hint)
+        self.selected_block=''
+        self.edit_text=QPushButton('Editar texto ou script…')
+        self.edit_text.setToolTip('Selecione um bloco de texto ou de execução Bash para editar várias linhas.')
+        self.edit_text.setEnabled(False)
+        self.edit_text.clicked.connect(self._edit_text)
+        layout.addWidget(self.edit_text,0,Qt.AlignmentFlag.AlignLeft)
         self.splitter = QSplitter()
         self.placeholder = QLabel('O editor de blocos será carregado ao abrir esta aba.')
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -275,13 +281,50 @@ class LogicPanel(QWidget):
         self.generated = generate(self.get_project(), self.get_source())
         if self.code.toPlainText() != self.generated.text:
             self.code.setPlainText(self.generated.text)
-        self.diagnostics.setText('\n'.join(self.generated.diagnostics) or 'Blocos salvos como dados. Execução e diálogos serão conectados na etapa M4.')
+        self.diagnostics.setText('\n'.join(self.generated.diagnostics) or 'Blocos salvos. Use F5 para testar o aplicativo e acompanhar a saída.')
 
     def _select_block(self, flow, block):
         """Mostra a linha gerada correspondente à seleção de Blockly."""
+        self.selected_block=block
+        self.edit_text.setEnabled(bool(block))
         line = self.generated.lines.get((flow, block))
         if line:
             self.code.show_line(line)
+
+    def _edit_text(self):
+        """Edita texto multilinha sem executar scripts nem concatenar argumentos."""
+        if not self.ready or not self.selected_block:
+            return
+        self.page.runJavaScript("JSON.stringify(window.makebench.textValue("+json.dumps(self.selected_block)+"))", self._text_dialog)
+
+    def _text_dialog(self, result):
+        """Abre um editor nativo para um literal textual do workspace atual."""
+        if not result or result=='null':
+            self.diagnostics.setText('Selecione um bloco de texto ou um bloco “executar Bash” com texto conectado.')
+            return
+        data=json.loads(result);token=self.token
+        dialog=QDialog(self);dialog.setWindowTitle('Editar texto ou script');dialog.resize(760,480)
+        layout=QVBoxLayout(dialog)
+        label=QLabel('Escreva várias linhas. Em scripts Bash, argumentos separados ficam disponíveis em $1, $2…')
+        label.setWordWrap(True);layout.addWidget(label)
+        editor=QPlainTextEdit(data['text']);layout.addWidget(editor)
+        buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
+        if dialog.exec()==QDialog.DialogCode.Accepted and token==self.token:
+            code='window.makebench.setTextValue('+json.dumps(data['id'])+','+json.dumps(editor.toPlainText())+')'
+            self.page.runJavaScript(code)
+        dialog.deleteLater()
+
+    def focus_block(self, flow, block, attempt=0):
+        """Revela origem de erro assim que o workspace solicitado está disponível."""
+        self._select_block(flow, block)
+        if attempt >= 30:
+            return
+        if not self.ready:
+            QTimer.singleShot(100, lambda: self.focus_block(flow, block, attempt + 1))
+            return
+        code = "(() => {const ws=window.makebench?.workspace;const b=ws?.getBlockById(" + json.dumps(block) + ");if(!b)return false;b.select();ws.centerOnBlock(b.id);return true;})()"
+        self.page.runJavaScript(code, lambda found: QTimer.singleShot(50, lambda: self.focus_block(flow, block, attempt + 1)) if not found else None)
 
     def _mark_pending(self, token):
         """Mantém desfazer e aviso de alterações disponíveis antes do debounce."""

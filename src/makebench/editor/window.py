@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
     """Coordena documento, histórico, seleção e comandos de arquivo.
 
     O documento é a fonte de verdade; árvore, prévia e propriedades são vistas.
-    Interface e blocos geram dados/Python; esta etapa ainda não executa tarefas.
+    Interface e blocos geram dados/Python; executar exige uma ação explícita.
     """
 
     def __init__(self, project: Project | None = None, path: Path | None = None) -> None:
@@ -48,6 +48,8 @@ class MainWindow(QMainWindow):
         self.selected_id = self.project.root.id
         self._tree_items: dict[str, QTreeWidgetItem] = {}
         self._refreshing = False
+        self.runtime_window = None
+        self._closing_after_runtime = False
         self.resize(1280, 800)
         self.setMinimumSize(980, 600)
         self.setWindowModified(False)
@@ -59,6 +61,11 @@ class MainWindow(QMainWindow):
         """Registra menus e atalhos que têm comportamento implementado."""
         file_menu = self.menuBar().addMenu("&Arquivo")
         edit_menu = self.menuBar().addMenu("&Editar")
+        run_menu = self.menuBar().addMenu("E&xecutar")
+        self.run_action = QAction("Testar aplicativo", self)
+        self.run_action.setShortcut(QKeySequence("F5"))
+        self.run_action.triggered.connect(self.run_project)
+        run_menu.addAction(self.run_action)
         help_menu = self.menuBar().addMenu("Aj&uda")
         self.new_action = QAction("Novo projeto", self)
         self.new_action.setShortcut(QKeySequence.StandardKey.New)
@@ -122,6 +129,8 @@ class MainWindow(QMainWindow):
         toolbar.addActions([self.undo_action, self.redo_action])
         toolbar.addSeparator()
         toolbar.addActions([self.duplicate_action, self.page_action])
+        toolbar.addSeparator()
+        toolbar.addAction(self.run_action)
         toolbar.addSeparator()
         self.snap_check = QCheckBox("Encaixar na grade")
         self.snap_check.setChecked(True)
@@ -226,7 +235,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.logic, "Lógica")
         code_page = QWidget()
         code_layout = QVBoxLayout(code_page)
-        hint = QLabel("Edite suas funções à direita. O Python à esquerda acompanha os blocos e não substitui suas funções. Execução será conectada na etapa M4.")
+        hint = QLabel("Edite suas funções à direita. O Python à esquerda acompanha os blocos e não substitui suas funções. Use F5 para testar o aplicativo em uma janela separada.")
         hint.setWordWrap(True)
         code_layout.addWidget(hint)
         code_splitter = QSplitter()
@@ -753,6 +762,51 @@ class MainWindow(QMainWindow):
         self._update_code()
         self._update_actions()
 
+    def run_project(self):
+        """Testa snapshot explícito; edição e abertura continuam sem executar código."""
+        if self.runtime_window is not None and not self.runtime_window.session.closed:
+            self.runtime_window.show();self.runtime_window.raise_();self.runtime_window.activateWindow()
+            return
+        if not self._finish_field_edit():
+            return
+        from makebench.runtime.window import RuntimeWindow
+        try:
+            window = RuntimeWindow(self.project, self.source.text, self.assets.read,
+                self.path.parent if self.path else None, self.source.path, self)
+        except (ProjectError, OSError) as exc:
+            self._show_error(str(exc));return
+        if self.runtime_window is not None:
+            self.runtime_window.close()
+        self.runtime_window = window
+        window.locate_requested.connect(lambda error: self._locate_runtime_error(error, window))
+        window.shutdown_finished.connect(self._runtime_stopped)
+        window.destroyed.connect(lambda: self._runtime_destroyed(window))
+        window.show();window.start()
+
+    def _runtime_destroyed(self, window):
+        """Remove apenas a referência da janela que foi efetivamente destruída."""
+        if self.runtime_window is window:
+            self.runtime_window = None
+
+    def _runtime_stopped(self):
+        """Retoma fechamento após o supervisor terminar a limpeza dos processos."""
+        if self._closing_after_runtime:
+            QTimer.singleShot(0, self.close)
+
+    def _locate_runtime_error(self, error, window):
+        """Localiza o bloco atual; linhas próprias só valem se o texto não mudou."""
+        if self.project.id != window.project.id:
+            self.statusBar().showMessage("O erro pertence a outro projeto aberto na execução.", 7000);return
+        if error.get('source_line') and self.source.text == window.source:
+            self.tabs.setCurrentIndex(2)
+            self.source_editor.show_line(error['source_line'])
+        elif error.get('block'):
+            flow = next((f for f in self.project.workflows if f['id'] == error.get('flow')), None)
+            if flow:
+                self.logic.sync(flow['id']);self.tabs.setCurrentIndex(1)
+                self.logic.focus_block(flow['id'], error['block'])
+        self.raise_();self.activateWindow()
+
     def _show_error(self, message: str) -> None:
         """Apresenta falhas recuperáveis sem fechar o editor."""
         QMessageBox.critical(self, "Makebench", message)
@@ -763,12 +817,21 @@ class MainWindow(QMainWindow):
             self, "Sobre o Makebench",
             "<h2>Makebench</h2><p>Aplicativos Linux, construídos por você.</p>"
             f"<p>Versão {__version__} — interface, blocos e funções Python.</p>"
-            "<p>Execução de scripts e empacotamento serão adicionados nas próximas etapas.</p>",
+            "<p>Teste aplicativos e tarefas com F5. Exportadores serão adicionados na próxima etapa.</p>",
         )
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Protege alterações não salvas ao encerrar a janela."""
-        if self._confirm_discard():
-            event.accept()
-        else:
-            event.ignore()
+        window = self.runtime_window
+        if window is not None and window.session.admin_active:
+            window.show();window.raise_()
+            self.statusBar().showMessage("Aguarde a tarefa administrativa terminar antes de fechar o editor.", 7000)
+            event.ignore();return
+        if not self._closing_after_runtime and not self._confirm_discard():
+            event.ignore();return
+        if window is not None and not window.session.closed:
+            self._closing_after_runtime = True
+            self.setEnabled(False)
+            window.close()
+            event.ignore();return
+        event.accept()

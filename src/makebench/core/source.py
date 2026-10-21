@@ -10,7 +10,7 @@ from .project import ProjectError
 DEFAULT_SOURCE = '''"""Funções próprias do projeto. Abrir o Makebench não executa este arquivo.
 
 Cada função recebe ctx (contexto do aplicativo) e valor (entrada do bloco).
-O runtime de execução será conectado na etapa M4.
+Use F5 para testar estas funções no processo do aplicativo.
 """
 
 
