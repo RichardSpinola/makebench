@@ -37,7 +37,8 @@ class ResizeHandle(QWidget):
         painter = QPainter(self)
         painter.setPen(QPen(self.palette().highlight().color(), 1))
         painter.setBrush(self.palette().base())
-        painter.drawRect(self.rect().adjusted(0, 0, -1, -1))
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.drawEllipse(self.rect().adjusted(1, 1, -1, -1))
 
 
 class LayoutHandle(QWidget):
@@ -192,6 +193,14 @@ class PreviewCanvas(QFrame):
         if self._project is None or self._project.id != project.id:
             self._visible_pages = {}
         self._project = project
+        from makebench.ui.theme import manager
+        t=manager().tokens
+        self.setStyleSheet(f'''QFrame[previewNode="true"] {{ border:1px solid transparent; border-radius:6px; }}
+            QFrame[previewNode="true"][selectedNode="true"] {{ border:2px solid {t['accent']}; }}
+            QFrame[previewNode="true"][dropTarget="true"] {{ border:2px dashed {t['accent']}; }}
+            QWidget#app_window_titlebar {{ background:{t['header']}; border-radius:12px; }}'''+
+            (f'''QPushButton {{ background:{t['raised']}; border:1px solid {t['border']}; border-radius:8px; min-height:30px; }}
+            QLineEdit {{ background:{t['raised']}; border-radius:6px; }} QProgressBar {{ border-radius:6px; background:{t['hover']}; }} QProgressBar::chunk {{ background:{t['accent']}; border-radius:6px; }}''' if project.application.get('backend','qt')=='gtk' else ''))
         self._layout_handles=[];self._guides=[]
         self._gesture = None
         self._frames = {}
@@ -207,6 +216,8 @@ class PreviewCanvas(QFrame):
         dimensions=QLabel(f"{project.root.properties.get('width',640)} × {project.root.properties.get('height',480)}")
         dimensions.setProperty('muted',True);bar.addWidget(dimensions);self._watch(chrome,project.root.id);self._watch(label,project.root.id)
         self._layout.addWidget(chrome)
+        if project.application.get('backend','qt')=='gtk':
+            notice=QLabel('Prévia GTK aproximada; o resultado real aparece em Testar.');notice.setProperty('muted',True);notice.setWordWrap(True);self._layout.addWidget(notice)
         surface = self._render(project.root)
         surface.setMinimumSize(surface.minimumSize().expandedTo(QSize(360, 320)))
         surface.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

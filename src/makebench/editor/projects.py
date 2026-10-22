@@ -45,7 +45,7 @@ class ProjectMixin:
         opening=QPushButton('Abrir projeto…');opening.clicked.connect(self.open_project);start.addWidget(opening)
         start.addStretch();columns.addLayout(start,1)
         recent_box=QVBoxLayout();recent_box.addWidget(QLabel('Projetos recentes'))
-        self.recent_list=QListWidget();self.recent_list.setAccessibleName('Projetos recentes')
+        self.recent_list=QListWidget();self.recent_list.setObjectName('recent_list');self.recent_list.setAccessibleName('Projetos recentes')
         self.recent_list.itemActivated.connect(self.open_recent)
         recent_box.addWidget(self.recent_list)
         actions=QHBoxLayout()
@@ -146,12 +146,31 @@ class ProjectMixin:
 
     def new_project_dialog(self,template='blank'):
         """Cria uma pasta somente após validar nome, destino e alterações pendentes."""
-        dialog=QDialog(self);dialog.setWindowTitle('Novo projeto');dialog.resize(620,240);form=QFormLayout(dialog)
-        model=QComboBox()
-        for label,key in [('Em branco','blank'),('Assistente de boas-vindas','welcome'),('Central de tarefas','tasks')]:model.addItem(label,key)
-        model.setCurrentIndex(model.findData(template));form.addRow('Modelo',model)
+        from makebench.core.templates import MODELS
+        from makebench.core.environment import gtk_support
+        from .theme import manager
+        from PySide6.QtCore import QSize
+        from PySide6.QtGui import QPixmap,QPainter,QPen,QColor,QIcon
+        dialog=QDialog(self);dialog.setWindowTitle('O que você quer criar?');dialog.resize(760,660);form=QFormLayout(dialog)
+        title=QLabel('O que você quer criar?');title.setProperty('title',True);form.addRow(title)
+        cards=QListWidget();cards.setViewMode(QListWidget.ViewMode.IconMode);cards.setIconSize(QSize(112,68));cards.setGridSize(QSize(140,126));cards.setMinimumHeight(260);cards.setResizeMode(QListWidget.ResizeMode.Adjust)
+        model=QComboBox();model.hide()
+        for key,label,description in MODELS:
+            model.addItem(label,key)
+            pix=QPixmap(112,68);t=manager().tokens;pix.fill(QColor(t['canvas']));paint=QPainter(pix);paint.setRenderHint(QPainter.RenderHint.Antialiasing);paint.setBrush(QColor(t['raised']));paint.setPen(QPen(QColor(t['control']),1));paint.drawRoundedRect(4,3,104,62,6,6);paint.drawLine(4,15,108,15)
+            if key=='multi':paint.drawLine(35,16,35,63)
+            if key=='tasks':
+                for y in (25,38,51):paint.drawRoundedRect(12,y,88,6,3,3)
+            elif key!='blank':
+                paint.drawLine(44 if key=='multi' else 14,27,94,27);paint.setBrush(QColor(t['accent']));paint.setPen(Qt.PenStyle.NoPen);paint.drawRoundedRect(66,46,30,10,4,4)
+            paint.end();item=QListWidgetItem(QIcon(pix),label);item.setToolTip(description);item.setData(Qt.ItemDataRole.UserRole,key);cards.addItem(item)
+        model.setCurrentIndex(max(0,model.findData(template)));cards.setCurrentRow(model.currentIndex());cards.currentRowChanged.connect(model.setCurrentIndex);form.addRow(cards)
+        backend=QComboBox();backend.addItem('GTK — aparência Adwaita','gtk');backend.addItem('Qt — controles do desktop','qt')
+        supported=gtk_support()['gtk4'];preferred=self.settings.value('v1/projects/backend','gtk' if supported else 'qt');backend.setCurrentIndex(backend.findData(preferred if supported else 'qt'))
+        form.addRow('Aparência do aplicativo',backend)
+        note=QLabel('GTK4 detectado. Testar abre controles GTK reais.' if supported else 'GTK4 não encontrado neste Python. Qt foi selecionado; GTK exige PyGObject e GTK4 no sistema.');note.setWordWrap(True);note.setProperty('muted',True);form.addRow(note)
         name=QLineEdit('Meu aplicativo');form.addRow('Nome',name)
-        folder=QLineEdit(str(Path.home()/'Makebench'/'Projetos'/'meu-aplicativo'))
+        folder=QLineEdit(str(Path(self.settings.value('v1/projects/folder',str(Path.home()/'Makebench'/'Projetos')))/'meu-aplicativo'))
         folder_row=QWidget();row=QHBoxLayout(folder_row);row.setContentsMargins(0,0,0,0);row.addWidget(folder)
         choose=QPushButton('Escolher…');row.addWidget(choose)
         def choose_folder():
@@ -161,6 +180,8 @@ class ProjectMixin:
         choose.clicked.connect(choose_folder);form.addRow('Pasta',folder_row)
         name.textEdited.connect(lambda text:folder.setText(str(Path(folder.text()).parent/slug(text))))
         info=QLabel('Será criada uma pasta com o projeto, suas funções e imagens.');info.setWordWrap(True);form.addRow(info)
+        from PySide6.QtWidgets import QGroupBox
+        advanced=QGroupBox('Avançado');advanced.setCheckable(True);advanced.setChecked(False);af=QFormLayout(advanced);identifier=QLineEdit();identifier.setPlaceholderText('br.exemplo.meuapp');identifier.setEnabled(False);advanced.toggled.connect(identifier.setEnabled);af.addRow('Identificador',identifier);form.addRow(advanced)
         error=QLabel();error.setWordWrap(True);form.addRow(error)
         buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
         buttons.button(QDialogButtonBox.StandardButton.Save).setText('Criar projeto')
@@ -173,6 +194,8 @@ class ProjectMixin:
             if not self._confirm_discard():return
             try:
                 project,source,assets=self.project_template(model.currentData(),name.text().strip())
+                project.application['backend']=backend.currentData()
+                if identifier.text().strip():project.application['id']=identifier.text().strip()
                 destination.mkdir(parents=True,exist_ok=True)
                 self._replace_project(project,None);self.source.text=source;self.source_editor.setPlainText(source);self.assets=assets
                 if not self.save_to(destination/'project.makebench.json'):return
@@ -182,10 +205,9 @@ class ProjectMixin:
 
     def project_template(self,key,name):
         """Copia modelos distribuídos, mantendo os exemplos originais intactos."""
-        if key=='blank':return Project.empty(name),SourceBuffer().text,AssetStore()
-        if key=='welcome':
-            from makebench.core.navigation import welcome_template
-            return welcome_template(name),SourceBuffer().text,AssetStore()
+        if key!='tasks':
+            from makebench.core.templates import make_template
+            return make_template(key,name),SourceBuffer().text,AssetStore()
         root=Path(__file__).resolve().parents[3]/'examples'/'script-center'
         if not (root/'app.makebench.json').is_file():
             root=Path(__file__).resolve().parent.parent/'templates'/'script-center'

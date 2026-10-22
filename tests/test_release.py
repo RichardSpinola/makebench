@@ -38,3 +38,21 @@ class PaletteTests(unittest.TestCase):
             theme.set_mode('dark');theme.set_accent('green');theme.set_mode('light')
             setter.assert_not_called()
         theme.set_accent('system');theme.set_mode('system')
+
+
+class TemplateTests(unittest.TestCase):
+    """Modelos são documentos independentes e preservam o backend escolhido."""
+    def test_five_models_and_backend_roundtrip(self):
+        """Todos os modelos validam sem executar código e legados continuam Qt."""
+        from makebench.core.templates import MODELS,make_template
+        from makebench.core.project import Project
+        from makebench.core.codegen import generate
+        self.assertEqual(len(MODELS),5)
+        for key,_,_ in MODELS:
+            if key=='tasks':continue
+            p=make_template(key,'Teste');self.assertEqual(generate(p,'').diagnostics,[])
+            self.assertEqual(Project.from_dict(p.to_dict()).application.get('backend','qt'),'qt')
+            for backend in ('gtk','qt'):
+                p.application['backend']=backend;q=Project.from_dict(p.to_dict())
+                self.assertEqual(q.application['backend'],backend)
+                self.assertEqual(q.to_dict(),p.to_dict())

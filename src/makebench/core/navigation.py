@@ -49,6 +49,7 @@ def validate_navigation(project):
         if root.properties.get('initial_state','@default') not in valid_states:raise ProjectError('Estado inicial inexistente.')
     application=project.application
     if not isinstance(application,dict):raise ProjectError('Configuração do aplicativo inválida.')
+    if application.get('backend','qt') not in {'qt','gtk'}:raise ProjectError('Backend precisa ser GTK ou Qt.')
     for key in ('name','id','version','description','author','license','category','icon'):
         if key in application and not isinstance(application[key],str):raise ProjectError('Metadado do aplicativo precisa ser texto: '+key)
     if not isinstance(application.get('packages',[]),list) or any(not isinstance(v,str) for v in application.get('packages',[])):raise ProjectError('Dependências precisam ser uma lista de textos.')
