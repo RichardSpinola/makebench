@@ -53,7 +53,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         initial=project.find(self.root_window_id)
         self.setWindowTitle(('[Teste] ' if supervision else '')+initial.properties.get('title',project.name))
         width=initial.properties.get('width',640);height=initial.properties.get('height',480)+(220 if supervision else 0)
-        icon_path=project.application.get('icon')
+        icon_path=initial.properties.get('icon') or project.application.get('icon')
         if icon_path:
             from PySide6.QtGui import QIcon,QPixmap
             try:

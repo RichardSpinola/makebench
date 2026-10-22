@@ -59,6 +59,10 @@ def validate_navigation(project):
         if path.is_absolute() or '..' in path.parts or '\\' in application['icon'] or len(path.parts)<2 or path.parts[0]!='assets':raise ProjectError('O ícone precisa ficar em assets.')
     for node in project.walk():
         p=node.properties
+        if p.get('icon'):
+            from pathlib import PurePosixPath
+            icon=PurePosixPath(p['icon']) if isinstance(p['icon'],str) else None
+            if icon is None or icon.is_absolute() or '..' in icon.parts or len(icon.parts)<2 or icon.parts[0]!='assets' or '\\' in p['icon']:raise ProjectError('Ícone da janela precisa ficar em assets.')
         for key in ('visible','enabled','resizable'):
             if key in p and type(p[key]) is not bool:raise ProjectError('Propriedade booleana inválida: '+key)
         for key in ('width','height'):

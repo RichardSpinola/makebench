@@ -12,6 +12,9 @@ class AppWindow(QMainWindow):
         super().__init__()
         self.owner=owner;self.identifier=root.id
         self.setWindowIcon(owner.windowIcon())
+        if root.properties.get('icon'):
+            from PySide6.QtGui import QIcon,QPixmap
+            pixmap=QPixmap();pixmap.loadFromData(owner.read_asset(root.properties['icon']));self.setWindowIcon(QIcon(pixmap))
         self.setWindowTitle(root.properties.get('title',owner.project.name))
         self.resize(root.properties.get('width',640),root.properties.get('height',480))
         if not root.properties.get('resizable',True):self.setFixedSize(self.size())

@@ -2,7 +2,7 @@
 from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy, QVBoxLayout)
+    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy, QVBoxLayout,QFrame,QWidget)
 from makebench.core.project import ComponentKind, LayoutKind
 from makebench.core.storage import StorageError
 
@@ -34,6 +34,10 @@ def create_control(node, read_asset, editing=False):
     """Cria um controle nativo; edição desabilita digitação e recebe seleção externa."""
     text = node.properties.get("text", "")
     match node.kind:
+        case ComponentKind.SEPARATOR:
+            widget=QFrame();widget.setFrameShape(QFrame.Shape.HLine)
+        case ComponentKind.SPACER:
+            widget=QWidget();widget.setMinimumSize(24,24);widget.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
         case ComponentKind.LABEL:
             widget = QLabel(text)
             widget.setWordWrap(True)

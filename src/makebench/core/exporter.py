@@ -70,7 +70,7 @@ def verify(project,source,read_asset):
     return issues
 
 
-RUNNER='''"""Aplicativo exportado pelo Makebench. Iniciar executa o código do projeto."""
+QT_RUNNER='''"""Aplicativo exportado pelo Makebench. Iniciar executa o código do projeto."""
 import sys
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
@@ -102,6 +102,24 @@ if __name__=='__main__':
 '''
 
 
+GTK_RUNNER=r'''"""Aplicativo GTK exportado. Iniciar executa o código do projeto."""
+from pathlib import Path
+from makebench.core.storage import load_project
+from makebench.core.source import SourceBuffer
+from makebench.gtk_runtime.application import GtkRuntime
+
+
+def main():
+    """Inicia controles GTK reais, sem editor nem dependência de Qt."""
+    root=Path(__file__).resolve().parent;path=root/'project.makebench.json'
+    return GtkRuntime(load_project(path),SourceBuffer.load(path).text,lambda name:(root/name).read_bytes(),root,root/'project.actions.py',lambda message:print(message.get('text',message.get('message','')),end='' if message.get('type')=='log' else '\n') if message.get('type') in {'log','error'} else None).run()
+
+
+if __name__=='__main__':raise SystemExit(main())
+'''
+RUNNER=QT_RUNNER
+
+
 def export_source(project,source,read_asset,destination,progress=None,cancelled=None):
     """Constrói ZIP em staging, inclui runtime mínimo e só move após sucesso.
 
@@ -129,13 +147,16 @@ def export_source(project,source,read_asset,destination,progress=None,cancelled=
         step(40,'Incluir runtime do aplicativo')
         target=stage/'makebench';target.mkdir()
         shutil.copy2(package_root/'__init__.py',target/'__init__.py')
-        for module in ('core','runtime','ui'):
+        backend=project.application.get('backend','qt')
+        for module in (('core','gtk_runtime') if backend=='gtk' else ('core','runtime','ui')):
             (target/module).mkdir()
             for path in sorted((package_root/module).glob('*.py')):shutil.copy2(path,target/module/path.name)
-        (stage/'run.py').write_text(RUNNER,encoding='utf-8')
-        dependencies=['PySide6==6.11.2',*project.application.get('packages',[])]
+        if backend=='gtk':
+            (target/'runtime').mkdir();shutil.copy2(package_root/'runtime'/'__init__.py',target/'runtime'/'__init__.py');shutil.copy2(package_root/'runtime'/'worker.py',target/'runtime'/'worker.py')
+        (stage/'run.py').write_text(GTK_RUNNER if backend=='gtk' else QT_RUNNER,encoding='utf-8')
+        dependencies=[*(['PyGObject>=3.50'] if backend=='gtk' else ['PySide6==6.11.2']),*project.application.get('packages',[])]
         (stage/'requirements.txt').write_text('\n'.join(dependencies)+'\n',encoding='utf-8')
-        (stage/'LEIA-ME.txt').write_text('Aplicativo exportado pelo Makebench.\nRequer Linux, Python 3.13+ e as dependências de requirements.txt.\nCrie um ambiente Python, instale requirements.txt e execute python3 run.py.\nIniciar executa as funções e scripts do projeto com suas permissões.\nO runtime acompanha o aplicativo; a supervisão do editor não aparece.\nProgramas externos e Polkit devem estar disponíveis no sistema de destino.\nDefina a licença do seu aplicativo antes de distribuí-lo publicamente.\n',encoding='utf-8')
+        (stage/'LEIA-ME.txt').write_text('Aplicativo exportado pelo Makebench.\nRequer Linux, Python 3.13+ e as dependências de requirements.txt. GTK exige também GTK4 e PyGObject do sistema; libadwaita é opcional.\nCrie um ambiente Python, instale requirements.txt e execute python3 run.py.\nIniciar executa as funções e scripts do projeto com suas permissões.\nO runtime acompanha o aplicativo; a supervisão do editor não aparece.\nProgramas externos e Polkit devem estar disponíveis no sistema de destino.\nDefina a licença do seu aplicativo antes de distribuí-lo publicamente.\n',encoding='utf-8')
         step(75,'Verificar fontes sem executá-las')
         for path in stage.rglob('*.py'):compile(path.read_text(encoding='utf-8'),str(path),'exec')
         zip_path=Path(directory)/'result.zip'

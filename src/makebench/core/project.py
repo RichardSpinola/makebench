@@ -35,6 +35,8 @@ class ComponentKind(StrEnum):
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     OUTPUT = "output"
+    SEPARATOR = "separator"
+    SPACER = "spacer"
 
 
 class LayoutKind(StrEnum):
@@ -50,6 +52,8 @@ CONTAINER_KINDS = {
     ComponentKind.WINDOW, ComponentKind.CONTAINER, ComponentKind.PAGES, ComponentKind.PAGE,
 }
 KIND_LABELS = {
+    ComponentKind.SEPARATOR: "Separador",
+    ComponentKind.SPACER: "Espaçador",
     ComponentKind.WINDOW: "Janela",
     ComponentKind.CONTAINER: "Contêiner",
     ComponentKind.PAGES: "Páginas com abas",
@@ -212,6 +216,8 @@ def create_component(kind: ComponentKind) -> Component:
     kind = ComponentKind(kind)
     defaults = {
         ComponentKind.WINDOW: {"title": "Meu aplicativo"},
+        ComponentKind.SEPARATOR: {},
+        ComponentKind.SPACER: {"size_mode":{"width":"fill","height":"fill"}},
         ComponentKind.CONTAINER: {},
         ComponentKind.PAGES: {},
         ComponentKind.PAGE: {"title": "Nova página"},
@@ -306,9 +312,9 @@ class Project:
                 return any(new_logic(item) for item in value.values())
             if isinstance(value,list):return any(new_logic(item) for item in value)
             return False
-        fields = {'spacing', 'padding', 'align', 'distribute', 'size_mode', 'free_geometry'}
+        fields = {'spacing', 'padding', 'align', 'distribute', 'size_mode', 'free_geometry', 'icon'}
         return bool(self.format_version == 5 or self.application or self.windows or self.states or self.variables or self.map_layout
-            or any(fields & n.properties.keys() for n in self.walk())
+            or any(n.kind in {ComponentKind.SEPARATOR,ComponentKind.SPACER} or fields & n.properties.keys() for n in self.walk())
             or any(f.get('states') for f in self.editable_flows)
             or new_logic(self.editable_flows))
 
@@ -488,6 +494,8 @@ class Project:
                 for override in state.get('overrides', {}).values():
                     if override.get('source'):
                         paths.add(override['source'])
+        for root in self.roots:
+            if root.properties.get('icon'):paths.add(root.properties['icon'])
         icon=self.application.get('icon')
         if icon:paths.add(icon)
         return paths
