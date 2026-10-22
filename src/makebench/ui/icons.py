@@ -5,6 +5,10 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication
 
 PATHS={
+    'map':'<rect x="2" y="3" width="7" height="6" rx="1"/><rect x="15" y="15" width="7" height="6" rx="1"/><path d="M6 9v9h9"/>',
+    'logic':'<path d="M4 4h12v5h4v6h-4v5H4zM8 8h4M8 16h4"/>',
+    'code':'<path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18"/>',
+    'export':'<path d="M12 16V2M7 7l5-5 5 5M4 13v8h16v-8"/>',
     'new':'<path d="M12 4v16M4 12h16"/>',
     'add':'<path d="M12 4v16M4 12h16"/>',
     'remove':'<path d="M4 12h16"/>',
@@ -33,7 +37,8 @@ PATHS={
 
 def vector_icon(name):
     """Renderiza SVG em tamanhos nítidos para telas comuns e HiDPI."""
-    color=QApplication.palette().color(QPalette.ColorRole.Text).name()
+    theme=getattr(QApplication.instance(),'makebench_theme',None)
+    color=theme.tokens['text'] if theme else QApplication.palette().color(QPalette.ColorRole.Text).name()
     content=PATHS.get(name,PATHS['page'])
     data=f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">{content}</svg>'
     renderer=QSvgRenderer(QByteArray(data.encode('utf-8')));result=QIcon()

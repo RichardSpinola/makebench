@@ -88,7 +88,7 @@ class RedesignModelTests(unittest.TestCase):
     def export_fixture(self):
         p=Project.empty('Aplicativo exportado')
         p.application={'name':p.name,'id':'br.exemplo.teste','version':'0.1.0','icon':'assets/icon.svg'}
-        assets={'assets/icon.svg':b'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#a34916"/></svg>'}
+        assets={'assets/icon.svg':b'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#3584e4"/></svg>'}
         return p,assets
 
     def test_scoped_logic_alone_requires_v5(self):

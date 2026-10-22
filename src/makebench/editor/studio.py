@@ -88,7 +88,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.workspace_splitter=QSplitter(Qt.Orientation.Vertical);self.workspace_splitter.addWidget(self.tabs);self.workspace_splitter.addWidget(self.drawer)
         self.workspace_splitter.setStretchFactor(0,1);self.workspace_splitter.setSizes([650,180])
         editor=QWidget();el=QVBoxLayout(editor);el.setContentsMargins(0,0,0,0);el.setSpacing(0)
-        self.context_bar=QToolBar('Contexte de création');self.context_bar.setObjectName('context_bar')
+        self.context_bar=QToolBar('Contexto de criação');self.context_bar.setObjectName('context_bar')
         self.context_label=QLabel();self.context_label.setTextFormat(Qt.TextFormat.PlainText)
         self.context_bar.addWidget(self.context_label)
         el.addWidget(self.context_bar);el.addWidget(self.workspace_splitter,1)
@@ -103,7 +103,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.project_heading=QLabel();self.project_heading.setTextFormat(Qt.TextFormat.PlainText);self.project_heading.setMinimumWidth(120);bar.addWidget(self.project_heading)
         self.mode_group=QButtonGroup(self);self.mode_group.setExclusive(True);self.mode_buttons={}
         for number,name in enumerate(['Mapa','Design','Lógica','Código','Publicar'],1):
-            button=QToolButton();button.setText(name);button.setCheckable(True);button.setAccessibleName('Modo '+name)
+            button=QToolButton();button.setIcon(icon({'Mapa':'map','Design':'select','Lógica':'logic','Código':'code','Publicar':'export'}[name]));button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);button.setText(name);button.setCheckable(True);button.setAccessibleName('Modo '+name)
             button.clicked.connect(lambda _,m=name:self.set_mode(m));self.mode_group.addButton(button);bar.addWidget(button)
             self.mode_buttons[name]=button
             action=QAction('Modo '+name,self);action.setShortcut(QKeySequence(f'Ctrl+{number}'))
@@ -112,6 +112,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Preferred);bar.addWidget(spacer)
         self.test_status=QLabel('Parado');self.test_status.setMaximumWidth(190);bar.addWidget(self.test_status)
         bar.addAction(self.run_action)
+        bar.widgetForAction(self.run_action).setProperty('primary',True)
         self.stop_action=QAction(icon('stop'),'Parar teste',self);self.stop_action.setShortcut(QKeySequence('Shift+F5'))
         self.stop_action.triggered.connect(self.stop_test);bar.addAction(self.stop_action)
         self.workspace_toolbar=bar

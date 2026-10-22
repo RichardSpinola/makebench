@@ -37,7 +37,7 @@ class Inspector(QWidget):
         wrapper=QWidget();layout=QVBoxLayout(wrapper);layout.setContentsMargins(0,0,0,0);layout.setSpacing(6)
         header=QToolButton();header.setText(title);header.setCheckable(True)
         header.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        body=QWidget();form=QFormLayout(body);form.setContentsMargins(0,0,0,8);form.setSpacing(8)
+        body=QWidget();body.setProperty('card',True);form=QFormLayout(body);form.setContentsMargins(12,12,12,12);form.setSpacing(12)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         key=(self._kind,title);opened=self._expanded.get(key,expanded)
         header.setChecked(opened);header.setArrowType(Qt.ArrowType.DownArrow if opened else Qt.ArrowType.RightArrow);body.setVisible(opened)

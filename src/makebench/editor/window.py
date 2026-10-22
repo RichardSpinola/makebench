@@ -460,6 +460,11 @@ class MainWindow(StudioMixin, QMainWindow):
 
     def _finish_field_edit(self) -> bool:
         """Confirma texto ainda em edição antes de salvar ou substituir o projeto."""
+        # Também confirma edição por acessibilidade/testes sem janela ativa.
+        from PySide6.QtWidgets import QLineEdit
+        for field in self.inspector.findChildren(QLineEdit):
+            if field.isModified():
+                field.setModified(False);field.editingFinished.emit()
         focus = QApplication.focusWidget()
         if focus is not None:
             focus.clearFocus()
