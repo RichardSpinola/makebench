@@ -28,7 +28,7 @@ class DevelopmentMixin:
         self.function_outline=QListWidget();self.function_outline.setAccessibleName('Funções do arquivo e usos nos blocos')
         self.function_outline.itemActivated.connect(self.open_function)
         self.function_outline.itemClicked.connect(self.open_function)
-        pane=QWidget();pl=QVBoxLayout(pane);pl.addWidget(QLabel('Funções do projeto'));pl.addWidget(self.function_outline)
+        pane=QWidget();pl=QVBoxLayout(pane);pl.setContentsMargins(4,4,4,4);pl.addWidget(QLabel('Funções do projeto'));self.function_search=QLineEdit();self.function_search.setPlaceholderText('Filtrar funções…');self.function_search.setClearButtonEnabled(True);self.function_search.textChanged.connect(self.filter_outline);pl.addWidget(self.function_search);pl.addWidget(self.function_outline)
         add=QPushButton('+ Nova função');add.clicked.connect(self.new_function);pl.addWidget(add)
         splitter=QSplitter();splitter.setHandleWidth(4);splitter.addWidget(self.code_files);splitter.addWidget(pane);splitter.setSizes([900,260])
         index=layout.indexOf(old);layout.removeWidget(old);old.deleteLater();layout.insertWidget(index,splitter,1)
@@ -37,10 +37,12 @@ class DevelopmentMixin:
             stored=self.settings.value('workspace/'+key+'_panels')
             if stored:panel.restoreState(stored)
             panel.splitterMoved.connect(lambda *_,panel=panel,key=key:self.settings.setValue('workspace/'+key+'_panels',panel.saveState()))
+        self.code_position=QLabel();self.code_position.setAlignment(Qt.AlignmentFlag.AlignRight);layout.addWidget(self.code_position)
+        self.source_editor.cursorPositionChanged.connect(self.update_code_position);self.generated_editor.cursorPositionChanged.connect(self.update_code_position);self.code_files.currentChanged.connect(self.update_code_position);self.update_code_position()
         self.code_diagnostics.hide()
         for n in range(layout.count()):
             widget=layout.itemAt(n).widget()
-            if isinstance(widget,QLabel) and widget is not self.code_diagnostics:widget.hide()
+            if isinstance(widget,QLabel) and widget not in (self.code_diagnostics,self.code_position):widget.hide()
         self.source_editor.textChanged.connect(self.sync_outline)
         data_page=QWidget();dl=QVBoxLayout(data_page);dl.setContentsMargins(4,4,4,4);dl.setSpacing(4);dl.addWidget(self.data_list)
         actions=QHBoxLayout()
@@ -55,7 +57,7 @@ class DevelopmentMixin:
         commands=QToolBar('Blocos');commands.setIconSize(QSize(16,16));commands.setMovable(False)
         commands.addAction(icon('search'),'Buscar bloco…',self.search_block)
         self.logic.layout().removeWidget(self.logic.edit_text);commands.addWidget(self.logic.edit_text)
-        self.logic.layout().insertWidget(2,commands)
+        self.logic.layout().insertWidget(1,commands)
         # Realce Bash no editor da gaveta; sua aplicação continua explícita.
         self.script_editor.highlighter.language='bash';self.script_editor.highlighter.rehighlight()
 
@@ -92,6 +94,19 @@ class DevelopmentMixin:
                 item=QListWidgetItem(node.name+'('+', '.join(a.arg for a in node.args.args)+f') · {count} uso(s)')
                 item.setData(Qt.ItemDataRole.UserRole,node.lineno);item.setToolTip(ast.get_docstring(node) or 'Sem descrição.')
                 self.function_outline.addItem(item)
+        self.filter_outline()
+
+    def update_code_position(self,_index=None):
+        """Informa linha e coluna no arquivo ativo sem roubar foco nem alterar o texto."""
+        editor=self.generated_editor if self.code_files.currentIndex()==0 else self.source_editor;cursor=editor.textCursor()
+        self.code_position.setText(f'Linha {cursor.blockNumber()+1} · Coluna {cursor.positionInBlock()+1}')
+
+    def filter_outline(self,_text=None):
+        """Filtra funções localmente, mantendo o arquivo e a seleção de texto intactos."""
+        if not hasattr(self,'function_search'):return
+        text=self.function_search.text().casefold()
+        for index in range(self.function_outline.count()):
+            item=self.function_outline.item(index);item.setHidden(text not in item.text().casefold())
 
     def open_function(self,item):
         """Localiza a definição sem executar o arquivo."""

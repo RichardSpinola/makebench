@@ -99,7 +99,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.workspace_splitter.setStretchFactor(0,1);self.workspace_splitter.setSizes([650,180])
         editor=QWidget();el=QVBoxLayout(editor);el.setContentsMargins(0,0,0,0);el.setSpacing(0)
         self.context_bar=QToolBar('Contexto de criação');self.context_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly);self.context_bar.setIconSize(QSize(16,16));self.context_bar.setMovable(False);self.context_bar.setObjectName('context_bar')
-        self.context_label=QLabel();self.context_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.context_label=QLabel();self.context_label.setTextFormat(Qt.TextFormat.PlainText);self.context_label.setFixedWidth(190)
         self.overview_action=self.context_bar.addAction(icon('map'),'Mapa',lambda:self.set_mode('Mapa'))
         self.overview_action.setProperty('makebenchIcon','map')
         self.context_bar.addWidget(self.context_label)
@@ -117,7 +117,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.project_heading=QLabel(self);self.project_heading.setTextFormat(Qt.TextFormat.PlainText);self.project_heading.hide()
         self.mode_group=QButtonGroup(self);self.mode_group.setExclusive(True);self.mode_buttons={}
         self.mode_switcher=QWidget();mode_row=QHBoxLayout(self.mode_switcher);mode_row.setContentsMargins(6,0,0,0);mode_row.setSpacing(0)
-        for number,name in enumerate(['Mapa','Design','Lógica','Código','Publicar'],1):
+        for number,name in enumerate(['Mapa','Design','Lógica','Código'],1):
             button=QToolButton();button.setIcon(icon({'Mapa':'map','Design':'select','Lógica':'logic','Código':'code','Publicar':'export'}[name]));button.setIconSize(QSize(16,16));button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);button.setText(name);button.setToolTip(name+f' · Ctrl+{number}');button.setFixedSize(84,26);button.setAutoRaise(True);button.setProperty('mode',True);button.setCheckable(True);button.setAccessibleName('Modo '+name)
             button.clicked.connect(lambda _,m=name:self.set_mode(m));self.mode_group.addButton(button);mode_row.addWidget(button)
             self.mode_buttons[name]=button
@@ -159,17 +159,24 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.install_designer()
         self.install_development()
         self.install_execution()
-        from .publish import PublishPanel
-        self.publish_panel=PublishPanel(self);self.tabs.addTab(self.publish_panel,"Publicar")
+        from .publish import ExportDialog
+        self.publish_dialog=ExportDialog(self);self.publish_panel=self.publish_dialog.panel
+        self.export_action=QAction(icon('export'),'Exportar aplicativo…',self);self.export_action.setProperty('makebenchIcon','export');self.export_action.setShortcut(QKeySequence('Ctrl+Shift+E'));self.export_action.triggered.connect(self.export_application)
+        self.workspace_toolbar.insertAction(self.run_action,self.export_action)
         project_menu=next((a.menu() for a in self.menuBar().actions() if a.text().replace('&','')=='Projeto'),None) or self.menuBar().addMenu('Projeto')
-        project_menu.addAction('Configurações do aplicativo…',self.application_settings)
+        project_menu.addAction('Configurações do aplicativo…',self.application_settings);project_menu.addAction(self.export_action)
         from .settings import show_diagnostic,open_checklist,apply_preferences
         help_menu=next(a.menu() for a in self.menuBar().actions() if a.text().replace('&','')=='Ajuda')
         help_menu.addAction('Diagnóstico do ambiente…',lambda:show_diagnostic(self))
         help_menu.addAction('Checklist de validação',lambda:open_checklist(self))
         gear=QToolButton();gear.setIcon(icon('settings'));gear.setToolTip('Configurações do aplicativo');gear.clicked.connect(self.application_settings);sl.insertWidget(0,gear,0,Qt.AlignmentFlag.AlignRight)
         gear.setProperty('makebenchIcon','settings')
-        apply_preferences(self)
+        apply_preferences(self);register(self)
+
+    def export_application(self):
+        """Abre uma janela de exportação sem substituir nem desmontar a área de trabalho."""
+        if not self._finish_field_edit():return
+        self.publish_panel.sync();self.publish_dialog.show();self.publish_dialog.raise_();self.publish_dialog.activateWindow()
 
     def insert_kind(self, kind):
         """Insere uma ferramenta usando o mesmo histórico da paleta por arraste."""
@@ -177,9 +184,12 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
 
     def set_mode(self, mode):
         """Troca a tarefa preservando seleção e confirmação dos blocos."""
+        if mode=='Publicar':self.export_application();return
         if getattr(self,'_compact_home',False):
             self._compact_home=False;self.setMinimumSize(980,600);self.resize(1280,800)
-        indexes={'Design':0,'Lógica':1,'Código':2,'Mapa':3,'Publicar':4}
+        if self.project.metadata.get('empty_map') and mode in {'Design','Lógica','Código'}:
+            mode='Mapa';self.statusBar().showMessage('Crie a primeira interface no mapa para começar.',6000)
+        indexes={'Design':0,'Lógica':1,'Código':2,'Mapa':3}
         index=indexes[mode]
         if index>=self.tabs.count():return
         self.pages.setCurrentWidget(self.editor_page)
@@ -192,22 +202,27 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
 
     def sync_mode_button(self,index):
         """Acompanha atalhos e navegação automática para a origem dos erros."""
-        modes=['Design','Lógica','Código','Mapa','Publicar']
+        modes=['Design','Lógica','Código','Mapa']
         if 0<=index<len(modes):
             self._mode=modes[index];self.mode_buttons[self._mode].setChecked(True)
         if hasattr(self,'zoom_actions'):
             for action in self.zoom_actions:action.setVisible(True);action.setEnabled(self._mode in {'Design','Mapa'})
         if hasattr(self,'overview_action'):self.overview_action.setVisible(True)
-        for button in self.mode_buttons.values():button.setVisible(True)
+        for name,button in self.mode_buttons.items():
+            button.setVisible(True);button.setEnabled(not self.project.metadata.get('empty_map') or name in {'Mapa','Publicar'})
         self.sync_studio()
+        if hasattr(self,'zoom_reset_button'):self.update_zoom_label()
 
     def sync_studio(self):
         """Atualiza somente dados derivados; nunca executa código do projeto."""
         if not hasattr(self,'project_heading'):return
+        empty=bool(self.project.metadata.get('empty_map'))
+        for name,button in self.mode_buttons.items():button.setEnabled(not empty or name in {'Mapa','Publicar'})
         dirty=self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
         self.project_heading.setText(self.project.name+(' •' if dirty else ''))
         node=self.project.find(self.selected_id)
-        self.context_label.setText('' if self._mode in {'Mapa','Publicar'} or node is None or node.kind.value=='window' else node.display_name[:32])
+        context='' if self._mode in {'Mapa','Publicar'} or node is None or node.kind.value=='window' else node.display_name
+        self.context_label.setText(self.context_label.fontMetrics().elidedText(context,Qt.TextElideMode.ElideRight,185));self.context_label.setToolTip(context)
         data_signature=(id(self.project),self.project.id,self.history._index,self.source.text)
         if getattr(self,'_data_signature',None)!=data_signature:
             self._data_signature=data_signature;self.data_list.clear();self.list_resources()
@@ -217,7 +232,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.sync_navigation()
         self.sync_problems()
         self.sync_outline()
-        if hasattr(self,'publish_panel') and self.tabs.currentIndex()==4:self.publish_panel.sync()
+        if hasattr(self,'publish_dialog') and self.publish_dialog.isVisible():self.publish_panel.sync()
         if hasattr(self,'map_panel') and self.tabs.currentIndex()==3:self.map_panel.sync()
 
     def sync_problems(self):
@@ -375,6 +390,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
     def theme_changed(self,_tokens):
         """Atualiza ícones e mantém a seleção/campos intactos ao alternar aparência."""
         register(self)
+        QTimer.singleShot(0,self,self._sync_native_bars)
         from PySide6.QtWidgets import QAbstractButton
         for button in self.findChildren(QAbstractButton):
             symbol=button.property('makebenchIcon')

@@ -243,8 +243,21 @@ class ProjectMixin:
         choose.clicked.connect(choose_folder);form.addRow('Pasta',folder_row)
         name.textEdited.connect(lambda text:folder.setText(str(Path(folder.text()).parent/slug(text))))
         info=QLabel('Será criada uma pasta com o projeto, suas funções e imagens.');info.setWordWrap(True);form.addRow(info)
-        from PySide6.QtWidgets import QGroupBox
-        advanced=QGroupBox('Avançado');advanced.setCheckable(True);advanced.setChecked(False);af=QFormLayout(advanced);identifier=QLineEdit();identifier.setPlaceholderText('br.exemplo.meuapp');identifier.setEnabled(False);advanced.toggled.connect(identifier.setEnabled);af.addRow('Identificador',identifier);form.addRow(advanced)
+        identifier=QLineEdit('br.exemplo.meuaplicativo');identifier.setPlaceholderText('br.exemplo.meuapp');identifier.setObjectName('new_application_id');form.addRow('Identificador',identifier)
+        version=QLineEdit('0.1.0');version.setObjectName('new_application_version');form.addRow('Versão',version)
+        def suggest_identifier(text):
+            """Sugere um identificador editável, sem substituir uma escolha da pessoa."""
+            if not identifier.isModified():identifier.setText('br.exemplo.app_'+slug(text).replace('-','_'))
+        name.textEdited.connect(suggest_identifier)
+        icon_path=QLineEdit();icon_path.setReadOnly(True);icon_path.setPlaceholderText('Escolher depois');icon_path.setObjectName('new_application_icon')
+        icon_row=QWidget();icons=QHBoxLayout(icon_row);icons.setContentsMargins(0,0,0,0);icons.addWidget(icon_path)
+        choose_icon=QPushButton('Escolher…');icons.addWidget(choose_icon)
+        def select_icon():
+            """O ícone é copiado como recurso somente ao confirmar a criação."""
+            filename,_=QFileDialog.getOpenFileName(dialog,'Ícone do aplicativo','','Ícones (*.png *.svg)')
+            if filename:icon_path.setText(filename)
+        choose_icon.clicked.connect(select_icon);form.addRow('Ícone',icon_row)
+        name.setObjectName('new_application_name');folder.setObjectName('new_project_folder');backend.setObjectName('new_application_backend');model.setObjectName('new_project_model')
         error=QLabel();error.setWordWrap(True);error.setMinimumHeight(error.fontMetrics().height()*2);form.addRow(error)
         buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
         buttons.button(QDialogButtonBox.StandardButton.Save).setText('Criar projeto')
@@ -253,13 +266,16 @@ class ProjectMixin:
             """Cria o item solicitado com os valores validados do diálogo."""
             destination=Path(folder.text()).expanduser()
             if not name.text().strip():error.setText('Informe um nome para o projeto.');return
+            if not re.fullmatch(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}',identifier.text().strip()):error.setText('Use um identificador como br.exemplo.meuapp.');return
+            if not re.fullmatch(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?',version.text().strip()):error.setText('Informe a versão, por exemplo 0.1.0.');return
             if destination.exists() and any(destination.iterdir()):error.setText('Escolha uma pasta nova ou vazia.');return
             if not self._confirm_discard():return
             try:
                 project,source,assets=self.project_template(model.currentData(),name.text().strip())
-                project.application['backend']=backend.currentData()
+                project.application.update(backend=backend.currentData(),name=name.text().strip(),version=version.text().strip())
                 used=self.settings.value('projects/templates/recent',[],type=list);self.settings.setValue('projects/templates/recent',[model.currentData(),*[key for key in used if key!=model.currentData()]][:5])
                 if identifier.text().strip():project.application['id']=identifier.text().strip()
+                if icon_path.text():project.application['icon']=assets.import_image(Path(icon_path.text()))
                 destination.mkdir(parents=True,exist_ok=True)
                 self._replace_project(project,None);self.source.text=source;self.source_editor.setPlainText(source);self.assets=assets
                 if not self.save_to(destination/'project.makebench.json'):return

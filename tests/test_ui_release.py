@@ -123,10 +123,10 @@ class NativeQtInterfaceTests(unittest.TestCase):
         """Qt não recebe uma bancada parcialmente vazia durante a reconstrução."""
         w=self.window;native=w.winId();states=[];original=w.canvas.set_project
         def rebuild(project):
-            original(project);self.app.processEvents();states.append(w.updatesEnabled())
+            original(project);self.app.processEvents();states.append((w.updatesEnabled(),w.canvas.updatesEnabled()))
         with patch.object(w.canvas,'set_project',side_effect=rebuild):
             w.palette.setCurrentRow(w.palette.findData('label'));w.add_component()
-        self.assertEqual(states,[False]);self.assertTrue(w.updatesEnabled());self.assertEqual(w.winId(),native)
+        self.assertEqual(states,[(False,False)]);self.assertTrue(w.updatesEnabled());self.assertTrue(w.canvas.updatesEnabled());self.assertEqual(w.winId(),native)
         self.assertEqual(w.project.find(w.selected_id).kind,ComponentKind.LABEL)
 
     def test_map_empty_hint_survives_click_zoom_and_node_click_is_not_edit(self):
@@ -143,4 +143,81 @@ class NativeQtInterfaceTests(unittest.TestCase):
         point=panel.view.mapFromScene(node.mapToScene(node.rect().center()))
         QTest.mouseClick(panel.view.viewport(),Qt.MouseButton.LeftButton,pos=point);QTest.qWait(10)
         self.assertEqual(w.history._index,history);self.assertIs(next(iter(panel.nodes.values())),node)
+
+    def test_application_settings_and_nonvisual_preferences_keep_preview_widgets(self):
+        """Metadados e preferências sem efeito visual não refazem o canvas nem o tema."""
+        from PySide6.QtTest import QSignalSpy
+        from makebench.editor.settings import ApplicationSettings,EditorPreferences,preference
+        from makebench.editor.theme import manager
+        w=self.window;frame=w.canvas._frames[w.project.root.id];settings=ApplicationSettings(w)
+        with patch.object(w.canvas,'set_project',wraps=w.canvas.set_project) as rebuild:
+            settings.change('description','Configuração sem piscada');settings.close();self.app.processEvents();rebuild.assert_not_called()
+        self.assertIs(w.canvas._frames[w.project.root.id],frame)
+        prefs=EditorPreferences(w);signals=QSignalSpy(manager().changed);original=preference('editor/recovery')
+        prefs.changed('editor/recovery',15 if original!=15 else 30);prefs.changed('editor/recovery',original)
+        self.assertEqual(signals.count(),0);prefs.close()
+
+    def test_visibility_and_enabled_properties_survive_rebuild(self):
+        """Os controles reais refletem os valores agora e depois de reconstruir a prévia."""
+        from PySide6.QtWidgets import QCheckBox
+        w=self.window;p=Project.empty();button=p.add(p.root.id,ComponentKind.BUTTON);w._replace_project(p,None);w._select(button.id)
+        visible=next(field for field in w.inspector.findChildren(QCheckBox) if field.accessibleName()=='Visível')
+        visible.click();self.assertTrue(w.canvas._frames[button.id].isHidden())
+        w._refresh();self.assertTrue(w.canvas._frames[button.id].isHidden())
+        w._change_property(button.id,'visible',True);w._change_property(button.id,'enabled',False)
+        widget=w.canvas._frames[button.id].layout().itemAt(0).widget();self.assertFalse(widget.isEnabled())
+        w._refresh();widget=w.canvas._frames[button.id].layout().itemAt(0).widget();self.assertFalse(widget.isEnabled())
+
+    def test_new_project_starts_empty_and_opens_first_interface_by_double_click(self):
+        """Criação configura identidade, mapa vazio e entrada explícita no Designer."""
+        from PySide6.QtCore import QTimer,Qt
+        from PySide6.QtWidgets import QApplication,QLineEdit,QComboBox,QDialogButtonBox
+        from PySide6.QtTest import QTest
+        from makebench.core.exporter import verify
+        w=self.window
+        def create_project():
+            dialog=QApplication.activeModalWidget()
+            for key,value in [('new_application_name','Aplicativo QA'),('new_project_folder',str(self.root/'novo')),('new_application_id','br.exemplo.qa'),('new_application_version','0.2.0')]:dialog.findChild(QLineEdit,key).setText(value)
+            backend=dialog.findChild(QComboBox,'new_application_backend');backend.setCurrentIndex(backend.findData('qt'))
+            dialog.findChild(QDialogButtonBox).button(QDialogButtonBox.StandardButton.Save).click()
+        QTimer.singleShot(30,create_project);w.new_project_dialog('blank');self.app.processEvents()
+        self.assertTrue(w.project.metadata['empty_map']);self.assertEqual(w.project.application['id'],'br.exemplo.qa');self.assertEqual(w.project.application['version'],'0.2.0');self.assertEqual(w.map_panel.nodes,{})
+        self.assertFalse(w.mode_buttons['Design'].isEnabled());w.set_mode('Código');self.assertTrue(w.map_panel.isVisible())
+        self.assertTrue(any(i['field']=='windows' and i['level']=='error' for i in verify(w.project,'',lambda _:b'')))
+        def create_interface():
+            dialog=QApplication.activeModalWidget();dialog.findChild(QLineEdit,'new_interface_name').setText('Tela principal');dialog.accept()
+        QTimer.singleShot(30,create_interface);w.new_window_dialog();self.app.processEvents()
+        self.assertFalse(w.project.metadata.get('empty_map'));self.assertEqual(len(w.project.roots),1);self.assertTrue(w.mode_buttons['Design'].isEnabled())
+        node=next(iter(w.map_panel.nodes.values()));point=w.map_panel.view.mapFromScene(node.sceneBoundingRect().center())
+        QTest.mouseDClick(w.map_panel.view.viewport(),Qt.MouseButton.LeftButton,pos=point);QTest.qWait(20)
+        self.assertEqual(w.active_window,w.project.root.id);self.assertTrue(w.zoom_view.isVisible())
+
+    def test_code_find_is_local_wraps_and_keeps_source_unchanged(self):
+        """Busca não modal funciona em código próprio e gerado, com ida/volta e Escape."""
+        from PySide6.QtCore import Qt
+        from PySide6.QtGui import QTextCursor
+        from PySide6.QtTest import QTest
+        from makebench.editor.code import CodeEditor
+        editor=CodeEditor();editor.setPlainText('alpha = 1\nbeta = alpha + 1\n');editor.resize(600,300);editor.show();editor.moveCursor(QTextCursor.MoveOperation.Start)
+        original=editor.toPlainText();editor.open_find();editor.find_text.setText('alpha');editor.find_next();first=editor.textCursor().selectionStart();editor.find_next();second=editor.textCursor().selectionStart()
+        self.assertGreater(second,first);editor.find_next();self.assertEqual(editor.textCursor().selectionStart(),first)
+        editor.find_next(True);self.assertEqual(editor.textCursor().selectionStart(),second)
+        editor.find_text.setText('ausente');editor.find_next();self.assertEqual(editor.find_status.text(),'Nenhum resultado')
+        QTest.keyClick(editor.find_text,Qt.Key.Key_Escape);self.assertTrue(editor.find_bar.isHidden());self.assertEqual(editor.toPlainText(),original);editor.close()
+    def test_native_header_keeps_system_text_legible(self):
+        """Paleta de cabeçalho errada não deixa o menu invisível no tema do desktop."""
+        from PySide6.QtGui import QPalette
+        from PySide6.QtWidgets import QMenuBar
+        from makebench.ui.theme import manager,contrast
+        manager();bar=QMenuBar();palette=QPalette(self.app.palette());palette.setColor(QPalette.ColorRole.Window,self.app.palette().window().color());palette.setColor(QPalette.ColorRole.WindowText,self.app.palette().window().color());bar.setPalette(palette);manager().repair_bar_palette(bar);self.app.processEvents()
+        self.assertGreaterEqual(contrast(bar.palette().windowText().color().name(),bar.palette().window().color().name()),4.5);bar.deleteLater()
+
+    def test_export_opens_separate_fixed_dialog_and_preserves_editor(self):
+        """Exportar abre uma única janela compacta e mantém seleção, modo e canvas."""
+        w=self.window;w.set_mode('Design');selected=w.selected_id;native=w.winId();canvas=w.canvas;mode=w.tabs.currentIndex()
+        self.assertEqual(w.tabs.count(),4);self.assertNotIn('Publicar',w.mode_buttons)
+        w.export_action.trigger();self.app.processEvents();dialog=w.publish_dialog
+        self.assertTrue(dialog.isVisible());self.assertIs(w.publish_panel.parentWidget(),dialog);self.assertEqual(w.tabs.currentIndex(),mode);self.assertIs(w.canvas,canvas);self.assertEqual(w.selected_id,selected);self.assertEqual(w.winId(),native)
+        self.assertEqual(dialog.minimumSize(),dialog.maximumSize());dialog.close();self.app.processEvents();self.assertFalse(dialog.isVisible());self.assertTrue(w.isVisible())
+        w.export_action.trigger();self.app.processEvents();self.assertIs(w.publish_dialog,dialog);dialog.hide()
 

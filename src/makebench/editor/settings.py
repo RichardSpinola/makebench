@@ -182,9 +182,13 @@ class ApplicationSettings(SettingsShell):
         page=self.add_page('Permissões');group=self.group(page,'Acesso ao sistema')
         text=QLabel('Fonte Python, DEB, RPM e AppImage executam com as permissões do usuário. O teste não é uma sandbox.\n\n'+('Há ações administrativas declaradas: Polkit/pkexec e agente do sistema são necessários. O Makebench não pede senhas.' if admin else 'Nenhuma ação administrativa declarada nos blocos.')+'\n\nFlatpak isolado bloqueia programas do host e administração. Dependências adicionais devem existir dentro do pacote.');text.setWordWrap(True);group.addWidget(text)
         page=self.add_page('Janelas');group=self.group(page,'Janelas do aplicativo');initial=QComboBox()
-        for root in window.project.roots:initial.addItem(root.properties.get('title','Interface'),root.id)
+        roots=[] if window.project.metadata.get('empty_map') else window.project.roots
+        if not roots:
+            notice=QLabel('Nenhuma interface. Crie a primeira pelo mapa.');group.addWidget(notice)
+        initial.setEnabled(bool(roots))
+        for root in roots:initial.addItem(root.properties.get('title','Interface'),root.id)
         initial.setCurrentIndex(initial.findData(window.project.entry_window or window.project.root.id));initial.currentIndexChanged.connect(lambda _:window._edit(lambda:setattr(window.project,'entry_window',initial.currentData())));self.row(group,'Janela inicial',initial)
-        for root in window.project.roots:
+        for root in roots:
             field=QLineEdit(root.properties.get('title','Interface'));field.editingFinished.connect(lambda identifier=root.id,field=field:window._edit(lambda:window.project.find(identifier).properties.update(title=field.text())));self.row(group,'Título da interface',field)
             for key,label,default in [('width','Largura',640),('height','Altura',480)]:
                 spin=QSpinBox();spin.setRange(100,20000);spin.setValue(root.properties.get(key,default));spin.editingFinished.connect(lambda identifier=root.id,key=key,spin=spin:window._edit(lambda:window.project.find(identifier).properties.update({key:spin.value()})));self.row(group,label,spin)
@@ -194,12 +198,11 @@ class ApplicationSettings(SettingsShell):
             edit=QPushButton('Editar…');edit.clicked.connect(lambda _,index=index:window.variable_dialog(index=index));self.row(group,variable['name'],edit,repr(variable.get('initial')))
         page=self.add_page('Destinos');group=self.group(page,'Exportadores','O resultado só é marcado como construído depois de passar pela ferramenta e pela verificação.')
         for name,tool in [('Fonte Python',None),('DEB','dpkg-deb'),('AppImage','appimagetool'),('Flatpak','flatpak-builder'),('RPM','rpmbuild')]:
-            status=QLabel('Construção pela tela Publicar' if not tool or build_tools().get(tool) else 'Gerar receita · falta '+tool);self.row(group,name,status)
-        self.finished.connect(lambda _:window._refresh())
+            status=QLabel('Construção pela janela Exportar' if not tool or build_tools().get(tool) else 'Gerar receita · falta '+tool);self.row(group,name,status)
 
     def change(self,key,value):
         """Grava apenas o campo alterado, sem regenerar nem executar fontes próprias."""
-        if self.window.project.application.get(key)!=value:self.window._edit(lambda:self.window.project.application.update({key:value}))
+        if self.window.project.application.get(key)!=value:self.window.change_application(key,value)
 
     def choose_icon(self):
         """Importa recurso no cache portátil do projeto e mostra sua aparência real."""

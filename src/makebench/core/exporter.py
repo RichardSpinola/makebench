@@ -43,6 +43,7 @@ def verify(project,source,read_asset):
     def add(level,message,field):
         """Registra um diagnóstico com severidade e campo de origem."""
         issues.append({'level':level,'message':message,'field':field})
+    if project.metadata.get('empty_map'):add('error','Crie a primeira interface no mapa antes de exportar.','windows')
     if not str(app.get('name','')).strip():add('error','Informe o nome público do aplicativo.','name')
     if not re.fullmatch(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}',app.get('id','')):add('error','Use um identificador como br.exemplo.meuapp.','id')
     if not re.fullmatch(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?',app.get('version','')):add('error','Informe a versão, por exemplo 0.1.0.','version')

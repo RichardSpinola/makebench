@@ -52,6 +52,9 @@ def main() -> int:
             source = SourceBuffer.load(path)
             window = RuntimeWindow(project, source.text, AssetStore(path.parent).read, path.parent, source.path)
         else:
+            if project is None:
+                from makebench.core.project import Project
+                project=Project.empty();project.metadata['empty_map']=True
             window = MainWindow(project, args.project)
             # WebEngine entra na árvore antes da primeira apresentação da janela.
             # Evita recriação nativa ao abrir Lógica pela primeira vez.

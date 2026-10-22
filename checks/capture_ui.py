@@ -40,6 +40,7 @@ def main():
                 window.activate_window(window.project.root.id,'@default')
                 QTest.qWait(100)
                 for mode in ['Início','Design','Lógica','Código','Mapa','Publicar']:
+                    window.publish_dialog.hide()
                     if mode=='Início':window.show_home()
                     else:
                         if mode=='Lógica':
@@ -48,10 +49,10 @@ def main():
                         window.set_mode(mode)
                     app.processEvents()
                     if mode=='Mapa':window.map_panel.fit()
-                    QTest.qWait(100)
+                    QTest.qWait(400 if mode=='Lógica' else 100)
                     filename=args.output/f'{theme}-{size}-{ {"Início":"inicio","Design":"design","Lógica":"logica","Código":"codigo","Mapa":"mapa","Publicar":"publicar"}[mode] }.png'
-                    if not window.grab().save(str(filename)):raise RuntimeError('Falha ao gravar '+str(filename))
-                window.set_mode('Design');window.left_tabs.setCurrentIndex(1);QTest.qWait(80);window.grab().save(str(args.output/f'{theme}-{size}-inserir.png'));window.left_tabs.setCurrentIndex(0)
+                    if not (window.publish_dialog if mode=='Publicar' else window).grab().save(str(filename)):raise RuntimeError('Falha ao gravar '+str(filename))
+                window.publish_dialog.hide();window.set_mode('Design');window.left_tabs.setCurrentIndex(1);QTest.qWait(80);window.grab().save(str(args.output/f'{theme}-{size}-inserir.png'));window.left_tabs.setCurrentIndex(0)
                 window.show_test_error({'message':'Exemplo de falha: tarefa terminou com código 3.','traceback':'Diagnóstico de verificação visual.'});QTest.qWait(80);window.grab().save(str(args.output/f'{theme}-{size}-gaveta-erro.png'));window.drawer.hide();window.test_status.setText('Parado')
                 window.preferences();QTest.qWait(80);window.preferences_dialog.grab().save(str(args.output/f'{theme}-{size}-preferencias.png'));window.preferences_dialog.close()
                 window.application_settings();QTest.qWait(80);window.app_settings_dialog.grab().save(str(args.output/f'{theme}-{size}-configuracoes.png'));window.app_settings_dialog.close()

@@ -105,7 +105,7 @@ class LogicPanel(QWidget):
         self.name.setPlaceholderText('Nome do fluxo')
         self.name.editingFinished.connect(self._rename)
         self.name.hide()
-        self.state_filter=QComboBox();self.state_filter.setAccessibleName('Filtro de estado do fluxo')
+        self.state_filter=QComboBox();self.state_filter.setMaximumWidth(220);self.state_filter.setAccessibleName('Filtro de estado do fluxo')
         self.state_filter.currentIndexChanged.connect(self._change_filter)
         row.addWidget(self.state_filter)
         from .theme import icon
@@ -114,14 +114,8 @@ class LogicPanel(QWidget):
         row.addWidget(self.remove)
         duplicate=QToolButton();duplicate.setIcon(icon('duplicate'));duplicate.setToolTip('Duplicar fluxo…');duplicate.setAccessibleName('Duplicar fluxo');duplicate.setAutoRaise(True);duplicate.clicked.connect(lambda:self.duplicate_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(duplicate)
         layout.addLayout(row)
-        add_row = QHBoxLayout()
-        add_row.addWidget(QLabel('Novo vínculo'))
-        self.targets = QComboBox()
-        add_row.addWidget(self.targets, 1)
-        add = QPushButton('Conectar evento')
-        add.clicked.connect(lambda: self.add_requested.emit(self.targets.currentData()) if self.targets.currentData() else None)
-        add_row.addWidget(add)
-        layout.addLayout(add_row)
+        self.targets=QComboBox(self);self.targets.hide()
+        self.add_event=QPushButton('+ Evento…');self.add_event.setToolTip('Conectar um clique ou a abertura de uma janela à lógica.');self.add_event.clicked.connect(self.new_event_dialog);row.addWidget(self.add_event)
         hint = QLabel('Encaixe os blocos em “fazer”. Botão direito adiciona comentários. Selecione um bloco para localizar sua linha Python.')
         hint.setWordWrap(True)
         hint.hide()
@@ -138,11 +132,11 @@ class LogicPanel(QWidget):
         code_box = QWidget()
         code_layout = QVBoxLayout(code_box)
         code_layout.setContentsMargins(0, 0, 0, 0)
-        code_layout.addWidget(QLabel('Python deste fluxo · somente leitura'))
-        complete=QPushButton('Ver arquivo completo');complete.clicked.connect(lambda:self.full_code_requested.emit(self.code_start+self.code.textCursor().blockNumber()));code_layout.addWidget(complete)
+        code_header=QHBoxLayout();code_header.addWidget(QLabel('Python gerado'),1)
+        complete=QToolButton();complete.setIcon(icon('code'));complete.setToolTip('Ver arquivo completo');complete.setAccessibleName('Ver arquivo completo');complete.clicked.connect(lambda:self.full_code_requested.emit(self.code_start+self.code.textCursor().blockNumber()));code_header.addWidget(complete)
         self.code_start=1;self._selecting_code=False
         self.code = CodeEditor(True)
-        wrap=QCheckBox('Quebrar linhas');wrap.toggled.connect(lambda enabled:self.code.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth if enabled else QPlainTextEdit.LineWrapMode.NoWrap));code_layout.addWidget(wrap)
+        wrap=QCheckBox('Quebrar linhas');wrap.toggled.connect(lambda enabled:self.code.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth if enabled else QPlainTextEdit.LineWrapMode.NoWrap));code_header.addWidget(wrap);code_layout.addLayout(code_header)
         code_layout.addWidget(self.code)
         self.code.cursorPositionChanged.connect(self._select_line)
         self.splitter.addWidget(code_box)
@@ -153,6 +147,17 @@ class LogicPanel(QWidget):
         self.diagnostics.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(self.diagnostics)
         self.sync()
+
+    def new_event_dialog(self):
+        """Uma ação curta abre a escolha de origem, sem uma segunda barra permanente."""
+        dialog=QDialog(self);dialog.setWindowTitle('Novo evento');dialog.setFixedWidth(460);layout=QVBoxLayout(dialog)
+        layout.addWidget(QLabel('Quando acontecer'))
+        choices=QComboBox()
+        for index in range(self.targets.count()):choices.addItem(self.targets.itemText(index),self.targets.itemData(index))
+        choices.setCurrentIndex(max(0,choices.findData(self.targets.currentData())));layout.addWidget(choices)
+        buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel);buttons.button(QDialogButtonBox.StandardButton.Save).setText('Conectar evento');buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
+        dialog.setFixedHeight(dialog.sizeHint().height())
+        if dialog.exec()==QDialog.DialogCode.Accepted and choices.currentData():self.add_requested.emit(choices.currentData())
 
     def ensure_loaded(self):
         """Abre exclusivamente recursos locais, com perfil temporário sem rede."""
@@ -274,32 +279,19 @@ class LogicPanel(QWidget):
             candidates=[f for f in flows if not self._target_component or f['event']['component']==self._target_component]
             self.flow_id=candidates[0]['id'] if candidates else None
         flow = next((f for f in flows if f['id'] == self.flow_id), None)
-        self.events.blockSignals(True)
-        self.events.clear()
-        for item in flows:
-            self.events.addItem(item['name'], item['id'])
-        self.events.setCurrentIndex(self.events.findData(self.flow_id))
-        self.events.blockSignals(False)
+        from .controls import reconcile_combo
+        reconcile_combo(self.events,[((project.window_of(item['event']['component']).properties.get('title','Interface')+' › ' if len(project.roots)>1 else '')+item['name'],item['id']) for item in flows],self.flow_id)
         self.name.setText(flow['name'] if flow else '')
-        self.state_filter.blockSignals(True);self.state_filter.clear();self.state_filter.addItem('em qualquer estado',[])
-        owner=project.window_of(flow['event']['component']) if flow else project.root
-        self.state_filter.addItem('só no Padrão',['@default'])
-        for state in project.states.get(owner.id,[]):self.state_filter.addItem('só em '+state['name'],[state['id']])
-        self.state_filter.addItem('Escolher vários estados…','@choose')
+        owner=project.window_of(flow['event']['component']) if flow else project.window_of(self._target_component) if self._target_component and project.find(self._target_component) else project.root
         filters=flow.get('states',[]) if flow else []
-        selected=self.state_filter.findData(filters)
-        if selected<0:self.state_filter.addItem('filtro de vários estados',filters);selected=self.state_filter.count()-1
-        self.state_filter.setCurrentIndex(selected);self.state_filter.setEnabled(flow is not None)
-        self.state_filter.blockSignals(False)
+        entries=[('em qualquer estado',[]),('só no Padrão',['@default']),*[("só em "+state['name'],[state['id']]) for state in project.states.get(owner.id,[])],('Escolher vários estados…','@choose')]
+        if filters not in [value for _,value in entries]:entries.append(('filtro de vários estados',filters))
+        reconcile_combo(self.state_filter,entries,filters);self.state_filter.setEnabled(flow is not None)
         self.name.setEnabled(flow is not None)
         self.remove.setEnabled(flow is not None)
         target = self._target_component or self.targets.currentData()
-        self.targets.clear()
-        for node in project.walk():
-            if node.kind in {ComponentKind.WINDOW, ComponentKind.BUTTON}:
-                self.targets.addItem(('Ao iniciar: ' if node.kind == ComponentKind.WINDOW else 'Ao clicar: ') + node.display_name, node.id)
-        if self.targets.findData(target) >= 0:
-            self.targets.setCurrentIndex(self.targets.findData(target))
+        targets=[(('Ao iniciar: ' if node.kind==ComponentKind.WINDOW else 'Ao clicar: ')+(project.window_of(node.id).properties.get('title','Interface')+' › ' if len(project.roots)>1 else '')+node.display_name,node.id) for node in project.walk() if node.kind in {ComponentKind.WINDOW,ComponentKind.BUTTON}]
+        reconcile_combo(self.targets,targets,target if target in [value for _,value in targets] else targets[0][1] if targets else None)
         components = [{'id':n.id,'kind':n.kind.value,'name':project.window_of(n.id).properties.get('title','Janela')+' › '+(n.properties.get('code_name') or n.display_name)} for n in project.walk()]
         try:
             function_info=[{'name':n.name,'signature':n.name+'('+', '.join(a.arg for a in n.args.args)+')','description':(ast.get_docstring(n) or '').split('\n')[0]} for n in ast.parse(self.get_source()).body if isinstance(n,ast.FunctionDef)]

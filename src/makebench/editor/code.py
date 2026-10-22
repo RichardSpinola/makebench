@@ -2,9 +2,9 @@
 import keyword
 import re
 
-from PySide6.QtCore import QRect, QSize, Qt, Slot
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QPainter, QSyntaxHighlighter, QTextCharFormat, QTextCursor, QTextFormat
-from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
+from PySide6.QtCore import QRect, QSize, Qt, Slot, QEvent
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QPainter, QSyntaxHighlighter, QTextCharFormat, QTextCursor, QTextDocument, QTextFormat, QKeySequence, QShortcut
+from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QWidget, QLineEdit, QToolButton, QLabel, QHBoxLayout
 
 
 class PythonHighlight(QSyntaxHighlighter):
@@ -57,6 +57,14 @@ class CodeEditor(QPlainTextEdit):
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ') * 4)
         self.setPlaceholderText('Escreva suas funções Python aqui.')
+        self.find_bar=QWidget(self);find_layout=QHBoxLayout(self.find_bar);find_layout.setContentsMargins(4,2,4,2)
+        self.find_text=QLineEdit();self.find_text.setPlaceholderText('Buscar no código…');self.find_text.setAccessibleName('Buscar no código');self.find_text.setClearButtonEnabled(True);self.find_text.installEventFilter(self);find_layout.addWidget(self.find_text,1)
+        self.find_status=QLabel();find_layout.addWidget(self.find_status)
+        for label,callback in [('↑',lambda:self.find_next(True)),('↓',self.find_next),('×',self.close_find)]:
+            button=QToolButton();button.setText(label);button.setAccessibleName({'↑':'Resultado anterior','↓':'Próximo resultado','×':'Fechar busca'}[label]);button.clicked.connect(callback);find_layout.addWidget(button)
+        self.find_bar.hide();self.find_text.textEdited.connect(lambda _:self.find_next(restart=True));self.find_text.returnPressed.connect(self.find_next)
+        for sequence,callback in [('Ctrl+F',self.open_find),('F3',self.find_next),('Shift+F3',lambda:self.find_next(True)),('Esc',self.close_find)]:
+            shortcut=QShortcut(QKeySequence(sequence),self);shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut);shortcut.activated.connect(callback)
         self.numbers=LineNumbers(self)
         self.highlighter=PythonHighlight(self.document())
         self._error_selections=[]
@@ -72,7 +80,10 @@ class CodeEditor(QPlainTextEdit):
 
     def _update_margin(self):
         """Ajusta a margem quando o documento ganha ou perde linhas."""
-        self.setViewportMargins(self.number_width(),0,0,0)
+        height=self.find_bar.sizeHint().height() if not self.find_bar.isHidden() else 0
+        self.setViewportMargins(self.number_width(),height,0,0)
+        rect=self.contentsRect();self.find_bar.setGeometry(rect.left(),rect.top(),rect.width(),height)
+        self.numbers.setGeometry(rect.left(),rect.top()+height,self.number_width(),rect.height()-height)
 
     def _update_numbers(self, rect, dy):
         """Sincroniza a margem com rolagem e repintura do texto."""
@@ -83,8 +94,7 @@ class CodeEditor(QPlainTextEdit):
     def resizeEvent(self, event):
         """Reposiciona a margem junto da área útil do editor."""
         super().resizeEvent(event)
-        rect=self.contentsRect()
-        self.numbers.setGeometry(QRect(rect.left(),rect.top(),self.number_width(),rect.height()))
+        self._update_margin()
 
     def show_line(self, line: int) -> None:
         """Destaca uma linha de origem e a traz para a área visível."""
@@ -96,15 +106,36 @@ class CodeEditor(QPlainTextEdit):
         selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
         self.setExtraSelections([*self._error_selections,selection]);self.centerCursor()
 
+    def eventFilter(self,watched,event):
+        """Escape também funciona enquanto a busca tem o foco de digitação."""
+        if watched is getattr(self,'find_text',None) and event.type()==QEvent.Type.KeyPress and event.key()==Qt.Key.Key_Escape:
+            self.close_find();return True
+        return super().eventFilter(watched,event)
+
+    def open_find(self):
+        """Busca local não modal, preservando o código e o contexto selecionado."""
+        selected=self.textCursor().selectedText()
+        if selected and '\u2029' not in selected:self.find_text.setText(selected)
+        self.find_bar.show();self._update_margin();self.find_text.setFocus();self.find_text.selectAll()
+
+    def close_find(self):
+        """Escape devolve o foco ao código sem perder a seleção encontrada."""
+        if self.find_bar.isHidden():return
+        self.find_bar.hide();self._update_margin();self.setFocus()
+
+    def find_next(self,backward=False,restart=False):
+        """Percorre ocorrências com retorno ao início/fim e informa ausência de resultados."""
+        text=self.find_text.text()
+        if not text:self.find_status.clear();return
+        cursor=self.textCursor();position=cursor.selectionStart() if restart or backward else cursor.selectionEnd()
+        flags=QTextDocument.FindFlag.FindBackward if backward else QTextDocument.FindFlag(0)
+        found=self.document().find(text,position,flags)
+        if found.isNull():found=self.document().find(text,self.document().characterCount()-1 if backward else 0,flags)
+        if found.isNull():self.find_status.setText('Nenhum resultado')
+        else:self.find_status.clear();self.setTextCursor(found);self.ensureCursorVisible()
+
     def keyPressEvent(self,event):
         """Oferece busca, comentários e recuo Python sem executar o conteúdo."""
-        from PySide6.QtWidgets import QInputDialog
-        if event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key()==Qt.Key.Key_F:
-            text,ok=QInputDialog.getText(self,'Buscar no código','Texto')
-            if ok and text:
-                if not self.find(text):
-                    self.moveCursor(QTextCursor.MoveOperation.Start);self.find(text)
-            return
         if self.isReadOnly():super().keyPressEvent(event);return
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key()==Qt.Key.Key_Slash:
             cursor=self.textCursor();start=min(cursor.anchor(),cursor.position());end=max(cursor.anchor(),cursor.position())

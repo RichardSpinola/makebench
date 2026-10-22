@@ -1,9 +1,9 @@
 """Edição de janelas/estados e mapa derivado da lógica neutra."""
 from PySide6.QtCore import Qt,QPointF,QRectF,Signal,QTimer
-from PySide6.QtGui import QBrush,QColor,QPainter,QPainterPath,QPen
+from PySide6.QtGui import QBrush,QColor,QPainter,QPainterPath,QPen,QFontMetricsF
 from PySide6.QtWidgets import (QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QGraphicsItem,
     QGraphicsPathItem,QGraphicsRectItem,QGraphicsScene,QGraphicsSimpleTextItem,QGraphicsView,
-    QHBoxLayout,QInputDialog,QLabel,QMessageBox,QMenu,QPushButton,QVBoxLayout,QWidget)
+    QHBoxLayout,QInputDialog,QLabel,QMessageBox,QMenu,QPushButton,QVBoxLayout,QWidget,QApplication)
 from makebench.core.project import ComponentKind,ProjectError,new_id
 from makebench.core.navigation import add_state,add_window,navigation_edges
 from .theme import manager,icon
@@ -19,9 +19,9 @@ class MapNode(QGraphicsRectItem):
         self.setPos(*position)
         t=manager().tokens
         self.setBrush(QColor(t['raised']));self.setPen(QPen(QColor(t['control']),1))
-        text=QGraphicsSimpleTextItem(label,self);text.setBrush(QColor(t['text']));text.setPos(12,12)
+        text=QGraphicsSimpleTextItem('',self);text.setFont(QApplication.font());metrics=QFontMetricsF(text.font());text.setText('\n'.join(metrics.elidedText(line,Qt.TextElideMode.ElideRight,200) for line in label.splitlines()));text.setBrush(QColor(t['text']));text.setPos(12,12)
         port=QGraphicsSimpleTextItem('○',self);port.setBrush(QColor(t['accent']));port.setPos(207,44)
-        self.setToolTip('Duplo clique para entrar na interface. Arraste da porta à direita até outro nó para conectar.')
+        self.setToolTip(label+'\n\nDuplo clique para entrar na interface. Arraste da porta à direita até outro nó para conectar.')
 
     def paint(self,painter,option,widget=None):
         """Cartão de interface com desenho Qt, seleção explícita e cantos discretos."""
@@ -36,12 +36,14 @@ class MapNode(QGraphicsRectItem):
 
 class NavigationView(QGraphicsView):
     """Canvas de mapa com zoom, pan e conexão por arraste entre portas."""
+    zoom_changed=Signal(float)
     def __init__(self,panel):
         """Configura interação sem substituir o modelo por itens gráficos."""
         super().__init__(panel)
         self.graph_scene=QGraphicsScene(self);self.setScene(self.graph_scene)
-        self.panel=panel;self.connection=None;self._press_positions={}
-        self.empty_hint=QLabel('Crie a primeira interface\n\nUse + ou o botão direito para começar.',self.viewport())
+        self.panel=panel;self.connection=None;self.connection_item=None;self._press_positions={}
+        self.empty_hint=QLabel('Nenhuma interface\nCrie uma tela para começar.',self.viewport())
+        self.empty_action=QPushButton(icon('add'),'Nova interface…',self.viewport());self.empty_action.setFixedSize(164,32);self.empty_action.clicked.connect(panel.window.new_window_dialog);self.empty_action.hide()
         self.empty_hint.setAlignment(Qt.AlignmentFlag.AlignCenter);self.empty_hint.setWordWrap(True)
         self.empty_hint.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.empty_hint.hide()
@@ -68,6 +70,7 @@ class NavigationView(QGraphicsView):
         """Confirma ligação ou posição; uma edição corresponde a um Desfazer."""
         if self.connection:
             source=self.connection;self.connection=None
+            if self.connection_item:self.graph_scene.removeItem(self.connection_item);self.connection_item=None
             target=self.node_at(event.position().toPoint())
             if target and target.key!=source:
                 key=target.key;QTimer.singleShot(0,lambda:self.panel.connect_nodes(source,key))
@@ -84,6 +87,18 @@ class NavigationView(QGraphicsView):
                     self.panel.window._edit(lambda:project.map_layout.update(moved))
             QTimer.singleShot(0,commit)
 
+    def mouseMoveEvent(self,event):
+        """A ligação acompanha o cursor antes da confirmação, sem criar blocos ainda."""
+        if self.connection:
+            source=self.panel.nodes.get(self.connection)
+            if source:
+                start=source.scenePos()+QPointF(230,50);end=self.mapToScene(event.position().toPoint());path=QPainterPath(start)
+                path.cubicTo(start+QPointF(80,0),end-QPointF(80,0),end)
+                if self.connection_item is None:self.connection_item=self.graph_scene.addPath(path,QPen(QColor(manager().tokens['accent']),2,Qt.PenStyle.DashLine))
+                else:self.connection_item.setPath(path)
+            event.accept();return
+        super().mouseMoveEvent(event)
+
     def resizeEvent(self,event):
         """A orientação pertence ao viewport, sem aumentar nem sumir com o zoom."""
         super().resizeEvent(event);self.position_hint()
@@ -91,25 +106,33 @@ class NavigationView(QGraphicsView):
     def position_hint(self):
         """Centraliza o estado vazio sem criar objetos editáveis no mapa."""
         width=min(360,max(0,self.viewport().width()-32));height=110
-        self.empty_hint.setGeometry((self.viewport().width()-width)//2,(self.viewport().height()-height)//2,width,height)
+        self.empty_hint.setGeometry((self.viewport().width()-width)//2,(self.viewport().height()-height)//2-24,width,height)
+        self.empty_action.move((self.viewport().width()-self.empty_action.width())//2,self.viewport().height()//2+32)
 
     def contextMenuEvent(self,event):
         """O espaço de interfaces cria janelas pelo botão direito, inclusive vazio."""
         node=self.node_at(event.pos());menu=QMenu(self);point=self.mapToScene(event.pos())
         def create():
             """Após o diálogo, posiciona a nova interface no ponto escolhido."""
-            before={r.id for r in self.panel.window.project.roots};self.panel.window.new_window_dialog()
+            empty=bool(self.panel.window.project.metadata.get('empty_map'));before=set() if empty else {r.id for r in self.panel.window.project.roots};self.panel.window.new_window_dialog()
             root=next((r for r in self.panel.window.project.roots if r.id not in before),None)
             if root:
                 self.panel.window._edit(lambda:self.panel.window.project.map_layout.update({root.id+'|@default':[point.x(),point.y()]}));self.panel.sync()
         menu.addAction('Criar interface aqui…',create)
         if node:
             menu.addAction('Entrar na interface',lambda:self.panel.activate(node.key))
-            menu.addAction('Criar estado…',self.panel.window.new_state_dialog)
+            def state_here():
+                """O estado pertence à interface sob o cursor, mesmo sem entrar nela."""
+                self.panel.window.active_window=node.key.split('|')[0];self.panel.window.active_state='@default';self.panel.window.new_state_dialog()
+            menu.addAction('Criar estado…',state_here)
         menu.exec(event.globalPos())
 
     def keyPressEvent(self,event):
         """Permite remover uma conexão selecionada sem exigir gestos precisos."""
+        if event.key()==Qt.Key.Key_Escape and self.connection:
+            self.connection=None
+            if self.connection_item:self.graph_scene.removeItem(self.connection_item);self.connection_item=None
+            event.accept();return
         if event.key()==Qt.Key.Key_Delete:
             selected=self.scene().selectedItems()
             edge=next((item.data(0) for item in selected if isinstance(item,QGraphicsPathItem) and item.data(0)),None)
@@ -121,7 +144,7 @@ class NavigationView(QGraphicsView):
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             factor=1.15 if event.angleDelta().y()>0 else 1/1.15
             scale=self.transform().m11()*factor
-            if .25<=scale<=4:self.scale(factor,factor)
+            if .25<=scale<=4:self.scale(factor,factor);self.zoom_changed.emit(self.transform().m11())
             event.accept()
         else:super().wheelEvent(event)
 
@@ -130,13 +153,16 @@ class MapPanel(QWidget):
     """Mostra janelas/estados e as mesmas transições que existem nos blocos."""
     def __init__(self,window):
         """Cria comandos de mapa e adia leitura do documento até a sincronização."""
-        super().__init__();self.window=window;self.nodes={};self._signature=None;self._fit_project=None
+        super().__init__();self.window=window;self.nodes={};self.edge_labels=[];self._signature=None;self._fit_project=None
         layout=QVBoxLayout(self);layout.setContentsMargins(0,0,0,0);layout.setSpacing(0);row=QHBoxLayout();row.setContentsMargins(4,2,4,2)
-        heading=QLabel('Interfaces');row.addWidget(heading,1)
+        self.summary=QLabel();row.addWidget(self.summary,1)
         from PySide6.QtWidgets import QToolButton
-        for symbol,label,callback in [('add','Nova interface…',window.new_window_dialog),('new','Novo estado',window.new_state_dialog),('logic','Conectar…',self.connect_dialog),('map','Organizar',self.organize),('fit','Ajustar',self.fit)]:
+        self.interface_actions=[]
+        for symbol,label,callback in [('settings','Aplicativo…',window.application_settings),('add','Nova interface…',window.new_window_dialog),('new','Novo estado',window.new_state_dialog),('logic','Conectar…',self.connect_dialog),('map','Organizar',self.organize),('fit','Ajustar',self.fit)]:
             button=QToolButton();button.setIcon(icon(symbol));button.setProperty('makebenchIcon',symbol);button.setAutoRaise(True);button.setToolTip(label);button.setAccessibleName(label);button.clicked.connect(callback);row.addWidget(button)
-        layout.addLayout(row);self.view=NavigationView(self);layout.addWidget(self.view,1)
+            if symbol in {'settings','add'}:button.setText(label);button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+            if symbol not in {'settings','add','fit'}:self.interface_actions.append(button)
+        layout.addLayout(row);self.view=NavigationView(self);self.view.scene().selectionChanged.connect(self.show_selected_edge);layout.addWidget(self.view,1)
         hint=QLabel('Este é o espaço das interfaces do projeto. Botão direito cria uma interface; duplo clique entra nela para trabalhar em Design, Lógica e Código.')
         self.hint=hint;hint.setWordWrap(True);hint.hide();self.view.setToolTip(hint.text())
 
@@ -144,11 +170,18 @@ class MapPanel(QWidget):
         """Reconstrói quando documento/tema mudam, mantendo posições salvas."""
         import json
         project=self.window.project
-        signature=json.dumps(project.to_dict(),sort_keys=True)+str(manager().tokens)
+        app=project.application;empty=bool(project.metadata.get('empty_map'))
+        self.summary.setText((app.get('name') or project.name)+' · '+app.get('backend','qt').upper()+(' · '+app['version'] if app.get('version') else ''))
+        self.summary.setToolTip(app.get('id','Configurações do aplicativo'))
+        for button in self.interface_actions:button.setEnabled(not empty)
+        edges=navigation_edges(project)
+        visual={'windows':[(r.id,r.properties.get('title','Janela'),r.properties.get('initial_state','@default')) for r in project.roots],
+            'states':{key:[(state['id'],state['name']) for state in states] for key,states in project.states.items()},'entry':project.entry_window,'positions':project.map_layout,'edges':edges,'empty':empty}
+        signature=json.dumps(visual,sort_keys=True)+str(manager().tokens)+str(manager().scale)
         if signature==self._signature:return
-        self._signature=signature;scene=self.view.scene();scene.clear();self.nodes={}
+        self._signature=signature;scene=self.view.scene();self.view.connection=None;self.view.connection_item=None;self.edge_labels=[];scene.clear();self.nodes={}
         scene.setBackgroundBrush(QColor(manager().tokens['canvas']))
-        empty=bool(project.metadata.get('empty_map'));self.view.empty_hint.setVisible(empty);self.view.position_hint()
+        empty=bool(project.metadata.get('empty_map'));self.view.empty_hint.setVisible(empty);self.view.empty_action.setVisible(empty);self.view.position_hint()
         if empty:
             scene.setSceneRect(0,0,1000,650);return
         incoming={edge['target'] for edge in navigation_edges(project) if edge['op']=='open_window'}
@@ -177,16 +210,29 @@ class MapPanel(QWidget):
                     root=project.find(edge['target']);target=self.nodes.get(root.id+'|'+root.properties.get('initial_state','@default'))
                 else:continue
                 if not source or not target:continue
-                start=source.scenePos()+QPointF(230,50);end=target.scenePos()+QPointF(0,50)
-                path=QPainterPath(start);bend=max(60,abs(end.x()-start.x())/2)
-                path.cubicTo(start+QPointF(bend,0),end-QPointF(bend,0),end)
+                source_rect=source.sceneBoundingRect();target_rect=target.sceneBoundingRect();vertical=False
+                if target_rect.left()>source_rect.right():
+                    start=QPointF(source_rect.right(),source_rect.center().y());end=QPointF(target_rect.left(),target_rect.center().y());path=QPainterPath(start);bend=max(30,(end.x()-start.x())/2);path.cubicTo(start+QPointF(bend,0),end-QPointF(bend,0),end)
+                else:
+                    # Retornos passam por cima; outra janela abaixo usa portas verticais.
+                    # Evita curvas que ampliavam a cena muito além dos cartões.
+                    below=target_rect.top()>source_rect.bottom()+20;vertical=True
+                    start=QPointF(source_rect.center().x(),source_rect.bottom() if below else source_rect.top());end=QPointF(target_rect.center().x(),target_rect.top());path=QPainterPath(start)
+                    if below:
+                        bend=max(40,(end.y()-start.y())/2);path.cubicTo(start+QPointF(0,bend),end-QPointF(0,bend),end)
+                    else:
+                        lane=min(start.y(),end.y())-64;path.cubicTo(QPointF(start.x(),lane),QPointF(end.x(),lane),end)
                 line=scene.addPath(path,QPen(QColor(manager().tokens['muted']),1.5));line.setZValue(-1)
-                line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable,True);line.setData(0,edge)
-                arrow=QPainterPath(end);arrow.lineTo(end+QPointF(-9,-4));arrow.lineTo(end+QPointF(-9,4));arrow.closeSubpath()
+                line.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable,True);line.setData(0,edge);line.setToolTip(edge['event']+' · Delete remove esta conexão')
+                arrow=QPainterPath(end);arrow.lineTo(end+(QPointF(-4,-9) if vertical else QPointF(-9,-4)));arrow.lineTo(end+(QPointF(4,-9) if vertical else QPointF(-9,4)));arrow.closeSubpath()
                 head=scene.addPath(arrow,QPen(Qt.PenStyle.NoPen),QBrush(QColor(manager().tokens['muted'])));head.setZValue(-1)
                 head.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable,True);head.setData(0,edge)
-                label=scene.addSimpleText(edge['event'][:30]);label.setBrush(QColor(manager().tokens['muted']));label.setPos((start+end)/2+QPointF(0,-24))
+                label=scene.addSimpleText(edge['event'][:30]);label.setBrush(QColor(manager().tokens['muted']));label.setPos(path.pointAtPercent(.5)+QPointF(0,-24));label.setZValue(2);label.hide();self.edge_labels.append((line,head,label))
         scene.setSceneRect(scene.itemsBoundingRect().adjusted(-40,-40,40,40))
+
+    def show_selected_edge(self):
+        """O nome da ação aparece só na conexão selecionada, reduzindo sobreposições."""
+        for line,head,label in self.edge_labels:label.setVisible(line.isSelected() or head.isSelected())
 
     def showEvent(self,event):
         """Enquadra uma vez por projeto após o layout obter seu tamanho real."""
@@ -201,8 +247,11 @@ class MapPanel(QWidget):
     def fit(self):
         """Enquadra o mapa sem modificar seus dados ou posições."""
         if not self.nodes:
-            self.view.resetTransform();self.view.centerOn(self.view.sceneRect().center());return
+            self.view.resetTransform();self.view.centerOn(self.view.sceneRect().center());self.view.zoom_changed.emit(1);return
         self.view.fitInView(self.view.scene().itemsBoundingRect().adjusted(-24,-24,24,24),Qt.AspectRatioMode.KeepAspectRatio)
+        scale=self.view.transform().m11()
+        if scale>1.25:self.view.scale(1.25/scale,1.25/scale)
+        self.view.zoom_changed.emit(self.view.transform().m11())
 
     def activate(self,key):
         """Seleciona janela/estado e muda para Design."""
@@ -263,8 +312,8 @@ class NavigationMixin:
     def install_navigation_editor(self):
         """Adiciona seletores, comandos e mapa de navegação real."""
         self.active_window=self.project.root.id;self.active_state='@default'
-        self.window_selector=QComboBox();self.window_selector.setAccessibleName('Janela em edição')
-        self.state_selector=QComboBox();self.state_selector.setAccessibleName('Estado em edição')
+        self.window_selector=QComboBox();self.window_selector.setAccessibleName('Janela em edição');self.window_selector.setMaximumWidth(210)
+        self.state_selector=QComboBox();self.state_selector.setAccessibleName('Estado em edição');self.state_selector.setMaximumWidth(170)
         self.context_bar.insertWidget(self.context_bar.actions()[0],self.window_selector)
         self.context_bar.insertWidget(self.context_bar.actions()[-1],self.state_selector)
         self.window_selector.currentIndexChanged.connect(self.window_selected)
@@ -282,14 +331,14 @@ class NavigationMixin:
             self.active_window=self.project.root.id;self.active_state='@default'
         owner=self.project.window_of(self.selected_id)
         if owner and owner.id!=self.active_window:self.active_window=owner.id;self.active_state='@default'
-        self.window_selector.blockSignals(True);self.window_selector.clear()
-        for root in self.project.roots:self.window_selector.addItem(root.properties.get('title','Janela'),root.id)
-        self.window_selector.setCurrentIndex(self.window_selector.findData(self.active_window));self.window_selector.blockSignals(False)
+        from .controls import reconcile_combo
+        empty=bool(self.project.metadata.get('empty_map'));self.window_selector.setEnabled(not empty);self.state_selector.setEnabled(not empty)
+        if empty:
+            reconcile_combo(self.window_selector,[('Nenhuma interface',None)],None);reconcile_combo(self.state_selector,[],None);return
+        reconcile_combo(self.window_selector,[(root.properties.get('title','Janela'),root.id) for root in self.project.roots],self.active_window)
         states=self.project.states.get(self.active_window,[])
         if self.active_state not in {'@default',*[s['id'] for s in states]}:self.active_state='@default'
-        self.state_selector.blockSignals(True);self.state_selector.clear();self.state_selector.addItem(self.project.find(self.active_window).properties.get('default_state_name','Padrão'),'@default')
-        for state in states:self.state_selector.addItem('Estado: '+state['name'],state['id'])
-        self.state_selector.setCurrentIndex(self.state_selector.findData(self.active_state));self.state_selector.blockSignals(False)
+        reconcile_combo(self.state_selector,[(self.project.find(self.active_window).properties.get('default_state_name','Padrão'),'@default'),*[(state['name'],state['id']) for state in states]],self.active_state)
 
     def activate_window(self,window_id,state='@default'):
         """Muda o contexto após confirmar alterações dos blocos e campos."""
@@ -310,16 +359,17 @@ class NavigationMixin:
         """Cria janela vazia ou cópia da composição atual com novos IDs."""
         dialog=QDialog(self);dialog.setWindowTitle('Nova interface');form=QFormLayout(dialog)
         from PySide6.QtWidgets import QLineEdit
-        name=QLineEdit('Nova interface');base=QComboBox();base.addItem('Em branco',None)
-        for root in self.project.roots:base.addItem('Duplicar '+root.properties.get('title','Janela'),root.id)
+        empty=bool(self.project.metadata.get('empty_map'));name=QLineEdit('Tela principal' if empty else 'Nova interface');name.setObjectName('new_interface_name');base=QComboBox();base.addItem('Em branco',None)
+        if not empty:
+            for root in self.project.roots:base.addItem('Duplicar '+root.properties.get('title','Janela'),root.id)
         form.addRow('Nome',name);form.addRow('Base',base)
         buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);form.addRow(buttons)
-        if dialog.exec()!=QDialog.DialogCode.Accepted:return
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText('Criar interface');buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);form.addRow(buttons)
+        if dialog.exec()!=QDialog.DialogCode.Accepted or not name.text().strip():return
         def create():
             """Cria o item solicitado com os valores validados do diálogo."""
             if self.project.metadata.pop('empty_map',False):
-                root=self.project.root;root.properties['title']=name.text()
+                root=self.project.root;root.properties['title']=name.text().strip()
             else:root=add_window(self.project,name.text(),base.currentData())
             self.active_window=root.id;self.active_state='@default';self.selected_id=root.id
         self._edit(create)

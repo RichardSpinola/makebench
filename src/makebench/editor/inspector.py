@@ -36,7 +36,7 @@ class Inspector(QWidget):
     def section(self,title,expanded=True):
         """Cria uma seção cuja abertura é lembrada por tipo de componente."""
         wrapper=QWidget();layout=QVBoxLayout(wrapper);layout.setContentsMargins(0,0,0,0);layout.setSpacing(6)
-        header=QToolButton();header.setText(title);header.setCheckable(True)
+        header=QToolButton();header.setText(title);header.setCheckable(True);header.setAutoRaise(True)
         header.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         body=QWidget();body.setProperty('card',True);form=QFormLayout(body);form.setContentsMargins(6,6,6,6);form.setSpacing(6)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)

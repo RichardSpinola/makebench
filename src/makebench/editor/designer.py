@@ -1,5 +1,5 @@
 """Ferramentas de composição, conversão reversível e enquadramento do canvas."""
-from PySide6.QtCore import Qt,QRectF
+from PySide6.QtCore import Qt,QRectF,Signal
 from PySide6.QtGui import QAction,QKeySequence
 from PySide6.QtWidgets import (QGraphicsScene,QGraphicsView,QHBoxLayout,QInputDialog,
     QLabel,QMenu,QPushButton,QScrollArea,QToolBar,QWidget)
@@ -8,6 +8,8 @@ from makebench.core.project import ComponentKind,LayoutKind,ProjectError
 
 class ZoomView(QGraphicsView):
     """Hospeda widgets reais em proxy Qt; gestos continuam usando o mesmo canvas."""
+    zoom_changed=Signal(float)
+
     def __init__(self,canvas,parent=None):
         """Mantém a árvore editável e transforma somente sua apresentação."""
         super().__init__(parent)
@@ -34,12 +36,12 @@ class ZoomView(QGraphicsView):
     def set_zoom(self,value):
         """Aplica zoom limitado e informa a escala aos gestos de geometria."""
         self.zoom=max(.25,min(4,value));self.resetTransform();self.scale(self.zoom,self.zoom)
-        self.canvas.view_scale=self.zoom
+        self.canvas.view_scale=self.zoom;self.zoom_changed.emit(self.zoom)
 
     def fit(self):
         """Enquadra a composição, preservando suas coordenadas no documento."""
         self.update_bounds();self.fitInView(self.proxy.sceneBoundingRect().adjusted(-20,-20,20,20),Qt.AspectRatioMode.KeepAspectRatio)
-        self.zoom=self.transform().m11();self.canvas.view_scale=self.zoom
+        self.zoom=self.transform().m11();self.canvas.view_scale=self.zoom;self.zoom_changed.emit(self.zoom)
 
     def wheelEvent(self,event):
         """Usa Ctrl+roda para zoom; rolagem normal não modifica a composição."""
@@ -80,6 +82,8 @@ class DesignerMixin:
             self.zoom_actions=[]
             for label,callback in [('−',lambda:self.zoom_current(1/1.15)),('100%',lambda:self.zoom_current(absolute=1)),('+',lambda:self.zoom_current(1.15)),('Ajustar',self.fit_current_canvas)]:
                 button=QPushButton(label if label=='100%' else '');button.setToolTip({'−':'Reduzir zoom','+':'Ampliar zoom','Ajustar':'Enquadrar interface'}.get(label,'Tamanho real'));button.setAccessibleName('Zoom '+label);button.setIcon(__import__('makebench.editor.theme',fromlist=['icon']).icon({'−':'zoom-out','+':'zoom-in','Ajustar':'fit'}.get(label,'actual')));button.setProperty('makebenchIcon',{'−':'zoom-out','+':'zoom-in','Ajustar':'fit'}.get(label,'actual'));button.clicked.connect(callback);self.zoom_actions.append(self.context_bar.addWidget(button))
+                if label=='100%':self.zoom_reset_button=button;button.setMinimumWidth(76)
+            self.zoom_view.zoom_changed.connect(self.update_zoom_label);self.map_panel.view.zoom_changed.connect(self.update_zoom_label)
             action=QAction('Ajustar composição',self);action.setShortcut(QKeySequence('Ctrl+0'));action.triggered.connect(self.fit_current_canvas);self.addAction(action)
             actual=QAction('Tamanho real',self);actual.setShortcut(QKeySequence('Ctrl+Alt+0'));actual.triggered.connect(lambda:self.zoom_current(absolute=1));self.addAction(actual)
         rename=QAction('Renomear seleção',self);rename.setShortcut(QKeySequence('F2'));rename.triggered.connect(self.rename_selected);self.addAction(rename)
@@ -272,8 +276,14 @@ class DesignerMixin:
         """Mantém zoom do mapa independente do zoom de composição."""
         if self._mode=='Mapa':
             view=self.map_panel.view;scale=absolute if absolute is not None else view.transform().m11()*factor
-            view.resetTransform();view.scale(max(.25,min(4,scale)),max(.25,min(4,scale)))
+            view.resetTransform();view.scale(max(.25,min(4,scale)),max(.25,min(4,scale)));self.update_zoom_label()
         elif self._mode=='Design':self.zoom_view.set_zoom(absolute if absolute is not None else self.zoom_view.zoom*factor)
+
+    def update_zoom_label(self,_value=None):
+        """Mostra a escala real da área ativa, inclusive depois de Ajustar ou Ctrl+roda."""
+        if not hasattr(self,'zoom_reset_button'):return
+        scale=self.map_panel.view.transform().m11() if self._mode=='Mapa' else self.zoom_view.zoom
+        self.zoom_reset_button.setText(str(round(scale*100))+'%')
 
     def top_level_selection(self):
         """Evita duplicar ou remover descendentes duas vezes na mesma operação de grupo."""
