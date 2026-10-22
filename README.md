@@ -2,7 +2,7 @@
 
 Crie aplicativos Linux visualmente, com Qt, blocos e funções Python.
 
-**0.5.0.dev1 — Bancada.** Tela inicial, projetos recentes, Designer, Lógica, Código,
+**0.6.0.dev1 — Bancada nativa.** Tela inicial, projetos recentes, Designer, Lógica, Código,
 Mapa de janelas/estados, execução supervisionada e exportação real em fonte Python.
 Tudo funciona localmente, sem conta, servidor ou IA em tempo de execução.
 
@@ -21,10 +21,14 @@ compatível. Blockly 13.4 está incorporado e não exige rede ou Node.
 
 ## Começar e retomar
 
-Na tela inicial, escolha **Em branco**, **Assistente de boas-vindas** ou
-**Central de tarefas**. Defina nome e pasta. O projeto reúne o JSON,
-`project.actions.py` e `assets/`; código próprio nunca é substituído pela geração.
-Projetos recentes ausentes podem ser localizados ou removidos da lista.
+A abertura sem projeto usa uma janela separada e fixa, com X interno: **Novo**, **Abrir**, recentes e modelos recentes. A bancada aparece depois da escolha; “Mostrar na inicialização” pode ser desligado.
+Os cinco modelos ficam dentro do diálogo **Novo projeto**. Defina nome, pasta e
+backend do aplicativo (GTK ou Qt). O editor permanece Qt e segue o estilo/paleta
+nativos do desktop, sem tema próprio. Os modos permanecem no canto superior direito. Painéis têm abas na base e barras compactas, seguindo a organização do Kdenlive.
+
+O projeto reúne JSON, `project.actions.py` e `assets/`; código próprio nunca é
+substituído pela geração. Recentes oferecem busca, localizar, remover da lista e
+mover arquivos para a lixeira. A pasta inteira exige uma escolha explícita.
 
 **Salvar como** copia funções e recursos e recusa fontes conflitantes.
 **Compartilhar projeto** gera um ZIP editável. Abrir um ZIP extrai primeiro em
@@ -37,12 +41,13 @@ Mudanças externas no arquivo de funções mostram **Recarregar / Manter minha v
 
 ## A bancada
 
-- **Design:** ferramentas de inserção por clique, biblioteca por arraste, árvore
+- **Design:** Qt usa controles e barra de título desenhados pelo estilo nativo. GTK usa imagem produzida pelo próprio GTK4/Adwaita, com as áreas reais dos componentes para selecionar e editar; não há QSS para imitar GTK. Essa prévia exige `gtk4-broadwayd` e PyGObject/GTK4, roda num display privado e nunca recebe funções ou scripts. Se faltar uma biblioteca, mostra o motivo.
+  Ferramentas de inserção por clique, biblioteca por arraste, árvore
   pesquisável e inspetor com seções. Duplo clique ou F2 edita texto na própria
   composição; Escape cancela. Contêineres têm Coluna, Linha, Grade e Livre,
   margens, espaçamento, alinhamento e dimensionamento dos filhos. Alças ajustam
   margens/espaçamento. Livre oferece seleção por retângulo, guias e geometria;
-  uma seleção de irmãos pode ser alinhada/distribuída como grupo.
+  uma seleção de irmãos pode ser alinhada/distribuída como grupo. Inserir tem busca e ocupa a altura do painel; o menu de contexto oferece todos os tipos, incluindo Separador e Espaçador.
 - **Lógica:** abra o evento de uma janela ou botão, escolha o filtro de estado e
   conecte blocos. O painel Python mostra só o fluxo atual e conserva o mapa de
   linhas do arquivo completo. Use Espaço para buscar blocos. Scripts de várias
@@ -53,13 +58,20 @@ Mudanças externas no arquivo de funções mostram **Recarregar / Manter minha v
 - **Mapa:** janelas reais agrupam suas variações. Duplo clique abre a composição;
   arrastar entre portas ou usar **Conectar** cria o bloco de navegação no evento.
   Excluir uma conexão remove esse bloco. Posições são independentes da lógica.
-- **Publicar:** configure identidade, ícone, dependências e permissões; verifique
+- **Publicar:** abra as configurações do aplicativo para identidade, ícone, dependências e permissões; verifique
   o projeto e construa **Fonte Python**. O ZIP inclui código, funções, recursos,
-  runtime, `run.py` e dependências. Roda fora do Makebench com Python/PySide6.
+  runtime, `run.py` e dependências. Roda fora do Makebench com Python e o backend escolhido.
   Construção usa pasta temporária, cancelamento e resultado com SHA-256.
 
-AppImage, Flatpak, DEB e RPM aparecem como **Em breve**, sem exportadores fictícios.
-GTK, lógica por fios, terminal interativo e depurador permanecem para depois.
+GTK4/PyGObject é um backend real para os aplicativos criados; libadwaita é opcional.
+AppImage, Flatpak, DEB e RPM geram receitas e usam ferramentas locais quando
+presentes. Só um artefato realmente construído/inspecionado recebe esse estado.
+Neste ambiente, as receitas foram verificadas; faltam dpkg-deb, appimagetool e
+rpmbuild. Flatpak foi tentado, mas falta org.gnome.Sdk//50. Esses quatro pacotes
+binários ainda não foram construídos/instalados em VM. Consulte os limites em
+[Validação do desktop](docs/validacao-desktop.md).
+
+Lógica por fios, terminal interativo e depurador continuam **Em breve**.
 O pacote do editor Makebench é separado do aplicativo criado.
 
 ## Janelas, páginas, estados e dados
@@ -146,3 +158,30 @@ A sandbox Chromium permanece ativa. Polkit real é testado apenas no contêiner
 isolado descrito em `checks/polkit/README.md`. Documentação técnica em `.dev/`.
 Licença própria e publicação continuam decisões do proprietário; a licença do
 Blockly permanece preservada nos recursos incorporados.
+
+## Preferências e diagnóstico
+
+**Ctrl+,** abre preferências do Makebench com busca, aplicação imediata e
+restauração por página. **Projeto → Configurações do aplicativo** é uma central
+separada: suas alterações entram no histórico do projeto. Publicar não duplica
+campos. **Ajuda → Diagnóstico do ambiente** copia informações sem executar
+ferramentas nem instalar pacotes.
+
+WebEngine é preparado antes da primeira apresentação da janela no inicializador,
+evita recriação nativa na primeira abertura de Lógica. Atalhos WebChannel são
+adiados para não bloquear a confirmação dos blocos. Propriedades simples da
+imagem atualizam os widgets existentes, preservando campo/foco. Logs das tarefas
+aparecem na gaveta e nos painéis de saída da janela do aplicativo.
+
+Verificação GTK, em display descartável já aberto:
+
+```bash
+GDK_BACKEND=broadway BROADWAY_DISPLAY=:12 PYTHONPATH=src python3 checks/gtk_runtime_smoke.py
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen python3 checks/task_center_smoke.py
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen python3 checks/native_preview_smoke.py
+PYTHONPATH=src QT_QPA_PLATFORM=offscreen python3 checks/startup_smoke.py
+```
+
+O display Broadway é só infraestrutura de teste; não é necessário ao aplicativo
+no desktop Wayland/X11. Administração real no desktop, escala/Orca e instalação
+de pacotes em VM ainda precisam do checklist.
