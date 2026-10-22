@@ -89,6 +89,7 @@ class ComponentTree(QTreeWidget):
         super().__init__(parent)
         self.project = project
         self.can_drop = can_drop
+        self.active_root=lambda:self.project().root.id
         self._hint = None
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
@@ -103,7 +104,7 @@ class ComponentTree(QTreeWidget):
             return
         node_id = item.data(0, Qt.ItemDataRole.UserRole)
         project = self.project()
-        if node_id == project.root.id:
+        if project.find(node_id) is None or node_id in {r.id for r in project.roots}:
             return
         drag = QDrag(self)
         drag.setMimeData(mime_for({"mode": "move", "id": node_id, "project": project.id}))
@@ -115,13 +116,14 @@ class ComponentTree(QTreeWidget):
         project = self.project()
         item = self.itemAt(point)
         if item is None:
-            return project.root.id, len(project.root.children), None, "inside"
+            root=project.find(self.active_root());return root.id,len(root.children),None,"inside"
         node = project.find(item.data(0, Qt.ItemDataRole.UserRole))
         rect = self.visualItemRect(item)
         zone = "before" if point.y() < rect.top() + rect.height() / 3 else (
             "after" if point.y() > rect.bottom() - rect.height() / 3 else "inside"
         )
-        if node.id == project.root.id or (zone == "inside" and node.can_have_children):
+        if node is None:return None,0,None,"inside"
+        if node.id in {r.id for r in project.roots} or (zone == "inside" and node.can_have_children):
             return node.id, len(node.children), item, "inside"
         parent = project.parent_of(node.id)
         index = parent.children.index(node) + (zone != "before")

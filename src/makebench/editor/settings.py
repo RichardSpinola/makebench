@@ -1,5 +1,6 @@
 """Centrais de configuração Qt: editor global e aplicativo do projeto."""
 import json
+import re
 from pathlib import Path
 from PySide6.QtCore import Qt,QSettings,QUrl
 from PySide6.QtGui import QDesktopServices,QFont,QFontDatabase
@@ -16,7 +17,7 @@ DEFAULTS={'appearance/theme':'system','appearance/accent':'system','appearance/s
     'editor/code_font':'Monospace','editor/code_size':11,'editor/wrap':False,'editor/recovery':30,'editor/grid':True,
     'test/clear':True,'test/confirm_restart':True,'test/duration':True}
 CHOICES={'appearance/theme':['system','light','dark'],'appearance/accent':['system'],
-    'appearance/scale':[90,100,115,130],'projects/backend':['gtk','qt'],'editor/recovery':[0,15,30,60]}
+    'appearance/scale':[90,100,115,125,130,150],'projects/backend':['gtk','qt'],'editor/recovery':[0,15,30,60]}
 
 
 def preference(key,settings=None):
@@ -37,17 +38,17 @@ class SettingsShell(QDialog):
     """Janela com navegação, busca de opções e grupos de cartões Qt."""
     def __init__(self,parent,title):
         """A busca filtra linhas em todas as páginas e mantém foco de teclado."""
-        super().__init__(parent);self.setWindowTitle(title);self.resize(940,680);self.setMinimumSize(720,480)
+        super().__init__(parent);self.setWindowTitle(title);self.resize(860,640);self.setMinimumSize(720,440)
         outer=QVBoxLayout(self);outer.setContentsMargins(10,10,10,10);outer.setSpacing(8)
         self.search=QLineEdit();self.search.setPlaceholderText('Buscar configurações…');self.search.setClearButtonEnabled(True);outer.addWidget(self.search)
         body=QHBoxLayout();self.sections=QListWidget();self.sections.setMaximumWidth(200);self.sections.setMinimumWidth(170);body.addWidget(self.sections)
         self.pages=QStackedWidget();body.addWidget(self.pages,1);outer.addLayout(body,1);self.sections.currentRowChanged.connect(self.pages.setCurrentIndex);self.search.textChanged.connect(self.filter_rows)
         close=QPushButton('Fechar');close.clicked.connect(self.close);outer.addWidget(close,0,Qt.AlignmentFlag.AlignRight)
-        self.rows=[];self.page_layouts=[]
+        self.rows=[];self.page_layouts=[];self.no_results=QLabel('Nenhuma configuração corresponde à busca.');self.no_results.hide();outer.insertWidget(2,self.no_results)
 
     def add_page(self,title):
         """Página rolável funciona também com fontes ampliadas e janela menor."""
-        self.sections.addItem(title);page=QWidget();layout=QVBoxLayout(page);layout.setContentsMargins(8,4,8,8);layout.setSpacing(10);layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.sections.addItem(title);page=QWidget();layout=QVBoxLayout(page);layout.setContentsMargins(8,4,8,8);layout.setSpacing(12);page.setMaximumWidth(700);layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(page);self.pages.addWidget(scroll);self.page_layouts.append(layout)
         if self.sections.count()==1:self.sections.setCurrentRow(0)
         return layout
@@ -58,21 +59,22 @@ class SettingsShell(QDialog):
         if description:
             label=QLabel(description);label.setWordWrap(True);label.setProperty('muted',True);page.addWidget(label)
         from PySide6.QtWidgets import QFrame
-        card=QFrame();card.setFrameShape(QFrame.Shape.StyledPanel);layout=QVBoxLayout(card);layout.setContentsMargins(10,10,10,10);layout.setSpacing(8);page.addWidget(card);return layout
+        card=QFrame();card.setFrameShape(QFrame.Shape.NoFrame);layout=QVBoxLayout(card);layout.setContentsMargins(10,10,10,10);layout.setSpacing(8);page.addWidget(card);return layout
 
     def row(self,group,label,control,description=''):
         """Uma linha de opção tem título/descrição e controle alinhado à direita."""
-        widget=QWidget();layout=QHBoxLayout(widget);layout.setContentsMargins(0,0,0,0);text=QVBoxLayout();title=QLabel(label);title.setTextFormat(Qt.TextFormat.PlainText);text.addWidget(title)
+        widget=QWidget();layout=QHBoxLayout(widget);layout.setContentsMargins(0,0,0,0);text_holder=QWidget();text_holder.setFixedWidth(200);text=QVBoxLayout(text_holder);text.setContentsMargins(0,0,0,0);title=QLabel(label);title.setWordWrap(True);title.setTextFormat(Qt.TextFormat.PlainText);text.addWidget(title)
         if description:
             subtitle=QLabel(description);subtitle.setTextFormat(Qt.TextFormat.PlainText);subtitle.setWordWrap(True);subtitle.setProperty('muted',True);text.addWidget(subtitle)
-        layout.addLayout(text,1);layout.addWidget(control);group.addWidget(widget);self.rows.append((widget,(label+' '+description).casefold(),self.pages.count()-1));control.setAccessibleName(label);return control
+        layout.addWidget(text_holder);layout.addWidget(control);layout.addStretch(1);control.setMaximumWidth(360);group.addWidget(widget);self.rows.append((widget,(label+' '+description).casefold(),self.pages.count()-1));control.setAccessibleName(label);return control
 
     def filter_rows(self,text):
         """Busca muda para a primeira página com resultados sem alterar valores."""
-        query=text.casefold();matches=[]
+        query=text.casefold();matches=[index for index in range(self.sections.count()) if query in self.sections.item(index).text().casefold()]
         for widget,label,page in self.rows:
-            visible=query in label;widget.setVisible(visible)
+            visible=query in label or query in self.sections.item(page).text().casefold();widget.setVisible(visible)
             if visible:matches.append(page)
+        self.no_results.setVisible(bool(query and not matches))
         if query and matches:self.sections.setCurrentRow(matches[0])
 
 
@@ -101,11 +103,12 @@ class EditorPreferences(SettingsShell):
     def populate(self,group,prefix):
         """Cria controles vinculados a chaves versionadas e opções validadas."""
         labels={'appearance/theme':'Tema','appearance/accent':'Cor de destaque','appearance/scale':'Tamanho do texto','appearance/reduce_motion':'Reduzir movimento','projects/folder':'Pasta dos novos projetos','projects/trust':'Avisar sobre projeto não confiável','projects/backend':'Backend padrão','projects/startup':'Mostrar a janela inicial ao abrir','editor/code_font':'Fonte do código','editor/code_size':'Tamanho do código','editor/wrap':'Quebrar linhas do código','editor/recovery':'Recuperação automática','editor/grid':'Encaixar na grade por padrão','test/clear':'Limpar saída ao iniciar','test/confirm_restart':'Confirmar reinício durante uma tarefa','test/duration':'Mostrar tempo de execução'}
-        option_labels={'appearance/theme':['Sistema','Claro','Escuro'],'appearance/accent':['Do sistema'],'appearance/scale':['90%','100%','115%','130%'],'projects/backend':['GTK','Qt'],'editor/recovery':['Desligada','15 segundos','30 segundos','60 segundos']}
+        option_labels={'appearance/theme':['Sistema','Claro','Escuro'],'appearance/accent':['Do sistema'],'appearance/scale':['90%','100%','115%','125%','130%','150%'],'projects/backend':['GTK','Qt'],'editor/recovery':['Desligada','15 segundos','30 segundos','60 segundos']}
         for key,label in labels.items():
             if not key.startswith(prefix+'/'):continue
             value=preference(key,self.settings)
-            if key in CHOICES:
+            if key=='appearance/accent':field=QLabel('Do sistema')
+            elif key in CHOICES:
                 field=QComboBox()
                 for text,item in zip(option_labels[key],CHOICES[key]):field.addItem(text,item)
                 field.setCurrentIndex(field.findData(value));field.currentIndexChanged.connect(lambda _,key=key,field=field:self.changed(key,field.currentData()))
@@ -126,7 +129,7 @@ class EditorPreferences(SettingsShell):
             if isinstance(field,QComboBox):field.setCurrentIndex(field.findData(value))
             elif isinstance(field,QCheckBox):field.setChecked(value)
             elif isinstance(field,QSpinBox):field.setValue(value)
-            else:field.setText(value)
+            else:field.setText('Do sistema' if key=='appearance/accent' else value)
             field.blockSignals(False)
         apply_preferences(self.window)
 
@@ -166,18 +169,24 @@ class ApplicationSettings(SettingsShell):
     """Configuração por projeto, com alterações reversíveis e busca de campos."""
     def __init__(self,window):
         """Identidade, ícone, backend, dependências, permissões, janelas, dados e destinos."""
-        super().__init__(window,'Configurações do aplicativo');self.window=window;self.fields={};app=window.project.application
+        super().__init__(window,'Configurações do aplicativo');self.window=window;self.fields={};self.validation_errors={};app=window.project.application
         page=self.add_page('Identidade');group=self.group(page,'Identidade','Estas informações acompanham o aplicativo exportado.')
         for key,label in [('name','Nome público'),('id','Identificador'),('version','Versão'),('description','Descrição'),('author','Autor'),('license','Licença'),('category','Categorias')]:
-            field=QLineEdit(str(app.get(key,'')));field.setMinimumWidth(230);field.editingFinished.connect(lambda key=key,field=field:self.change(key,field.text()));self.row(group,label,field);self.fields[key]=field
-        page=self.add_page('Ícone');group=self.group(page,'Ícone do aplicativo','PNG com pelo menos 256 pixels ou SVG.');self.icon_preview=QLabel();self.icon_preview.setFixedSize(128,128);group.addWidget(self.icon_preview)
+            field=QLineEdit(str(app.get(key,'')));field.setMinimumWidth(230);field.editingFinished.connect(lambda key=key,field=field:self.change(key,field.text()));self.row(group,label,field,'Ex.: br.exemplo.meuapp; identifica o aplicativo nos pacotes.' if key=='id' else 'Ex.: 0.1.0' if key=='version' else '');self.fields[key]=field
+        self.identity_notice=QLabel();self.identity_notice.setWordWrap(True);group.addWidget(self.identity_notice)
+        page=self.add_page('Ícone');group=self.group(page,'Ícone do aplicativo','PNG com pelo menos 256 pixels ou SVG.');self.icon_preview=QLabel();self.icon_preview.setFixedSize(128,128)
+        preview_row=QHBoxLayout();self.icon_previews={}
+        for size in (16,32,64,128):
+            holder=QVBoxLayout();image=self.icon_preview if size==128 else QLabel();image.setFixedSize(size,size);holder.addWidget(image,0,Qt.AlignmentFlag.AlignHCenter);holder.addWidget(QLabel(str(size)+' px'),0,Qt.AlignmentFlag.AlignHCenter);preview_row.addLayout(holder);self.icon_previews[size]=image
+        preview_row.addStretch();group.addLayout(preview_row)
         choose=QPushButton('Escolher ícone…');choose.clicked.connect(self.choose_icon);group.addWidget(choose);self.update_icon()
         page=self.add_page('Aparência');group=self.group(page,'Backend do aplicativo','O editor é Qt. Esta escolha define os controles do aplicativo que você está criando.')
         backend=QComboBox();backend.addItem('GTK4 / Adwaita','gtk');backend.addItem('Qt / PySide6','qt');backend.setCurrentIndex(backend.findData(app.get('backend','qt')));backend.currentIndexChanged.connect(lambda _:self.change('backend',backend.currentData()));self.row(group,'Aparência e execução',backend)
         if not gtk_support()['gtk4']:
             notice=QLabel('GTK4 ausente neste Python. O teste GTK informa os pacotes necessários, sem instalar automaticamente.');notice.setWordWrap(True);group.addWidget(notice)
         page=self.add_page('Dependências');group=self.group(page,'Dependências','Python mínimo 3.13. GTK exige PyGObject/GTK4; Qt exige PySide6 6.11.2.')
-        packages=QLineEdit('; '.join(app.get('packages',[])));packages.editingFinished.connect(lambda:self.change('packages',[v.strip() for v in packages.text().split(';') if v.strip()]));self.row(group,'Pacotes Python',packages,'Separe por ponto e vírgula.');self.fields['packages']=packages
+        from .settings_fields import Dependencies
+        packages=Dependencies(app.get('packages',[]));packages.changed.connect(lambda values:self.change('packages',values));group.addWidget(packages);self.fields['packages']=packages
         programs,admin=effects(window.project);label=QLabel('Programas detectados: '+(', '.join(programs) or 'nenhum')+'. Funções próprias podem exigir outros programas.');label.setWordWrap(True);group.addWidget(label)
         page=self.add_page('Permissões');group=self.group(page,'Acesso ao sistema')
         text=QLabel('Fonte Python, DEB, RPM e AppImage executam com as permissões do usuário. O teste não é uma sandbox.\n\n'+('Há ações administrativas declaradas: Polkit/pkexec e agente do sistema são necessários. O Makebench não pede senhas.' if admin else 'Nenhuma ação administrativa declarada nos blocos.')+'\n\nFlatpak isolado bloqueia programas do host e administração. Dependências adicionais devem existir dentro do pacote.');text.setWordWrap(True);group.addWidget(text)
@@ -189,19 +198,37 @@ class ApplicationSettings(SettingsShell):
         for root in roots:initial.addItem(root.properties.get('title','Interface'),root.id)
         initial.setCurrentIndex(initial.findData(window.project.entry_window or window.project.root.id));initial.currentIndexChanged.connect(lambda _:window._edit(lambda:setattr(window.project,'entry_window',initial.currentData())));self.row(group,'Janela inicial',initial)
         for root in roots:
+            group=self.group(page,root.properties.get('title','Interface'),'Tamanho inicial em pixels lógicos.')
             field=QLineEdit(root.properties.get('title','Interface'));field.editingFinished.connect(lambda identifier=root.id,field=field:window._edit(lambda:window.project.find(identifier).properties.update(title=field.text())));self.row(group,'Título da interface',field)
             for key,label,default in [('width','Largura',640),('height','Altura',480)]:
                 spin=QSpinBox();spin.setRange(100,20000);spin.setValue(root.properties.get(key,default));spin.editingFinished.connect(lambda identifier=root.id,key=key,spin=spin:window._edit(lambda:window.project.find(identifier).properties.update({key:spin.value()})));self.row(group,label,spin)
+            resizable=QCheckBox();resizable.setChecked(root.properties.get('resizable',True));resizable.toggled.connect(lambda value,identifier=root.id:window._edit(lambda:window.project.find(identifier).properties.update(resizable=value)));self.row(group,'Permitir redimensionar',resizable)
+            state=QComboBox();state.addItem('Padrão','@default')
+            for entry in window.project.states.get(root.id,[]):state.addItem(entry['name'],entry['id'])
+            state.setCurrentIndex(state.findData(root.properties.get('initial_state','@default')));state.currentIndexChanged.connect(lambda _,identifier=root.id,state=state:window._edit(lambda:window.project.find(identifier).properties.update(initial_state=state.currentData())));self.row(group,'Estado ao abrir',state)
             choose=QPushButton('Escolher ícone desta janela…');choose.clicked.connect(lambda _,identifier=root.id:self.choose_window_icon(identifier));group.addWidget(choose)
-        page=self.add_page('Dados');group=self.group(page,'Variáveis e valores iniciais');add=QPushButton('Adicionar variável…');add.clicked.connect(window.variable_dialog);group.addWidget(add)
-        for index,variable in enumerate(window.project.variables):
-            edit=QPushButton('Editar…');edit.clicked.connect(lambda _,index=index:window.variable_dialog(index=index));self.row(group,variable['name'],edit,repr(variable.get('initial')))
+        page=self.add_page('Dados');group=self.group(page,'Variáveis e valores iniciais','Dados do projeto ou de uma janela. Valores são JSON: texto, número, booleano ou lista.')
+        self.variables_view=QListWidget();self.variables_view.setAccessibleName('Nome, tipo, escopo e valor inicial');group.addWidget(self.variables_view)
+        self.variables_view.itemActivated.connect(lambda _:self.edit_variable())
+        row=QHBoxLayout()
+        for label,callback in [('Adicionar…',lambda:self.edit_variable(new=True)),('Editar…',self.edit_variable)]:
+            button=QPushButton(label);button.clicked.connect(callback);row.addWidget(button)
+        row.addStretch();group.addLayout(row);self.refresh_variables()
         page=self.add_page('Destinos');group=self.group(page,'Exportadores','O resultado só é marcado como construído depois de passar pela ferramenta e pela verificação.')
         for name,tool in [('Fonte Python',None),('DEB','dpkg-deb'),('AppImage','appimagetool'),('Flatpak','flatpak-builder'),('RPM','rpmbuild')]:
-            status=QLabel('Construção pela janela Exportar' if not tool or build_tools().get(tool) else 'Gerar receita · falta '+tool);self.row(group,name,status)
+            from makebench.core.build_environment import prepared
+            status=QLabel('Construção pela janela Exportar' if not tool or build_tools().get(tool) or tool!='flatpak-builder' and prepared() else 'Preparar ferramentas na janela Exportar');self.row(group,name,status)
 
     def change(self,key,value):
         """Grava apenas o campo alterado, sem regenerar nem executar fontes próprias."""
+        error=''
+        if key=='id' and not re.fullmatch(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}',value):error='Use um identificador como br.exemplo.meuapp.'
+        elif key=='version' and not re.fullmatch(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?',value):error='Use uma versão como 0.1.0.'
+        elif key=='name' and not value.strip():error='Informe o nome público do aplicativo.'
+        if error:self.validation_errors[key]=error
+        else:self.validation_errors.pop(key,None)
+        if hasattr(self,'identity_notice'):self.identity_notice.setText('\n'.join(self.validation_errors.values()))
+        if error:return
         if self.window.project.application.get(key)!=value:self.window.change_application(key,value)
 
     def choose_icon(self):
@@ -225,5 +252,20 @@ class ApplicationSettings(SettingsShell):
         name=self.window.project.application.get('icon')
         if name:
             try:
-                pixmap=QPixmap();pixmap.loadFromData(self.window.assets.read(name));self.icon_preview.setPixmap(pixmap.scaled(128,128,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation))
+                pixmap=QPixmap();pixmap.loadFromData(self.window.assets.read(name))
+                for size,image in self.icon_previews.items():image.setPixmap(pixmap.scaled(size,size,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation))
             except Exception:self.icon_preview.clear()
+
+    def refresh_variables(self):
+        """A lista reflete o modelo atual sem trocar a fonte de verdade dos dados."""
+        self.variables_view.clear()
+        for variable in self.window.project.variables:
+            value=variable.get('initial');scope='Projeto' if variable.get('scope','project')=='project' else self.window.project.find(variable['window']).properties.get('title','Janela')
+            kind='Nulo' if value is None else 'Booleano' if isinstance(value,bool) else 'Número' if isinstance(value,(int,float)) else 'Texto' if isinstance(value,str) else 'Lista' if isinstance(value,list) else 'Objeto'
+            self.variables_view.addItem(f"{variable['name']} · {kind} · {scope}\n{value!r}")
+
+    def edit_variable(self,_checked=False,new=False):
+        """Abre o editor existente e atualiza a lista depois de confirmar ou cancelar."""
+        index=None if new else self.variables_view.currentRow()
+        if index is not None and index<0:return
+        self.window.variable_dialog(index=index);self.refresh_variables()

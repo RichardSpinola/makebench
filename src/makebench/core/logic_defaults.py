@@ -11,7 +11,7 @@ def literal(value=''):
 
 def default_block(op,project,window):
     """Valores iniciais válidos quando há controles compatíveis; nunca executa nada."""
-    node={'id':new_id('block'),'op':op};components=list(project.walk())
+    node={'id':new_id('block'),'op':op};components=list(project.find(window).walk())
     if op in {'log','message','set_text','assign','call'}:node['value']=literal('Olá!')
     if op in {'set_text','set_enabled','set_value','show_page'}:
         kinds={'set_text':{'label','button','text_input','checkbox','output'},'set_value':{'progress'},'show_page':{'page'}}.get(op)

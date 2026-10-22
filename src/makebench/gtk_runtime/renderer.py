@@ -55,6 +55,13 @@ class GtkView:
         elif k==ComponentKind.LABEL:widget=Gtk.Label(label=text,wrap=True,xalign=0)
         elif k==ComponentKind.BUTTON:
             widget=Gtk.Button(label=text);widget.connect('clicked',lambda _button:self.clicked(node.id))
+            if p.get('icon'):
+                try:
+                    texture=self.Gdk.Texture.new_from_bytes(self.GLib.Bytes.new(self.read_asset(p['icon'])))
+                    content=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=6,halign=Gtk.Align.CENTER)
+                    image=Gtk.Image.new_from_paintable(texture);image.set_pixel_size(16);content.append(image)
+                    widget._makebench_label=Gtk.Label(label=text);content.append(widget._makebench_label);widget.set_child(content)
+                except (OSError,ValueError,self.GLib.Error):pass
         elif k==ComponentKind.TEXT_INPUT:widget=Gtk.Entry(text=text,placeholder_text=p.get('placeholder',''))
         elif k==ComponentKind.CHECKBOX:widget=Gtk.CheckButton(label=text,active=p.get('checked',False))
         elif k==ComponentKind.PROGRESS:widget=Gtk.ProgressBar(show_text=True,fraction=p.get('value',0)/100)
@@ -70,6 +77,7 @@ class GtkView:
         else:raise ValueError('Componente GTK não reconhecido: '+str(k))
         self.frames[node.id]=widget;self.widgets.setdefault(node.id,widget);self.enabled[node.id]=p.get('enabled',True)
         widget.set_visible(p.get('visible',True));widget.set_sensitive(p.get('enabled',True))
+        if p.get('tooltip'):widget.set_tooltip_text(p['tooltip'])
         modes=p.get('size_mode',{})
         widget.set_hexpand(modes.get('width')=='fill');widget.set_vexpand(modes.get('height')=='fill')
         widget.set_size_request(node.geometry['width'] if modes.get('width')=='fixed' else -1,node.geometry['height'] if modes.get('height')=='fixed' else -1)
@@ -82,7 +90,8 @@ class GtkView:
     def set_text(self,identifier,value):
         """Atualiza texto usando a API específica de cada controle GTK."""
         w=self.widgets[identifier];Gtk=self.Gtk
-        if isinstance(w,Gtk.TextView):w.get_buffer().set_text(str(value))
+        if hasattr(w,'_makebench_label'):w._makebench_label.set_label(str(value))
+        elif isinstance(w,Gtk.TextView):w.get_buffer().set_text(str(value))
         elif isinstance(w,(Gtk.Button,Gtk.CheckButton,Gtk.Label)):w.set_label(str(value))
         elif isinstance(w,Gtk.Entry):w.set_text(str(value))
         else:raise ValueError('Este componente não possui texto.')
@@ -91,6 +100,7 @@ class GtkView:
         """Lê controles atuais, incluindo mudanças feitas pelo usuário."""
         w=self.widgets[identifier];Gtk=self.Gtk
         if attribute=='text':
+            if hasattr(w,'_makebench_label'):return w._makebench_label.get_label()
             if isinstance(w,Gtk.TextView):b=w.get_buffer();return b.get_text(b.get_start_iter(),b.get_end_iter(),True)
             return w.get_text() if isinstance(w,Gtk.Entry) else w.get_label()
         if attribute=='checked':return w.get_active()

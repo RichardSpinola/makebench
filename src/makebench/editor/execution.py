@@ -11,17 +11,20 @@ class ExecutionMixin:
     """Apresenta logs, tarefas e origem sem executar código no processo do editor."""
     def install_execution(self):
         """Acrescenta filtros e comandos sobre o mesmo log compartilhado."""
-        self.log_entries=[];self.task_items={};self.test_started=None
+        self.log_entries=[];self.task_items={};self.task_running={};self.test_started=None
+        # Remover antes de reparentear evita deslocar e apagar a aba Problemas.
+        self.drawer.removeTab(self.drawer.indexOf(self.output_log));self.drawer.setMinimumHeight(145)
         output=QWidget();layout=QVBoxLayout(output);layout.setContentsMargins(4,4,4,4)
-        row=QHBoxLayout();self.output_filter=QComboBox();self.output_filter.addItems(['Tudo','Erros'])
-        self.output_filter.currentIndexChanged.connect(self.rebuild_output);row.addWidget(self.output_filter);row.addStretch()
+        row=QHBoxLayout();self.output_filter=QComboBox();
+        for label,key in [('Tudo',None),('Saída padrão','stdout'),('Avisos / stderr','stderr'),('Erros','error'),('Execução','status')]:self.output_filter.addItem(label,key)
+        self.output_filter.currentIndexChanged.connect(self.rebuild_output);row.addWidget(self.output_filter);self.process_info=QLabel('Nenhum teste iniciado');row.addWidget(self.process_info,1)
         for label,callback in [('Copiar',lambda:__import__('PySide6.QtWidgets',fromlist=['QApplication']).QApplication.clipboard().setText(self.output_log.toPlainText())),('Limpar',self.clear_output)]:
             button=QPushButton(label);button.clicked.connect(callback);row.addWidget(button)
-        layout.addLayout(row);layout.addWidget(self.output_log)
-        self.drawer.removeTab(0);self.drawer.insertTab(0,output,'Saída')
+        layout.addLayout(row);layout.addWidget(self.output_log,1);self.output_log.show()
+        self.drawer.insertTab(0,output,'Saída')
         tasks=QWidget();tl=QVBoxLayout(tasks)
-        self.task_tree=QTreeWidget();self.task_tree.setHeaderLabels(['Tarefa','Tipo','Estado','Duração']);tl.addWidget(self.task_tree)
-        self.cancel_task_button=QPushButton('Cancelar tarefa comum e encerrar teste');self.cancel_task_button.clicked.connect(self.stop_test);tl.addWidget(self.cancel_task_button)
+        self.task_tree=QTreeWidget();self.task_tree.setHeaderLabels(['Tarefa','Tipo','Estado','Duração']);tl.addWidget(self.task_tree);self.task_empty=QLabel('As tarefas iniciadas pelo aplicativo aparecem aqui, com resultado e duração.');self.task_empty.setWordWrap(True);tl.addWidget(self.task_empty)
+        self.cancel_task_button=QPushButton('Cancelar tarefa comum e encerrar teste');self.cancel_task_button.setEnabled(False);self.cancel_task_button.clicked.connect(self.stop_test);tl.addWidget(self.cancel_task_button)
         self.drawer.addTab(tasks,'Tarefas')
         error=QWidget();er=QVBoxLayout(error);self.run_error_label=QLabel();self.run_error_label.setWordWrap(True);er.addWidget(self.run_error_label)
         locate=QPushButton('Ir à origem');locate.clicked.connect(self.locate_test_error);er.addWidget(locate,0,Qt.AlignmentFlag.AlignLeft)
@@ -29,28 +32,31 @@ class ExecutionMixin:
         self.run_trace=QPlainTextEdit();self.run_trace.setReadOnly(True);self.run_trace.hide();details.toggled.connect(self.run_trace.setVisible);er.addWidget(self.run_trace)
         self.drawer.addTab(error,'Erro')
         self.clock=QTimer(self);self.clock.setInterval(1000);self.clock.timeout.connect(self.update_test_time);self.clock.start()
-        self._runtime_project_fingerprint=None
+        self._runtime_project_fingerprint=None;manager().changed.connect(self.rebuild_output)
 
     def monitor_runtime(self,window):
         """Conecta um processo real antes de seu início explícito."""
         from .settings import preference
         if preference('test/clear'):self.clear_output()
         self.run_number+=1;self.test_started=time.monotonic();self._runtime_project_fingerprint=self.fingerprint()
+        self.process_info.setText(f'Execução {self.run_number} · {datetime.now():%H:%M:%S}');self.task_empty.setVisible(not self.task_items)
         self.add_output('status',f'\n──────── Execução {self.run_number} · {datetime.now():%H:%M:%S} ────────\n')
+        process=getattr(window.session,'process',None) or getattr(window,'process',None)
+        if process:process.started.connect(lambda:self.process_info.setText(f'Execução {self.run_number} · Python · PID {process.processId()}'))
         window.session.output.connect(self.add_output)
         window.session.busy_changed.connect(lambda _:self._update_actions())
         window.session.error.connect(self.show_test_error)
         window.status_changed.connect(self.set_test_status)
         window.session.task_changed.connect(self.update_task)
         window.session.admin_changed.connect(lambda active:self.stop_action.setEnabled(not active))
-        window.session.stopped.connect(lambda:self.test_status.setText('Interrompido'))
+        window.session.stopped.connect(self.runtime_stopped)
         self.drawer.show();self.drawer.setCurrentIndex(0)
 
     def add_output(self,channel,text):
         """Mantém canais separados; stderr é aviso, falha explícita é erro."""
         self.log_entries.append((channel,text))
         if sum(len(t) for _,t in self.log_entries)>500000:self.log_entries=self.log_entries[-1000:]
-        if self.output_filter.currentIndex()==0 or channel=='error':
+        if self.output_filter.currentData() is None or channel==self.output_filter.currentData():
             tokens=manager().tokens;color=tokens['warning'] if channel=='stderr' else tokens['error'] if channel=='error' else tokens['muted'] if channel=='status' else None
             append_output(self.output_log,text,color)
 
@@ -65,9 +71,12 @@ class ExecutionMixin:
 
     def update_task(self,data):
         """Mostra duração e resultado de tarefas comuns ou administrativas."""
+        self.task_empty.hide()
         key=f"{self.run_number}:{data['id']}";item=self.task_items.get(key)
         if item is None:
             item=QTreeWidgetItem();self.task_tree.addTopLevelItem(item);self.task_items[key]=item
+        if data['state']=='Executando':self.task_running[key]=time.monotonic()-data.get('duration',0)
+        else:self.task_running.pop(key,None)
         item.setText(0,data['program']);item.setText(1,'Administrativa' if data['admin'] else 'Comum')
         item.setText(2,data['state']);item.setText(3,f"{data.get('duration',0):.1f} s")
         self.cancel_task_button.setEnabled(not data['admin'] and data['state']=='Executando')
@@ -86,6 +95,7 @@ class ExecutionMixin:
 
     def update_test_time(self):
         """Avisa quando a edição se distancia do snapshot que está em execução."""
+        for key,started in self.task_running.items():self.task_items[key].setText(3,f'{time.monotonic()-started:.1f} s')
         window=self.runtime_window
         from .settings import preference
         if window and not window.session.closed and self.test_started and preference('test/duration'):
@@ -99,3 +109,12 @@ class ExecutionMixin:
         for phrase,label in [('administrativa','Autorização do sistema'),('Aguardando resposta','Aguardando resposta'),('Iniciando','Iniciando'),('Fluxo concluído','Concluído'),('Fluxo cancelado','Interrompido'),('Erro','Erro'),('erro','Erro'),('Executando fluxo','Executando'),('Aplicativo em execução','Em execução'),('Encerrando','Encerrando'),('encerrada','Parado'),('Projeto alterado','Alterações · F5 para reiniciar')]:
             if phrase in text:compact=label;break
         self.test_status.setText(compact);self.test_status.setToolTip(text)
+
+    def runtime_stopped(self):
+        """Registra encerramento com duração real, sem misturar diagnóstico de edição."""
+        elapsed=time.monotonic()-self.test_started if self.test_started else 0
+        for key in list(self.task_running):
+            if key.startswith(str(self.run_number)+':'):
+                self.task_items[key].setText(2,'Interrompido');self.task_items[key].setText(3,f'{time.monotonic()-self.task_running.pop(key):.1f} s')
+        self.test_status.setText('Parado');self.process_info.setText(f'Execução {self.run_number} · encerrada · {elapsed:.1f} s');self.cancel_task_button.setEnabled(False)
+        self.add_output('status',f'\nExecução encerrada · {elapsed:.1f} s\n')

@@ -18,9 +18,11 @@ def check_runtime():
     """Exercita três estados, duas janelas, pergunta GTK e tarefa com stdout/stderr."""
     with tempfile.TemporaryDirectory(prefix='makebench-gtk-runtime-test-') as directory:
         root=Path(directory);p=welcome_template();entry=p.add(p.root.id,ComponentKind.TEXT_INPUT);progress=p.add(p.root.id,ComponentKind.PROGRESS);output=p.add(p.root.id,ComponentKind.OUTPUT)
-        launch=p.add(p.root.id,ComponentKind.BUTTON);launch.properties['text']='API ctx'
+        launch=p.add(p.root.id,ComponentKind.BUTTON);launch.properties.update(text='API ctx',icon='assets/button.svg',tooltip='Testar API ctx')
         flow=create_flow(p,launch.id);flow['body']=[{'id':'call','op':'call','function':'exercise','value':{'id':'arg','op':'literal','value':''}}]
         source=f'''def exercise(ctx, valor):
+    ctx.set_text({launch.id!r}, 'Ícone preservado')
+    assert ctx.read({launch.id!r}, 'text') == 'Ícone preservado'
     ctx.set_text({entry.id!r}, 'GTK real')
     assert ctx.read({entry.id!r}, 'text') == 'GTK real'
     ctx.set_value({progress.id!r}, 75)
@@ -29,7 +31,7 @@ def check_runtime():
     ctx.run('/bin/sh', ['-c', 'printf saida; printf aviso >&2'])
     ctx.run('/bin/sh', ['-c', 'exit 3'])
 '''
-        messages=[];runtime=GtkRuntime(p,source,lambda _:b'',root,None,messages.append);step=[0];failure=[]
+        messages=[];runtime=GtkRuntime(p,source,lambda _:b'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16"/></svg>',root,None,messages.append);step=[0];failure=[]
         def tick():
             """Responde ao diálogo por API GTK e avança somente depois de cada fluxo."""
             try:
@@ -42,6 +44,7 @@ def check_runtime():
                 if not runtime.active or runtime.busy:return True
                 if step[0]==0:runtime.queue_event(launch.id);step[0]=1;return True
                 if step[0]==1:
+                    assert hasattr(runtime.views[p.root.id].widgets[launch.id],'_makebench_label'),'O botão perdeu seu ícone'
                     assert any(m['type']=='error' and '3' in m.get('message','') for m in messages),messages
                     assert any(m['type']=='log' and m.get('channel')=='stderr' and 'aviso' in m['text'] for m in messages)
                     text=runtime.views[p.root.id].read(output.id,'text')

@@ -67,11 +67,14 @@ const block = (type, inputs) => ({kind:'block', type, ...(inputs ? {inputs} : {}
 const value = (type, fields) => ({shadow:{type,fields}});
 const emptyList=()=>({block:{type:'lists_create_with',extraState:{itemCount:0}}});
 const toolbox = {kind:'categoryToolbox',contents:[
- {kind:'category',name:'Interface',colour:210,contents:[block('mb_set_text',{VALUE:value('text',{TEXT:'Novo texto'})}),block('mb_set_enabled',{VALUE:value('logic_boolean',{BOOL:'TRUE'})}),block('mb_set_value',{VALUE:value('math_number',{NUM:50})}),block('mb_show_page'),block('mb_go_state'),block('mb_open_window'),block('mb_close_window'),block('mb_message',{VALUE:value('text',{TEXT:'Olá!'})}),block('mb_log',{VALUE:value('text',{TEXT:'Tudo pronto'})}),block('mb_read_text'),block('mb_read_checked'),block('mb_read_value')]},
- {kind:'category',name:'Condições e repetição',colour:120,contents:[block('mb_if',{CONDITION:value('logic_boolean',{BOOL:'TRUE'})}),block('mb_repeat',{COUNT:value('math_number',{NUM:3})}),block('mb_binary',{LEFT:value('math_number',{NUM:0}),RIGHT:value('math_number',{NUM:0})})]},
- {kind:'category',name:'Valores e variáveis',colour:330,contents:[block('text'),block('math_number'),block('logic_boolean'),block('mb_join',{LEFT:value('text',{TEXT:'Olá, '}),RIGHT:value('text',{TEXT:'Linux'})}),block('mb_assign',{VALUE:value('math_number',{NUM:0})}),block('mb_variable')]},
- {kind:'category',name:'Perguntas',colour:180,contents:[block('mb_ask',{PROMPT:value('text',{TEXT:'Qual é o seu nome?'}),OPTIONS:emptyList()}),block('mb_confirm',{PROMPT:value('text',{TEXT:'Deseja continuar?'})})]},
- {kind:'category',name:'Programas e scripts',colour:20,contents:[block('mb_run',{PROGRAM:value('text',{TEXT:'uname'}),ARGUMENTS:emptyList()}),block('mb_script',{SOURCE:value('text',{TEXT:'printf "Olá, %s\\n" "$1"'}),ARGUMENTS:emptyList()}),{kind:'block',type:'lists_create_with',extraState:{itemCount:0}}]},
+ {kind:'category',name:'Interface e navegação',colour:210,contents:[block('mb_set_text',{VALUE:value('text',{TEXT:'Novo texto'})}),block('mb_set_enabled',{VALUE:value('logic_boolean',{BOOL:'TRUE'})}),block('mb_set_value',{VALUE:value('math_number',{NUM:50})}),block('mb_show_page'),block('mb_go_state'),block('mb_open_window'),block('mb_close_window'),block('mb_message',{VALUE:value('text',{TEXT:'Olá!'})}),block('mb_read_text'),block('mb_read_checked'),block('mb_read_value')]},
+ {kind:'category',name:'Variáveis e dados',colour:330,contents:[block('mb_assign',{VALUE:value('math_number',{NUM:0})}),block('mb_variable'),{kind:'block',type:'lists_create_with',extraState:{itemCount:0}}]},
+ {kind:'category',name:'Condições',colour:120,contents:[block('mb_if',{CONDITION:value('logic_boolean',{BOOL:'TRUE'})}),block('logic_boolean')]},
+ {kind:'category',name:'Repetições',colour:120,contents:[block('mb_repeat',{COUNT:value('math_number',{NUM:3})})]},
+ {kind:'category',name:'Operações',colour:230,contents:[block('mb_binary',{LEFT:value('math_number',{NUM:0}),RIGHT:value('math_number',{NUM:0})}),block('math_number')]},
+ {kind:'category',name:'Texto',colour:160,contents:[block('text'),block('mb_multiline'),block('mb_join',{LEFT:value('text',{TEXT:'Olá, '}),RIGHT:value('text',{TEXT:'Linux'})})]},
+ {kind:'category',name:'Eventos',colour:210,contents:[{kind:'label',text:'O evento atual fica no topo do fluxo.'},{kind:'button',text:'Conectar outro evento…',callbackKey:'MAKEBENCH_EVENT'}]},
+ {kind:'category',name:'Tarefas',colour:20,contents:[block('mb_run',{PROGRAM:value('text',{TEXT:'uname'}),ARGUMENTS:emptyList()}),block('mb_script',{SOURCE:value('text',{TEXT:'printf "Olá, Linux\\n"'}),ARGUMENTS:emptyList()}),block('mb_log',{VALUE:value('text',{TEXT:'Tudo pronto'})}),block('mb_ask',{PROMPT:value('text',{TEXT:'Qual é o seu nome?'}),OPTIONS:emptyList()}),block('mb_confirm',{PROMPT:value('text',{TEXT:'Deseja continuar?'})})]},
  {kind:'category',name:'Funções próprias',colour:290,contents:[block('mb_call',{VALUE:value('text',{TEXT:'Linux'})})]}
 ]};
 
@@ -231,6 +234,7 @@ new QWebChannel(qt.webChannelTransport, channel => {
  // Blockly 13 disponibiliza um serializador explícito para comentários soltos.
  try {Blockly.serialization.registry.register('workspaceComments',new Blockly.serialization.workspaceComments.WorkspaceCommentSerializer());} catch(e) { /* Já registrado nesta versão. */ }
  workspace=Blockly.inject('workspace',{toolbox,renderer:'zelos',media:'vendor/blockly/media/',sounds:false,trashcan:true,comments:true,collapse:true,disable:false,maxBlocks:5000,maxUndo:0,zoom:{controls:true,wheel:true,startScale:0.85},grid:{spacing:24,length:2,colour:'var(--mb-grid)',snap:false}});
+ workspace.registerButtonCallback('MAKEBENCH_EVENT',()=>bridge.command('new_event'));
  workspace.addChangeListener(event => {
    if(loading) return;
    if(event.type===Blockly.Events.SELECTED && current) bridge.selected(current.flow.id,event.newElementId || '');

@@ -63,6 +63,7 @@ def validate_navigation(project):
             from pathlib import PurePosixPath
             icon=PurePosixPath(p['icon']) if isinstance(p['icon'],str) else None
             if icon is None or icon.is_absolute() or '..' in icon.parts or len(icon.parts)<2 or icon.parts[0]!='assets' or '\\' in p['icon']:raise ProjectError('Ícone da janela precisa ficar em assets.')
+        if not isinstance(p.get('tooltip',''),str):raise ProjectError('Dica do componente precisa ser texto.')
         for key in ('visible','enabled','resizable'):
             if key in p and type(p[key]) is not bool:raise ProjectError('Propriedade booleana inválida: '+key)
         for key in ('width','height'):
@@ -170,3 +171,67 @@ def welcome_template(name='Boas-vindas'):
         if index:
             create_flow(project,back.id,states=[state])['body']=[{'id':new_id('block'),'op':'go_state','state':sequence[index-1]}]
     return project
+
+
+def find_navigation_block(project,flow_id,block_id):
+    """Localiza uma ação por identidade, inclusive dentro de condições/repetições."""
+    flow=next((f for f in project.editable_flows if f['id']==flow_id),None)
+    def visit(value):
+        """IDs não são nomes exibidos e não precisam de interpretação de código."""
+        if isinstance(value,dict):
+            if value.get('id')==block_id:return value
+            for child in value.values():
+                found=visit(child)
+                if found:return found
+        elif isinstance(value,list):
+            for child in value:
+                found=visit(child)
+                if found:return found
+    return (flow,visit(flow.get('body'))) if flow else (None,None)
+
+
+def remove_navigation_block(project,flow_id,block_id):
+    """Remove só o bloco indicado, preservando outros efeitos e comentários do fluxo."""
+    flow,_=find_navigation_block(project,flow_id,block_id)
+    if not flow:return
+    def visit(items):
+        """A remoção funciona também em ramificações internas do evento."""
+        for item in list(items or []):
+            if item.get('id')==block_id:items.remove(item);return True
+            for key in ('then','else','body'):
+                if isinstance(item.get(key),list) and visit(item[key]):return True
+        return False
+    visit(flow.get('body'));flow['workspace']={'workspaceComments':flow.get('workspace',{}).get('workspaceComments',[])}
+
+
+def connect_navigation(project,source,event_component,target,close_current=False,replace=None):
+    """Cria/edita navegação real no fluxo; janelas abrem no estado inicial suportado."""
+    from .logic import create_flow
+    window_id,state=source.split('|',1);target_window,target_state=target.split('|',1)
+    owner=project.window_of(event_component);destination=project.find(target_window)
+    if owner is None or owner.id!=window_id or destination not in project.roots:raise ProjectError('Origem ou destino da navegação não pertence à interface escolhida.')
+    if target_window!=window_id and target_state!=destination.properties.get('initial_state','@default'):raise ProjectError('Outra janela abre em seu estado inicial. Escolha esse estado como destino.')
+    old_flow,old_block=find_navigation_block(project,*replace) if replace else (None,None)
+    comment=old_block.get('comment') if old_block else None;identifier=old_block['id'] if old_block else new_id('block')
+    if replace and not old_block:raise ProjectError('A transição não existe mais.')
+    if state not in {'@default',*[s['id'] for s in project.states.get(window_id,[])]} or target_state not in {'@default',*[s['id'] for s in project.states.get(target_window,[])]}:raise ProjectError('O estado da transição não existe.')
+    flow=old_flow if old_flow and old_flow['event']['component']==event_component and (not old_flow.get('states') or state in old_flow['states']) else next(iter(sorted((f for f in project.editable_flows if f['event']['component']==event_component and (not f.get('states') or state in f['states'])),key=lambda f:not bool(f.get('states')))),None)
+    if flow is None:flow=create_flow(project,event_component,states=[state])
+    if flow.get('body') is None:raise ProjectError('Complete o rascunho desse evento antes de adicionar uma transição.')
+    block={'id':identifier,'op':'go_state','state':target_state} if window_id==target_window else {'id':identifier,'op':'open_window','window':target_window,'close_current':bool(close_current)}
+    if comment:block['comment']=comment
+    if old_block and old_flow is flow:old_block.clear();old_block.update(block)
+    else:
+        if old_block:remove_navigation_block(project,*replace)
+        flow['body'].append(block)
+    flow['workspace']={'workspaceComments':flow.get('workspace',{}).get('workspaceComments',[])}
+    return flow
+
+
+def effective_edge_states(project,edge):
+    """Deriva estados realmente alcançados, respeitando handlers específicos sobre gerais."""
+    if edge['states']:return edge['states']
+    flow=next(f for f in project.editable_flows if f['id']==edge['flow'])
+    states=['@default',*[s['id'] for s in project.states.get(edge['source'],[])]]
+    overridden={s for f in project.editable_flows if f['id']!=flow['id'] and f['event']==flow['event'] for s in f.get('states',[])}
+    return [state for state in states if state not in overridden]

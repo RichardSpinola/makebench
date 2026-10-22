@@ -1,6 +1,6 @@
 """Controles e layouts comuns à edição e à execução de aplicativos Qt."""
 from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (QCheckBox, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
     QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy, QVBoxLayout,QFrame,QWidget)
 from makebench.core.project import ComponentKind, LayoutKind
@@ -76,6 +76,12 @@ def create_control(node, read_asset, editing=False):
             raise ValueError(f"Componente sem renderizador: {node.kind}")
     if isinstance(widget, QLabel):
         widget.setTextFormat(Qt.TextFormat.PlainText)
+    if node.kind==ComponentKind.BUTTON and node.properties.get('icon'):
+        image=QPixmap()
+        try:image.loadFromData(read_asset(node.properties['icon']))
+        except (OSError,StorageError):pass
+        widget.setIcon(QIcon(image))
+    widget.setToolTip(node.properties.get('tooltip',''))
     widget.setObjectName(node.id)
     widget.setEnabled(node.properties.get('enabled',True))
     return widget

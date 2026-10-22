@@ -8,7 +8,7 @@ from makebench.core.project import KIND_LABELS,LAYOUT_LABELS,ComponentKind,Layou
 class Inspector(QWidget):
     """Mostra conteúdo, organização, tamanho e eventos pertinentes à seleção."""
     property_changed=Signal(str,str,object)
-    image_requested=Signal(str);image_cleared=Signal(str);logic_requested=Signal(str)
+    image_requested=Signal(str);image_cleared=Signal(str);logic_requested=Signal(str);icon_requested=Signal(str);navigation_requested=Signal(dict)
     selection_command=Signal(str);layout_preview_requested=Signal(str,str)
     restore_requested=Signal(str,str)
 
@@ -38,7 +38,7 @@ class Inspector(QWidget):
         wrapper=QWidget();layout=QVBoxLayout(wrapper);layout.setContentsMargins(0,0,0,0);layout.setSpacing(6)
         header=QToolButton();header.setText(title);header.setCheckable(True);header.setAutoRaise(True)
         header.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        body=QWidget();body.setProperty('card',True);form=QFormLayout(body);form.setContentsMargins(6,6,6,6);form.setSpacing(6)
+        body=QWidget();body.setProperty('card',True);form=QFormLayout(body);form.setContentsMargins(6,6,6,6);form.setSpacing(6);form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         key=(self._kind,title);opened=self._expanded.get(key,expanded)
         header.setChecked(opened);header.setArrowType(Qt.ArrowType.DownArrow if opened else Qt.ArrowType.RightArrow);body.setVisible(opened)
@@ -52,9 +52,12 @@ class Inspector(QWidget):
         """Renderiza propriedades efetivas; ● identifica diferenças do estado ativo."""
         import json
         parent=project.parent_of(node.id)
+        from makebench.core.navigation import navigation_edges
+        flows={f['id'] for f in project.editable_flows if f['event']['component']==node.id}
+        interactions=json.dumps(([f['id'] for f in project.editable_flows if f['id'] in flows],[e for e in navigation_edges(project) if e['flow'] in flows]),sort_keys=True)
         signature=(id(project),project.name,json.dumps(node.to_dict(),sort_keys=True),
                    parent.id if parent else None,parent.display_name if parent else None,
-                   json.dumps(overrides or {},sort_keys=True),state_mode)
+                   json.dumps(overrides or {},sort_keys=True),state_mode,interactions)
         if signature==getattr(self,'_binding_signature',None):return
         self.clear();self._binding_signature=signature
         self._kind=node.kind.value;self._overrides=overrides or {};self.state_mode=state_mode
@@ -62,26 +65,27 @@ class Inspector(QWidget):
         parent=project.parent_of(node.id)
         if parent:
             caption=QLabel('Dentro de: '+(parent.properties.get('code_name') or parent.display_name));caption.setWordWrap(True);caption.setProperty('muted',True);self.form.addRow(caption)
-        if node.kind==ComponentKind.WINDOW and node.id==project.root.id:
-            self.section('Projeto');self._text_field('Nome do projeto','@project','name',project.name)
         self.section('Conteúdo')
         for key,label in [('title','Título'),('text','Texto'),('placeholder','Dica do campo')]:
             if key in node.properties:self._text_field(label,node.id,key,node.properties[key])
+        if node.kind==ComponentKind.BUTTON:
+            self._text_field('Dica',node.id,'tooltip',node.properties.get('tooltip',''))
+            choose_icon=QPushButton('Escolher ícone…' if not node.properties.get('icon') else 'Trocar ícone…');choose_icon.setEnabled(not self.state_mode);choose_icon.clicked.connect(lambda:self.icon_requested.emit(node.id));self.fields.addRow('Ícone',choose_icon)
+            if node.properties.get('icon'):
+                clear_icon=QPushButton('Remover ícone');clear_icon.setEnabled(not self.state_mode);clear_icon.clicked.connect(lambda:self.property_changed.emit(node.id,'icon',''));self.fields.addRow(clear_icon)
         if node.kind==ComponentKind.IMAGE:
             filename=QLabel(node.properties.get('image_name') or 'Nenhuma imagem');filename.setWordWrap(True);self.fields.addRow('Arquivo',filename)
             button=QPushButton('Escolher ou substituir imagem…');button.clicked.connect(lambda:self.image_requested.emit(node.id));self.fields.addRow(button)
             clear=QPushButton('Remover imagem');clear.setEnabled(bool(node.properties.get('source')));clear.clicked.connect(lambda:self.image_cleared.emit(node.id));self.fields.addRow(clear)
             self._text_field('Descrição acessível',node.id,'alt_text',node.properties.get('alt_text',''))
-        for key,label in [('visible','Visível'),('enabled','Habilitado')]:self._boolean_field(label,node.id,key,node.properties.get(key,True))
-        if node.kind==ComponentKind.CHECKBOX:self._boolean_field('Selecionada inicialmente',node.id,'checked',node.properties.get('checked',False))
         if node.kind==ComponentKind.PROGRESS:self._number_field('Progresso (%)',node.id,'value',node.properties.get('value',0),0,100)
         if node.kind==ComponentKind.PAGES:
             pages=QComboBox()
             for child in node.children:pages.addItem(child.properties.get('title','Página'),child.id)
             pages.setCurrentIndex(pages.findData(node.properties['initial_page']))
             pages.currentIndexChanged.connect(lambda _:self.property_changed.emit(node.id,'initial_page',pages.currentData()));self.fields.addRow('Página inicial',pages)
+        self.section('Layout')
         if node.can_have_children and node.kind!=ComponentKind.PAGES:
-            self.section('Organizar')
             segments=QWidget();row=QGridLayout(segments);row.setContentsMargins(0,0,0,0);row.setSpacing(4)
             for index,(mode,label) in enumerate(LAYOUT_LABELS.items()):
                 button=QPushButton(label);button.setCheckable(True);button.setChecked(node.layout==mode)
@@ -103,13 +107,12 @@ class Inspector(QWidget):
                 self._choice_field('Alinhar',node.id,'align',node.properties.get('align','start'),[('Início','start'),('Centro','center'),('Fim','end'),('Preencher','stretch')])
                 self._choice_field('Distribuir',node.id,'distribute',node.properties.get('distribute','start'),[('Início','start'),('Centro','center'),('Fim','end'),('Entre elementos','space-between')])
             if node.layout==LayoutKind.GRID:self._number_field('Colunas',node.id,'columns',node.properties.get('columns',2),1,12)
-        self.section('Tamanho e posição')
         if node.kind==ComponentKind.WINDOW:
             self._number_field('Largura inicial',node.id,'width',node.properties.get('width',640),200,4000)
             self._number_field('Altura inicial',node.id,'height',node.properties.get('height',480),160,4000)
             self._boolean_field('Redimensionável',node.id,'resizable',node.properties.get('resizable',True))
         elif parent:
-            for axis,label in [('width','Largura'),('height','Altura')]:
+            for axis,label in ([] if parent.layout==LayoutKind.FREE else [('width','Largura'),('height','Altura')]):
                 field=QComboBox()
                 for text,value in [('Ajustar ao conteúdo','content'),('Preencher','fill'),('Fixo','fixed')]:field.addItem(text,value)
                 field.setCurrentIndex(field.findData(node.properties.get('size_mode',{}).get(axis,'content')))
@@ -122,12 +125,22 @@ class Inspector(QWidget):
                 for key,label in [('x','X'),('y','Y'),('width','Largura (px)'),('height','Altura (px)')]:self._number_field(label,node.id,'geometry.'+key,node.geometry[key],1 if key in {'width','height'} else 0,20000)
             else:
                 hint=QLabel('Posição definida pelo contêiner ('+LAYOUT_LABELS[parent.layout]+').');hint.setWordWrap(True);hint.setProperty('muted',True);self.fields.addRow(hint)
+        self.section('Estado')
+        for key,label in [('visible','Visível'),('enabled','Habilitado')]:self._boolean_field(label,node.id,key,node.properties.get(key,True))
+        if node.kind==ComponentKind.CHECKBOX:self._boolean_field('Selecionada inicialmente',node.id,'checked',node.properties.get('checked',False))
         if node.kind in {ComponentKind.WINDOW,ComponentKind.BUTTON}:
-            self.section('Eventos')
+            self.section('Interações')
             count=sum(1 for flow in project.editable_flows if flow.get('event',{}).get('component')==node.id)
             label='Editar lógica' if count else '+ Ao iniciar' if node.kind==ComponentKind.WINDOW else '+ Ao clicar'
             logic=QPushButton(label+(f' · {count} fluxo(s)' if count else ''));logic.clicked.connect(lambda:self.logic_requested.emit(node.id));self.fields.addRow(logic)
+            from makebench.core.navigation import navigation_edges
+            for edge in [e for e in navigation_edges(project) if any(f['id']==e['flow'] and f['event']['component']==node.id for f in project.editable_flows)]:
+                destination=project.find(edge['target']) if edge['target'] else None
+                text='Navegação: '+(destination.display_name if destination else next((s['name'] for s in project.states.get(project.window_of(node.id).id,[]) if s['id']==edge['target']),'Padrão'))
+                link=QToolButton();link.setText(text);link.setToolTip('Inspecionar esta transição no Mapa');link.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly);link.setAutoRaise(True);link.clicked.connect(lambda _,edge=edge:self.navigation_requested.emit(edge));self.fields.addRow(link)
         self.section('Avançado',False)
+        if node.kind==ComponentKind.WINDOW and node.id==project.root.id:self._text_field('Nome do projeto','@project','name',project.name)
+        identifier=QLineEdit(node.id);identifier.setReadOnly(True);self.fields.addRow('Identificador interno',identifier)
         self._text_field('Nome no código',node.id,'code_name',node.properties.get('code_name',''))
         self.error_label=QLabel();self.error_label.setWordWrap(True);self.error_label.hide();self.form.addRow(self.error_label)
 
@@ -147,7 +160,7 @@ class Inspector(QWidget):
     def _text_field(self,label,node_id,key,value):
         """Confirma a digitação ao sair do campo como uma única alteração."""
         field=QLineEdit(value)
-        if self.state_mode and key=='code_name':field.setReadOnly(True)
+        if self.state_mode and key in {'code_name','tooltip'}:field.setReadOnly(True)
         field.setObjectName('property_'+key);field.setAccessibleName(label)
         field.editingFinished.connect(lambda:self.property_changed.emit(node_id,key,field.text()))
         self._restore_menu(field,node_id,key);self.fields.addRow(self._label(label,key),field)
@@ -191,3 +204,13 @@ class Inspector(QWidget):
             elif event.type()==QEvent.Type.Leave:
                 self.preview_timer.stop();self._preview=None;self.layout_preview_requested.emit(obj.property('layoutNode'),'')
         return super().eventFilter(obj,event)
+
+    def patch_value(self,key,value):
+        """Atualiza uma entrada existente se a alteração veio de outro comando, sem perder foco."""
+        field=self.findChild(QWidget,'property_'+key)
+        if field is None:return
+        blocked=field.blockSignals(True)
+        try:
+            if isinstance(field,QLineEdit) and field.text()!=str(value):field.setText(str(value))
+            elif isinstance(field,QSpinBox) and field.value()!=value:field.setValue(value)
+        finally:field.blockSignals(blocked)

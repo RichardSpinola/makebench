@@ -43,7 +43,10 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.palette.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
         for index in range(self.palette.count()):
             item=self.palette.item(index);item.setIcon(icon(item.data(Qt.ItemDataRole.UserRole)));item.setSizeHint(__import__('PySide6.QtCore',fromlist=['QSize']).QSize(160,34))
-        self.insert_search.textChanged.connect(lambda query:[self.palette.item(index).setHidden(query.casefold() not in self.palette.item(index).text().casefold()) for index in range(self.palette.count())])
+        from .catalog import CATEGORIES,filter_library
+        self.insert_category=QComboBox();self.insert_category.setAccessibleName('Categoria de componentes');self.insert_category.addItem('Todos os componentes',None)
+        for key,label in CATEGORIES.items():self.insert_category.addItem(label,key)
+        il.addWidget(self.insert_category);self.insert_search.textChanged.connect(lambda _:filter_library(self));self.insert_category.currentIndexChanged.connect(lambda _:filter_library(self));filter_library(self)
         il.addWidget(self.palette,1)
 
         add=QPushButton(icon('add'),'Inserir');add.setToolTip('Inserir o elemento selecionado');add.clicked.connect(self.add_component);il.addWidget(add)
@@ -87,12 +90,12 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         # Uma gaveta compartilhada em todos os modos, fora do documento.
         self.drawer=QTabWidget();self.drawer.setDocumentMode(True);self.drawer.setTabPosition(QTabWidget.TabPosition.South);self.drawer.setMinimumHeight(80);self.drawer.setMaximumHeight(350)
         from .code import CodeEditor
-        self.output_log=CodeEditor(True);self.output_log.setPlaceholderText('A saída aparece aqui ao testar o aplicativo.')
+        self.output_log=CodeEditor(True);self.output_log.highlighter.language='plain';self.output_log.highlighter.rehighlight();self.output_log.origin_enabled=False;self.output_log.setAccessibleName('Saída da execução');self.output_log.setPlaceholderText('A saída aparece aqui ao testar o aplicativo.')
         self.problems=QListWidget();self.problems.itemActivated.connect(self.go_to_problem)
         self.problems.itemClicked.connect(self.go_to_problem)
         self.script_editor=CodeEditor();self.script_editor.setPlaceholderText('Selecione um bloco Bash e escolha Editar texto ou script.')
         self.script_apply=QPushButton('Aplicar ao bloco · Ctrl+Enter');self.script_apply.setEnabled(False)
-        script=QWidget();sc=QVBoxLayout(script);sc.addWidget(self.script_editor);sc.addWidget(self.script_apply)
+        script=QWidget();sc=QVBoxLayout(script);self.script_context=QLabel('Selecione um bloco de texto ou Bash na Lógica e use Editar texto ou script.');self.script_context.setWordWrap(True);sc.addWidget(self.script_context);sc.addWidget(self.script_editor);sc.addWidget(self.script_apply)
         self.drawer.addTab(self.output_log,'Saída');self.drawer.addTab(self.problems,'Problemas');self.drawer.addTab(script,'Script')
         self.drawer.hide()
         self.workspace_splitter=QSplitter(Qt.Orientation.Vertical);self.workspace_splitter.setHandleWidth(4);self.workspace_splitter.addWidget(self.tabs);self.workspace_splitter.addWidget(self.drawer)
@@ -238,7 +241,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
     def sync_problems(self):
         """Concentra diagnósticos estáticos com vínculo ao fluxo ou à linha."""
         import json
-        signature=(self.source.text,json.dumps(self.project.workflows,sort_keys=True))
+        signature=(self.source.text,json.dumps(self.project.workflows,sort_keys=True),tuple((r.id,r.properties.get('title')) for r in self.project.roots),self.project.entry_window)
         if signature==getattr(self,'_problems_signature',None):return
         self._problems_signature=signature
         self.problems.clear();self._problem_targets=[]
@@ -264,6 +267,11 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
             if flow.get('body') is None:
                 self._add_problem(flow.get('name','Fluxo')+': '+('; '.join(flow.get('errors',[])) or 'Complete os blocos.'),{'flow':flow['id']})
             visit(flow.get('body'),flow)
+        from makebench.core.navigation import navigation_edges
+        incoming={edge['target'] for edge in navigation_edges(self.project) if edge['op']=='open_window'}
+        if not self.project.metadata.get('empty_map'):
+            for root in self.project.roots:
+                if root.id!=(self.project.entry_window or self.project.root.id) and root.id not in incoming:self._add_problem('Aviso · '+root.properties.get('title','Janela')+': sem transição de entrada por blocos. Funções Python podem abri-la.',{'component':root.id})
         if not self.problems.count():
             item=QListWidgetItem('Nenhum problema encontrado.');item.setFlags(Qt.ItemFlag.NoItemFlags);self.problems.addItem(item)
         count=len(self._problem_targets);self.drawer.setTabText(1,f'Problemas ({count})' if count else 'Problemas')
@@ -278,10 +286,11 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         """Seleciona o arquivo ou o fluxo de origem do diagnóstico."""
         target=item.data(Qt.ItemDataRole.UserRole)
         if not target:return
-        if target.get('source_line'):
-            self.set_mode('Código');self.source_editor.show_line(target['source_line'])
+        if target.get('component'):self.navigate_to_item('component',target['component'])
+        elif target.get('source_line'):
+            self.set_mode('Código');self.code_files.setCurrentIndex(1);self.source_editor.show_line(target['source_line'])
         elif target.get('flow'):
-            self.logic.sync(target['flow']);self.set_mode('Lógica')
+            self.navigate_to_item('flow',target['flow'])
             if target.get('block'):self.logic.focus_block(target['flow'],target['block'])
 
     def toggle_drawer(self):
@@ -340,6 +349,8 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
             self.drawer.show();self.drawer.setCurrentIndex(2);self.script_editor.setFocus();return
         if not self.prepare_script_change():return
         self._script_target=target;self._script_original=data['text']
+        flow=next((f for f in self.project.editable_flows if f['id']==self.logic.flow_id),None)
+        self.script_context.setText(('Evento: '+flow['name']+' · '+self.project.window_of(flow['event']['component']).properties.get('title','Janela')) if flow else 'Texto do bloco selecionado')
         self.script_editor.setPlainText(data['text']);self.script_apply.setEnabled(False)
         self.drawer.show();self.drawer.setCurrentIndex(2);self.script_editor.setFocus()
 
@@ -407,6 +418,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         target=None
         if self._mode=='Design':target=self.left_panel if side=='left' else self.right_panel
         elif self._mode=='Lógica' and side=='right':target=self.logic.splitter.widget(1)
+        elif self._mode=='Mapa':target=self.map_panel.outline_panel if side=='left' else self.map_panel.details
         elif self._mode=='Código' and side=='right':target=self.function_outline.parentWidget()
         elif self._mode=='Publicar' and side=='left':target=self.publish_panel.checks
         if target:target.setVisible(not target.isVisible())

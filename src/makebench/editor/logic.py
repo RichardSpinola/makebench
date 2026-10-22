@@ -52,7 +52,7 @@ class LogicBridge(QObject):
     @Slot(str)
     def command(self, name):
         """Encaminha apenas salvar/desfazer/refazer originados por teclado."""
-        if name in {'save', 'undo', 'redo', 'find_block', 'python', 'function'}:
+        if name in {'save', 'undo', 'redo', 'find_block', 'python', 'function', 'new_event'}:
             # Sair do callback WebChannel antes de avaliar JS durante flush.
             QTimer.singleShot(0,lambda:self.command_received.emit(name))
 
@@ -79,6 +79,7 @@ class LogicPanel(QWidget):
     search_requested = Signal()
     function_requested = Signal(str)
     duplicate_requested = Signal(str)
+    design_requested = Signal(str)
 
     def __init__(self, project_getter, source_getter, parent=None):
         """Cria controles nativos; WebEngine só inicia ao entrar na aba Lógica."""
@@ -114,6 +115,8 @@ class LogicPanel(QWidget):
         row.addWidget(self.remove)
         duplicate=QToolButton();duplicate.setIcon(icon('duplicate'));duplicate.setToolTip('Duplicar fluxo…');duplicate.setAccessibleName('Duplicar fluxo');duplicate.setAutoRaise(True);duplicate.clicked.connect(lambda:self.duplicate_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(duplicate)
         layout.addLayout(row)
+        self.context_widget=QWidget();context_row=QHBoxLayout(self.context_widget);context_row.setContentsMargins(0,0,0,0);self.context_label=QLabel();self.context_label.setWordWrap(True);context_row.addWidget(self.context_label,1)
+        back=QToolButton();back.setIcon(icon('design'));back.setText('Ver no Design');back.setToolTip('Selecionar a origem deste evento no Designer');back.setAccessibleName('Ver origem no Designer');back.clicked.connect(self.show_origin);context_row.addWidget(back);layout.addWidget(self.context_widget)
         self.targets=QComboBox(self);self.targets.hide()
         self.add_event=QPushButton('+ Evento…');self.add_event.setToolTip('Conectar um clique ou a abertura de uma janela à lógica.');self.add_event.clicked.connect(self.new_event_dialog);row.addWidget(self.add_event)
         hint = QLabel('Encaixe os blocos em “fazer”. Botão direito adiciona comentários. Selecione um bloco para localizar sua linha Python.')
@@ -136,6 +139,7 @@ class LogicPanel(QWidget):
         complete=QToolButton();complete.setIcon(icon('code'));complete.setToolTip('Ver arquivo completo');complete.setAccessibleName('Ver arquivo completo');complete.clicked.connect(lambda:self.full_code_requested.emit(self.code_start+self.code.textCursor().blockNumber()));code_header.addWidget(complete)
         self.code_start=1;self._selecting_code=False
         self.code = CodeEditor(True)
+        self.code.origin_requested.connect(self.focus_code_origin)
         wrap=QCheckBox('Quebrar linhas');wrap.toggled.connect(lambda enabled:self.code.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth if enabled else QPlainTextEdit.LineWrapMode.NoWrap));code_header.addWidget(wrap);code_layout.addLayout(code_header)
         code_layout.addWidget(self.code)
         self.code.cursorPositionChanged.connect(self._select_line)
@@ -316,7 +320,16 @@ class LogicPanel(QWidget):
             self.pending_changed.emit()
             payload['token'] = self.token
             self.bridge.documentChanged.emit(json.dumps(payload, ensure_ascii=False))
+        if flow:
+            component=project.find(flow['event']['component']);verb='iniciar' if component.kind==ComponentKind.WINDOW else 'clicar em '+component.display_name
+            self.context_label.setText('Quando '+verb+' · '+owner.properties.get('title','Janela'))
+        else:self.context_label.setText('Escolha um evento ou conecte um novo para começar.')
         self.update_code()
+
+    def show_origin(self):
+        """Retorna ao componente que dispara o fluxo sem alterar seu comportamento."""
+        flow=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
+        if flow:self.design_requested.emit(flow['event']['component'])
 
     def update_code(self):
         """Regenera Python visível a partir do modelo, sem executar funções."""
@@ -375,6 +388,7 @@ class LogicPanel(QWidget):
     def _command(self, name):
         """Entrega atalhos capturados no DOM ao documento nativo."""
         if name=='find_block':self.search_requested.emit()
+        elif name=='new_event':self.new_event_dialog()
         elif name=='python':self.full_code_requested.emit(self.code_start+self.code.textCursor().blockNumber())
         elif name=='function':
             if self.ready:self.page.runJavaScript('window.makebench.selectedFunction()',lambda value:self.function_requested.emit(value) if value else None)
@@ -462,3 +476,9 @@ class LogicPanel(QWidget):
         flows=[f for f in self.get_project().editable_flows if f['event']['component']==component]
         flow=next((f for f in flows if state in f.get('states',[])),None) or next((f for f in flows if not f.get('states')),None)
         self.flow_id=flow['id'] if flow else None;self.sync()
+
+    def focus_code_origin(self,line):
+        """O menu do Python recolhível localiza o bloco pela linha global correspondente."""
+        candidates=[(number,key) for key,number in self.generated.lines.items() if key[0]==self.flow_id and number<=self.code_start+line-1]
+        if candidates:
+            _,key=max(candidates,key=lambda item:item[0]);self.focus_block(*key)

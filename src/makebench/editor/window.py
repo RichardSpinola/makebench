@@ -242,6 +242,8 @@ class MainWindow(StudioMixin, QMainWindow):
         self.inspector.image_requested.connect(self.choose_image)
         self.inspector.image_cleared.connect(self.clear_image)
         self.inspector.logic_requested.connect(self.edit_logic)
+        self.inspector.icon_requested.connect(self.choose_component_icon)
+        self.inspector.navigation_requested.connect(self.reveal_navigation)
         inspector_scroll.setWidget(self.inspector)
         right_layout.addWidget(inspector_scroll)
         splitter.addWidget(right)
@@ -297,13 +299,25 @@ class MainWindow(StudioMixin, QMainWindow):
         self.tabs.currentChanged.connect(self._tab_changed)
         self.setCentralWidget(self.tabs)
 
+    def presentation_signature(self):
+        """Identifica somente composição/contexto, sem reconstruir widgets por mudanças de lógica."""
+        import json
+        return json.dumps({'project':self.project.id,'assets':id(self.assets),'roots':[r.to_dict() for r in self.project.roots],
+            'states':self.project.states,'window':getattr(self,'active_window',self.project.root.id),'state':getattr(self,'active_state','@default'),
+            'backend':self.project.application.get('backend','qt'),'icon':self.project.application.get('icon'),'empty':self.project.metadata.get('empty_map',False)},sort_keys=True)
+
     def _refresh(self) -> None:
-        """Mostra uma atualização completa sem exibir o estado vazio intermediário."""
+        """Reutiliza a composição se só lógica/metadados mudaram; estrutura repinta atomicamente."""
         from .updates import hold_updates
-        # O canvas vive em QGraphicsProxyWidget, fora da hierarquia QWidget
-        # da janela. Congelar só MainWindow não impede sua repintura parcial.
-        with hold_updates(self), hold_updates(self.canvas):
-            self._rebuild_views()
+        signature=self.presentation_signature()
+        if signature==getattr(self,'_presentation_signature',None):
+            for identifier,item in self._tree_items.items():
+                node=self.project.find(identifier);count=sum(f['event']['component']==identifier for f in self.project.editable_flows)
+                item.setText(0,('◌ ' if not node.properties.get('visible',True) else '')+(node.properties.get('code_name') or node.display_name)+(f' · {count} evento(s)' if count else ''))
+            self.sync_navigation();self._select(self.selected_id);self.logic.sync();self._update_code();self._update_actions();return
+        # O proxy gráfico não é filho QWidget da janela principal.
+        with hold_updates(self), hold_updates(self.canvas):self._rebuild_views()
+        self._presentation_signature=self.presentation_signature()
 
     def _rebuild_views(self) -> None:
         """Atualiza as vistas a partir do documento e preserva a seleção válida."""
@@ -318,10 +332,11 @@ class MainWindow(StudioMixin, QMainWindow):
             """Projeta um nó e seus filhos na árvore de navegação."""
             count=sum(1 for flow in self.project.editable_flows if flow.get('event',{}).get('component')==node.id)
             label=node.properties.get('code_name') or node.display_name
+            if not node.properties.get('visible',True):label='◌ '+label
             if count:label+=f' · {count} evento(s)'
             item = QTreeWidgetItem([label])
             from .theme import icon
-            item.setIcon(0,icon(node.kind.value));item.setToolTip(0,node.display_name)
+            item.setIcon(0,icon(node.kind.value));item.setToolTip(0,node.display_name+(' · oculto no aplicativo' if not node.properties.get('visible',True) else '')+(' · contêiner' if node.can_have_children else ''))
             item.setData(0, Qt.ItemDataRole.UserRole, node.id)
             if parent:
                 parent.addChild(item)
@@ -437,6 +452,7 @@ class MainWindow(StudioMixin, QMainWindow):
         for action in self.align_actions:
             action.setEnabled(interface_active and bool(free))
         self.setWindowTitle(f"{self.project.name}[*] — Makebench")
+        if hasattr(self,'code_files'):self.code_files.setTabText(1,'Funções próprias'+(' •' if self.source.dirty else ''))
         self.setWindowModified(self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty())
         count = len(list(self.project.root.walk())) - 1
         state = "Alterações não salvas" if self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty() else "Pronto"
@@ -501,13 +517,13 @@ class MainWindow(StudioMixin, QMainWindow):
     def _refresh_property(self,identifier,key):
         """Atualiza valores sem destruir o campo em edição nem a árvore de widgets."""
         structural={'layout','size_mode','align','distribute','alignment_preset','initial_page'}
-        if key in structural:
+        if key in structural or key in {'width','height','resizable'} or key=='icon' and self.project.find(identifier).kind==ComponentKind.WINDOW:
             self.setUpdatesEnabled(False)
             try:self._refresh()
             finally:self.setUpdatesEnabled(True)
             return
         if identifier=='@project':
-            self.canvas._project.name=self.project.name;self._update_actions();return
+            self.canvas._project.name=self.project.name;self._presentation_signature=self.presentation_signature();self._update_actions();return
         node=self.project.find(identifier)
         if node is None:return
         effective=next((n for n in self.project.effective_root(self.active_window,self.active_state).walk() if n.id==identifier),None)
@@ -521,6 +537,12 @@ class MainWindow(StudioMixin, QMainWindow):
             if key=='text':
                 widget.setPlainText(str(effective.properties.get('text',''))) if hasattr(widget,'setPlainText') else widget.setText(str(effective.properties.get('text','')))
             elif key=='placeholder' and hasattr(widget,'setPlaceholderText'):widget.setPlaceholderText(str(effective.properties.get('placeholder','')))
+            elif key=='tooltip':widget.setToolTip(effective.properties.get('tooltip',''))
+            elif key=='icon' and hasattr(widget,'setIcon'):
+                from PySide6.QtGui import QPixmap,QIcon
+                image=QPixmap()
+                if effective.properties.get('icon'):image.loadFromData(self.assets.read(effective.properties['icon']))
+                widget.setIcon(QIcon(image))
             elif key=='checked' and hasattr(widget,'setChecked'):widget.setChecked(effective.properties['checked'])
             elif key=='value' and hasattr(widget,'setValue'):widget.setValue(effective.properties['value'])
             elif key in {'source','alt_text','image_name'} and hasattr(widget,'image'):
@@ -548,11 +570,28 @@ class MainWindow(StudioMixin, QMainWindow):
         item=self._tree_items.get(identifier)
         if item:
             count=sum(f.get('event',{}).get('component')==identifier for f in self.project.editable_flows)
-            item.setText(0,(node.properties.get('code_name') or node.display_name)+(f' · {count} evento(s)' if count else ''))
+            item.setText(0,('◌ ' if not node.properties.get('visible',True) else '')+(node.properties.get('code_name') or node.display_name)+(f' · {count} evento(s)' if count else ''))
         if self.active_state!='@default':
             state=next(s for s in self.project.states[self.active_window] if s['id']==self.active_state);self.inspector._overrides=state.get('overrides',{}).get(identifier,{})
+        if identifier==self.selected_id:
+            if key=='icon':self.inspector._binding_signature=None;self._select(identifier)
+            elif not key.startswith('geometry.'):self.inspector.patch_value(key,effective.properties.get(key,''))
+        self._presentation_signature=self.presentation_signature()
         self.logic.sync();self._update_code();self._update_actions()
         if hasattr(self,'zoom_view'):self.zoom_view.update_bounds()
+
+    def choose_component_icon(self,identifier):
+        """Importa ícone portátil no documento, sem vincular caminhos externos."""
+        filename,_=QFileDialog.getOpenFileName(self,'Ícone do botão','','Ícones (*.png *.svg)')
+        if filename:
+            try:self._change_property(identifier,'icon',self.assets.import_image(Path(filename)))
+            except (OSError,ProjectError) as exc:self._show_error(str(exc))
+
+    def reveal_navigation(self,edge):
+        """O inspetor do Designer abre a conexão exata no Mapa."""
+        self.set_mode('Mapa')
+        line=next((line for line in self.map_panel.edges if line.edge['flow']==edge['flow'] and line.edge['block']==edge['block']),None)
+        if line:self.map_panel.view.scene().clearSelection();line.setSelected(True);self.map_panel.view.ensureVisible(line)
 
     def _finish_field_edit(self) -> bool:
         """Confirma texto ainda em edição antes de salvar ou substituir o projeto."""
@@ -597,7 +636,7 @@ class MainWindow(StudioMixin, QMainWindow):
             node = self.project.parent_of(node.id)
         return None
 
-    def _edit(self, change: Callable[[], None]) -> None:
+    def _edit(self, change: Callable[[], None], refresh=True) -> None:
         """Agrupa um comando em uma alteração e restaura o documento se falhar."""
         if not self._finish_field_edit():
             return
@@ -613,7 +652,8 @@ class MainWindow(StudioMixin, QMainWindow):
             self._show_error(str(exc))
             return
         self.history.push(self.project)
-        self._refresh()
+        if refresh:self._refresh()
+        else:self._update_actions()
 
     def change_application(self,key,value):
         """Metadados do app não precisam destruir os widgets da interface em edição."""
@@ -1105,5 +1145,6 @@ class MainWindow(StudioMixin, QMainWindow):
             self.publish_panel.cancel_build()
             self.statusBar().showMessage('Cancelando construção antes de fechar…',5000)
             QTimer.singleShot(100,self.close);event.ignore();return
+        if hasattr(self,'map_panel'):self.map_panel.previews.shutdown()
         self.clear_recovery()
         event.accept()

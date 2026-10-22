@@ -2,9 +2,9 @@
 import keyword
 import re
 
-from PySide6.QtCore import QRect, QSize, Qt, Slot, QEvent
+from PySide6.QtCore import QRect, QSize, Qt, Slot, QEvent, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QPainter, QSyntaxHighlighter, QTextCharFormat, QTextCursor, QTextDocument, QTextFormat, QKeySequence, QShortcut
-from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QWidget, QLineEdit, QToolButton, QLabel, QHBoxLayout
+from PySide6.QtWidgets import QPlainTextEdit, QTextEdit, QWidget, QLineEdit, QToolButton, QLabel, QHBoxLayout, QVBoxLayout
 
 
 class PythonHighlight(QSyntaxHighlighter):
@@ -18,6 +18,7 @@ class PythonHighlight(QSyntaxHighlighter):
                  (r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')''',t['success']),
                  (r'#.*',t['muted'])]
         if getattr(self,'language','python')=='bash':rules=[(r'\b(?:if|then|fi|for|do|done|echo|printf|exit|read)\b',t['info']),(r'\$[a-zA-Z0-9_{}]+',t['accent']),(r'#.*',t['muted'])]
+        if getattr(self,'language','python')=='plain':rules=[]
         for pattern, color in rules:
             style = QTextCharFormat(); style.setForeground(QColor(color))
             for match in re.finditer(pattern,text):
@@ -47,8 +48,13 @@ class LineNumbers(QWidget):
             top+=height;number+=1;block=block.next()
 
 
-class CodeEditor(QPlainTextEdit):
+from .code_tools import CodeTools
+
+
+class CodeEditor(CodeTools,QPlainTextEdit):
     """Apresenta Python e destaca a linha correspondente a um bloco."""
+    origin_requested=Signal(int)
+
     def __init__(self, readonly=False, parent=None):
         """Configura fonte, recuo, margem e sintaxe sem habilitar execução."""
         super().__init__(parent)
@@ -57,17 +63,23 @@ class CodeEditor(QPlainTextEdit):
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ') * 4)
         self.setPlaceholderText('Escreva suas funções Python aqui.')
-        self.find_bar=QWidget(self);find_layout=QHBoxLayout(self.find_bar);find_layout.setContentsMargins(4,2,4,2)
+        self.find_bar=QWidget(self);bar_layout=QVBoxLayout(self.find_bar);bar_layout.setContentsMargins(4,2,4,2);bar_layout.setSpacing(2);find_layout=QHBoxLayout();bar_layout.addLayout(find_layout)
         self.find_text=QLineEdit();self.find_text.setPlaceholderText('Buscar no código…');self.find_text.setAccessibleName('Buscar no código');self.find_text.setClearButtonEnabled(True);self.find_text.installEventFilter(self);find_layout.addWidget(self.find_text,1)
         self.find_status=QLabel();find_layout.addWidget(self.find_status)
         for label,callback in [('↑',lambda:self.find_next(True)),('↓',self.find_next),('×',self.close_find)]:
             button=QToolButton();button.setText(label);button.setAccessibleName({'↑':'Resultado anterior','↓':'Próximo resultado','×':'Fechar busca'}[label]);button.clicked.connect(callback);find_layout.addWidget(button)
+        self.replace_row=QWidget();replacement=QHBoxLayout(self.replace_row);replacement.setContentsMargins(0,0,0,0)
+        self.replace_text=QLineEdit();self.replace_text.setPlaceholderText('Substituir por…');self.replace_text.setAccessibleName('Texto de substituição');replacement.addWidget(self.replace_text,1)
+        for label,callback in [('Substituir',self.replace_one),('Todas',self.replace_all)]:
+            button=QToolButton();button.setText(label);button.clicked.connect(callback);replacement.addWidget(button)
+        self.replace_row.hide();bar_layout.addWidget(self.replace_row)
         self.find_bar.hide();self.find_text.textEdited.connect(lambda _:self.find_next(restart=True));self.find_text.returnPressed.connect(self.find_next)
-        for sequence,callback in [('Ctrl+F',self.open_find),('F3',self.find_next),('Shift+F3',lambda:self.find_next(True)),('Esc',self.close_find)]:
+        for sequence,callback in [('Ctrl+H',self.open_replace),('Ctrl+G',self.go_to_line),('F4',lambda:self.origin_requested.emit(self.textCursor().blockNumber()+1) if self.isReadOnly() and getattr(self,'origin_enabled',True) else None),('Ctrl+F',self.open_find),('F3',self.find_next),('Shift+F3',lambda:self.find_next(True)),('Esc',self.close_find)]:
             shortcut=QShortcut(QKeySequence(sequence),self);shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut);shortcut.activated.connect(callback)
         self.numbers=LineNumbers(self)
         self.highlighter=PythonHighlight(self.document())
         self._error_selections=[]
+        self.cursorPositionChanged.connect(self.highlight_cursor);self.textChanged.connect(self.highlight_cursor)
         self.blockCountChanged.connect(self._update_margin)
         self.updateRequest.connect(self._update_numbers)
         self._update_margin()
@@ -104,7 +116,7 @@ class CodeEditor(QPlainTextEdit):
         selection = QTextEdit.ExtraSelection();selection.cursor = cursor
         selection.format.setBackground(self.palette().alternateBase())
         selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
-        self.setExtraSelections([*self._error_selections,selection]);self.centerCursor()
+        self.highlight_cursor();self.centerCursor()
 
     def eventFilter(self,watched,event):
         """Escape também funciona enquanto a busca tem o foco de digitação."""
@@ -121,7 +133,7 @@ class CodeEditor(QPlainTextEdit):
     def close_find(self):
         """Escape devolve o foco ao código sem perder a seleção encontrada."""
         if self.find_bar.isHidden():return
-        self.find_bar.hide();self._update_margin();self.setFocus()
+        self.find_bar.hide();self.replace_row.hide();self._update_margin();self.setFocus()
 
     def find_next(self,backward=False,restart=False):
         """Percorre ocorrências com retorno ao início/fim e informa ausência de resultados."""
@@ -138,7 +150,7 @@ class CodeEditor(QPlainTextEdit):
         """Oferece busca, comentários e recuo Python sem executar o conteúdo."""
         if self.isReadOnly():super().keyPressEvent(event);return
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier and event.key()==Qt.Key.Key_Slash:
-            cursor=self.textCursor();start=min(cursor.anchor(),cursor.position());end=max(cursor.anchor(),cursor.position())
+            cursor=self.textCursor();start=min(cursor.anchor(),cursor.position());end=max(cursor.anchor(),cursor.position());end=end-1 if cursor.hasSelection() and self.document().findBlock(end).position()==end else end
             first=self.document().findBlock(start).blockNumber();last=self.document().findBlock(end).blockNumber()
             cursor.beginEditBlock()
             for number in range(last,first-1,-1):
@@ -149,16 +161,14 @@ class CodeEditor(QPlainTextEdit):
                 else:edit.insertText('# ')
             cursor.endEditBlock();return
         if event.key()==Qt.Key.Key_Tab:
-            self.textCursor().insertText('    ');return
+            if self.textCursor().hasSelection():self.indent_selection()
+            else:self.textCursor().insertText('    ')
+            return
         if event.key() in {Qt.Key.Key_Return,Qt.Key.Key_Enter}:
-            line=self.textCursor().block().text();indent=line[:len(line)-len(line.lstrip())]
+            line=self.textCursor().block().text()[:self.textCursor().positionInBlock()];indent=line[:len(line)-len(line.lstrip())]
             if line.rstrip().endswith(':'):indent+='    '
             super().keyPressEvent(event);self.textCursor().insertText(indent);return
-        if event.key()==Qt.Key.Key_Backtab:
-            cursor=self.textCursor();cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
-            if cursor.block().text().startswith('    '):
-                cursor.movePosition(QTextCursor.MoveOperation.Right,QTextCursor.MoveMode.KeepAnchor,4);cursor.removeSelectedText()
-            return
+        if event.key()==Qt.Key.Key_Backtab:self.indent_selection(True);return
         super().keyPressEvent(event)
 
     def mark_syntax_error(self,line=None,message=''):
@@ -173,7 +183,7 @@ class CodeEditor(QPlainTextEdit):
                 from .theme import manager
                 selection.format.setUnderlineColor(QColor(manager().tokens['error']));selection.format.setToolTip(message)
                 self._error_selections=[selection]
-        self.setExtraSelections(self._error_selections)
+        self.highlight_cursor()
 
     @Slot(dict)
     def theme_changed(self,_tokens):
@@ -182,4 +192,4 @@ class CodeEditor(QPlainTextEdit):
         from .theme import manager
         font.setPointSizeF(max(8,font.pointSizeF())*manager().scale/100);self.setFont(font)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ')*4)
-        self._update_margin();self.highlighter.rehighlight();self.numbers.update()
+        self._update_margin();self.highlighter.rehighlight();self.numbers.update();self.highlight_cursor()

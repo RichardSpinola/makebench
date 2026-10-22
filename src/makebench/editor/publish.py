@@ -41,6 +41,7 @@ class PublishPanel(QWidget):
     def __init__(self,window):
         """Controles nativos compactos e detalhes expansíveis para logs e diagnóstico."""
         super().__init__();self.window=window;self.job=None;layout=QVBoxLayout(self);layout.setContentsMargins(12,10,12,10);layout.setSpacing(8)
+        self.stages=QLabel('1 Formato  →  2 Verificação  →  3 Construção  →  4 Resultado');layout.addWidget(self.stages)
         header=QHBoxLayout();self.summary=QLabel();header.addWidget(self.summary,1)
         edit=QPushButton('Aplicativo…');edit.clicked.connect(window.application_settings);header.addWidget(edit);layout.addLayout(header)
         form=QFormLayout();self.destination_form=form;self.format=QComboBox()
@@ -72,9 +73,9 @@ class PublishPanel(QWidget):
     def sync(self):
         """A falta de ferramentas nunca troca silenciosamente um pacote por uma receita."""
         app=self.window.project.application;self.summary.setText((app.get('name') or self.window.project.name)+' · '+(app.get('version') or 'Sem versão')+' · '+app.get('backend','qt').upper())
-        key=self.format.currentData();signature=(self.window.project.id,self.window.history._index,self.window.source.text,key)
+        key=self.format.currentData();signature=(self.window.project.id,self.window.history._index,self.window.source.text,key,self.recipe_only.isChecked(),self.environment.currentData())
         if signature!=getattr(self,'_check_signature',None):
-            self._check_signature=signature;self.checks.clear();self.checks.hide();self.check_hint.show()
+            self._check_signature=signature;self.checks.clear();self.checks.hide();self.check_hint.show();self.stages.setText('1 Formato  →  2 Verificação  →  3 Construção  →  4 Resultado');self.result.clear();self.open_folder.hide();self.copy_path.hide()
         name,tool,_=FORMATS[key];available=build_tools().get(tool) if tool else True;managed=prepared();busy=bool(self.job and self.job.isRunning())
         self.destination_form.setRowVisible(self.environment,key not in {'source','flatpak'});self.prepare.setVisible(key!='source');self.recipe_only.setVisible(key!='source')
         self.environment.setEnabled(key not in {'source','flatpak'} and not busy);self.recipe_only.setEnabled(key!='source' and not busy);self.prepare.setEnabled(key!='source' and not busy)
@@ -91,6 +92,7 @@ class PublishPanel(QWidget):
     def check(self):
         """Verifica o projeto sem executar código e permite abrir a origem de cada problema."""
         if not self.window._finish_field_edit():return False
+        self.stages.setText('1 Formato  →  [2 Verificação]  →  3 Construção  →  4 Resultado')
         self.checks.clear();self.checks.show();self.check_hint.hide();issues=preflight(self.window.project,self.window.source.text,self.window.assets.read,self.format.currentData())
         for issue in issues:
             prefix={'error':'✕','warning':'!','success':'✓'}[issue['level']];item=QListWidgetItem(prefix+'  '+issue['message']);item.setData(Qt.ItemDataRole.UserRole,issue['field']);self.checks.addItem(item)
@@ -106,6 +108,7 @@ class PublishPanel(QWidget):
 
     def start_job(self,job,prepare=False):
         """Uma operação de cada vez, com controles e cancelamento coerentes."""
+        self.stages.setText('Preparação das ferramentas' if prepare else '1 Formato  →  2 Verificação  →  [3 Construção]  →  4 Resultado')
         self.job=job;self.build.setEnabled(False);self.prepare.setEnabled(False);self.check_button.setEnabled(False);self.format.setEnabled(False);self.environment.setEnabled(False);self.recipe_only.setEnabled(False);self.cancel_button.setEnabled(True);self.cancel_button.show()
         self.result.clear();self.open_folder.hide();self.copy_path.hide();self.build_log.clear();self.progress_bar.setValue(0);self.progress_bar.show();self.result.setText('Preparando ferramentas…' if prepare else 'Construindo…')
         job.progress.connect(lambda number,text:(self.progress_bar.setValue(number),self.build_log.appendPlainText(text)))
@@ -143,11 +146,13 @@ class PublishPanel(QWidget):
 
     def completed(self,result):
         """Resultado identifica formato, tamanho e pasta; hash permanece nos detalhes."""
+        self.stages.setText('1 Formato  →  2 Verificação  →  3 Construção  →  [4 Resultado]')
         self.output_path=Path(result['path']);self.result.setText(f"{result.get('status','Exportado')}\n{self.output_path.name} · {result['size']/1048576:.1f} MB" if result['size']>=1048576 else f"{result.get('status','Exportado')}\n{self.output_path.name} · {result['size']/1024:.0f} KB");self.result.setToolTip(str(self.output_path))
         self.build_log.appendPlainText(str(self.output_path)+'\nSHA-256: '+result['sha256']);self.progress_bar.setValue(100);self.open_folder.show();self.copy_path.show()
 
     def failed(self,message):
         """Mantém a causa acessível junto da saída da ferramenta."""
+        self.stages.setText('Operação interrompida · consulte o diagnóstico')
         self.result.setText(message.splitlines()[0] if message else 'A operação não terminou.');self.build_log.appendPlainText(message);self.log_toggle.setChecked(True)
 
     def build_finished(self):
@@ -165,5 +170,5 @@ class ExportDialog(QDialog):
         """A janela cresce com verificações e detalhes, sem ocupar a bancada principal."""
         super().__init__(window);self.setWindowTitle('Exportar aplicativo');self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint,False)
         layout=QVBoxLayout(self);layout.setContentsMargins(6,6,6,6);layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
-        self.panel=PublishPanel(window);self.panel.setFixedWidth(680);layout.addWidget(self.panel)
+        self.panel=PublishPanel(window);self.panel.setFixedWidth(min(680,max(460,window.screen().availableGeometry().width()-60)));layout.addWidget(self.panel)
         row=QHBoxLayout();row.addStretch();close=QPushButton('Fechar');close.clicked.connect(self.hide);row.addWidget(close);layout.addLayout(row)

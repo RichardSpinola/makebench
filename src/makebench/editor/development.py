@@ -4,7 +4,7 @@ from copy import deepcopy
 import json
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox,QDialog,QDialogButtonBox,QFormLayout,QHBoxLayout,
-    QInputDialog,QLabel,QLineEdit,QListWidget,QListWidgetItem,QPushButton,QSplitter,QTabWidget,QVBoxLayout,QWidget)
+    QInputDialog,QLabel,QLineEdit,QListWidget,QListWidgetItem,QPushButton,QToolButton,QMenu,QSplitter,QTabWidget,QVBoxLayout,QWidget)
 from makebench.core.project import ProjectError
 
 
@@ -12,6 +12,8 @@ class DevelopmentMixin:
     """Liga Lógica e Código a dados estáticos e ao contexto da seleção."""
     def install_development(self):
         """Reorganiza arquivos existentes em abas e acrescenta outline navegável."""
+        self.logic.design_requested.connect(self.design_event_origin)
+        self.generated_editor.origin_requested.connect(self.generated_origin)
         self.logic.duplicate_requested.connect(self.duplicate_flow_dialog)
         self.logic.search_requested.connect(self.search_block)
         self.logic.function_requested.connect(self.find_function_name)
@@ -56,7 +58,16 @@ class DevelopmentMixin:
         from .theme import icon
         commands=QToolBar('Blocos');commands.setIconSize(QSize(16,16));commands.setMovable(False)
         commands.addAction(icon('search'),'Buscar bloco…',self.search_block)
+        templates=QToolButton();templates.setText('Comportamento');templates.setToolTip('Inserir um modelo de comportamento com blocos reais');templates.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);templates.setIcon(icon('add'));templates.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup);menu=QMenu(templates)
+        from makebench.core.behaviors import TEMPLATES
+        for kind,label in TEMPLATES:menu.addAction(label,lambda kind=kind:self.insert_behavior(kind))
+        templates.setMenu(menu);commands.addWidget(templates)
+        self.python_action=commands.addAction(icon('code'),'Python');self.python_action.setCheckable(True);self.python_action.setToolTip('Mostrar ou recolher Python gerado pelos blocos')
+        self.python_action.toggled.connect(self.toggle_logic_python)
+        self.python_action.setChecked(str(self.settings.value('workspace/logic_python',False)).lower()=='true')
+        self.toggle_logic_python(self.python_action.isChecked())
         self.logic.layout().removeWidget(self.logic.edit_text);commands.addWidget(self.logic.edit_text)
+        self.logic.layout().removeWidget(self.logic.context_widget);commands.addSeparator();commands.addWidget(self.logic.context_widget)
         self.logic.layout().insertWidget(1,commands)
         # Realce Bash no editor da gaveta; sua aplicação continua explícita.
         self.script_editor.highlighter.language='bash';self.script_editor.highlighter.rehighlight()
@@ -89,9 +100,10 @@ class DevelopmentMixin:
             if isinstance(value,list):return sum(uses(v,name) for v in value)
             return 0
         for node in tree.body:
-            if isinstance(node,ast.FunctionDef):
+            if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef)):
                 count=sum(uses(f.get('body'),node.name) for f in self.project.workflows)
-                item=QListWidgetItem(node.name+'('+', '.join(a.arg for a in node.args.args)+f') · {count} uso(s)')
+                signature='classe '+node.name if isinstance(node,ast.ClassDef) else node.name+'('+', '.join(a.arg for a in node.args.args)+')'
+                item=QListWidgetItem(signature+f' · {count} uso(s)')
                 item.setData(Qt.ItemDataRole.UserRole,node.lineno);item.setToolTip(ast.get_docstring(node) or 'Sem descrição.')
                 self.function_outline.addItem(item)
         self.filter_outline()
@@ -249,3 +261,35 @@ class DevelopmentMixin:
                     for child in value:reidentify(child)
             reidentify(clone['body']);self.logic.flow_id=clone['id'];self.logic._target_component=None
         self._edit(copy)
+
+    def toggle_logic_python(self,enabled):
+        """Persiste a visibilidade sem destruir o editor nem o workspace Blockly."""
+        self.logic.splitter.widget(1).setVisible(enabled);self.settings.setValue('workspace/logic_python',enabled)
+
+    def design_event_origin(self,identifier):
+        """Mantém o estado selecionado ao retornar à origem do evento."""
+        if not self.logic.flush():return
+        self.navigate_to_item('component',identifier)
+
+    def insert_behavior(self,kind):
+        """Insere ações neutras no evento atual com histórico e IDs próprios."""
+        if not self.logic.flush():return
+        flow=next((f for f in self.project.editable_flows if f['id']==self.logic.flow_id),None)
+        if flow is None:
+            self.logic.new_event_dialog()
+            flow=next((f for f in self.project.editable_flows if f['id']==self.logic.flow_id),None)
+        if flow is None:return
+        from makebench.core.behaviors import behavior_template,append_behavior
+        try:blocks=behavior_template(kind,self.project,self.project.window_of(flow['event']['component']).id)
+        except ProjectError as exc:self._show_error(str(exc));return
+        self._edit(lambda:append_behavior(flow,blocks))
+
+    def generated_origin(self,line):
+        """Localiza a instrução gerada no mesmo mapa de origem usado pelos diagnósticos."""
+        generated=self.logic.generated
+        functions=[node for node in ast.parse(generated.text).body if isinstance(node,ast.FunctionDef) and node.name.startswith('on_event_') and node.lineno<=line<=node.end_lineno]
+        start=functions[0].lineno if functions else line+1
+        candidates=[(number,key) for key,number in generated.lines.items() if start<=number<=line]
+        if candidates:
+            _,(flow,block)=max(candidates,key=lambda item:item[0]);self.navigate_to_item('flow',flow);self.logic.focus_block(flow,block)
+        else:self.statusBar().showMessage('Esta linha é infraestrutura gerada, sem bloco de origem.',5000)

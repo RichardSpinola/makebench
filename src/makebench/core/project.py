@@ -312,7 +312,7 @@ class Project:
                 return any(new_logic(item) for item in value.values())
             if isinstance(value,list):return any(new_logic(item) for item in value)
             return False
-        fields = {'spacing', 'padding', 'align', 'distribute', 'size_mode', 'free_geometry', 'icon'}
+        fields = {'spacing', 'padding', 'align', 'distribute', 'size_mode', 'free_geometry', 'icon', 'tooltip'}
         return bool(self.format_version == 5 or self.application or self.windows or self.states or self.variables or self.map_layout
             or any(n.kind in {ComponentKind.SEPARATOR,ComponentKind.SPACER} or fields & n.properties.keys() for n in self.walk())
             or any(f.get('states') for f in self.editable_flows)
@@ -494,8 +494,8 @@ class Project:
                 for override in state.get('overrides', {}).values():
                     if override.get('source'):
                         paths.add(override['source'])
-        for root in self.roots:
-            if root.properties.get('icon'):paths.add(root.properties['icon'])
+        for node in self.walk():
+            if node.properties.get('icon'):paths.add(node.properties['icon'])
         icon=self.application.get('icon')
         if icon:paths.add(icon)
         return paths
