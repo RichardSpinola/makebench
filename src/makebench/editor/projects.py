@@ -28,31 +28,36 @@ def slug(text):
 class ProjectMixin:
     """Mantém operações de arquivo independentes da execução do aplicativo."""
 
+    def project_dialog_parent(self):
+        """Mantém seletores e mensagens sobre o iniciador enquanto a bancada está oculta."""
+        startup = getattr(self, 'startup_dialog', None)
+        return startup if startup and startup.isVisible() else self
+
     def install_projects(self):
         """Monta a entrada e comandos sem substituir um projeto aberto por argumento."""
-        home=QWidget();home.setObjectName('home');outer=QVBoxLayout(home);outer.setContentsMargins(48,32,48,32)
-        title=QLabel('Makebench');font=title.font();font.setPointSize(24);title.setFont(font);outer.addWidget(title)
-        subtitle=QLabel('Sua bancada para criar aplicativos Linux.');subtitle.setProperty('muted',True);outer.addWidget(subtitle)
-        self.recovery_row=QWidget();rr=QHBoxLayout(self.recovery_row)
-        rr.addWidget(QLabel('Há alterações de uma sessão anterior para recuperar.'),1)
+        from PySide6.QtWidgets import QGridLayout,QToolButton,QScrollArea,QFrame,QSizePolicy
+        from PySide6.QtCore import QSize
+        from .theme import icon
+        from makebench.core.templates import MODELS
+        home=QWidget();home.setObjectName('home');outer=QVBoxLayout(home);outer.setContentsMargins(24,28,24,24)
+        content=QWidget();content.setMaximumWidth(760);body=QVBoxLayout(content);body.setContentsMargins(0,0,0,0);body.setSpacing(18)
+        header=QHBoxLayout();title=QLabel('Makebench');font=title.font();font.setPointSize(24);font.setBold(True);title.setFont(font);header.addWidget(title);header.addStretch()
+        for symbol,label,callback in [('new','Novo…',lambda:self.new_project_dialog('blank')),('open','Abrir projeto…',self.open_project)]:
+            button=QPushButton(icon(symbol),label);button.clicked.connect(callback);header.addWidget(button)
+        body.addLayout(header)
+        self.recovery_row=QFrame();self.recovery_row.setFrameShape(QFrame.Shape.StyledPanel);rr=QHBoxLayout(self.recovery_row)
+        rr.addWidget(QLabel('Sessão anterior disponível.'),1)
         recover=QPushButton('Recuperar');recover.clicked.connect(self.recover_latest);rr.addWidget(recover)
-        discard=QPushButton('Descartar recuperação');discard.clicked.connect(self.discard_recovery);rr.addWidget(discard)
-        outer.addWidget(self.recovery_row)
-        columns=QHBoxLayout();start=QVBoxLayout();start.addWidget(QLabel('Começar um projeto'))
-        for key,title,description in [('blank','Em branco','Uma janela para começar do seu jeito.'),('welcome','Assistente de boas-vindas','Etapas, navegação e uma janela principal.'),('tasks','Central de tarefas','Perguntas, scripts, progresso e resultados.')]:
-            button=QPushButton(title+'\n'+description);button.setMinimumHeight(76)
-            button.clicked.connect(lambda _,key=key:self.new_project_dialog(key));start.addWidget(button)
-        opening=QPushButton('Abrir projeto…');opening.clicked.connect(self.open_project);start.addWidget(opening)
-        start.addStretch();columns.addLayout(start,1)
-        recent_box=QVBoxLayout();recent_box.addWidget(QLabel('Projetos recentes'))
-        self.recent_list=QListWidget();self.recent_list.setObjectName('recent_list');self.recent_list.setAccessibleName('Projetos recentes')
-        self.recent_list.itemActivated.connect(self.open_recent)
-        recent_box.addWidget(self.recent_list)
-        actions=QHBoxLayout()
-        for label,callback in [('Abrir selecionado',lambda:self.open_recent(self.recent_list.currentItem())),('Localizar…',self.locate_recent),('Remover da lista',self.remove_recent)]:
-            button=QPushButton(label);button.clicked.connect(callback);actions.addWidget(button)
-        recent_box.addLayout(actions);columns.addLayout(recent_box,2);outer.addLayout(columns,1)
-        back=QPushButton('Voltar ao projeto aberto');back.clicked.connect(lambda:self.set_mode(self._mode));outer.addWidget(back,0,Qt.AlignmentFlag.AlignLeft)
+        discard=QToolButton();discard.setIcon(icon('remove'));discard.setToolTip('Descartar recuperação');discard.clicked.connect(self.discard_recovery);rr.addWidget(discard);body.addWidget(self.recovery_row)
+        recent_header=QHBoxLayout();recent_header.addWidget(QLabel('Recentes'));recent_header.addStretch();self.recent_search=QLineEdit();self.recent_search.setPlaceholderText('Buscar projeto…');self.recent_search.setClearButtonEnabled(True);self.recent_search.setMaximumWidth(320);self.recent_search.textChanged.connect(self.filter_recents);recent_header.addWidget(self.recent_search);body.addLayout(recent_header)
+        self.recent_list=QListWidget();self.recent_list.setObjectName('recent_list');self.recent_list.setFrameShape(QFrame.Shape.NoFrame);self.recent_list.setAccessibleName('Projetos recentes');self.recent_list.itemActivated.connect(self.open_recent)
+        self.recent_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);self.recent_list.customContextMenuRequested.connect(self.recent_context);body.addWidget(self.recent_list)
+        self.no_recents=QLabel('Nenhum projeto recente.');self.no_recents.setAlignment(Qt.AlignmentFlag.AlignCenter);body.addWidget(self.no_recents)
+        actions=QHBoxLayout();actions.addStretch()
+        for symbol,label,callback in [('open','Abrir',lambda:self.open_recent(self.recent_list.currentItem())),('search','Localizar…',self.locate_recent),('remove','Remover da lista',self.remove_recent),('trash','Mover para a lixeira…',self.trash_recent)]:
+            button=QToolButton();button.setIcon(icon(symbol));button.setText(label);button.setToolTip(label);button.setAccessibleName(label);button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);button.clicked.connect(callback);actions.addWidget(button)
+        body.addLayout(actions)
+        center=QHBoxLayout();center.addStretch();center.addWidget(content,1);center.addStretch();outer.addLayout(center);outer.addStretch(1)
         self.home_page=home;self.pages.addWidget(home)
         self.new_action.triggered.disconnect();self.new_action.triggered.connect(lambda:self.new_project_dialog('blank'))
         menu=self.menuBar().actions()[0].menu()
@@ -92,19 +97,86 @@ class ProjectMixin:
             except OSError as exc:self._show_error(str(exc));return
         self.external_change_row.hide();self.watch_source();self.refresh_trust_banner()
 
-    def show_home(self):
+    def show_home(self,compact=False):
         """Mostra a entrada sem descartar ou executar o documento em edição."""
         if not self._finish_field_edit():return
-        self.refresh_recents();self.refresh_recovery();self.pages.setCurrentWidget(self.home_page);self.workspace_toolbar.hide()
+        self.refresh_recents();self.refresh_recovery();self.pages.setCurrentWidget(self.home_page);self.workspace_toolbar.show()
+        if compact:
+            self._compact_home=True;self.setMinimumSize(680,420);self.resize(820,500)
 
     def refresh_recents(self):
         """Apresenta caminhos reais e indica documentos movidos ou removidos."""
         self.recent_list.clear()
         paths=self.settings.value('projects/recent',[],type=list)
+        from .theme import icon
+        from PySide6.QtCore import QSize
         for value in paths[:20]:
-            path=Path(value);text=path.parent.name+'\n'+str(path)
-            if not path.is_file():text+=' · Não encontrado'
-            item=QListWidgetItem(text);item.setData(Qt.ItemDataRole.UserRole,str(path));self.recent_list.addItem(item)
+            path=Path(value);folder=str(path.parent)
+            home=str(Path.home())
+            if folder.startswith(home+'/'):folder='~'+folder[len(home):]
+            text=path.parent.name+'\n'+folder+(' · Não encontrado' if not path.is_file() else '')
+            item=QListWidgetItem(icon('document'),text);item.setSizeHint(QSize(320,58));item.setToolTip(str(path));item.setData(Qt.ItemDataRole.UserRole,str(path));self.recent_list.addItem(item)
+        count=self.recent_list.count();self.recent_list.setVisible(count>0);self.recent_list.setFixedHeight(max(58,min(360,58*count+4)))
+        if hasattr(self,'no_recents'):self.no_recents.setVisible(count==0)
+        self.filter_recents()
+
+    def filter_recents(self):
+        """Filtra localmente sem remover arquivos nem referências da lista."""
+        query=self.recent_search.text().casefold() if hasattr(self,'recent_search') else ''
+        for index in range(self.recent_list.count()):
+            item=self.recent_list.item(index);item.setHidden(query not in (item.text()+' '+item.toolTip()).casefold())
+
+    def recent_context(self,point):
+        """Menu do projeto distingue abrir, localizar, remover referência e lixeira."""
+        item=self.recent_list.itemAt(point)
+        if not item:return
+        self.recent_list.setCurrentItem(item)
+        from PySide6.QtWidgets import QMenu
+        from PySide6.QtGui import QDesktopServices
+        from PySide6.QtCore import QUrl
+        menu=QMenu(self);menu.addAction('Abrir',lambda:self.open_recent(item));menu.addAction('Abrir pasta',lambda:QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(item.data(Qt.ItemDataRole.UserRole)).parent))))
+        menu.addAction('Localizar…',self.locate_recent);menu.addSeparator();menu.addAction('Remover dos recentes',self.remove_recent);menu.addAction('Mover para a lixeira…',self.trash_recent);menu.exec(self.recent_list.viewport().mapToGlobal(point))
+
+    def trash_recent(self):
+        """Oferece lixeira recuperável; nunca apaga pastas silenciosamente."""
+        item=self.recent_list.currentItem()
+        if not item:return
+        path=Path(item.data(Qt.ItemDataRole.UserRole))
+        if not path.is_file():self.remove_recent();return
+        if self.runtime_window and not self.runtime_window.session.closed:
+            self.statusBar().showMessage('Encerre o teste antes de mover um projeto para a lixeira.',6000);return
+        if self.path==path and not self._confirm_discard():return
+        from PySide6.QtWidgets import QCheckBox
+        from makebench.core.source import source_path
+        dialog=QDialog(self.project_dialog_parent());dialog.setWindowTitle('Mover projeto para a lixeira');layout=QVBoxLayout(dialog)
+        caption=QLabel('Mover estes arquivos para a lixeira?');layout.addWidget(caption)
+        paths=[path];own=source_path(path)
+        if own.exists():paths.append(own)
+        listing=QLabel('\n'.join(str(p) for p in paths));listing.setTextFormat(Qt.TextFormat.PlainText);listing.setWordWrap(True);layout.addWidget(listing)
+        folder=QCheckBox('Incluir toda a pasta do projeto e seu conteúdo');layout.addWidget(folder)
+        safe=path.parent.resolve() not in {Path.home().resolve(),Path('/'),Path(self.settings.value('v1/projects/folder',str(Path.home()/'Makebench'/'Projetos'))).resolve()}
+        folder.setEnabled(safe);folder.setToolTip('A pasta inteira só é incluída se você marcar esta opção. Imagens permanecem quando apenas os arquivos são movidos.')
+        buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel);buttons.button(QDialogButtonBox.StandardButton.Ok).setText('Mover para a lixeira');buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
+        if dialog.exec()!=QDialog.DialogCode.Accepted:return
+        self.move_project_to_trash(path,whole_folder=folder.isChecked())
+
+    def move_project_to_trash(self,path,whole_folder=False):
+        """Move só o conjunto escolhido; uma falha não vira exclusão permanente."""
+        from PySide6.QtCore import QFile
+        from makebench.core.source import source_path
+        path=Path(path)
+        if whole_folder and path.parent.resolve() in {Path.home().resolve(),Path('/'),Path(self.settings.value('v1/projects/folder',str(Path.home()/'Makebench'/'Projetos'))).resolve()}:
+            self._show_error('Esta pasta não pode ser movida como um projeto inteiro.');return False
+        targets=[path.parent] if whole_folder else [p for p in (source_path(path),path) if p.exists()]
+        moved=[]
+        for target in targets:
+            result=QFile.moveToTrash(str(target));ok=result[0] if isinstance(result,tuple) else result
+            if not ok:self._show_error('Não foi possível mover para a lixeira: '+str(target)+'\nJá movidos: '+(', '.join(moved) or 'nenhum'));return False
+            moved.append(str(target))
+        recent=self.settings.value('projects/recent',[],type=list);self.settings.setValue('projects/recent',[p for p in recent if p!=str(path)]);self.refresh_recents()
+        if self.path==path:
+            self._replace_project(Project.empty(),None);self.show_home()
+        self.statusBar().showMessage('Projeto movido para a lixeira.',6000);return True
 
     def remember_project(self):
         """Adiciona o caminho ao topo dos recentes após abertura ou gravação bem-sucedida."""
@@ -151,24 +223,15 @@ class ProjectMixin:
         from .theme import manager
         from PySide6.QtCore import QSize
         from PySide6.QtGui import QPixmap,QPainter,QPen,QColor,QIcon
-        dialog=QDialog(self);dialog.setWindowTitle('O que você quer criar?');dialog.resize(760,660);form=QFormLayout(dialog)
-        title=QLabel('O que você quer criar?');title.setProperty('title',True);form.addRow(title)
-        cards=QListWidget();cards.setViewMode(QListWidget.ViewMode.IconMode);cards.setIconSize(QSize(112,68));cards.setGridSize(QSize(140,126));cards.setMinimumHeight(260);cards.setResizeMode(QListWidget.ResizeMode.Adjust)
-        model=QComboBox();model.hide()
-        for key,label,description in MODELS:
-            model.addItem(label,key)
-            pix=QPixmap(112,68);t=manager().tokens;pix.fill(QColor(t['canvas']));paint=QPainter(pix);paint.setRenderHint(QPainter.RenderHint.Antialiasing);paint.setBrush(QColor(t['raised']));paint.setPen(QPen(QColor(t['control']),1));paint.drawRoundedRect(4,3,104,62,6,6);paint.drawLine(4,15,108,15)
-            if key=='multi':paint.drawLine(35,16,35,63)
-            if key=='tasks':
-                for y in (25,38,51):paint.drawRoundedRect(12,y,88,6,3,3)
-            elif key!='blank':
-                paint.drawLine(44 if key=='multi' else 14,27,94,27);paint.setBrush(QColor(t['accent']));paint.setPen(Qt.PenStyle.NoPen);paint.drawRoundedRect(66,46,30,10,4,4)
-            paint.end();item=QListWidgetItem(QIcon(pix),label);item.setToolTip(description);item.setData(Qt.ItemDataRole.UserRole,key);cards.addItem(item)
-        model.setCurrentIndex(max(0,model.findData(template)));cards.setCurrentRow(model.currentIndex());cards.currentRowChanged.connect(model.setCurrentIndex);form.addRow(cards)
+        dialog=QDialog(self.project_dialog_parent());dialog.setWindowTitle('Novo projeto');dialog.setFixedWidth(560);form=QFormLayout(dialog)
+        model=QComboBox()
+        for key,label,description in MODELS:model.addItem(label,key)
+        model.setCurrentIndex(max(0,model.findData(template)));form.addRow('Modelo',model)
         backend=QComboBox();backend.addItem('GTK — aparência Adwaita','gtk');backend.addItem('Qt — controles do desktop','qt')
         supported=gtk_support()['gtk4'];preferred=self.settings.value('v1/projects/backend','gtk' if supported else 'qt');backend.setCurrentIndex(backend.findData(preferred if supported else 'qt'))
         form.addRow('Aparência do aplicativo',backend)
-        note=QLabel('GTK4 detectado. Testar abre controles GTK reais.' if supported else 'GTK4 não encontrado neste Python. Qt foi selecionado; GTK exige PyGObject e GTK4 no sistema.');note.setWordWrap(True);note.setProperty('muted',True);form.addRow(note)
+        if not supported:
+            note=QLabel('GTK4 não disponível; Qt selecionado.');form.addRow(note)
         name=QLineEdit('Meu aplicativo');form.addRow('Nome',name)
         folder=QLineEdit(str(Path(self.settings.value('v1/projects/folder',str(Path.home()/'Makebench'/'Projetos')))/'meu-aplicativo'))
         folder_row=QWidget();row=QHBoxLayout(folder_row);row.setContentsMargins(0,0,0,0);row.addWidget(folder)
@@ -182,7 +245,7 @@ class ProjectMixin:
         info=QLabel('Será criada uma pasta com o projeto, suas funções e imagens.');info.setWordWrap(True);form.addRow(info)
         from PySide6.QtWidgets import QGroupBox
         advanced=QGroupBox('Avançado');advanced.setCheckable(True);advanced.setChecked(False);af=QFormLayout(advanced);identifier=QLineEdit();identifier.setPlaceholderText('br.exemplo.meuapp');identifier.setEnabled(False);advanced.toggled.connect(identifier.setEnabled);af.addRow('Identificador',identifier);form.addRow(advanced)
-        error=QLabel();error.setWordWrap(True);form.addRow(error)
+        error=QLabel();error.setWordWrap(True);error.setMinimumHeight(error.fontMetrics().height()*2);form.addRow(error)
         buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
         buttons.button(QDialogButtonBox.StandardButton.Save).setText('Criar projeto')
         buttons.rejected.connect(dialog.reject);form.addRow(buttons)
@@ -195,19 +258,22 @@ class ProjectMixin:
             try:
                 project,source,assets=self.project_template(model.currentData(),name.text().strip())
                 project.application['backend']=backend.currentData()
+                used=self.settings.value('projects/templates/recent',[],type=list);self.settings.setValue('projects/templates/recent',[model.currentData(),*[key for key in used if key!=model.currentData()]][:5])
                 if identifier.text().strip():project.application['id']=identifier.text().strip()
                 destination.mkdir(parents=True,exist_ok=True)
                 self._replace_project(project,None);self.source.text=source;self.source_editor.setPlainText(source);self.assets=assets
                 if not self.save_to(destination/'project.makebench.json'):return
-                self._created_here=True;self.trust_project();self.pages.setCurrentWidget(self.editor_page);dialog.accept()
+                self._created_here=True;self.trust_project();self.set_mode('Mapa');dialog.accept()
             except (OSError,ProjectError) as exc:error.setText(str(exc))
-        buttons.accepted.connect(create);dialog.exec()
+        buttons.accepted.connect(create);dialog.setFixedHeight(dialog.sizeHint().height());dialog.exec()
 
     def project_template(self,key,name):
         """Copia modelos distribuídos, mantendo os exemplos originais intactos."""
         if key!='tasks':
             from makebench.core.templates import make_template
-            return make_template(key,name),SourceBuffer().text,AssetStore()
+            project=make_template(key,name)
+            if key=='blank':project.metadata['empty_map']=True
+            return project,SourceBuffer().text,AssetStore()
         root=Path(__file__).resolve().parents[3]/'examples'/'script-center'
         if not (root/'app.makebench.json').is_file():
             root=Path(__file__).resolve().parent.parent/'templates'/'script-center'
@@ -293,7 +359,8 @@ class ProjectMixin:
 
     def confirm_trust(self):
         """Pede consentimento uma vez por conteúdo importado antes de executar."""
-        if not self.path or getattr(self,'_created_here',False) or getattr(self,'_trusted_session',False):return True
+        from .settings import preference
+        if not preference('projects/trust') or not self.path or getattr(self,'_created_here',False) or getattr(self,'_trusted_session',False):return True
         key='trust/'+hashlib.sha256(str(self.path).encode()).hexdigest()
         if getattr(self,'_trusted',None)==self.fingerprint() or self.settings.value(key)==self.fingerprint():return True
         dialog=QMessageBox(self);dialog.setWindowTitle('Testar este projeto?')
@@ -352,7 +419,8 @@ class ProjectMixin:
     def refresh_trust_banner(self):
         """Explica execução futura sem bloquear a leitura e a edição do projeto."""
         if not hasattr(self,'trust_row'):return
-        trusted=not self.path or getattr(self,'_created_here',False) or getattr(self,'_trusted_session',False)
+        from .settings import preference
+        trusted=not preference('projects/trust') or not self.path or getattr(self,'_created_here',False) or getattr(self,'_trusted_session',False)
         if self.path and not trusted:
             key='trust/'+hashlib.sha256(str(self.path).encode()).hexdigest()
             if self.settings.value(key)==self.fingerprint():self._trusted_session=True;trusted=True

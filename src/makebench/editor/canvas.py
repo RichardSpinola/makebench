@@ -163,6 +163,7 @@ class PreviewCanvas(QFrame):
     layout_requested = Signal(str,str,object)
     tool_changed = Signal(str)
     image_dropped = Signal(str,str,int,object)
+    context_requested = Signal(str,object)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Prepara seleção, estado efêmero das páginas e controle dos gestos."""
@@ -293,6 +294,8 @@ class PreviewCanvas(QFrame):
         node_id = watched.property("componentId")
         if not node_id:
             return super().eventFilter(watched, event)
+        if event.type()==QEvent.Type.ContextMenu:
+            self.context_requested.emit(node_id,event.globalPos());return True
         if event.type()==QEvent.Type.MouseMove and self.insert_tool:
             self.tool_preview(watched,event);return True
         if event.type()==QEvent.Type.MouseButtonPress and event.button()==Qt.MouseButton.LeftButton and self.insert_tool:

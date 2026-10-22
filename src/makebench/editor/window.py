@@ -46,6 +46,8 @@ class MainWindow(StudioMixin, QMainWindow):
         from .theme import manager
         from .dialogs import install_translation
         manager()
+        from .theme import icon
+        self.setWindowIcon(icon('window'))
         if not hasattr(QApplication.instance(), '_makebench_dialog_filter'):
             install_translation(QApplication.instance())
         self.project = project or Project.empty()
@@ -325,7 +327,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._preserve_multi=False
         if hasattr(self,'selected_ids'):
             self.selected_ids={identifier for identifier in self.selected_ids if self.project.find(identifier)} or {self.selected_id}
-            self.select_multiple(self.selected_ids)
+            if len(self.selected_ids)>1:self.select_multiple(self.selected_ids)
         self.logic.sync()
         self._update_code()
         self._update_actions()
@@ -418,7 +420,7 @@ class MainWindow(StudioMixin, QMainWindow):
             try:Project.from_dict(self.project.to_dict())
             except ProjectError as exc:
                 self.project=Project.from_dict(before);self._refresh();self.statusBar().showMessage(str(exc),7000);return
-            self.history.push(self.project);self._refresh();return
+            self.history.push(self.project);self._refresh_property(component_id,key);return
         if component_id == "@project":
             cleaned = str(value).strip()
             if not cleaned:
@@ -456,7 +458,58 @@ class MainWindow(StudioMixin, QMainWindow):
         except ProjectError as exc:
             self.project=Project.from_dict(before);self._refresh();self.statusBar().showMessage(str(exc),7000);return
         self.history.push(self.project)
-        self._refresh()
+        self._refresh_property(component_id,key)
+
+    def _refresh_property(self,identifier,key):
+        """Atualiza valores sem destruir o campo em edição nem a árvore de widgets."""
+        structural={'layout','size_mode','align','distribute','alignment_preset','initial_page'}
+        if key in structural:
+            self.setUpdatesEnabled(False)
+            try:self._refresh()
+            finally:self.setUpdatesEnabled(True)
+            return
+        if identifier=='@project':
+            self.canvas._project.name=self.project.name;self._update_actions();return
+        node=self.project.find(identifier)
+        if node is None:return
+        effective=next((n for n in self.project.effective_root(self.active_window,self.active_state).walk() if n.id==identifier),None)
+        shown=self.canvas._project.find(identifier)
+        if effective is None or shown is None:return
+        shown.properties=deepcopy(effective.properties);shown.geometry=dict(effective.geometry)
+        frame=self.canvas._frames.get(identifier)
+        widget=frame.layout().itemAt(0).widget() if frame and frame.layout() and frame.layout().count() else None
+        if widget and not node.can_have_children:
+            if key=='text':
+                widget.setPlainText(str(effective.properties.get('text',''))) if hasattr(widget,'setPlainText') else widget.setText(str(effective.properties.get('text','')))
+            elif key=='placeholder' and hasattr(widget,'setPlaceholderText'):widget.setPlaceholderText(str(effective.properties.get('placeholder','')))
+            elif key=='checked' and hasattr(widget,'setChecked'):widget.setChecked(effective.properties['checked'])
+            elif key=='value' and hasattr(widget,'setValue'):widget.setValue(effective.properties['value'])
+            elif key in {'source','alt_text','image_name'} and hasattr(widget,'image'):
+                from PySide6.QtGui import QPixmap
+                image=QPixmap()
+                if effective.properties.get('source'):image.loadFromData(self.assets.read(effective.properties['source']))
+                widget.image=image;widget.setAccessibleName(effective.properties.get('alt_text','Imagem'));widget.update()
+        if frame:
+            if key=='spacing' and frame.layout():frame.layout().setSpacing(effective.properties.get('spacing',6))
+            if key=='padding' and frame.layout():
+                value=effective.properties.get('padding',8);frame.layout().setContentsMargins(value,value,value,value)
+            if key.startswith('geometry.'):
+                parent=self.project.parent_of(identifier)
+                if parent and parent.layout==LayoutKind.FREE:frame.setGeometry(*(effective.geometry[k] for k in ('x','y','width','height')))
+                else:
+                    axis=key.partition('.')[2]
+                    if axis in {'width','height'}:getattr(frame,'setFixed'+axis.title())(effective.geometry[axis])
+        if key=='title' and node.kind==ComponentKind.WINDOW:
+            for label in self.canvas.findChildren(QLabel):
+                if label.property('componentId')==identifier and label.parentWidget().objectName()=='app_window_titlebar':label.setText(str(effective.properties.get('title','Interface')))
+        item=self._tree_items.get(identifier)
+        if item:
+            count=sum(f.get('event',{}).get('component')==identifier for f in self.project.editable_flows)
+            item.setText(0,(node.properties.get('code_name') or node.display_name)+(f' · {count} evento(s)' if count else ''))
+        if self.active_state!='@default':
+            state=next(s for s in self.project.states[self.active_window] if s['id']==self.active_state);self.inspector._overrides=state.get('overrides',{}).get(identifier,{})
+        self.logic.sync();self._update_code();self._update_actions()
+        if hasattr(self,'zoom_view'):self.zoom_view.update_bounds()
 
     def _finish_field_edit(self) -> bool:
         """Confirma texto ainda em edição antes de salvar ou substituir o projeto."""
@@ -712,13 +765,13 @@ class MainWindow(StudioMixin, QMainWindow):
         if not self._confirm_discard():
             return
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Abrir projeto Makebench", str(self.path.parent) if self.path else "",
+            self.project_dialog_parent(), "Abrir projeto Makebench", str(self.path.parent) if self.path else "",
             "Projetos Makebench (*.makebench.json *.zip);;JSON (*.json)",
         )
         if not filename:
             return
         if filename.lower().endswith('.zip'):
-            destination=QFileDialog.getExistingDirectory(self,'Extrair em pasta vazia','')
+            destination=QFileDialog.getExistingDirectory(self.project_dialog_parent(),'Extrair em pasta vazia','')
             if not destination:return
             from makebench.core.bundle import read_bundle
             try:filename=str(read_bundle(filename,Path(destination)))
@@ -905,7 +958,8 @@ class MainWindow(StudioMixin, QMainWindow):
         if self.runtime_window is not None and not self.runtime_window.session.closed:
             if self.runtime_window.session.admin_active:
                 self.statusBar().showMessage('Aguarde a tarefa administrativa terminar antes de reiniciar.',7000);return
-            if self.runtime_window.session.busy:
+            from .settings import preference
+            if self.runtime_window.session.busy and preference('test/confirm_restart'):
                 choice=QMessageBox.warning(self,'Reiniciar teste?','Uma tarefa está em andamento. Reiniciar encerra o teste e os processos comuns.',QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.Cancel,QMessageBox.StandardButton.Cancel)
                 if choice!=QMessageBox.StandardButton.Yes:return
             if not self.runtime_window.stop():
@@ -915,10 +969,13 @@ class MainWindow(StudioMixin, QMainWindow):
             return
         if not self.confirm_trust():return
         from makebench.runtime.window import RuntimeWindow
+        if self.project.application.get('backend','qt')=='gtk':
+            from makebench.runtime.gtk_bridge import GtkRuntimeBridge as RuntimeWindow
         try:
             window = RuntimeWindow(self.project, self.source.text, self.assets.read,
                 self.path.parent if self.path else None, self.source.path, self, supervision=False)
         except (ProjectError, OSError) as exc:
+            if self.project.application.get('backend','qt')=='gtk':self._show_error(str(exc))
             self.sync_problems();self.drawer.show();self.drawer.setCurrentIndex(1)
             self.statusBar().showMessage('Teste impedido: resolva os itens em Problemas.',7000);return
         if self.runtime_window is not None:
@@ -959,7 +1016,7 @@ class MainWindow(StudioMixin, QMainWindow):
 
     def _show_error(self, message: str) -> None:
         """Apresenta falhas recuperáveis sem fechar o editor."""
-        QMessageBox.critical(self, "Makebench", message)
+        QMessageBox.critical(self.project_dialog_parent(), "Makebench", message)
 
     def show_about(self) -> None:
         """Informa a versão e o limite funcional da entrega atual."""
@@ -967,7 +1024,8 @@ class MainWindow(StudioMixin, QMainWindow):
             self, "Sobre o Makebench",
             "<h2>Makebench</h2><p>Aplicativos Linux, construídos por você.</p>"
             f"<p>Versão {__version__} — Bancada, janelas, estados e fonte Python.</p>"
-            "<p>Crie interfaces, conecte blocos e exporte em fonte Python. AppImage, Flatpak, DEB, RPM e GTK continuam em desenvolvimento.</p>",
+            "<p>Crie interfaces Qt ou GTK4, conecte blocos e exporte em fonte Python. "
+            "DEB, RPM, AppImage e Flatpak geram receitas; a construção exige ferramentas e SDKs de destino.</p>",
         )
 
     def closeEvent(self, event: QCloseEvent) -> None:

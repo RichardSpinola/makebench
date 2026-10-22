@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt,QPointF,QRectF,Signal,QTimer
 from PySide6.QtGui import QBrush,QColor,QPainter,QPainterPath,QPen
 from PySide6.QtWidgets import (QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFormLayout,QGraphicsItem,
     QGraphicsPathItem,QGraphicsRectItem,QGraphicsScene,QGraphicsSimpleTextItem,QGraphicsView,
-    QHBoxLayout,QInputDialog,QLabel,QMessageBox,QPushButton,QVBoxLayout,QWidget)
+    QHBoxLayout,QInputDialog,QLabel,QMessageBox,QMenu,QPushButton,QVBoxLayout,QWidget)
 from makebench.core.project import ComponentKind,ProjectError,new_id
 from makebench.core.navigation import add_state,add_window,navigation_edges
 from .theme import manager
@@ -21,7 +21,12 @@ class MapNode(QGraphicsRectItem):
         self.setBrush(QColor(t['raised']));self.setPen(QPen(QColor(t['control']),1))
         text=QGraphicsSimpleTextItem(label,self);text.setBrush(QColor(t['text']));text.setPos(12,12)
         port=QGraphicsSimpleTextItem('○',self);port.setBrush(QColor(t['accent']));port.setPos(207,44)
-        self.setToolTip('Duplo clique para editar. Arraste da porta à direita até outro nó para conectar.')
+        self.setToolTip('Duplo clique para entrar na interface. Arraste da porta à direita até outro nó para conectar.')
+
+    def paint(self,painter,option,widget=None):
+        """Cartão de interface com desenho Qt, seleção explícita e cantos discretos."""
+        t=manager().tokens;painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QPen(QColor(t['accent'] if self.isSelected() else t['control']),2 if self.isSelected() else 1));painter.setBrush(QColor(t['raised']));painter.drawRoundedRect(self.rect(),8,8)
 
     def mouseDoubleClickEvent(self,event):
         """Abre a composição no contexto exato deste nó."""
@@ -67,6 +72,21 @@ class NavigationView(QGraphicsView):
             self.panel.window.project.map_layout.update(positions)
             self.panel.window.history.push(self.panel.window.project);self.panel.window._update_actions()
 
+    def contextMenuEvent(self,event):
+        """O espaço de interfaces cria janelas pelo botão direito, inclusive vazio."""
+        node=self.node_at(event.pos());menu=QMenu(self);point=self.mapToScene(event.pos())
+        def create():
+            """Após o diálogo, posiciona a nova interface no ponto escolhido."""
+            before={r.id for r in self.panel.window.project.roots};self.panel.window.new_window_dialog()
+            root=next((r for r in self.panel.window.project.roots if r.id not in before),None)
+            if root:
+                self.panel.window._edit(lambda:self.panel.window.project.map_layout.update({root.id+'|@default':[point.x(),point.y()]}));self.panel.sync()
+        menu.addAction('Criar interface aqui…',create)
+        if node:
+            menu.addAction('Entrar na interface',lambda:self.panel.activate(node.key))
+            menu.addAction('Criar estado…',self.panel.window.new_state_dialog)
+        menu.exec(event.globalPos())
+
     def keyPressEvent(self,event):
         """Permite remover uma conexão selecionada sem exigir gestos precisos."""
         if event.key()==Qt.Key.Key_Delete:
@@ -91,11 +111,11 @@ class MapPanel(QWidget):
         """Cria comandos de mapa e adia leitura do documento até a sincronização."""
         super().__init__();self.window=window;self.nodes={};self._signature=None;self._fit_project=None
         layout=QVBoxLayout(self);row=QHBoxLayout()
-        row.addWidget(QLabel('Navegação do aplicativo'),1)
-        for label,callback in [('Nova janela',window.new_window_dialog),('Novo estado',window.new_state_dialog),('Conectar…',self.connect_dialog),('Organizar',self.organize),('Ajustar',self.fit)]:
+        heading=QLabel('Visão geral do projeto');heading.setProperty('title',True);row.addWidget(heading,1)
+        for label,callback in [('Nova interface…',window.new_window_dialog),('Novo estado',window.new_state_dialog),('Conectar…',self.connect_dialog),('Organizar',self.organize),('Ajustar',self.fit)]:
             button=QPushButton(label);button.clicked.connect(callback);row.addWidget(button)
         layout.addLayout(row);self.view=NavigationView(self);layout.addWidget(self.view,1)
-        hint=QLabel('As conexões vêm dos fluxos. Duplo clique abre o Design; arraste de uma porta até outro estado ou janela para conectar.')
+        hint=QLabel('Este é o espaço das interfaces do projeto. Botão direito cria uma interface; duplo clique entra nela para trabalhar em Design, Lógica e Código.')
         self.hint=hint;hint.setWordWrap(True);hint.setProperty('muted',True);layout.addWidget(hint)
 
     def sync(self):
@@ -106,6 +126,9 @@ class MapPanel(QWidget):
         if signature==self._signature:return
         self._signature=signature;scene=self.view.scene();scene.clear();self.nodes={}
         scene.setBackgroundBrush(QColor(manager().tokens['canvas']))
+        if project.metadata.get('empty_map'):
+            title=scene.addText('Crie a primeira interface');title.setDefaultTextColor(QColor(manager().tokens['text']));title.setScale(1.7);title.setPos(80,80)
+            note=scene.addText('Use Nova interface ou clique com o botão direito no espaço vazio.');note.setDefaultTextColor(QColor(manager().tokens['muted']));note.setPos(80,140);scene.setSceneRect(0,0,1000,650);return
         incoming={edge['target'] for edge in navigation_edges(project) if edge['op']=='open_window'}
         for row,root in enumerate(project.roots):
             states=[{'id':'@default','name':'Padrão'},*project.states.get(root.id,[])]
@@ -261,9 +284,9 @@ class NavigationMixin:
 
     def new_window_dialog(self):
         """Cria janela vazia ou cópia da composição atual com novos IDs."""
-        dialog=QDialog(self);dialog.setWindowTitle('Nova janela');form=QFormLayout(dialog)
+        dialog=QDialog(self);dialog.setWindowTitle('Nova interface');form=QFormLayout(dialog)
         from PySide6.QtWidgets import QLineEdit
-        name=QLineEdit('Nova janela');base=QComboBox();base.addItem('Em branco',None)
+        name=QLineEdit('Nova interface');base=QComboBox();base.addItem('Em branco',None)
         for root in self.project.roots:base.addItem('Duplicar '+root.properties.get('title','Janela'),root.id)
         form.addRow('Nome',name);form.addRow('Base',base)
         buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
@@ -271,7 +294,10 @@ class NavigationMixin:
         if dialog.exec()!=QDialog.DialogCode.Accepted:return
         def create():
             """Cria o item solicitado com os valores validados do diálogo."""
-            root=add_window(self.project,name.text(),base.currentData());self.active_window=root.id;self.active_state='@default';self.selected_id=root.id
+            if self.project.metadata.pop('empty_map',False):
+                root=self.project.root;root.properties['title']=name.text()
+            else:root=add_window(self.project,name.text(),base.currentData())
+            self.active_window=root.id;self.active_state='@default';self.selected_id=root.id
         self._edit(create)
 
     def new_state_dialog(self):

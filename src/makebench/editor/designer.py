@@ -70,7 +70,7 @@ class DesignerMixin:
             self.context_bar.addSeparator()
             self.zoom_actions=[]
             for label,callback in [('−',lambda:self.zoom_current(1/1.15)),('100%',lambda:self.zoom_current(absolute=1)),('+',lambda:self.zoom_current(1.15)),('Ajustar',self.fit_current_canvas)]:
-                button=QPushButton(label);button.setAccessibleName('Zoom '+label);button.clicked.connect(callback);self.zoom_actions.append(self.context_bar.addWidget(button))
+                button=QPushButton(label if label=='100%' else '');button.setToolTip({'−':'Reduzir zoom','+':'Ampliar zoom','Ajustar':'Enquadrar interface'}.get(label,'Tamanho real'));button.setAccessibleName('Zoom '+label);button.setIcon(__import__('makebench.editor.theme',fromlist=['icon']).icon({'−':'zoom-out','+':'zoom-in','Ajustar':'fit'}.get(label,'actual')));button.clicked.connect(callback);self.zoom_actions.append(self.context_bar.addWidget(button))
             action=QAction('Ajustar composição',self);action.setShortcut(QKeySequence('Ctrl+0'));action.triggered.connect(self.fit_current_canvas);self.addAction(action)
             actual=QAction('Tamanho real',self);actual.setShortcut(QKeySequence('Ctrl+Alt+0'));actual.triggered.connect(lambda:self.zoom_current(absolute=1));self.addAction(actual)
         rename=QAction('Renomear seleção',self);rename.setShortcut(QKeySequence('F2'));rename.triggered.connect(self.rename_selected);self.addAction(rename)
@@ -78,6 +78,7 @@ class DesignerMixin:
         self.canvas.image_dropped.connect(self.import_image_drop)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.tree_menu)
+        self.canvas.context_requested.connect(self.canvas_menu)
         self.selected_ids={self.selected_id};self._multi_syncing=False
         self.tree.setSelectionMode(self.tree.SelectionMode.ExtendedSelection)
         self.tree.itemSelectionChanged.connect(self.tree_multi_selected)
@@ -110,9 +111,31 @@ class DesignerMixin:
     def tree_menu(self,point):
         """Expõe comandos reais no contexto da seleção, com os mesmos estados."""
         menu=QMenu(self)
+        self.insertion_menu(menu)
+        menu.addSeparator()
         for action in [self.duplicate_action,self.remove_action,self.up_action,self.down_action,self.page_action]:menu.addAction(action)
         action=menu.addAction('Editar lógica…');action.triggered.connect(lambda:self.edit_logic(self.selected_id))
         menu.exec(self.tree.viewport().mapToGlobal(point))
+
+    def insertion_menu(self,menu):
+        """Elementos completos ficam numa área de inserir, separada de seleção/pan."""
+        from makebench.core.project import KIND_LABELS
+        from .theme import icon
+        insert=menu.addMenu('Inserir elemento')
+        for kind,label in KIND_LABELS.items():
+            if kind==ComponentKind.WINDOW:continue
+            action=insert.addAction(icon(kind.value),label)
+            action.setEnabled(self.active_state=='@default')
+            action.triggered.connect(lambda _,kind=kind:self.insert_kind(kind))
+        return insert
+
+    def canvas_menu(self,identifier,position):
+        """Menu contextual do canvas usa os mesmos comandos e histórico do editor."""
+        self._select(identifier);menu=QMenu(self);self.insertion_menu(menu);menu.addSeparator()
+        menu.addAction(self.duplicate_action);menu.addAction(self.remove_action)
+        menu.addAction('Editar texto',self.rename_selected)
+        if self.project.find(identifier).kind in {ComponentKind.BUTTON,ComponentKind.WINDOW}:menu.addAction('Editar lógica',lambda:self.edit_logic(identifier))
+        menu.exec(position)
 
     def convert_layout(self,node,mode):
         """Captura/restaura geometria livre sem descartar filhos, IDs ou comentários."""

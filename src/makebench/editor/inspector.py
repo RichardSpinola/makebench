@@ -74,11 +74,11 @@ class Inspector(QWidget):
             pages.currentIndexChanged.connect(lambda _:self.property_changed.emit(node.id,'initial_page',pages.currentData()));self.fields.addRow('Página inicial',pages)
         if node.can_have_children and node.kind!=ComponentKind.PAGES:
             self.section('Organizar')
-            segments=QWidget();row=QHBoxLayout(segments);row.setContentsMargins(0,0,0,0);row.setSpacing(2)
-            for mode,label in LAYOUT_LABELS.items():
+            segments=QWidget();row=QGridLayout(segments);row.setContentsMargins(0,0,0,0);row.setSpacing(4)
+            for index,(mode,label) in enumerate(LAYOUT_LABELS.items()):
                 button=QPushButton(label);button.setCheckable(True);button.setChecked(node.layout==mode)
                 button.setEnabled(not self.state_mode);button.setAccessibleName('Organizar em '+label);button.setProperty('layoutNode',node.id);button.setProperty('layoutMode',mode.value);button.installEventFilter(self)
-                button.clicked.connect(lambda _,mode=mode:self.property_changed.emit(node.id,'layout',mode.value));row.addWidget(button)
+                button.clicked.connect(lambda _,mode=mode:self.property_changed.emit(node.id,'layout',mode.value));row.addWidget(button,index//2,index%2)
             self.fields.addRow(segments)
             if node.layout!=LayoutKind.FREE:
                 self._number_field('Espaçamento',node.id,'spacing',node.properties.get('spacing',6),0,2000)

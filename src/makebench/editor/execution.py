@@ -33,6 +33,8 @@ class ExecutionMixin:
 
     def monitor_runtime(self,window):
         """Conecta um processo real antes de seu início explícito."""
+        from .settings import preference
+        if preference('test/clear'):self.clear_output()
         self.run_number+=1;self.test_started=time.monotonic();self._runtime_project_fingerprint=self.fingerprint()
         self.add_output('status',f'\n──────── Execução {self.run_number} · {datetime.now():%H:%M:%S} ────────\n')
         window.session.output.connect(self.add_output)
@@ -85,6 +87,9 @@ class ExecutionMixin:
     def update_test_time(self):
         """Avisa quando a edição se distancia do snapshot que está em execução."""
         window=self.runtime_window
+        from .settings import preference
+        if window and not window.session.closed and self.test_started and preference('test/duration'):
+            self.statusBar().showMessage(f'Teste em execução · {time.monotonic()-self.test_started:.0f} s')
         if window and not window.session.closed and self._runtime_project_fingerprint!=self.fingerprint():
             self.set_test_status('Projeto alterado · F5 para reiniciar')
 

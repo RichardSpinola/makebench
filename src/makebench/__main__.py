@@ -25,6 +25,8 @@ def main() -> int:
     from makebench.core.storage import load_project
     from makebench.editor.window import MainWindow
 
+    from PySide6.QtCore import Qt
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv[:1])
     from makebench.ui.dialogs import install_translation
     install_translation(app)
@@ -44,16 +46,27 @@ def main() -> int:
             from makebench.core.source import SourceBuffer
             from makebench.editor.assets import AssetStore
             from makebench.runtime.window import RuntimeWindow
+            if project.application.get('backend','qt')=='gtk':
+                from makebench.runtime.gtk_bridge import GtkRuntimeBridge as RuntimeWindow
             path = args.project.resolve()
             source = SourceBuffer.load(path)
             window = RuntimeWindow(project, source.text, AssetStore(path.parent).read, path.parent, source.path)
         else:
             window = MainWindow(project, args.project)
+            # WebEngine entra na árvore antes da primeira apresentação da janela.
+            # Evita recriação nativa ao abrir Lógica pela primeira vez.
+            window.logic.ensure_loaded()
     except (ProjectError, OSError) as exc:
         QMessageBox.critical(None, "Não foi possível abrir as funções", str(exc))
         return 1
     if not args.run and not args.project:
-        window.show_home()
+        from makebench.editor.settings import preference
+        if preference('projects/startup'):
+            from makebench.editor.startup import StartupDialog
+            window.startup_dialog=StartupDialog(window);window.startup_dialog.show()
+            return app.exec()
+        window.set_mode('Mapa')
+    if not args.run and args.project:window.set_mode('Mapa')
     window.show()
     if args.run:
         from PySide6.QtCore import QTimer

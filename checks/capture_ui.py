@@ -30,8 +30,11 @@ def main():
         deadline=time.monotonic()+15
         while not window.logic.ready and time.monotonic()<deadline:QTest.qWait(25)
         if not window.logic.ready:raise RuntimeError(window.logic.diagnostics.text())
+        from native_palette import kde_palette
         for theme in args.themes:
-            manager().set_mode(theme)
+            # Só QA: offscreen não recebe o esquema do compositor. Paleta vem
+            # dos esquemas Breeze instalados, sem paleta inventada pelo editor.
+            app.setPalette(kde_palette(theme));manager().set_mode('system')
             for size in args.sizes:
                 width,height=map(int,size.split('x'));window.resize(width,height)
                 window.activate_window(window.project.root.id,'@default')
@@ -48,6 +51,10 @@ def main():
                     QTest.qWait(100)
                     filename=args.output/f'{theme}-{size}-{ {"Início":"inicio","Design":"design","Lógica":"logica","Código":"codigo","Mapa":"mapa","Publicar":"publicar"}[mode] }.png'
                     if not window.grab().save(str(filename)):raise RuntimeError('Falha ao gravar '+str(filename))
+                window.set_mode('Design');window.left_tabs.setCurrentIndex(1);QTest.qWait(80);window.grab().save(str(args.output/f'{theme}-{size}-inserir.png'));window.left_tabs.setCurrentIndex(0)
+                window.show_test_error({'message':'Exemplo de falha: tarefa terminou com código 3.','traceback':'Diagnóstico de verificação visual.'});QTest.qWait(80);window.grab().save(str(args.output/f'{theme}-{size}-gaveta-erro.png'));window.drawer.hide()
+                window.preferences();QTest.qWait(80);window.preferences_dialog.grab().save(str(args.output/f'{theme}-{size}-preferencias.png'));window.preferences_dialog.close()
+                window.application_settings();QTest.qWait(80);window.app_settings_dialog.grab().save(str(args.output/f'{theme}-{size}-configuracoes.png'));window.app_settings_dialog.close()
                 # O diálogo é real; somente capturado e cancelado, sem criar pasta.
                 def capture_dialog():
                     dialog=app.activeModalWidget()

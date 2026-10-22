@@ -53,7 +53,8 @@ class LogicBridge(QObject):
     def command(self, name):
         """Encaminha apenas salvar/desfazer/refazer originados por teclado."""
         if name in {'save', 'undo', 'redo', 'find_block', 'python', 'function'}:
-            self.command_received.emit(name)
+            # Sair do callback WebChannel antes de avaliar JS durante flush.
+            QTimer.singleShot(0,lambda:self.command_received.emit(name))
 
     @Slot(str)
     def problem(self, message):

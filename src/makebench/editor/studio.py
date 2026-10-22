@@ -36,10 +36,17 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.tree_search.setAccessibleName('Buscar componente');sl.addWidget(self.tree_search)
         sl.addWidget(self.tree)
         self.tree_search.textChanged.connect(self.filter_tree)
-        insert=QWidget();il=QVBoxLayout(insert);il.addWidget(QLabel('Arraste para a interface ou dê dois cliques.'))
-        il.addWidget(self.palette)
+        insert=QWidget();il=QVBoxLayout(insert);il.setContentsMargins(6,6,6,6)
+        self.insert_search=QLineEdit();self.insert_search.setPlaceholderText('Buscar elemento…');self.insert_search.setClearButtonEnabled(True);il.addWidget(self.insert_search)
+        self.palette.setMaximumHeight(16777215)
+        from PySide6.QtWidgets import QSizePolicy
+        self.palette.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
+        for index in range(self.palette.count()):
+            item=self.palette.item(index);item.setIcon(icon(item.data(Qt.ItemDataRole.UserRole)));item.setSizeHint(__import__('PySide6.QtCore',fromlist=['QSize']).QSize(160,34))
+        self.insert_search.textChanged.connect(lambda query:[self.palette.item(index).setHidden(query.casefold() not in self.palette.item(index).text().casefold()) for index in range(self.palette.count())])
+        il.addWidget(self.palette,1)
 
-        add=QPushButton('Inserir selecionado');add.clicked.connect(self.add_component);il.addWidget(add)
+        add=QPushButton(icon('add'),'Inserir');add.setToolTip('Inserir o elemento selecionado');add.clicked.connect(self.add_component);il.addWidget(add)
         self.data_list=QListWidget();self.data_list.setAccessibleName('Recursos e funções do projeto')
         self.left_tabs.addTab(structure,'Estrutura');self.left_tabs.addTab(insert,'Inserir');self.left_tabs.addTab(self.data_list,'Dados')
         ll.addWidget(self.left_tabs)
@@ -54,17 +61,11 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
             widget=ml.itemAt(n).widget()
             if isinstance(widget,QLabel):ml.removeWidget(widget);widget.deleteLater()
         middle.setObjectName('pasteboard')
-        tools=QToolBar('Ferramentas de criação');tools.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        from makebench.core.project import ComponentKind
-        from PySide6.QtGui import QActionGroup
-        tool_group=QActionGroup(self);tool_group.setExclusive(True)
-        select=tools.addAction(icon('select'),'Selecionar');select.setCheckable(True);select.setChecked(True);tool_group.addAction(select)
-        select.triggered.connect(lambda:self.canvas.set_insert_tool(None))
-        self.canvas.tool_changed.connect(lambda kind:select.setChecked(True) if not kind else None)
-        for kind,label in [(ComponentKind.CONTAINER,'Contêiner'),(ComponentKind.LABEL,'Texto'),(ComponentKind.BUTTON,'Botão'),(ComponentKind.IMAGE,'Imagem')]:
-            action=tools.addAction(icon('add'),label)
-            action.setCheckable(True);tool_group.addAction(action)
-            action.triggered.connect(lambda _,k=kind:self.canvas.set_insert_tool(k.value))
+        tools=QToolBar('Ferramentas de criação');tools.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        tools.addAction(icon('select'),'Selecionar',lambda:self.canvas.set_insert_tool(None))
+        pan=tools.addAction(icon('pan'),'Mover a visão');pan.setCheckable(True)
+        pan.toggled.connect(lambda enabled:self.zoom_view.setDragMode(self.zoom_view.DragMode.ScrollHandDrag if enabled else self.zoom_view.DragMode.NoDrag) if hasattr(self,'zoom_view') else None)
+        tools.addSeparator();tools.addAction(icon('undo'),'Desfazer',self.undo);tools.addAction(icon('redo'),'Refazer',self.redo)
         ml.addWidget(tools,0,Qt.AlignmentFlag.AlignHCenter)
         self.right_panel=self.design_splitter.widget(2)
         self.design_splitter.setChildrenCollapsible(True)
@@ -88,22 +89,23 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.workspace_splitter=QSplitter(Qt.Orientation.Vertical);self.workspace_splitter.addWidget(self.tabs);self.workspace_splitter.addWidget(self.drawer)
         self.workspace_splitter.setStretchFactor(0,1);self.workspace_splitter.setSizes([650,180])
         editor=QWidget();el=QVBoxLayout(editor);el.setContentsMargins(0,0,0,0);el.setSpacing(0)
-        self.context_bar=QToolBar('Contexto de criação');self.context_bar.setObjectName('context_bar')
+        self.context_bar=QToolBar('Contexto de criação');self.context_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly);self.context_bar.setObjectName('context_bar')
         self.context_label=QLabel();self.context_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.overview_action=self.context_bar.addAction(icon('map'),'Mapa',lambda:self.set_mode('Mapa'))
         self.context_bar.addWidget(self.context_label)
         el.addWidget(self.context_bar);el.addWidget(self.workspace_splitter,1)
-        self.drawer_toggle=QPushButton('Saída e problemas · Ctrl+J');self.drawer_toggle.clicked.connect(self.toggle_drawer)
+        self.drawer_toggle=QPushButton(icon('output'),'');self.drawer_toggle.setToolTip('Saída e problemas · Ctrl+J');self.drawer_toggle.setAccessibleName('Saída e problemas');self.drawer_toggle.clicked.connect(self.toggle_drawer)
         el.addWidget(self.drawer_toggle)
         self.pages=QStackedWidget();self.editor_page=editor;self.pages.addWidget(editor)
         self.setCentralWidget(self.pages)
         bar=QToolBar('Bancada');bar.setObjectName('workspace_toolbar');bar.setMovable(False)
         bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
-        self.home_action=QAction(icon('home'),'Início',self);self.home_action.triggered.connect(self.show_home)
+        self.home_action=QAction(icon('home'),'Início',self);self.home_action.setProperty('makebenchIcon','home');self.home_action.triggered.connect(self.show_home)
         bar.addAction(self.home_action);bar.addActions([self.save_action,self.undo_action,self.redo_action]);bar.addSeparator()
         self.project_heading=QLabel();self.project_heading.setTextFormat(Qt.TextFormat.PlainText);self.project_heading.setMinimumWidth(120);bar.addWidget(self.project_heading)
         self.mode_group=QButtonGroup(self);self.mode_group.setExclusive(True);self.mode_buttons={}
         for number,name in enumerate(['Mapa','Design','Lógica','Código','Publicar'],1):
-            button=QToolButton();button.setIcon(icon({'Mapa':'map','Design':'select','Lógica':'logic','Código':'code','Publicar':'export'}[name]));button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);button.setText(name);button.setCheckable(True);button.setAccessibleName('Modo '+name)
+            button=QToolButton();button.setIcon(icon({'Mapa':'map','Design':'select','Lógica':'logic','Código':'code','Publicar':'export'}[name]));button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly);button.setText(name);button.setToolTip(name);button.setFixedSize(36,34);button.setProperty('mode',True);button.setCheckable(True);button.setAccessibleName('Modo '+name)
             button.clicked.connect(lambda _,m=name:self.set_mode(m));self.mode_group.addButton(button);bar.addWidget(button)
             self.mode_buttons[name]=button
             action=QAction('Modo '+name,self);action.setShortcut(QKeySequence(f'Ctrl+{number}'))
@@ -118,7 +120,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.workspace_toolbar=bar
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea,bar)
         view=self.menuBar().addMenu('E&xibir')
-        for label,shortcut,callback in [('Painel esquerdo','Ctrl+B',lambda:self.toggle_side('left')),('Inspetor','Ctrl+Alt+B',lambda:self.toggle_side('right')),('Saída e problemas','Ctrl+J',self.toggle_drawer),('Paleta de comandos…','Ctrl+K',self.show_commands),('Preferências…','',self.preferences),('Alternar região de foco','F6',self.cycle_focus)]:
+        for label,shortcut,callback in [('Painel esquerdo','Ctrl+B',lambda:self.toggle_side('left')),('Inspetor','Ctrl+Alt+B',lambda:self.toggle_side('right')),('Saída e problemas','Ctrl+J',self.toggle_drawer),('Paleta de comandos…','Ctrl+K',self.show_commands),('Preferências…','Ctrl+,',self.preferences),('Alternar região de foco','F6',self.cycle_focus)]:
             action=QAction(label,self);action.setShortcut(QKeySequence(shortcut));action.triggered.connect(callback);view.addAction(action)
         view.addAction(self.home_action)
         grid=view.addAction('Encaixar na grade');grid.setCheckable(True);grid.setChecked(self.snap_check.isChecked())
@@ -144,6 +146,14 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         self.install_execution()
         from .publish import PublishPanel
         self.publish_panel=PublishPanel(self);self.tabs.addTab(self.publish_panel,"Publicar")
+        project_menu=next((a.menu() for a in self.menuBar().actions() if a.text().replace('&','')=='Projeto'),None) or self.menuBar().addMenu('Projeto')
+        project_menu.addAction('Configurações do aplicativo…',self.application_settings)
+        from .settings import show_diagnostic,open_checklist,apply_preferences
+        help_menu=next(a.menu() for a in self.menuBar().actions() if a.text().replace('&','')=='Ajuda')
+        help_menu.addAction('Diagnóstico do ambiente…',lambda:show_diagnostic(self))
+        help_menu.addAction('Checklist de validação',lambda:open_checklist(self))
+        gear=QToolButton();gear.setIcon(icon('settings'));gear.setToolTip('Configurações do aplicativo');gear.clicked.connect(self.application_settings);sl.insertWidget(0,gear,0,Qt.AlignmentFlag.AlignRight)
+        apply_preferences(self)
 
     def insert_kind(self, kind):
         """Insere uma ferramenta usando o mesmo histórico da paleta por arraste."""
@@ -151,11 +161,15 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
 
     def set_mode(self, mode):
         """Troca a tarefa preservando seleção e confirmação dos blocos."""
+        if getattr(self,'_compact_home',False):
+            self._compact_home=False;self.setMinimumSize(980,600);self.resize(1280,800)
         indexes={'Design':0,'Lógica':1,'Código':2,'Mapa':3,'Publicar':4}
         index=indexes[mode]
         if index>=self.tabs.count():return
         self.pages.setCurrentWidget(self.editor_page)
         self.workspace_toolbar.show()
+        if mode=='Design' and hasattr(self,'zoom_view') and getattr(self,'_fitted_interface',None)!=(self.project.id,self.active_window):
+            self._fitted_interface=(self.project.id,self.active_window);QTimer.singleShot(0,self.zoom_view.fit)
         if mode=='Lógica' and self.tabs.currentIndex()!=1:
             self.logic.select_component_event(self.selected_id,self.active_state)
         self.tabs.setCurrentIndex(index);self.sync_mode_button(self.tabs.currentIndex())
@@ -166,7 +180,9 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         if 0<=index<len(modes):
             self._mode=modes[index];self.mode_buttons[self._mode].setChecked(True)
         if hasattr(self,'zoom_actions'):
-            for action in self.zoom_actions:action.setVisible(self._mode in {'Design','Mapa'})
+            for action in self.zoom_actions:action.setVisible(True);action.setEnabled(self._mode in {'Design','Mapa'})
+        if hasattr(self,'overview_action'):self.overview_action.setVisible(True)
+        for button in self.mode_buttons.values():button.setVisible(True)
         self.sync_studio()
 
     def sync_studio(self):
@@ -175,7 +191,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         dirty=self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
         self.project_heading.setText(self.project.name+(' •' if dirty else ''))
         node=self.project.find(self.selected_id)
-        self.context_label.setText('  '+self.project.root.properties.get('title',self.project.name)+'  ›  '+(node.display_name if node else 'Janela'))
+        self.context_label.setText('' if self._mode in {'Mapa','Publicar'} or node is None or node.kind.value=='window' else node.display_name[:32])
         data_signature=(id(self.project),self.project.id,self.history._index,self.source.text)
         if getattr(self,'_data_signature',None)!=data_signature:
             self._data_signature=data_signature;self.data_list.clear();self.list_resources()
@@ -268,28 +284,19 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         for n in range(self.tree.topLevelItemCount()):match(self.tree.topLevelItem(n))
 
     def preferences(self):
-        """Oferece tema e escala sem escrever preferências dentro do projeto."""
-        dialog=QDialog(self);dialog.setWindowTitle('Preferências');form=QFormLayout(dialog)
-        theme=QComboBox()
-        for label,value in [('Sistema','system'),('Claro','light'),('Escuro','dark')]:theme.addItem(label,value)
-        theme.setCurrentIndex(theme.findData(manager().mode))
-        theme.currentIndexChanged.connect(lambda _:manager().set_mode(theme.currentData()))
-        form.addRow('Aparência',theme)
-        scale=QComboBox()
-        for value in (90,100,115,130):scale.addItem(f'{value}%',value)
-        scale.setCurrentIndex(scale.findData(manager().scale))
-        def change_scale():
-            """Aplica escala de fonte ao editor, sem modificar o aplicativo criado."""
-            manager().scale=scale.currentData();manager().settings.setValue('appearance/scale',manager().scale);manager().apply()
-        scale.currentIndexChanged.connect(change_scale);form.addRow('Tamanho do texto',scale)
-        from PySide6.QtWidgets import QCheckBox
-        motion=QCheckBox('Reduzir movimento');motion.setChecked(manager().reduce_motion)
-        def change_motion(value):
-            """Persiste preferência e atualiza efeitos visuais do Qt."""
-            manager().reduce_motion=value;manager().settings.setValue('appearance/reduce_motion',value);manager().apply()
-        motion.toggled.connect(change_motion);form.addRow(motion)
-        buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Close);buttons.rejected.connect(dialog.reject);form.addRow(buttons)
-        dialog.exec()
+        """Abre preferências Qt com aplicação imediata e busca em todas as páginas."""
+        from .settings import EditorPreferences
+        self.preferences_dialog=EditorPreferences(self);self.preferences_dialog.show()
+
+    def application_settings(self,field=None):
+        """Abre a central única de configuração do aplicativo criado."""
+        if not self._finish_field_edit():return
+        from .settings import ApplicationSettings
+        self.app_settings_dialog=ApplicationSettings(self)
+        mapping={'icon':1,'packages':3,'dependencies':3,'permissions':4,'destinations':7}
+        self.app_settings_dialog.sections.setCurrentRow(mapping.get(field,0))
+        if field in self.app_settings_dialog.fields:self.app_settings_dialog.fields[field].setFocus()
+        self.app_settings_dialog.show()
 
     def edit_script_inline(self,data):
         """Edita literal no painel inferior, mantendo token e identificador Blockly."""
@@ -348,6 +355,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
     def theme_changed(self,_tokens):
         """Atualiza ícones e mantém a seleção/campos intactos ao alternar aparência."""
         register(self)
+        for mode,button in self.mode_buttons.items():button.setIcon(icon({'Mapa':'map','Design':'select','Lógica':'logic','Código':'code','Publicar':'export'}[mode]))
         for identifier,item in self._tree_items.items():
             node=self.project.find(identifier)
             if node:item.setIcon(0,icon(node.kind.value))
@@ -358,7 +366,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         if self._mode=='Design':target=self.left_panel if side=='left' else self.right_panel
         elif self._mode=='Lógica' and side=='right':target=self.logic.splitter.widget(1)
         elif self._mode=='Código' and side=='right':target=self.function_outline.parentWidget()
-        elif self._mode=='Publicar' and side=='left':target=self.publish_panel.sections
+        elif self._mode=='Publicar' and side=='left':target=self.publish_panel.checks
         if target:target.setVisible(not target.isVisible())
 
     def navigate_to_item(self,kind,identifier,owner=None):

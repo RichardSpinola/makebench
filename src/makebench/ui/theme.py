@@ -1,4 +1,4 @@
-"""Tokens derivados do desktop e estilo discreto inspirado na GNOME HIG."""
+"""Identidade visual Qt do Makebench, com contraste e destaque do desktop."""
 from PySide6.QtCore import QObject, QSettings, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 from PySide6.QtWidgets import QApplication, QStyleFactory
@@ -6,14 +6,8 @@ from PySide6.QtWidgets import QApplication, QStyleFactory
 ACCENTS = {'system':None,'blue':'#3584e4','green':'#26a269','yellow':'#e5a50a',
            'red':'#c01c28','purple':'#9141ac','pink':'#d56199','gray':'#77767b'}
 PALETTES = {
-    'light': dict(canvas='#ebebeb', panel='#fafafa', raised='#ffffff', header='#ebebeb', sidebar='#ebebeb',
-        border='#d9d9d9', control='#858585', text='#2e3436', muted='#5e5c64',
-        accent='#2874ce', fill='#2874ce', on_accent='#ffffff', success='#187346',
-        warning='#805b00', error='#c01c28', info='#2265b3', guide='#9141ac', hover='#e5e5e5', selection='#dfebfa'),
-    'dark': dict(canvas='#1e1e1e', panel='#242424', raised='#363636', header='#303030', sidebar='#2e2e2e',
-        border='#3d3d3d', control='#858585', text='#ffffff', muted='#c0bfbc',
-        accent='#78aeef', fill='#78aeef', on_accent='#161616', success='#8ff0a4',
-        warning='#f8e45c', error='#ff7b63', info='#78aeef', guide='#dc8add', hover='#414141', selection='#374453'),
+    'light': dict(canvas='#e7edf5',panel='#f5f7fb',raised='#ffffff',header='#ffffff',sidebar='#f0f3f8',border='#d3dce9',control='#72819a',text='#202a3a',muted='#52617a',accent='#2968c6',fill='#2968c6',on_accent='#ffffff',success='#187346',warning='#805b00',error='#b82e38',info='#245eb5',guide='#8545a0',hover='#e8edf5',selection='#dce8fb'),
+    'dark': dict(canvas='#121720',panel='#1d2430',raised='#283244',header='#202937',sidebar='#19212d',border='#39465d',control='#8293af',text='#e8eef8',muted='#a9b8d0',accent='#82b1ff',fill='#82b1ff',on_accent='#132136',success='#8ff0a4',warning='#f8e45c',error='#ff9393',info='#a0c4ff',guide='#e1a2ee',hover='#303c50',selection='#2d405c'),
 }
 
 
@@ -71,83 +65,47 @@ def derive_tokens(palette, dark=False, accent='system', system_surfaces=True):
 
 
 class ThemeManager(QObject):
-    """Segue esquema e paleta do desktop e persiste escolhas do editor."""
+    """Usa o estilo e a paleta nativos de Qt/KDE, sem folha de estilos própria."""
     changed=Signal(dict)
 
     def __init__(self,app):
-        """Captura a paleta antes de aplicar estilo; não a substitui globalmente."""
-        super().__init__(app);self.app=app;self.system_palette=QPalette(app.palette());self._applying=False
-        self.settings=QSettings('Makebench','Makebench');self.base_font=QFont(app.font())
-        value=self.settings.value('v1/appearance/theme',self.settings.value('appearance/theme','system'))
-        self.mode=value if value in {'system','light','dark'} else 'system'
-        try:self.scale=int(self.settings.value('v1/appearance/scale',self.settings.value('appearance/scale',100)))
-        except (TypeError,ValueError):self.scale=100
-        if self.scale not in {90,100,115,130}:self.scale=100
-        self.accent=self.settings.value('v1/appearance/accent','system');self.reduce_motion=self.settings.value('v1/appearance/reduce_motion',False,type=bool)
-        self._applying=True;app.setStyle(QStyleFactory.create('Fusion'));self._applying=False
-        app.styleHints().colorSchemeChanged.connect(lambda _:self.apply())
-        app.paletteChanged.connect(self.palette_changed);self.apply()
+        """Preserva escolhas do desktop; Breeze é a reserva nativa em uma sessão KDE."""
+        import os
+        super().__init__(app);self.app=app;self._applying=False;self.settings=QSettings('Makebench','Makebench');self.base_font=QFont(app.font())
+        if app.platformName()!='offscreen' and 'KDE' in os.environ.get('XDG_CURRENT_DESKTOP','') and app.style().objectName().lower()=='fusion' and not os.environ.get('QT_STYLE_OVERRIDE') and 'Breeze' in QStyleFactory.keys():app.setStyle(QStyleFactory.create('Breeze'))
+        self.system_palette=QPalette(app.palette());self.mode='system';self.accent='system';self.scale=100;self.reduce_motion=False
+        if not self.settings.value('v2/native_theme',False,type=bool):
+            self.settings.setValue('v1/appearance/theme','system');self.settings.setValue('v1/appearance/accent','system');self.settings.setValue('v2/native_theme',True)
+        app.styleHints().colorSchemeChanged.connect(lambda _:self.apply());app.paletteChanged.connect(self.palette_changed);self.apply()
 
     def palette_changed(self,palette):
-        """Atualiza cores vindas do sistema sem confundir QSS com nova paleta."""
+        """Acompanha alterações reais do desktop enquanto o aplicativo está aberto."""
         if self._applying:return
         self.system_palette=QPalette(palette);self.apply()
 
     def set_mode(self,mode):
-        """Aplica imediatamente uma escolha validada de esquema."""
+        """Solicita o esquema à plataforma Qt; não fabrica uma paleta substituta."""
         if mode not in {'system','light','dark'}:raise ValueError('Tema desconhecido')
-        self.mode=mode;self.settings.setValue('v1/appearance/theme',mode);self.settings.setValue('appearance/theme',mode);self.apply()
+        self.mode=mode;self.settings.setValue('v1/appearance/theme',mode)
+        self.app.styleHints().setColorScheme({'system':Qt.ColorScheme.Unknown,'light':Qt.ColorScheme.Light,'dark':Qt.ColorScheme.Dark}[mode]);self.apply()
 
-    def set_accent(self,value):
-        """Escolhe destaque local ou volta a acompanhar o desktop."""
-        self.accent=value if value in ACCENTS else 'system';self.settings.setValue('v1/appearance/accent',self.accent);self.apply()
+    def set_accent(self,_value):
+        """Destaque pertence ao tema do sistema, como solicitado pelo autor."""
+        self.accent='system';self.settings.setValue('v1/appearance/accent','system');self.apply()
 
     def apply(self):
-        """Estiliza vistas via tokens mantendo intacta a paleta global do sistema."""
+        """Lê roles da paleta Qt para desenho do canvas, mapas e sintaxe."""
         if self._applying:return
-        self._applying=True
-        dark=self.mode=='dark' or self.mode=='system' and (self.app.styleHints().colorScheme()==Qt.ColorScheme.Dark or self.app.styleHints().colorScheme()==Qt.ColorScheme.Unknown and self.system_palette.color(QPalette.ColorRole.Window).lightnessF()<.45)
-        self.tokens=t=derive_tokens(self.system_palette,dark,self.accent,self.mode=='system')
-        for effect in (Qt.UIEffect.UI_AnimateMenu,Qt.UIEffect.UI_FadeMenu,Qt.UIEffect.UI_AnimateCombo,Qt.UIEffect.UI_AnimateTooltip,Qt.UIEffect.UI_FadeTooltip):self.app.setEffectEnabled(effect,not self.reduce_motion)
+        self._applying=True;p=self.system_palette
+        self.app.setStyleSheet('')
+        role=lambda name:p.color(getattr(QPalette.ColorRole,name)).name()
+        dark=p.color(QPalette.ColorRole.Window).lightnessF()<.45
+        self.tokens=t={'dark':dark,'canvas':role('AlternateBase'),'panel':role('Window'),'raised':role('Base'),'header':role('Window'),'sidebar':role('Window'),
+            'border':role('Mid'),'control':role('Mid'),'text':role('WindowText'),'muted':role('PlaceholderText'),'accent':role('Highlight'),'fill':role('Highlight'),'on_accent':role('HighlightedText'),
+            'success':role('Link'),'warning':role('LinkVisited'),'error':role('LinkVisited'),'info':role('Link'),'guide':role('Link'),'hover':role('AlternateBase'),'selection':role('Highlight'),'pressed':role('Highlight'),
+            'system_accent':role('Highlight'),'accent_adjusted':False}
         font=QFont(self.base_font);font.setPointSizeF(max(8,font.pointSizeF())*self.scale/100);self.app.setFont(font)
-        self.app.setStyleSheet(f'''
-          QWidget {{ color:{t['text']}; background:{t['panel']}; }}
-          QMainWindow,QDialog,QWidget#home {{ background:{t['panel']}; }}
-          QMenu,QToolTip {{ background:{t['raised']}; color:{t['text']}; border:1px solid {t['border']}; padding:6px; }}
-          QMenu::item {{ padding:7px 18px; border-radius:6px; }}
-          QMenu::item:selected {{ background:{t['selection']}; }}
-          QMenuBar {{ background:{t['header']}; }}
-          QToolBar {{ border:0; spacing:6px; padding:6px; background:{t['header']}; }}
-          QToolBar#workspace_toolbar {{ min-height:34px; }}
-          QToolButton,QPushButton {{ min-height:26px; padding:3px 10px; border:1px solid transparent; border-radius:6px; background:transparent; }}
-          QToolButton:hover,QPushButton:hover {{ background:{t['hover']}; }}
-          QToolButton:pressed,QPushButton:pressed {{ background:{t['selection']}; }}
-          QToolButton:checked {{ background:{t['selection']}; color:{t['text']}; }}
-          QPushButton[primary="true"],QToolButton[primary="true"] {{ background:{t['fill']}; color:{t['on_accent']}; }}
-          QPushButton[primary="true"]:pressed {{ background:{t['pressed']}; }}
-          QPushButton[destructive="true"] {{ color:{t['error']}; }}
-          QToolButton:focus,QPushButton:focus,QLineEdit:focus,QComboBox:focus,QSpinBox:focus,QCheckBox:focus {{ border:2px solid {t['accent']}; }}
-          QLineEdit,QComboBox,QSpinBox {{ background:{t['raised']}; min-height:26px; padding:3px 8px; border:1px solid {t['control']}; border-radius:6px; selection-background-color:{t['fill']}; selection-color:{t['on_accent']}; }}
-          QTreeWidget,QListWidget,QPlainTextEdit,QTextEdit {{ background:{t['panel']}; border:0; selection-background-color:{t['selection']}; selection-color:{t['text']}; }}
-          QTreeWidget::item,QListWidget::item {{ min-height:34px; padding:3px; border-radius:6px; }}
-          QTreeWidget::item:selected,QListWidget::item:selected {{ background:{t['selection']}; color:{t['text']}; }}
-          QListWidget#recent_list::item {{ min-height:50px; }}
-          QScrollArea,QTabWidget::pane {{ border:0; background:transparent; }}
-          QSplitter::handle {{ background:{t['border']}; width:1px; height:1px; }}
-          QLabel[muted="true"] {{ color:{t['muted']}; }}
-          QLabel[section="true"] {{ font-weight:600; padding-top:12px; padding-bottom:6px; }}
-          QLabel[title="true"] {{ font-size:24px; font-weight:700; }}
-          QWidget#pasteboard {{ background:{t['canvas']}; }}
-          QWidget[card="true"],QFrame[card="true"] {{ background:{t['raised']}; border:1px solid {t['border']}; border-radius:12px; }}
-          QWidget[card="true"] QWidget {{ border:0; background:transparent; }}
-          QWidget#app_window_titlebar {{ background:{t['header']}; border-radius:12px; }}
-          QTabBar::tab {{ padding:8px 12px; margin:2px; border-radius:6px; background:transparent; }}
-          QTabBar::tab:selected {{ background:{t['selection']}; }}
-          QTabBar::tab:focus,QTreeWidget:focus,QListWidget:focus,QPlainTextEdit:focus {{ border:1px solid {t['accent']}; }}
-          QGroupBox {{ border:0; margin-top:18px; padding-top:12px; }}
-          QGroupBox::title {{ subcontrol-origin:margin; left:0; font-weight:600; }}
-          QWidget:disabled {{ color:{t['muted']}; }}
-        ''')
+        for effect in (Qt.UIEffect.UI_AnimateMenu,Qt.UIEffect.UI_FadeMenu,Qt.UIEffect.UI_AnimateCombo,Qt.UIEffect.UI_AnimateTooltip,Qt.UIEffect.UI_FadeTooltip):self.app.setEffectEnabled(effect,not self.reduce_motion)
         self._applying=False;self.changed.emit(t)
 
 
