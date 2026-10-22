@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from makebench.core.codegen import generate
 from makebench.core.project import Project, ProjectError
 from .session import RuntimeSession
+from makebench.core.project import ComponentKind
 from .view import RuntimeView
 
 
@@ -138,6 +139,11 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         tokens=PALETTES['dark' if self.palette().window().color().lightness()<128 else 'light']
         color=tokens['warning'] if channel=='stderr' else tokens['error'] if channel=='error' else tokens['muted'] if channel=='status' else None
         append_output(self.output,text,color)
+        if channel!='status':
+            view=self.views.get(self.current_window) if hasattr(self,'views') else None
+            if view:
+                for node in view.window_root.walk():
+                    if node.kind==ComponentKind.OUTPUT:append_output(view.widgets[node.id],text,color)
         if not self.supervision and self.parent() is None and channel!='status':
             import sys
             stream=sys.stderr if channel in {'stderr','error'} else sys.stdout

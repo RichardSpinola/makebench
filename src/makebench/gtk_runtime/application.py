@@ -103,6 +103,13 @@ class GtkRuntime:
     def output(self,channel,text):
         """Registra canais sem interpretar stderr como falha."""
         self.emit('log',channel=channel,text=text)
+        if channel!='status':
+            view=self.views.get(self.current)
+            if view:
+                for node in view.root.walk():
+                    if node.kind==ComponentKind.OUTPUT:
+                        buffer=view.widgets[node.id].get_buffer();buffer.insert(buffer.get_end_iter(),text)
+                        if buffer.get_char_count()>500000:buffer.delete(buffer.get_start_iter(),buffer.get_iter_at_offset(buffer.get_char_count()-400000))
 
     def message(self,message):
         """Atende eventos neutros do worker exclusivamente na thread GTK."""
@@ -112,7 +119,8 @@ class GtkRuntime:
         elif kind=='busy':self.set_busy(True)
         elif kind=='done':self.set_busy(False);self.emit('done',**{k:v for k,v in message.items() if k!='type'});self.dispatch()
         elif kind=='log':self.output(message['channel'],message['text'])
-        elif kind=='error':self.emit('error',**{k:v for k,v in message.items() if k!='type'})
+        elif kind=='error':
+            self.output('error','[Erro] '+message.get('message','Erro')+'\n');self.emit('error',**{k:v for k,v in message.items() if k!='type'})
         elif kind=='request':self.request(message)
 
     def set_busy(self,busy):

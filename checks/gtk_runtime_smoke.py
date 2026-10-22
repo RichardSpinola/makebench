@@ -17,7 +17,7 @@ from makebench.gtk_runtime.application import GtkRuntime
 def check_runtime():
     """Exercita três estados, duas janelas, pergunta GTK e tarefa com stdout/stderr."""
     with tempfile.TemporaryDirectory(prefix='makebench-gtk-runtime-test-') as directory:
-        root=Path(directory);p=welcome_template();entry=p.add(p.root.id,ComponentKind.TEXT_INPUT);progress=p.add(p.root.id,ComponentKind.PROGRESS)
+        root=Path(directory);p=welcome_template();entry=p.add(p.root.id,ComponentKind.TEXT_INPUT);progress=p.add(p.root.id,ComponentKind.PROGRESS);output=p.add(p.root.id,ComponentKind.OUTPUT)
         launch=p.add(p.root.id,ComponentKind.BUTTON);launch.properties['text']='API ctx'
         flow=create_flow(p,launch.id);flow['body']=[{'id':'call','op':'call','function':'exercise','value':{'id':'arg','op':'literal','value':''}}]
         source=f'''def exercise(ctx, valor):
@@ -44,6 +44,8 @@ def check_runtime():
                 if step[0]==1:
                     assert any(m['type']=='error' and '3' in m.get('message','') for m in messages),messages
                     assert any(m['type']=='log' and m.get('channel')=='stderr' and 'aviso' in m['text'] for m in messages)
+                    text=runtime.views[p.root.id].read(output.id,'text')
+                    assert 'saida' in text and 'aviso' in text and '[Erro]' in text,text
                     step[0]=2
                 next_button=next(n for n in p.root.walk() if n.properties.get('text')=='Próximo')
                 if step[0] in (2,3,4):runtime.queue_event(next_button.id);step[0]+=1;return True
