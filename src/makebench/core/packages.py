@@ -12,6 +12,7 @@ import tempfile
 import time
 import zipfile
 import xml.etree.ElementTree as ET
+from contextlib import ExitStack
 from .exporter import export_source,verify,effects,BuildCancelled
 from .project import ProjectError
 from .environment import build_tools
@@ -28,11 +29,15 @@ def one_line(value):
 def preflight(project,source,read_asset,format):
     """Inclui ferramentas e restrições explícitas por destino, sem executar builds."""
     issues=verify(project,source,read_asset);programs,admin=effects(project)
+    for issue in issues:
+        if issue['level']=='success':issue['message']='Verificação do projeto concluída.'
     tool=FORMATS[format][1]
-    if tool and not build_tools().get(tool):issues.append({'level':'warning','message':f'Gerado, não construído (falta {tool}). A saída será uma receita ZIP.','field':'destinations'})
+    from .build_environment import prepared
+    managed=format in {'deb','rpm','appimage'} and prepared()
+    if tool and not build_tools().get(tool) and not managed:issues.append({'level':'warning','message':f'Prepare as ferramentas de construção ({tool}) ou exporte somente a receita.','field':'destinations'})
     if format=='flatpak' and (admin or programs):issues.append({'level':'error','message':'Flatpak isolado não permite programas do host ou ações administrativas declaradas. Use Fonte Python, DEB, RPM ou AppImage.','field':'permissions'})
-    if format=='flatpak' and project.application.get('backend','qt')=='qt':issues.append({'level':'warning','message':'O manifesto Qt exige rodas PySide6 compatíveis fornecidas em wheels/; não há download implícito.','field':'dependencies'})
-    if project.application.get('packages') and format!='source':issues.append({'level':'warning','message':'Pacotes Python adicionais precisam ser fornecidos para a distribuição alvo; o empacotador não instala dependências automaticamente.','field':'packages'})
+    if format=='flatpak' and project.application.get('backend','qt')=='qt':issues.append({'level':'warning','message':'Preparar ferramentas baixa as rodas Qt; construir usa somente o cache verificado.','field':'dependencies'})
+    if project.application.get('packages') and format not in {'source','flatpak'}:issues.append({'level':'warning','message':'Pacotes Python adicionais precisam ser fornecidos para a distribuição alvo; o empacotador não instala dependências automaticamente.','field':'packages'})
     return issues
 
 
@@ -56,7 +61,14 @@ def write_recipe(project,source,read_asset,format,root,progress=None,cancelled=N
     with zipfile.ZipFile(root/'source.zip') as z:z.extractall(root/'app')
     icon_ext=Path(app['icon']).suffix;icon_name=identifier+icon_ext
     desktop=f'[Desktop Entry]\nType=Application\nName={name}\nComment={one_line(app.get("description",""))}\nExec={identifier}\nIcon={identifier}\nTerminal=false\nCategories={one_line(app.get("category","Utility")).rstrip(";")};\n'
-    (root/(identifier+'.desktop')).write_text(desktop,encoding='utf-8');(root/icon_name).write_bytes(read_asset(app['icon']))
+    icon_data=read_asset(app['icon'])
+    if icon_ext.lower()=='.svg':
+        ET.register_namespace('','http://www.w3.org/2000/svg');svg=ET.fromstring(icon_data)
+        # AppStream precisa do viewBox para rasterizar ícones SVG sem deformação.
+        if 'viewBox' not in svg.attrib:
+            dimensions=[re.fullmatch(r'([0-9.]+)(?:px)?',svg.get(axis,'')) for axis in ('width','height')]
+            if all(dimensions):svg.set('viewBox','0 0 '+' '.join(d.group(1) for d in dimensions));icon_data=ET.tostring(svg,encoding='utf-8')
+    (root/(identifier+'.desktop')).write_text(desktop,encoding='utf-8');(root/icon_name).write_bytes(icon_data)
     if admin:(root/(identifier+'.policy')).write_text(policy_xml(project),encoding='utf-8')
     payload=root/'payload';location=payload/'opt'/identifier;location.mkdir(parents=True)
     shutil.copytree(root/'app',location,dirs_exist_ok=True)
@@ -87,7 +99,7 @@ def write_recipe(project,source,read_asset,format,root,progress=None,cancelled=N
     elif format=='flatpak':
         runtime='org.gnome.Platform' if gtk else 'org.kde.Platform';sdk='org.gnome.Sdk' if gtk else 'org.kde.Sdk'
         manifest={'app-id':identifier,'runtime':runtime,'runtime-version':'50' if gtk else '6.10','sdk':sdk,'command':identifier,
-            'finish-args':['--socket=wayland','--socket=fallback-x11','--share=ipc','--device=dri'],
+            'finish-args':['--socket=wayland','--socket=fallback-x11','--share=ipc','--device=dri']+([] if gtk else ['--env=QT_QPA_PLATFORM=wayland;xcb']),
             'modules':[{'name':'application','buildsystem':'simple','build-commands':['mkdir -p /app/share/'+identifier,'cp -a app/. /app/share/'+identifier+'/',
                 'install -Dm755 flatpak-launcher /app/bin/'+identifier,'install -Dm644 '+identifier+'.desktop /app/share/applications/'+identifier+'.desktop',
                 'install -Dm644 '+icon_name+' /app/share/icons/hicolor/'+('scalable' if icon_ext=='.svg' else '256x256')+'/apps/'+icon_name,
@@ -103,40 +115,35 @@ def write_recipe(project,source,read_asset,format,root,progress=None,cancelled=N
     return root
 
 
-def build_package(project,source,read_asset,destination,format,progress=None,cancelled=None,recipe_only=False):
+def build_package(project,source,read_asset,destination,format,progress=None,cancelled=None,recipe_only=False,environment='system'):
     """Constrói com ferramentas presentes; publica exclusivamente ao terminar e verificar."""
     if format=='source':return dict(export_source(project,source,read_asset,destination,progress,cancelled),status='Construído e verificado',format=format)
     issues=preflight(project,source,read_asset,format);errors=[i['message'] for i in issues if i['level']=='error']
     if errors:raise ProjectError('\n'.join(errors))
-    destination=Path(destination)
+    destination=Path(destination).resolve()
     if destination.exists():raise ProjectError('O destino já existe. Escolha outro nome.')
-    tool=FORMATS[format][1];available=build_tools().get(tool);recipe=recipe_only or not available
+    tool=FORMATS[format][1];available=build_tools().get(tool)
+    from .build_environment import prepared,container_command,run_tool
+    managed=format in {'deb','rpm','appimage'} and (environment=='managed' or environment=='auto' and not available and prepared()) and not recipe_only
+    if managed:
+        if not prepared():raise ProjectError('Clique em Preparar ferramentas antes de construir este pacote.')
+        available=tool
+    if environment=='auto' and not available and not recipe_only:raise ProjectError('Prepare as ferramentas ou escolha Somente gerar receita.')
+    recipe=recipe_only or not available
     def step(number,message):
         """Cancelamento acontece antes de publicar qualquer artefato no destino."""
         if cancelled and cancelled():raise BuildCancelled('Construção cancelada.')
         if progress:progress(number,message)
     def run(arguments,cwd):
         """Ferramenta explícita, sem shell; logs e cancelamento da árvore de build."""
-        import selectors
         step(50,'Executar '+Path(arguments[0]).name)
-        process=subprocess.Popen(arguments,cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True)
-        selector=selectors.DefaultSelector();selector.register(process.stdout,selectors.EVENT_READ);tail=[]
-        try:
-            while process.poll() is None or selector.get_map():
-                if cancelled and cancelled():
-                    os.killpg(process.pid,signal.SIGTERM)
-                    try:process.wait(timeout=.7)
-                    except subprocess.TimeoutExpired:os.killpg(process.pid,signal.SIGKILL);process.wait()
-                    raise BuildCancelled('Construção cancelada.')
-                for key,_ in selector.select(.1):
-                    data=os.read(key.fileobj.fileno(),8192)
-                    if not data:selector.unregister(key.fileobj);continue
-                    text=data.decode('utf-8',errors='replace');tail.append(text)
-                    if progress:progress(65,text.rstrip())
-            if process.returncode:raise ProjectError('Falha ao construir: '+''.join(tail)[-6000:])
-        finally:selector.close();process.stdout.close()
-    with tempfile.TemporaryDirectory(prefix='.makebench-package-',dir=destination.parent) as directory:
-        root=write_recipe(project,source,read_asset,format,Path(directory)/'recipe',progress,cancelled);step(35,'Receita gerada')
+        return run_tool(container_command(arguments,stage) if managed else arguments,cwd,progress,cancelled)
+    with ExitStack() as stack:
+        directory=stack.enter_context(tempfile.TemporaryDirectory(prefix='.makebench-package-',dir=destination.parent))
+        # AppStream usa caminhos IPC limitados; mantenha a construção Flatpak curta.
+        build_directory=stack.enter_context(tempfile.TemporaryDirectory(prefix='mb-flatpak-')) if format=='flatpak' else directory
+        stage=Path(directory)
+        root=write_recipe(project,source,read_asset,format,Path(build_directory)/'recipe',progress,cancelled);step(35,'Receita gerada')
         if recipe:
             result=Path(directory)/'recipe.zip'
             with zipfile.ZipFile(result,'w',zipfile.ZIP_DEFLATED) as z:
@@ -144,7 +151,7 @@ def build_package(project,source,read_asset,destination,format,progress=None,can
                     if path.is_file():z.write(path,path.relative_to(root))
             status='Gerado, não construído ('+('receita solicitada' if available else 'falta '+tool)+')'
         else:
-            if project.application.get('packages'):raise ProjectError('Forneça as dependências Python adicionais para o destino. Gere a receita para preparar uma construção offline.')
+            if project.application.get('packages') and format!='flatpak':raise ProjectError('Forneça as dependências Python adicionais para o destino. Gere a receita para preparar uma construção offline.')
             identifier=project.application['id']
             if format=='deb':
                 result=Path(directory)/'app.deb';run([available,'--build','--root-owner-group',str(root/'payload'),str(result)],root);run([available,'--info',str(result)],root);run([available,'--contents',str(result)],root)
@@ -159,13 +166,22 @@ def build_package(project,source,read_asset,destination,format,progress=None,can
                 result=packages[0]
                 if shutil.which('rpm'):run([shutil.which('rpm'),'-qip',str(result)],root)
             else:
-                if project.application.get('backend','qt')=='qt':raise ProjectError('O Flatpak Qt exige rodas PySide6 offline. Gere a receita e forneça as dependências antes de construir.')
+                from .build_environment import copy_flatpak_wheels,flatpak_requirements
+                if flatpak_requirements(project):
+                    copy_flatpak_wheels(project,root/'wheels')
+                    manifest_path=root/(identifier+'.json');manifest=json.loads(manifest_path.read_text())
+                    manifest['modules'][0]['build-commands'].insert(0,'python3 -m pip install --no-index --no-deps --target=/app/lib/python/site-packages wheels/*.whl')
+                    manifest['finish-args'].append('--env=PYTHONPATH=/app/lib/python/site-packages')
+                    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
                 if shutil.which('appstreamcli'):run([shutil.which('appstreamcli'),'validate','--no-net','--override=url-homepage-missing=info',str(root/(identifier+'.metainfo.xml'))],root)
-                repo=Path(directory)/'repo';builddir=Path(directory)/'build-dir'
-                run([available,'--disable-download','--force-clean','--repo='+str(repo),str(builddir),str(root/(identifier+'.json'))],root)
+                repo=Path(build_directory)/'repo';builddir=Path(build_directory)/'build-dir'
+                run([available,'--user','--disable-download','--force-clean','--repo='+str(repo),str(builddir),str(root/(identifier+'.json'))],root)
                 flatpak=shutil.which('flatpak')
                 if not flatpak:raise ProjectError('Falta flatpak para gerar o bundle final.')
                 result=Path(directory)/'app.flatpak';run([flatpak,'build-bundle',str(repo),str(result),identifier],root)
             status='Construído e verificado (instalação no destino ainda não testada)'
-        step(95,'Publicar resultado completo');os.link(result,destination)
+        step(95,'Publicar resultado completo')
+        if format=='flatpak' and not recipe:
+            staged=Path(directory)/'bundle.flatpak';shutil.copy2(result,staged);result=staged
+        os.link(result,destination)
     return {'path':str(destination),'size':destination.stat().st_size,'sha256':hashlib.sha256(destination.read_bytes()).hexdigest(),'status':status,'format':format}
