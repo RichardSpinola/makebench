@@ -283,6 +283,12 @@ class MainWindow(StudioMixin, QMainWindow):
         self.setCentralWidget(self.tabs)
 
     def _refresh(self) -> None:
+        """Mostra uma atualização completa sem exibir o estado vazio intermediário."""
+        from .updates import hold_updates
+        with hold_updates(self):
+            self._rebuild_views()
+
+    def _rebuild_views(self) -> None:
         """Atualiza as vistas a partir do documento e preserva a seleção válida."""
         self._refreshing = True
         self._tree_items = {}
@@ -321,6 +327,9 @@ class MainWindow(StudioMixin, QMainWindow):
         if self.project.find(self.selected_id) is None:
             self.selected_id = self.project.root.id
         self._refreshing = False
+        # Uma reconstrução também restaura entradas rejeitadas pela validação.
+        # O cache só evita refazer campos em cliques de seleção sem alteração.
+        self.inspector._binding_signature = None
         if self.selected_id not in getattr(self,'selected_ids',set()):self.selected_ids={self.selected_id}
         self._preserve_multi=True
         self._select(self.selected_id)
@@ -334,6 +343,12 @@ class MainWindow(StudioMixin, QMainWindow):
         if hasattr(self,"zoom_view"):self.zoom_view.update_bounds()
 
     def _select(self, component_id: str) -> None:
+        """Agrupa a seleção e a troca de campos em uma única repintura."""
+        from .updates import hold_updates
+        with hold_updates(self.inspector):
+            self._select_component(component_id)
+
+    def _select_component(self, component_id: str) -> None:
         """Sincroniza seleção da árvore, prévia e formulário de propriedades."""
         if self._refreshing:
             return
@@ -476,6 +491,7 @@ class MainWindow(StudioMixin, QMainWindow):
         shown=self.canvas._project.find(identifier)
         if effective is None or shown is None:return
         shown.properties=deepcopy(effective.properties);shown.geometry=dict(effective.geometry)
+        self.canvas.refresh_native_preview()
         frame=self.canvas._frames.get(identifier)
         widget=frame.layout().itemAt(0).widget() if frame and frame.layout() and frame.layout().count() else None
         if widget and not node.can_have_children:
@@ -845,6 +861,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._update_code()
         self._update_actions()
         self.remember_project()
+        self.canvas.close_native_preview()
         self.clear_recovery()
         if upgraded:self.statusBar().showMessage('Projeto atualizado para formato 5. A cópia .bak-v4 preserva a versão anterior; editores antigos não abrem os recursos novos.',12000)
         return True

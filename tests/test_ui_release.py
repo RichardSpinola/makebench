@@ -108,3 +108,39 @@ class NativeQtInterfaceTests(unittest.TestCase):
         dialog.banner.close_button.click();self.app.processEvents()
         self.assertFalse(dialog.isVisible());self.assertFalse(w.isVisible());dialog.deleteLater()
 
+    def test_reselect_preserves_inspector_canvas_and_diagnostic_items(self):
+        """Cliques repetidos não reconstroem os campos, os frames nem a lista de problemas."""
+        from PySide6.QtWidgets import QLineEdit
+        w=self.window;p=Project.empty();text=p.add(p.root.id,ComponentKind.LABEL);w._replace_project(p,None);w._select(text.id)
+        field=w.inspector.findChild(QLineEdit,'property_text');frame=w.canvas._frames[text.id];problem=w.problems.item(0)
+        with patch.object(w.inspector,'clear',wraps=w.inspector.clear) as clear:
+            w._select(text.id);w.select_multiple([text.id]);self.app.processEvents()
+            clear.assert_not_called()
+        self.assertIs(w.inspector.findChild(QLineEdit,'property_text'),field)
+        self.assertIs(w.canvas._frames[text.id],frame);self.assertIs(w.problems.item(0),problem)
+
+    def test_insert_repaints_only_after_complete_refresh_and_keeps_native_window(self):
+        """Qt não recebe uma bancada parcialmente vazia durante a reconstrução."""
+        w=self.window;native=w.winId();states=[];original=w.canvas.set_project
+        def rebuild(project):
+            original(project);self.app.processEvents();states.append(w.updatesEnabled())
+        with patch.object(w.canvas,'set_project',side_effect=rebuild):
+            w.palette.setCurrentRow(w.palette.findData('label'));w.add_component()
+        self.assertEqual(states,[False]);self.assertTrue(w.updatesEnabled());self.assertEqual(w.winId(),native)
+        self.assertEqual(w.project.find(w.selected_id).kind,ComponentKind.LABEL)
+
+    def test_map_empty_hint_survives_click_zoom_and_node_click_is_not_edit(self):
+        """Orientação não é um item arrastável; selecionar nó não salva posições por engano."""
+        from PySide6.QtCore import Qt
+        from PySide6.QtTest import QTest
+        w=self.window;p=Project.empty();p.metadata['empty_map']=True;w._replace_project(p,None);w.set_mode('Mapa');self.app.processEvents()
+        panel=w.map_panel;hint=panel.view.empty_hint;history=w.history._index;size=hint.size()
+        QTest.mouseClick(panel.view.viewport(),Qt.MouseButton.LeftButton,pos=panel.view.viewport().rect().center());QTest.qWait(10)
+        panel.view.scale(2,2);self.app.processEvents()
+        self.assertTrue(hint.isVisible());self.assertEqual(hint.size(),size);self.assertEqual(w.history._index,history)
+        w._replace_project(Project.empty(),None);w.set_mode('Mapa');self.app.processEvents();panel.fit()
+        node=next(iter(panel.nodes.values()));history=w.history._index
+        point=panel.view.mapFromScene(node.mapToScene(node.rect().center()))
+        QTest.mouseClick(panel.view.viewport(),Qt.MouseButton.LeftButton,pos=point);QTest.qWait(10)
+        self.assertEqual(w.history._index,history);self.assertIs(next(iter(panel.nodes.values())),node)
+

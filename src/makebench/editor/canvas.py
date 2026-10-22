@@ -164,6 +164,7 @@ class PreviewCanvas(QFrame):
     tool_changed = Signal(str)
     image_dropped = Signal(str,str,int,object)
     context_requested = Signal(str,object)
+    native_preview_ready = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Prepara seleção, estado efêmero das páginas e controle dos gestos."""
@@ -194,15 +195,12 @@ class PreviewCanvas(QFrame):
         if self._project is None or self._project.id != project.id:
             self._visible_pages = {}
         self._project = project
-        from makebench.ui.theme import manager
-        t=manager().tokens
-        self.setStyleSheet(f'''QFrame[previewNode="true"] {{ border:1px solid transparent; border-radius:6px; }}
-            QFrame[previewNode="true"][selectedNode="true"] {{ border:2px solid {t['accent']}; }}
-            QFrame[previewNode="true"][dropTarget="true"] {{ border:2px dashed {t['accent']}; }}
-            QWidget#app_window_titlebar {{ background:{t['header']}; border-radius:12px; }}'''+
-            (f'''QPushButton {{ background:{t['raised']}; border:1px solid {t['border']}; border-radius:8px; min-height:30px; }}
-            QLineEdit {{ background:{t['raised']}; border-radius:6px; }} QProgressBar {{ border-radius:6px; background:{t['hover']}; }} QProgressBar::chunk {{ background:{t['accent']}; border-radius:6px; }}''' if project.application.get('backend','qt')=='gtk' else ''))
-        self._layout_handles=[];self._guides=[]
+        # Controles Qt usam o próprio estilo instalado. GTK é desenhado em
+        # processo separado pelo toolkit real, sem QSS para imitá-lo.
+        self.setStyleSheet('QFrame[previewNode="true"] { border:1px solid transparent; }'
+            'QFrame[previewNode="true"][selectedNode="true"] { border:1px solid palette(highlight); }'
+            'QFrame[previewNode="true"][dropTarget="true"] { border:2px dashed palette(highlight); }')
+        self._layout_handles=[];self._guides=[];self._layout_selection=None
         self._gesture = None
         self._frames = {}
         self._tabs = {}
@@ -211,18 +209,36 @@ class PreviewCanvas(QFrame):
             if item.widget():
                 item.widget().hide()
                 item.widget().deleteLater()
-        chrome=QWidget();chrome.setObjectName('app_window_titlebar')
-        bar=QHBoxLayout(chrome);bar.setContentsMargins(8,4,8,4)
-        label=QLabel(project.root.properties.get('title',project.name));label.setTextFormat(Qt.TextFormat.PlainText);bar.addWidget(label,1)
-        dimensions=QLabel(f"{project.root.properties.get('width',640)} × {project.root.properties.get('height',480)}")
-        dimensions.setProperty('muted',True);bar.addWidget(dimensions);self._watch(chrome,project.root.id);self._watch(label,project.root.id)
-        self._layout.addWidget(chrome)
-        if project.application.get('backend','qt')=='gtk':
-            notice=QLabel('Prévia GTK aproximada; o resultado real aparece em Testar.');notice.setProperty('muted',True);notice.setWordWrap(True);self._layout.addWidget(notice)
+        from .window_chrome import QtWindowChrome
+        self.title_bar=QtWindowChrome(project.root);self._watch(self.title_bar,project.root.id)
+        self._layout.addWidget(self.title_bar)
         surface = self._render(project.root)
         surface.setMinimumSize(surface.minimumSize().expandedTo(QSize(360, 320)))
         surface.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._layout.addWidget(surface, 1)
+        if project.application.get('backend','qt')=='gtk':
+            if not hasattr(self,'gtk_surface'):
+                from .native_preview import GtkDesignSurface
+                self.gtk_surface=GtkDesignSurface(self)
+            self.gtk_surface.request()
+        else:
+            self.native_size=None
+            if hasattr(self,'gtk_surface'):self.gtk_surface.hide()
+
+    def resizeEvent(self,event):
+        """Mantém a superfície GTK sobre a área de desenho ao ajustar zoom e tamanho."""
+        super().resizeEvent(event)
+        if hasattr(self,'gtk_surface'):self.gtk_surface.setGeometry(self.rect())
+
+    def refresh_native_preview(self):
+        """Atualiza a aparência visual após editar propriedades, sem eventos de execução."""
+        if hasattr(self,'title_bar'):self.title_bar.update()
+        if hasattr(self,'gtk_surface') and self._project.application.get('backend','qt')=='gtk':self.gtk_surface.request()
+
+    def close_native_preview(self):
+        """A limpeza da janela encerra também o renderizador descartável GTK."""
+        if hasattr(self,'gtk_surface'):self.gtk_surface.shutdown()
+
 
     def visible_page(self, node: Component) -> Component:
         """Retorna a página em edição sem alterar a página inicial do aplicativo."""
@@ -231,7 +247,7 @@ class PreviewCanvas(QFrame):
 
     def select(self, component_id: str) -> None:
         """Destaca a seleção e revela páginas ancestrais sem sujar o documento."""
-        self._selected_id = component_id
+        self._selected_id = component_id;previous_pages=dict(self._visible_pages)
         child = self._project.find(component_id)
         parent = self._project.parent_of(component_id)
         while parent:
@@ -244,17 +260,24 @@ class PreviewCanvas(QFrame):
             child, parent = parent, self._project.parent_of(parent.id)
         for node_id, frame in self._frames.items():
             selected = node_id == component_id
-            frame.setProperty("selectedNode", selected)
-            frame.style().unpolish(frame)
-            frame.style().polish(frame)
+            if frame.property('selectedNode') != selected:
+                frame.setProperty("selectedNode", selected)
+                frame.style().unpolish(frame)
+                frame.style().polish(frame)
             parent = self._project.parent_of(node_id)
             free = parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE
             frame.show_handles(bool(selected and free))
             frame.update()
         self.show_layout_handles(component_id)
+        if hasattr(self,"gtk_surface"):self.gtk_surface.update()
+        if previous_pages!=self._visible_pages and hasattr(self,'gtk_surface'):self.gtk_surface.request()
 
     def show_layout_handles(self,identifier):
         """Revela alças apenas no contêiner automático selecionado."""
+        parent=self._frames.get(identifier)
+        signature=(identifier,id(parent))
+        if signature==getattr(self,'_layout_selection',None):return
+        self._layout_selection=signature
         for handle in self._layout_handles:handle.hide();handle.deleteLater()
         self._layout_handles=[]
         node=self._project.find(identifier)
@@ -278,9 +301,13 @@ class PreviewCanvas(QFrame):
 
     def select_many(self,identifiers):
         """Destaca a seleção compartilhada sem duplicar seu estado no documento."""
+        self.native_selection=set(identifiers)
+        if hasattr(self,"gtk_surface"):self.gtk_surface.update()
         for identifier,frame in self._frames.items():
-            frame.setProperty('selectedNode',identifier in identifiers)
-            frame.style().unpolish(frame);frame.style().polish(frame);frame.update()
+            selected=identifier in identifiers
+            if frame.property('selectedNode') != selected:
+                frame.setProperty('selectedNode',selected)
+                frame.style().unpolish(frame);frame.style().polish(frame);frame.update()
 
     def _watch(self, widget: QWidget, component_id: str) -> None:
         """Associa controles ao nó de edição e preserva a navegação das abas."""
@@ -422,6 +449,9 @@ class PreviewCanvas(QFrame):
 
     def keyPressEvent(self, event) -> None:
         """Permite ajuste fino por setas e cancela um gesto com Esc."""
+        native=getattr(self,'gtk_surface',None)
+        if event.key()==Qt.Key.Key_Escape and native and (native.drag or native.rubber):
+            native.cancel_gesture();event.accept();return
         if event.key()==Qt.Key.Key_Escape and self.insert_tool:
             self.set_insert_tool(None);event.accept();return
         tools={Qt.Key.Key_C:'container',Qt.Key.Key_T:'label',Qt.Key.Key_B:'button',Qt.Key.Key_I:'image'}

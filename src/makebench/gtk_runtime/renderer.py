@@ -63,7 +63,9 @@ class GtkView:
             widget=Gtk.ScrolledWindow(min_content_height=110);widget.set_child(control);self.widgets[node.id]=control
         elif k==ComponentKind.IMAGE:
             widget=Gtk.Picture();widget.set_can_shrink(True);widget.set_content_fit(Gtk.ContentFit.CONTAIN)
-            if p.get('source'):widget.set_paintable(self.Gdk.Texture.new_from_bytes(self.GLib.Bytes.new(self.read_asset(p['source']))))
+            if p.get('source'):
+                try:widget.set_paintable(self.Gdk.Texture.new_from_bytes(self.GLib.Bytes.new(self.read_asset(p['source']))))
+                except (OSError,ValueError,self.GLib.Error):widget.set_tooltip_text('Imagem indisponível: '+p['source'])
             widget.update_property([Gtk.AccessibleProperty.LABEL],[p.get('alt_text','Imagem')])
         else:raise ValueError('Componente GTK não reconhecido: '+str(k))
         self.frames[node.id]=widget;self.widgets.setdefault(node.id,widget);self.enabled[node.id]=p.get('enabled',True)

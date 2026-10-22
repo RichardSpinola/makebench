@@ -26,6 +26,8 @@ class ZoomView(QGraphicsView):
         size=self.canvas.minimumSizeHint()
         width=max(root.properties.get('width',640)+40,size.width())
         height=max(root.properties.get('height',480)+78,size.height())
+        native=getattr(self.canvas,'native_size',None)
+        if native and project.application.get('backend','qt')=='gtk':width,height=native.width(),native.height()
         self.canvas.resize(width,height)
         self.graph_scene.setSceneRect(QRectF(-48,-48,width+96,height+96))
 
@@ -67,10 +69,17 @@ class DesignerMixin:
             scroll.takeWidget();parent=scroll.parentWidget();layout=parent.layout();position=layout.indexOf(scroll)
             layout.removeWidget(scroll);scroll.deleteLater();self.zoom_view=ZoomView(self.canvas)
             layout.insertWidget(position,self.zoom_view,1)
+            def native_ready():
+                """A primeira imagem GTK enquadra a janela; próximas edições preservam o zoom."""
+                self.zoom_view.update_bounds()
+                key=(self.project.id,self.active_window)
+                if getattr(self,'_gtk_fitted',None)!=key:
+                    self._gtk_fitted=key;self.zoom_view.fit()
+            self.canvas.native_preview_ready.connect(native_ready)
             self.context_bar.addSeparator()
             self.zoom_actions=[]
             for label,callback in [('−',lambda:self.zoom_current(1/1.15)),('100%',lambda:self.zoom_current(absolute=1)),('+',lambda:self.zoom_current(1.15)),('Ajustar',self.fit_current_canvas)]:
-                button=QPushButton(label if label=='100%' else '');button.setToolTip({'−':'Reduzir zoom','+':'Ampliar zoom','Ajustar':'Enquadrar interface'}.get(label,'Tamanho real'));button.setAccessibleName('Zoom '+label);button.setIcon(__import__('makebench.editor.theme',fromlist=['icon']).icon({'−':'zoom-out','+':'zoom-in','Ajustar':'fit'}.get(label,'actual')));button.clicked.connect(callback);self.zoom_actions.append(self.context_bar.addWidget(button))
+                button=QPushButton(label if label=='100%' else '');button.setToolTip({'−':'Reduzir zoom','+':'Ampliar zoom','Ajustar':'Enquadrar interface'}.get(label,'Tamanho real'));button.setAccessibleName('Zoom '+label);button.setIcon(__import__('makebench.editor.theme',fromlist=['icon']).icon({'−':'zoom-out','+':'zoom-in','Ajustar':'fit'}.get(label,'actual')));button.setProperty('makebenchIcon',{'−':'zoom-out','+':'zoom-in','Ajustar':'fit'}.get(label,'actual'));button.clicked.connect(callback);self.zoom_actions.append(self.context_bar.addWidget(button))
             action=QAction('Ajustar composição',self);action.setShortcut(QKeySequence('Ctrl+0'));action.triggered.connect(self.fit_current_canvas);self.addAction(action)
             actual=QAction('Tamanho real',self);actual.setShortcut(QKeySequence('Ctrl+Alt+0'));actual.triggered.connect(lambda:self.zoom_current(absolute=1));self.addAction(actual)
         rename=QAction('Renomear seleção',self);rename.setShortcut(QKeySequence('F2'));rename.triggered.connect(self.rename_selected);self.addAction(rename)
@@ -96,8 +105,10 @@ class DesignerMixin:
             from .inline import InlineText,InlineParagraph
             shown=self.canvas._project.find(node.id) or node
             parent=self.canvas._frames[node.id]
+            surface=getattr(self.canvas,'gtk_surface',None)
+            if surface and surface.isVisible() and node.id in surface.rectangles:parent=surface
             editor=(InlineParagraph if '\n' in shown.properties.get('text','') or node.kind==ComponentKind.OUTPUT else InlineText)(shown.properties.get('text',''),parent)
-            editor.setAccessibleName('Editar texto do componente');editor.setGeometry(parent.rect().adjusted(4,4,-4,-4))
+            editor.setAccessibleName('Editar texto do componente');editor.setGeometry((surface.rectangles[node.id] if parent is surface else parent.rect()).adjusted(4,4,-4,-4))
             def finish(text,accept):
                 """Finaliza a edição antes de atualizar a vista, preservando cancelamento."""
                 editor.hide();editor.setParent(None);editor.deleteLater()

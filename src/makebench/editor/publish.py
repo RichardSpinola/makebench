@@ -26,11 +26,11 @@ class PublishPanel(QWidget):
     """Configurações pertencem à central própria; este modo trata da exportação."""
     def __init__(self,window):
         """Separa resumo, destino, verificação, construção e resultado verificável."""
-        super().__init__();self.window=window;self.job=None;layout=QVBoxLayout(self);layout.setContentsMargins(32,24,32,24);layout.setSpacing(18)
+        super().__init__();self.window=window;self.job=None;layout=QVBoxLayout(self);layout.setContentsMargins(12,10,12,10);layout.setSpacing(8)
         title=QLabel('Publicar aplicativo');title.setProperty('title',True);layout.addWidget(title)
         self.summary=QLabel();self.summary.setWordWrap(True);layout.addWidget(self.summary)
         edit=QPushButton('Editar configurações do aplicativo…');edit.clicked.connect(window.application_settings);layout.addWidget(edit,0,Qt.AlignmentFlag.AlignLeft)
-        destination=QWidget();destination.setProperty('card',True);form=QVBoxLayout(destination);form.setContentsMargins(18,18,18,18)
+        destination=QWidget();form=QVBoxLayout(destination);form.setContentsMargins(0,6,0,6);form.setSpacing(6)
         self.format=QComboBox()
         for key,(name,_,_) in FORMATS.items():self.format.addItem(name,key)
         form.addWidget(QLabel('1  Escolha o destino'));form.addWidget(self.format)

@@ -38,7 +38,7 @@ class SettingsShell(QDialog):
     def __init__(self,parent,title):
         """A busca filtra linhas em todas as páginas e mantém foco de teclado."""
         super().__init__(parent);self.setWindowTitle(title);self.resize(940,680);self.setMinimumSize(720,480)
-        outer=QVBoxLayout(self);heading=QLabel(title);heading.setProperty('title',True);outer.addWidget(heading)
+        outer=QVBoxLayout(self);outer.setContentsMargins(10,10,10,10);outer.setSpacing(8)
         self.search=QLineEdit();self.search.setPlaceholderText('Buscar configurações…');self.search.setClearButtonEnabled(True);outer.addWidget(self.search)
         body=QHBoxLayout();self.sections=QListWidget();self.sections.setMaximumWidth(200);self.sections.setMinimumWidth(170);body.addWidget(self.sections)
         self.pages=QStackedWidget();body.addWidget(self.pages,1);outer.addLayout(body,1);self.sections.currentRowChanged.connect(self.pages.setCurrentIndex);self.search.textChanged.connect(self.filter_rows)
@@ -47,7 +47,7 @@ class SettingsShell(QDialog):
 
     def add_page(self,title):
         """Página rolável funciona também com fontes ampliadas e janela menor."""
-        self.sections.addItem(title);page=QWidget();layout=QVBoxLayout(page);layout.setContentsMargins(18,6,18,18);layout.setSpacing(18);layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.sections.addItem(title);page=QWidget();layout=QVBoxLayout(page);layout.setContentsMargins(8,4,8,8);layout.setSpacing(10);layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         scroll=QScrollArea();scroll.setWidgetResizable(True);scroll.setWidget(page);self.pages.addWidget(scroll);self.page_layouts.append(layout)
         if self.sections.count()==1:self.sections.setCurrentRow(0)
         return layout
@@ -58,7 +58,7 @@ class SettingsShell(QDialog):
         if description:
             label=QLabel(description);label.setWordWrap(True);label.setProperty('muted',True);page.addWidget(label)
         from PySide6.QtWidgets import QFrame
-        card=QFrame();card.setFrameShape(QFrame.Shape.StyledPanel);layout=QVBoxLayout(card);layout.setContentsMargins(14,14,14,14);layout.setSpacing(14);page.addWidget(card);return layout
+        card=QFrame();card.setFrameShape(QFrame.Shape.StyledPanel);layout=QVBoxLayout(card);layout.setContentsMargins(10,10,10,10);layout.setSpacing(8);page.addWidget(card);return layout
 
     def row(self,group,label,control,description=''):
         """Uma linha de opção tem título/descrição e controle alinhado à direita."""

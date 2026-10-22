@@ -15,7 +15,7 @@ class Inspector(QWidget):
     def __init__(self,parent=None):
         """Guarda apenas estado de apresentação; o documento continua no projeto."""
         super().__init__(parent)
-        self.form=QFormLayout(self);self.form.setContentsMargins(12,12,12,12);self.form.setSpacing(8)
+        self.form=QFormLayout(self);self.form.setContentsMargins(8,8,8,8);self.form.setSpacing(6)
         self.form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.fields=self.form;self._expanded={};self._overrides={};self._kind=''
         self.setMinimumWidth(220)
@@ -24,6 +24,7 @@ class Inspector(QWidget):
 
     def clear(self):
         """Remove as vistas anteriores, incluindo conexões e campos de outro escopo."""
+        self._binding_signature = None
         self.preview_timer.stop();self._preview=None
         while self.form.rowCount():
             row=self.form.takeRow(0)
@@ -37,7 +38,7 @@ class Inspector(QWidget):
         wrapper=QWidget();layout=QVBoxLayout(wrapper);layout.setContentsMargins(0,0,0,0);layout.setSpacing(6)
         header=QToolButton();header.setText(title);header.setCheckable(True)
         header.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        body=QWidget();body.setProperty('card',True);form=QFormLayout(body);form.setContentsMargins(12,12,12,12);form.setSpacing(12)
+        body=QWidget();body.setProperty('card',True);form=QFormLayout(body);form.setContentsMargins(6,6,6,6);form.setSpacing(6)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         key=(self._kind,title);opened=self._expanded.get(key,expanded)
         header.setChecked(opened);header.setArrowType(Qt.ArrowType.DownArrow if opened else Qt.ArrowType.RightArrow);body.setVisible(opened)
@@ -49,7 +50,14 @@ class Inspector(QWidget):
 
     def set_component(self,project,node,overrides=None,state_mode=False):
         """Renderiza propriedades efetivas; ● identifica diferenças do estado ativo."""
-        self.clear();self._kind=node.kind.value;self._overrides=overrides or {};self.state_mode=state_mode
+        import json
+        parent=project.parent_of(node.id)
+        signature=(id(project),project.name,json.dumps(node.to_dict(),sort_keys=True),
+                   parent.id if parent else None,parent.display_name if parent else None,
+                   json.dumps(overrides or {},sort_keys=True),state_mode)
+        if signature==getattr(self,'_binding_signature',None):return
+        self.clear();self._binding_signature=signature
+        self._kind=node.kind.value;self._overrides=overrides or {};self.state_mode=state_mode
         heading=QLabel(KIND_LABELS[node.kind]);heading.setProperty('section',True);self.form.addRow(heading)
         parent=project.parent_of(node.id)
         if parent:
@@ -166,7 +174,9 @@ class Inspector(QWidget):
 
     def set_multiple(self,nodes):
         """Limita o formulário a comandos comuns a todos os selecionados."""
-        self.clear();self.form.addRow(QLabel(f'{len(nodes)} componentes selecionados'))
+        signature=('multi',tuple(sorted(node.id for node in nodes)))
+        if signature==getattr(self,'_binding_signature',None):return
+        self.clear();self._binding_signature=signature;self.form.addRow(QLabel(f'{len(nodes)} componentes selecionados'))
         for label,mode in [('Alinhar à esquerda','left'),('Centralizar horizontalmente','center_x'),('Alinhar à direita','right'),('Alinhar no topo','top'),('Centralizar verticalmente','center_y'),('Alinhar na base','bottom'),('Mesma largura','same_width'),('Mesma altura','same_height'),('Distribuir horizontalmente','distribute_x'),('Distribuir verticalmente','distribute_y')]:
             button=QPushButton(label);button.setEnabled(not mode.startswith('distribute') or len(nodes)>=3);button.clicked.connect(lambda _,mode=mode:self.selection_command.emit(mode));self.form.addRow(button)
 

@@ -10,7 +10,7 @@ from PySide6.QtCore import QObject, Signal, Slot, QUrl, QEventLoop, QTimer, Qt
 from PySide6.QtGui import QKeySequence, QColor
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSplitter, QDialog, QDialogButtonBox, QPlainTextEdit,
-    QVBoxLayout, QWidget,
+    QVBoxLayout, QWidget, QToolButton,
 )
 
 from makebench.core.codegen import generate
@@ -94,7 +94,7 @@ class LogicPanel(QWidget):
         self.token = ''
         self._payload = None
         self._flushing = False
-        layout = QVBoxLayout(self)
+        layout = QVBoxLayout(self);layout.setContentsMargins(4,4,4,4);layout.setSpacing(4)
         row = QHBoxLayout()
         row.addWidget(QLabel('Quando'))
         self.events = QComboBox()
@@ -108,10 +108,11 @@ class LogicPanel(QWidget):
         self.state_filter=QComboBox();self.state_filter.setAccessibleName('Filtro de estado do fluxo')
         self.state_filter.currentIndexChanged.connect(self._change_filter)
         row.addWidget(self.state_filter)
-        self.remove = QPushButton('Remover fluxo')
+        from .theme import icon
+        self.remove = QToolButton();self.remove.setIcon(icon('remove'));self.remove.setToolTip('Remover fluxo');self.remove.setAccessibleName('Remover fluxo');self.remove.setAutoRaise(True)
         self.remove.clicked.connect(lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None)
         row.addWidget(self.remove)
-        duplicate=QPushButton('Duplicar fluxo…');duplicate.clicked.connect(lambda:self.duplicate_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(duplicate)
+        duplicate=QToolButton();duplicate.setIcon(icon('duplicate'));duplicate.setToolTip('Duplicar fluxo…');duplicate.setAccessibleName('Duplicar fluxo');duplicate.setAutoRaise(True);duplicate.clicked.connect(lambda:self.duplicate_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(duplicate)
         layout.addLayout(row)
         add_row = QHBoxLayout()
         add_row.addWidget(QLabel('Novo vínculo'))
@@ -130,7 +131,7 @@ class LogicPanel(QWidget):
         self.edit_text.setEnabled(False)
         self.edit_text.clicked.connect(self._edit_text)
         layout.addWidget(self.edit_text,0,Qt.AlignmentFlag.AlignLeft)
-        self.splitter = QSplitter()
+        self.splitter = QSplitter();self.splitter.setHandleWidth(4)
         self.placeholder = QLabel('O editor de blocos será carregado ao abrir esta aba.')
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.splitter.addWidget(self.placeholder)

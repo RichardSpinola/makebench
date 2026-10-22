@@ -21,6 +21,8 @@ class DevelopmentMixin:
         old=code_page.findChild(QSplitter)
         generated=old.widget(0);own=old.widget(1)
         self.code_files=QTabWidget();self.code_files.addTab(generated,'gerado.py · somente leitura');self.code_files.addTab(own,'Funções próprias')
+        self.code_files.setDocumentMode(True);self.code_files.setTabPosition(QTabWidget.TabPosition.South)
+        for page in (code_page,generated,own):page.layout().setContentsMargins(4,4,4,4);page.layout().setSpacing(4)
         self.code_files.setCurrentIndex(1)
         self.code_files.currentChanged.connect(lambda _:self._update_actions())
         self.function_outline=QListWidget();self.function_outline.setAccessibleName('Funções do arquivo e usos nos blocos')
@@ -28,7 +30,7 @@ class DevelopmentMixin:
         self.function_outline.itemClicked.connect(self.open_function)
         pane=QWidget();pl=QVBoxLayout(pane);pl.addWidget(QLabel('Funções do projeto'));pl.addWidget(self.function_outline)
         add=QPushButton('+ Nova função');add.clicked.connect(self.new_function);pl.addWidget(add)
-        splitter=QSplitter();splitter.addWidget(self.code_files);splitter.addWidget(pane);splitter.setSizes([900,260])
+        splitter=QSplitter();splitter.setHandleWidth(4);splitter.addWidget(self.code_files);splitter.addWidget(pane);splitter.setSizes([900,260])
         index=layout.indexOf(old);layout.removeWidget(old);old.deleteLater();layout.insertWidget(index,splitter,1)
         self.code_splitter=splitter
         for panel,key in [(self.logic.splitter,'logic'),(splitter,'code')]:
@@ -40,15 +42,20 @@ class DevelopmentMixin:
             widget=layout.itemAt(n).widget()
             if isinstance(widget,QLabel) and widget is not self.code_diagnostics:widget.hide()
         self.source_editor.textChanged.connect(self.sync_outline)
-        data_page=QWidget();dl=QVBoxLayout(data_page);dl.addWidget(self.data_list)
+        data_page=QWidget();dl=QVBoxLayout(data_page);dl.setContentsMargins(4,4,4,4);dl.setSpacing(4);dl.addWidget(self.data_list)
         actions=QHBoxLayout()
         for label,callback in [('+ Variável',self.variable_dialog),('Editar',self.edit_data_item),('Remover',self.remove_variable)]:
             button=QPushButton(label);button.clicked.connect(callback);actions.addWidget(button)
         dl.addLayout(actions);self.left_tabs.removeTab(2);self.left_tabs.addTab(data_page,'Dados')
         self.data_list.itemActivated.connect(lambda _:self.edit_data_item())
         self.sync_outline()
-        search=QPushButton('Buscar bloco…');search.clicked.connect(self.search_block)
-        self.logic.layout().insertWidget(2,search,0,Qt.AlignmentFlag.AlignLeft)
+        from PySide6.QtWidgets import QToolBar
+        from PySide6.QtCore import QSize
+        from .theme import icon
+        commands=QToolBar('Blocos');commands.setIconSize(QSize(16,16));commands.setMovable(False)
+        commands.addAction(icon('search'),'Buscar bloco…',self.search_block)
+        self.logic.layout().removeWidget(self.logic.edit_text);commands.addWidget(self.logic.edit_text)
+        self.logic.layout().insertWidget(2,commands)
         # Realce Bash no editor da gaveta; sua aplicação continua explícita.
         self.script_editor.highlighter.language='bash';self.script_editor.highlighter.rehighlight()
 
@@ -68,6 +75,9 @@ class DevelopmentMixin:
     def sync_outline(self):
         """Lê assinaturas e docstrings com AST; arquivos inválidos continuam editáveis."""
         if not hasattr(self,'function_outline'):return
+        signature=(self.source_editor.toPlainText(),json.dumps(self.project.workflows,sort_keys=True))
+        if signature==getattr(self,'_outline_signature',None):return
+        self._outline_signature=signature
         self.function_outline.clear()
         try:tree=ast.parse(self.source_editor.toPlainText())
         except (SyntaxError,ValueError):return

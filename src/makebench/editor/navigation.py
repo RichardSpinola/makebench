@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (QCheckBox,QComboBox,QDialog,QDialogButtonBox,QFor
     QHBoxLayout,QInputDialog,QLabel,QMessageBox,QMenu,QPushButton,QVBoxLayout,QWidget)
 from makebench.core.project import ComponentKind,ProjectError,new_id
 from makebench.core.navigation import add_state,add_window,navigation_edges
-from .theme import manager
+from .theme import manager,icon
 
 
 class MapNode(QGraphicsRectItem):
@@ -30,7 +30,8 @@ class MapNode(QGraphicsRectItem):
 
     def mouseDoubleClickEvent(self,event):
         """Abre a composição no contexto exato deste nó."""
-        self.map_view.panel.activate(self.key);event.accept()
+        key=self.key;panel=self.map_view.panel
+        QTimer.singleShot(0,lambda:panel.activate(key));event.accept()
 
 
 class NavigationView(QGraphicsView):
@@ -39,7 +40,11 @@ class NavigationView(QGraphicsView):
         """Configura interação sem substituir o modelo por itens gráficos."""
         super().__init__(panel)
         self.graph_scene=QGraphicsScene(self);self.setScene(self.graph_scene)
-        self.panel=panel;self.connection=None
+        self.panel=panel;self.connection=None;self._press_positions={}
+        self.empty_hint=QLabel('Crie a primeira interface\n\nUse + ou o botão direito para começar.',self.viewport())
+        self.empty_hint.setAlignment(Qt.AlignmentFlag.AlignCenter);self.empty_hint.setWordWrap(True)
+        self.empty_hint.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.empty_hint.hide()
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
@@ -52,6 +57,7 @@ class NavigationView(QGraphicsView):
 
     def mousePressEvent(self,event):
         """Inicia ligação apenas na porta, preservando o arraste do corpo do nó."""
+        self._press_positions={key:[node.pos().x(),node.pos().y()] for key,node in self.panel.nodes.items()}
         node=self.node_at(event.position().toPoint())
         if node:
             local=node.mapFromScene(self.mapToScene(event.position().toPoint()))
@@ -63,14 +69,29 @@ class NavigationView(QGraphicsView):
         if self.connection:
             source=self.connection;self.connection=None
             target=self.node_at(event.position().toPoint())
-            if target and target.key!=source:self.panel.connect_nodes(source,target.key)
+            if target and target.key!=source:
+                key=target.key;QTimer.singleShot(0,lambda:self.panel.connect_nodes(source,key))
             event.accept();return
         super().mouseReleaseEvent(event)
         positions={node.key:[node.pos().x(),node.pos().y()] for node in self.panel.nodes.values()}
-        changed=any(self.panel.window.project.map_layout.get(key)!=value for key,value in positions.items())
-        if changed:
-            self.panel.window.project.map_layout.update(positions)
-            self.panel.window.history.push(self.panel.window.project);self.panel.window._update_actions()
+        moved={key:value for key,value in positions.items() if key in self._press_positions and self._press_positions[key]!=value}
+        self._press_positions={}
+        if moved:
+            project=self.panel.window.project
+            def commit():
+                """A cena só pode ser reconstruída depois que Qt termina o evento dos itens."""
+                if self.panel.window.project is project:
+                    self.panel.window._edit(lambda:project.map_layout.update(moved))
+            QTimer.singleShot(0,commit)
+
+    def resizeEvent(self,event):
+        """A orientação pertence ao viewport, sem aumentar nem sumir com o zoom."""
+        super().resizeEvent(event);self.position_hint()
+
+    def position_hint(self):
+        """Centraliza o estado vazio sem criar objetos editáveis no mapa."""
+        width=min(360,max(0,self.viewport().width()-32));height=110
+        self.empty_hint.setGeometry((self.viewport().width()-width)//2,(self.viewport().height()-height)//2,width,height)
 
     def contextMenuEvent(self,event):
         """O espaço de interfaces cria janelas pelo botão direito, inclusive vazio."""
@@ -110,13 +131,14 @@ class MapPanel(QWidget):
     def __init__(self,window):
         """Cria comandos de mapa e adia leitura do documento até a sincronização."""
         super().__init__();self.window=window;self.nodes={};self._signature=None;self._fit_project=None
-        layout=QVBoxLayout(self);row=QHBoxLayout()
-        heading=QLabel('Visão geral do projeto');heading.setProperty('title',True);row.addWidget(heading,1)
-        for label,callback in [('Nova interface…',window.new_window_dialog),('Novo estado',window.new_state_dialog),('Conectar…',self.connect_dialog),('Organizar',self.organize),('Ajustar',self.fit)]:
-            button=QPushButton(label);button.clicked.connect(callback);row.addWidget(button)
+        layout=QVBoxLayout(self);layout.setContentsMargins(0,0,0,0);layout.setSpacing(0);row=QHBoxLayout();row.setContentsMargins(4,2,4,2)
+        heading=QLabel('Interfaces');row.addWidget(heading,1)
+        from PySide6.QtWidgets import QToolButton
+        for symbol,label,callback in [('add','Nova interface…',window.new_window_dialog),('new','Novo estado',window.new_state_dialog),('logic','Conectar…',self.connect_dialog),('map','Organizar',self.organize),('fit','Ajustar',self.fit)]:
+            button=QToolButton();button.setIcon(icon(symbol));button.setProperty('makebenchIcon',symbol);button.setAutoRaise(True);button.setToolTip(label);button.setAccessibleName(label);button.clicked.connect(callback);row.addWidget(button)
         layout.addLayout(row);self.view=NavigationView(self);layout.addWidget(self.view,1)
         hint=QLabel('Este é o espaço das interfaces do projeto. Botão direito cria uma interface; duplo clique entra nela para trabalhar em Design, Lógica e Código.')
-        self.hint=hint;hint.setWordWrap(True);hint.setProperty('muted',True);layout.addWidget(hint)
+        self.hint=hint;hint.setWordWrap(True);hint.hide();self.view.setToolTip(hint.text())
 
     def sync(self):
         """Reconstrói quando documento/tema mudam, mantendo posições salvas."""
@@ -126,9 +148,9 @@ class MapPanel(QWidget):
         if signature==self._signature:return
         self._signature=signature;scene=self.view.scene();scene.clear();self.nodes={}
         scene.setBackgroundBrush(QColor(manager().tokens['canvas']))
-        if project.metadata.get('empty_map'):
-            title=scene.addText('Crie a primeira interface');title.setDefaultTextColor(QColor(manager().tokens['text']));title.setScale(1.7);title.setPos(80,80)
-            note=scene.addText('Use Nova interface ou clique com o botão direito no espaço vazio.');note.setDefaultTextColor(QColor(manager().tokens['muted']));note.setPos(80,140);scene.setSceneRect(0,0,1000,650);return
+        empty=bool(project.metadata.get('empty_map'));self.view.empty_hint.setVisible(empty);self.view.position_hint()
+        if empty:
+            scene.setSceneRect(0,0,1000,650);return
         incoming={edge['target'] for edge in navigation_edges(project) if edge['op']=='open_window'}
         for row,root in enumerate(project.roots):
             states=[{'id':'@default','name':'Padrão'},*project.states.get(root.id,[])]
@@ -178,6 +200,8 @@ class MapPanel(QWidget):
 
     def fit(self):
         """Enquadra o mapa sem modificar seus dados ou posições."""
+        if not self.nodes:
+            self.view.resetTransform();self.view.centerOn(self.view.sceneRect().center());return
         self.view.fitInView(self.view.scene().itemsBoundingRect().adjusted(-24,-24,24,24),Qt.AspectRatioMode.KeepAspectRatio)
 
     def activate(self,key):
