@@ -43,7 +43,7 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                 if op == "list":
                     return "[" + ", ".join(expression(item) for item in node["items"]) + "]"
                 if op == "variable":
-                    return f"variables.get({node['name']!r})"
+                    return f"{ {'project':'variables','window':'ctx.window_variables','local':'local_variables'}[node.get('scope','project')] }.get({node['name']!r})"
                 if op == "read":
                     return f"ctx.read({node['component']!r}, {node['attribute']!r})"
                 left, right = expression(node["left"]), expression(node["right"])
@@ -81,8 +81,14 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         emit(f"ctx.{op}({node['component']!r}, {expression(node['value'])})", node, indent)
                     elif op == "show_page":
                         emit(f"ctx.show_page({node['component']!r})", node, indent)
+                    elif op == 'go_state':
+                        emit(f"ctx.go_state({node['state']!r})", node, indent)
+                    elif op == 'open_window':
+                        emit(f"ctx.open_window({node['window']!r}, close_current={node.get('close_current', False)!r})", node, indent)
+                    elif op == 'close_window':
+                        emit("ctx.close_window()", node, indent)
                     elif op == "assign":
-                        emit(f"variables[{node['name']!r}] = {expression(node['value'])}", node, indent)
+                        emit(f"{ {'project':'variables','window':'ctx.window_variables','local':'local_variables'}[node.get('scope','project')] }[{node['name']!r}] = {expression(node['value'])}", node, indent)
                     elif op == "call":
                         if node["function"] not in functions:
                             result.diagnostics.append(f"{flow['name']}: função ‘{node['function']}’ não encontrada em .actions.py.")
@@ -91,7 +97,7 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         method, key = ("run", "program") if op == "run" else ("run_script", "source")
                         emit(f"ctx.{method}({expression(node[key])}, {expression(node['arguments'])}, admin={node['admin']!r})", node, indent)
                     elif op == "ask":
-                        emit(f"variables[{node['name']!r}] = ctx.ask({node['kind']!r}, {expression(node['prompt'])}, {expression(node['options'])})", node, indent)
+                        emit(f"{ {'project':'variables','window':'ctx.window_variables','local':'local_variables'}[node.get('scope','project')] }[{node['name']!r}] = ctx.ask({node['kind']!r}, {expression(node['prompt'])}, {expression(node['options'])})", node, indent)
                     elif op == "confirm":
                         emit(f"ctx.confirm({expression(node['prompt'])})", node, indent)
                     elif op == "if":
@@ -105,6 +111,13 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
             lines.extend([f"# {flow['name'].replace(chr(10), ' ').replace(chr(13), ' ')}",
                           f"# Evento: {flow['event']['kind']} em {flow['event']['component']!r}",
                           f"def on_event_{index}(ctx):", "    variables = ctx.variables"])
+            def uses_local(value):
+                """Detecta dados locais por estrutura, sem examinar texto de literais."""
+                if isinstance(value,dict):return value.get('scope')=='local' or any(uses_local(v) for v in value.values())
+                if isinstance(value,list):return any(uses_local(v) for v in value)
+                return False
+            if uses_local(flow['body']):
+                emit('local_variables = {}')
             body(flow["body"])
             lines.append("")
     result.text = "\n".join(lines) + "\n"

@@ -30,7 +30,10 @@ from makebench.editor.inspector import Inspector
 from makebench import __version__
 
 
-class MainWindow(QMainWindow):
+from .studio import StudioMixin
+
+
+class MainWindow(StudioMixin, QMainWindow):
     """Coordena documento, histórico, seleção e comandos de arquivo.
 
     O documento é a fonte de verdade; árvore, prévia e propriedades são vistas.
@@ -40,6 +43,11 @@ class MainWindow(QMainWindow):
     def __init__(self, project: Project | None = None, path: Path | None = None) -> None:
         """Abre um projeto fornecido ou inicia uma nova interface vazia."""
         super().__init__()
+        from .theme import manager
+        from .dialogs import install_translation
+        manager()
+        if not hasattr(QApplication.instance(), '_makebench_dialog_filter'):
+            install_translation(QApplication.instance())
         self.project = project or Project.empty()
         self.path = path.resolve() if path else None
         self.source = SourceBuffer.load(self.path)
@@ -55,7 +63,9 @@ class MainWindow(QMainWindow):
         self.setWindowModified(False)
         self._create_actions()
         self._create_workspace()
+        self.install_studio()
         self._refresh()
+        self.remember_project()
 
     def _create_actions(self) -> None:
         """Registra menus e atalhos que têm comportamento implementado."""
@@ -279,27 +289,47 @@ class MainWindow(QMainWindow):
 
         def append(node: Component, parent: QTreeWidgetItem | None = None) -> None:
             """Projeta um nó e seus filhos na árvore de navegação."""
-            item = QTreeWidgetItem([node.display_name])
+            count=sum(1 for flow in self.project.editable_flows if flow.get('event',{}).get('component')==node.id)
+            label=node.properties.get('code_name') or node.display_name
+            if count:label+=f' · {count} evento(s)'
+            item = QTreeWidgetItem([label])
+            from .theme import icon
+            item.setIcon(0,icon(node.kind.value));item.setToolTip(0,node.display_name)
             item.setData(0, Qt.ItemDataRole.UserRole, node.id)
             if parent:
                 parent.addChild(item)
             else:
                 self.tree.addTopLevelItem(item)
             self._tree_items[node.id] = item
+            if node.kind==ComponentKind.WINDOW and self.project.states.get(node.id):
+                group=QTreeWidgetItem(['Estados']);item.addChild(group)
+                for state in [{'id':'@default','name':node.properties.get('default_state_name','Padrão')},*self.project.states[node.id]]:
+                    state_item=QTreeWidgetItem([state['name']]);state_item.setData(0,Qt.ItemDataRole.UserRole,'@state|'+node.id+'|'+state['id']);group.addChild(state_item)
             for child in node.children:
                 append(child, item)
 
-        append(self.project.root)
+        for root in self.project.roots:append(root)
         self.tree.expandAll()
         self.canvas.read_asset = self.assets.read
-        self.canvas.set_project(self.project)
+        self.sync_navigation()
+        from dataclasses import replace
+        root=self.project.effective_root(self.active_window,self.active_state)
+        canvas_project=replace(self.project,root=root,windows=[])
+        self.canvas.set_project(canvas_project)
         if self.project.find(self.selected_id) is None:
             self.selected_id = self.project.root.id
         self._refreshing = False
+        if self.selected_id not in getattr(self,'selected_ids',set()):self.selected_ids={self.selected_id}
+        self._preserve_multi=True
         self._select(self.selected_id)
+        self._preserve_multi=False
+        if hasattr(self,'selected_ids'):
+            self.selected_ids={identifier for identifier in self.selected_ids if self.project.find(identifier)} or {self.selected_id}
+            self.select_multiple(self.selected_ids)
         self.logic.sync()
         self._update_code()
         self._update_actions()
+        if hasattr(self,"zoom_view"):self.zoom_view.update_bounds()
 
     def _select(self, component_id: str) -> None:
         """Sincroniza seleção da árvore, prévia e formulário de propriedades."""
@@ -308,27 +338,56 @@ class MainWindow(QMainWindow):
         node = self.project.find(component_id)
         if node is None:
             return
+        if not getattr(self,'_preserve_multi',False) and not getattr(self,'_from_tree',False):
+            modifiers=QApplication.keyboardModifiers()
+            if modifiers & (Qt.KeyboardModifier.ControlModifier|Qt.KeyboardModifier.ShiftModifier):
+                self.selected_ids=getattr(self,'selected_ids',set())|{component_id}
+            elif component_id not in getattr(self,"selected_ids",set()):self.selected_ids={component_id}
         self.selected_id = component_id
+        owner=self.project.window_of(component_id)
+        if owner and owner.id!=self.active_window:
+            self.active_window=owner.id;self.active_state='@default'
+            self._refresh();return
         self.tree.blockSignals(True)
         self.tree.setCurrentItem(self._tree_items[component_id])
         self.tree.blockSignals(False)
         self.canvas.select(component_id)
-        self.inspector.set_component(self.project, node)
+        shown=self.canvas._project.find(component_id) or node
+        overrides={}
+        if self.active_state!='@default':
+            state=next(item for item in self.project.states[self.active_window] if item['id']==self.active_state)
+            overrides=state.get('overrides',{}).get(node.id,{})
+        self.inspector.set_component(self.project, shown, overrides,self.active_state!='@default')
+        if hasattr(self,"selected_ids"):self.canvas.select_many(self.selected_ids)
+        if self.active_state!='@default':
+            self.statusBar().showMessage('Editando estado: somente propriedades. Projeto > Restaurar seleção do Padrão remove diferenças.')
+        if len(getattr(self,"selected_ids",[]))>1:self.select_multiple(self.selected_ids)
         self._update_actions()
 
     def _tree_selection_changed(self, current: QTreeWidgetItem | None, _previous=None) -> None:
         """Recebe seleção por mouse ou teclado na árvore."""
         if current and not self._refreshing:
-            self._select(current.data(0, Qt.ItemDataRole.UserRole))
+            identifier=current.data(0,Qt.ItemDataRole.UserRole)
+            if isinstance(identifier,str) and identifier.startswith('@state|'):
+                _,window,state=identifier.split('|',2);self.activate_window(window,state)
+            elif identifier:
+                self._from_tree=True;self._select(identifier);self._from_tree=False
 
     def _update_actions(self) -> None:
         """Atualiza comandos, título e indicador de alterações não salvas."""
-        source_active = self.tabs.currentIndex() == 2
+        source_active = self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()==1)
         interface_active = self.tabs.currentIndex() == 0
-        self.snap_check.setEnabled(interface_active)
+        home=hasattr(self,'home_page') and self.pages.currentWidget() is self.home_page
+        active=self.runtime_window is not None and not self.runtime_window.session.closed
+        self.run_action.setEnabled(not home)
+        self.run_action.setText('Reiniciar teste' if active else 'Testar aplicativo')
+        self.run_action.setToolTip(self.run_action.text()+' · F5')
+        if hasattr(self,'stop_action'):self.stop_action.setEnabled(active and not self.runtime_window.session.admin_active)
+        self.save_action.setEnabled(not home)
+        self.snap_check.setEnabled(interface_active and not home)
         self.undo_action.setEnabled(self.source_editor.document().isUndoAvailable() if source_active else self.history.can_undo or self.logic.pending)
         self.redo_action.setEnabled(self.source_editor.document().isRedoAvailable() if source_active else self.history.can_redo)
-        self.remove_action.setEnabled(interface_active and self.selected_id != self.project.root.id)
+        self.remove_action.setEnabled(interface_active and (self.selected_id != self.project.root.id or len(self.project.roots)>1))
         node = self.project.find(self.selected_id)
         parent = self.project.parent_of(self.selected_id)
         self.duplicate_action.setEnabled(interface_active and parent is not None and editable(self.project))
@@ -339,15 +398,27 @@ class MainWindow(QMainWindow):
         for action in self.align_actions:
             action.setEnabled(interface_active and bool(free))
         self.setWindowTitle(f"{self.project.name}[*] — Makebench")
-        self.setWindowModified(self.history.dirty or self.source.dirty or self.logic.pending)
+        self.setWindowModified(self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty())
         count = len(list(self.project.root.walk())) - 1
-        state = "Alterações não salvas" if self.history.dirty or self.source.dirty or self.logic.pending else "Pronto"
+        state = "Alterações não salvas" if self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty() else "Pronto"
         self.statusBar().showMessage(f"{state} · {count} componente(s)")
+        self.sync_studio()
 
     def _change_property(self, component_id: str, key: str, value: object) -> None:
         """Aplica uma propriedade válida e registra uma única alteração no histórico."""
         if self._refreshing:
             return
+        before=self.project.to_dict()
+        if component_id != '@project' and getattr(self,'active_state','@default')!='@default':
+            from makebench.core.navigation import OVERRIDES
+            if key not in OVERRIDES:
+                self.statusBar().showMessage('Edite a estrutura e o layout no estado Padrão.',6000);self._refresh();return
+            state=next(item for item in self.project.states[self.active_window] if item['id']==self.active_state)
+            state.setdefault('overrides',{}).setdefault(component_id,{})[key]=value
+            try:Project.from_dict(self.project.to_dict())
+            except ProjectError as exc:
+                self.project=Project.from_dict(before);self._refresh();self.statusBar().showMessage(str(exc),7000);return
+            self.history.push(self.project);self._refresh();return
         if component_id == "@project":
             cleaned = str(value).strip()
             if not cleaned:
@@ -364,7 +435,14 @@ class MainWindow(QMainWindow):
             if key == "layout":
                 if node.layout == LayoutKind(value):
                     return
-                node.layout = LayoutKind(value)
+                try:self.convert_layout(node,value)
+                except ProjectError as exc:self._show_error(str(exc));self._refresh();return
+            elif key=='alignment_preset':
+                if node.properties.get(key)==value:return
+                vertical,horizontal=str(value).split('-')
+                horizontal={'left':'start','center':'center','right':'end'}[horizontal]
+                vertical={'top':'start','center':'center','bottom':'end'}[vertical]
+                node.properties.update(alignment_preset=value,align=horizontal if node.layout==LayoutKind.VERTICAL else vertical,distribute=vertical if node.layout==LayoutKind.VERTICAL else horizontal)
             elif key.startswith("geometry."):
                 name = key.partition(".")[2]
                 if node.geometry[name] == value:
@@ -374,6 +452,9 @@ class MainWindow(QMainWindow):
                 if node.properties.get(key) == value:
                     return
                 node.properties[key] = value
+        try:Project.from_dict(self.project.to_dict())
+        except ProjectError as exc:
+            self.project=Project.from_dict(before);self._refresh();self.statusBar().showMessage(str(exc),7000);return
         self.history.push(self.project)
         self._refresh()
 
@@ -382,10 +463,13 @@ class MainWindow(QMainWindow):
         focus = QApplication.focusWidget()
         if focus is not None:
             focus.clearFocus()
+        if not self.prepare_script_change():return False
         return self.logic.flush()
 
     def add_component(self) -> None:
         """Insere no contêiner ou página adequada à seleção atual."""
+        if self.active_state!='@default':
+            self.statusBar().showMessage('Adicione componentes no estado Padrão.',6000);return
         kind = ComponentKind(self.palette.currentData())
         def insert():
             """Insere o tipo escolhido no destino resolvido pela seleção."""
@@ -432,6 +516,7 @@ class MainWindow(QMainWindow):
 
     def _can_drop(self, payload: dict, parent_id: str) -> bool:
         """Valida arraste sem alterar o documento durante a passagem do mouse."""
+        if self.active_state!='@default':return False
         parent = self.project.find(parent_id)
         if parent is None:
             return False
@@ -470,13 +555,32 @@ class MainWindow(QMainWindow):
 
     def _commit_geometry(self, node_id: str, geometry: dict) -> None:
         """Registra um movimento/redimensionamento completo sem fragmentar o histórico."""
-        self._edit(lambda: self.project.set_geometry(node_id, geometry))
+        if self.active_state!='@default':self._refresh();return
+        node=self.project.find(node_id)
+        ids=getattr(self,'selected_ids',{node_id})
+        if len(ids)>1 and node_id in ids and geometry.get('width',node.geometry['width'])==node.geometry['width'] and geometry.get('height',node.geometry['height'])==node.geometry['height']:
+            dx=geometry.get('x',node.geometry['x'])-node.geometry['x'];dy=geometry.get('y',node.geometry['y'])-node.geometry['y']
+            siblings=[self.project.find(identifier) for identifier in ids if self.project.parent_of(identifier) is self.project.parent_of(node_id)]
+            dx=max(-min(item.geometry['x'] for item in siblings),min(dx,20000-max(item.geometry['x'] for item in siblings)))
+            dy=max(-min(item.geometry['y'] for item in siblings),min(dy,20000-max(item.geometry['y'] for item in siblings)))
+            def move_group():
+                """Transfere o grupo preservando posições relativas e limites válidos."""
+                for identifier in ids:
+                    item=self.project.find(identifier)
+                    if self.project.parent_of(identifier) is self.project.parent_of(node_id):
+                        self.project.set_geometry(identifier,{'x':max(0,min(20000,item.geometry['x']+dx)),'y':max(0,min(20000,item.geometry['y']+dy))})
+            self._edit(move_group)
+        else:self._edit(lambda:self.project.set_geometry(node_id,geometry))
 
     def duplicate_component(self) -> None:
         """Duplica a seleção com identificadores próprios e mantém a cópia selecionada."""
+        if self.active_state!='@default':
+            self.statusBar().showMessage('Edite a estrutura no estado Padrão.',6000);return
         def duplicate():
-            """Seleciona a cópia recém-criada, preservando o original."""
-            self.selected_id = self.project.duplicate(self.selected_id).id
+            """Duplica os nós superiores da seleção e mantém o grupo copiado selecionado."""
+            identifiers=self.top_level_selection()
+            copies=[self.project.duplicate(identifier).id for identifier in identifiers]
+            self.selected_ids=set(copies);self.selected_id=copies[-1]
         self._edit(duplicate)
 
     def reorder_component(self, direction: int) -> None:
@@ -492,6 +596,8 @@ class MainWindow(QMainWindow):
 
     def add_page(self) -> None:
         """Acrescenta uma página ao conjunto selecionado ou ancestral."""
+        if self.active_state!='@default':
+            self.statusBar().showMessage('Edite a estrutura no estado Padrão.',6000);return
         def add():
             """Insere uma página no conjunto ancestral da seleção."""
             group = self._page_group(self.project.find(self.selected_id))
@@ -547,10 +653,21 @@ class MainWindow(QMainWindow):
 
     def remove_component(self) -> None:
         """Remove a seleção, mantendo a exclusão disponível para desfazer."""
+        if self.active_state!='@default':
+            self.statusBar().showMessage('Edite a estrutura no estado Padrão.',6000);return
         if not self._finish_field_edit():
             return
-        if self.selected_id == self.project.root.id:
+        node=self.project.find(self.selected_id)
+        if node and node.kind==ComponentKind.WINDOW:
+            if len(self.project.roots)>1:self.remove_window()
             return
+        if len(getattr(self,'selected_ids',set()))>1:
+            def remove_group():
+                """Agrupa remoções de irmãos/contêineres em uma única alteração reversível."""
+                identifiers=self.top_level_selection();parent=self.project.parent_of(identifiers[0])
+                for identifier in identifiers:self.project.remove(identifier)
+                self.selected_id=parent.id if parent and self.project.find(parent.id) else self.active_window;self.selected_ids={self.selected_id}
+            self._edit(remove_group);return
         try:
             self.selected_id = self.project.remove(self.selected_id)
         except ProjectError as exc:
@@ -561,7 +678,7 @@ class MainWindow(QMainWindow):
 
     def undo(self) -> None:
         """Restaura o documento anterior, incluindo propriedades e ordem dos nós."""
-        if self.tabs.currentIndex() == 2:
+        if self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()==1):
             self.source_editor.undo()
             return
         if not self._finish_field_edit():
@@ -571,7 +688,7 @@ class MainWindow(QMainWindow):
 
     def redo(self) -> None:
         """Reaplica uma alteração previamente desfeita."""
-        if self.tabs.currentIndex() == 2:
+        if self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()==1):
             self.source_editor.redo()
             return
         if not self._finish_field_edit():
@@ -591,10 +708,16 @@ class MainWindow(QMainWindow):
             return
         filename, _ = QFileDialog.getOpenFileName(
             self, "Abrir projeto Makebench", str(self.path.parent) if self.path else "",
-            "Projetos Makebench (*.makebench.json);;JSON (*.json)",
+            "Projetos Makebench (*.makebench.json *.zip);;JSON (*.json)",
         )
         if not filename:
             return
+        if filename.lower().endswith('.zip'):
+            destination=QFileDialog.getExistingDirectory(self,'Extrair em pasta vazia','')
+            if not destination:return
+            from makebench.core.bundle import read_bundle
+            try:filename=str(read_bundle(filename,Path(destination)))
+            except (ProjectError,OSError) as exc:self._show_error(str(exc));return
         try:
             project = load_project(filename)
         except ProjectError as exc:
@@ -609,17 +732,23 @@ class MainWindow(QMainWindow):
         """Troca o documento e inicia um histórico independente."""
         path = path.resolve() if path else None
         source = SourceBuffer.load(path)
+        self._trusted_session=False;self._created_here=False
         self.project = project
         self.path = path
         self.source = source
         self.source_editor.blockSignals(True)
         self.source_editor.setPlainText(source.text)
         self.source_editor.blockSignals(False)
+        self._script_target=None;self._script_original=''
+        self.script_editor.clear();self.script_apply.setEnabled(False)
         self.logic.flow_id = None
+        self.logic._target_component=None
         self.assets = AssetStore(path.parent if path else None)
         self.history = History(project)
         self.selected_id = project.root.id
         self._refresh()
+        self.remember_project()
+        self.pages.setCurrentWidget(self.editor_page)
 
     def save(self) -> bool:
         """Salva o projeto ou solicita um destino quando ainda não tem caminho."""
@@ -631,24 +760,18 @@ class MainWindow(QMainWindow):
 
     def save_as(self) -> bool:
         """Solicita um destino, sem mudar o caminho atual em caso de falha."""
-        if not self._finish_field_edit():
-            return False
-        filename, _ = QFileDialog.getSaveFileName(
-            self, "Salvar projeto Makebench",
-            str(self.path) if self.path else "projeto.makebench.json",
-            "Projetos Makebench (*.makebench.json)",
-        )
-        if not filename:
-            return False
-        if not filename.endswith(".makebench.json"):
-            filename += ".makebench.json"
-        return self.save_to(Path(filename))
+        return self.save_as_dialog()
 
     def save_to(self, path: Path) -> bool:
         """Persiste o documento e marca como salvo somente depois do sucesso."""
         if not self._finish_field_edit():
             return False
         path = path.resolve()
+        upgraded=False
+        if self.project.uses_v5() and path.is_file():
+            import json
+            try:upgraded=json.loads(path.read_text(encoding='utf-8')).get('format_version') in (1,2,3,4)
+            except (OSError,ValueError):pass
         try:
             Project.from_dict(self.project.to_dict())
             self.assets.write_referenced(path.parent, self.project.asset_paths())
@@ -663,17 +786,22 @@ class MainWindow(QMainWindow):
         self.source.mark_saved()
         self._update_code()
         self._update_actions()
+        self.remember_project()
+        self.clear_recovery()
+        if upgraded:self.statusBar().showMessage('Projeto atualizado para formato 5. A cópia .bak-v4 preserva a versão anterior; editores antigos não abrem os recursos novos.',12000)
         return True
 
     def _confirm_discard(self) -> bool:
         """Oferece salvar alterações antes de fechar, abrir ou criar um projeto."""
         if not self._finish_field_edit():
             choice = QMessageBox.warning(
-                self, "Blocos não confirmados", "O editor de blocos não respondeu. Descartar pode perder as alterações mais recentes. Deseja descartar e continuar?",
+                self, "Blocos não confirmados", "Há alterações de lógica ainda não confirmadas. Descartar pode perder blocos ou o script em edição. Deseja descartar e continuar?",
                 QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel,
             )
-            return choice == QMessageBox.StandardButton.Discard
+            if choice==QMessageBox.StandardButton.Discard:
+                self.clear_recovery();return True
+            return False
         if not self.history.dirty and not self.source.dirty:
             return True
         choice = QMessageBox.warning(
@@ -683,11 +811,13 @@ class MainWindow(QMainWindow):
         )
         if choice == QMessageBox.StandardButton.Save:
             return self.save()
-        return choice == QMessageBox.StandardButton.Discard
+        if choice==QMessageBox.StandardButton.Discard:
+            self.clear_recovery();return True
+        return False
 
     def _tab_changed(self, index):
         """Confirma blocos ao sair e inicia WebEngine apenas quando necessário."""
-        if index != 1 and not self.logic.flush():
+        if index != 1 and not self._finish_field_edit():
             self.tabs.setCurrentIndex(1)
             return
         if index == 1:
@@ -716,7 +846,10 @@ class MainWindow(QMainWindow):
         if not self._finish_field_edit():
             return
         try:
-            flow = create_flow(self.project, component_id)
+            states=[self.active_state] if self.project.states.get(self.active_window) else None
+            existing=[f for f in self.project.workflows if f.get('event',{}).get('component')==component_id]
+            flow=next((f for f in existing if self.active_state in f.get('states',[])),None) or next((f for f in existing if not f.get('states')),None)
+            if flow is None:flow=create_flow(self.project,component_id,states=states)
         except ProjectError as exc:
             self._show_error(str(exc))
             return
@@ -765,22 +898,31 @@ class MainWindow(QMainWindow):
     def run_project(self):
         """Testa snapshot explícito; edição e abertura continuam sem executar código."""
         if self.runtime_window is not None and not self.runtime_window.session.closed:
-            self.runtime_window.show();self.runtime_window.raise_();self.runtime_window.activateWindow()
-            return
+            if self.runtime_window.session.admin_active:
+                self.statusBar().showMessage('Aguarde a tarefa administrativa terminar antes de reiniciar.',7000);return
+            if self.runtime_window.session.busy:
+                choice=QMessageBox.warning(self,'Reiniciar teste?','Uma tarefa está em andamento. Reiniciar encerra o teste e os processos comuns.',QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.Cancel,QMessageBox.StandardButton.Cancel)
+                if choice!=QMessageBox.StandardButton.Yes:return
+            if not self.runtime_window.stop():
+                self.statusBar().showMessage('Aguarde a tarefa administrativa terminar antes de reiniciar.',7000);return
+            self._restart_pending=True;return
         if not self._finish_field_edit():
             return
+        if not self.confirm_trust():return
         from makebench.runtime.window import RuntimeWindow
         try:
             window = RuntimeWindow(self.project, self.source.text, self.assets.read,
-                self.path.parent if self.path else None, self.source.path, self)
+                self.path.parent if self.path else None, self.source.path, self, supervision=False)
         except (ProjectError, OSError) as exc:
-            self._show_error(str(exc));return
+            self.sync_problems();self.drawer.show();self.drawer.setCurrentIndex(1)
+            self.statusBar().showMessage('Teste impedido: resolva os itens em Problemas.',7000);return
         if self.runtime_window is not None:
             self.runtime_window.close()
         self.runtime_window = window
         window.locate_requested.connect(lambda error: self._locate_runtime_error(error, window))
         window.shutdown_finished.connect(self._runtime_stopped)
         window.destroyed.connect(lambda: self._runtime_destroyed(window))
+        self.monitor_runtime(window)
         window.show();window.start()
 
     def _runtime_destroyed(self, window):
@@ -790,8 +932,11 @@ class MainWindow(QMainWindow):
 
     def _runtime_stopped(self):
         """Retoma fechamento após o supervisor terminar a limpeza dos processos."""
+        self._update_actions()
         if self._closing_after_runtime:
             QTimer.singleShot(0, self.close)
+        elif getattr(self,'_restart_pending',False):
+            self._restart_pending=False;QTimer.singleShot(0,self.run_project)
 
     def _locate_runtime_error(self, error, window):
         """Localiza o bloco atual; linhas próprias só valem se o texto não mudou."""
@@ -816,8 +961,8 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self, "Sobre o Makebench",
             "<h2>Makebench</h2><p>Aplicativos Linux, construídos por você.</p>"
-            f"<p>Versão {__version__} — interface, blocos e funções Python.</p>"
-            "<p>Teste aplicativos e tarefas com F5. Exportadores serão adicionados na próxima etapa.</p>",
+            f"<p>Versão {__version__} — Bancada, janelas, estados e fonte Python.</p>"
+            "<p>Crie interfaces, conecte blocos e exporte em fonte Python. AppImage, Flatpak, DEB, RPM e GTK continuam em desenvolvimento.</p>",
         )
 
     def closeEvent(self, event: QCloseEvent) -> None:
@@ -827,11 +972,19 @@ class MainWindow(QMainWindow):
             window.show();window.raise_()
             self.statusBar().showMessage("Aguarde a tarefa administrativa terminar antes de fechar o editor.", 7000)
             event.ignore();return
-        if not self._closing_after_runtime and not self._confirm_discard():
+        if not self._closing_after_runtime and not getattr(self,'_closing_after_build',False) and not self._confirm_discard():
             event.ignore();return
         if window is not None and not window.session.closed:
+            if not window.stop():
+                self.statusBar().showMessage('Aguarde a tarefa administrativa terminar antes de fechar.',7000);event.ignore();return
             self._closing_after_runtime = True
             self.setEnabled(False)
-            window.close()
+            window.close_pending=True
             event.ignore();return
+        if hasattr(self,'publish_panel') and self.publish_panel.job and self.publish_panel.job.isRunning():
+            self._closing_after_build=True
+            self.publish_panel.cancel_build()
+            self.statusBar().showMessage('Cancelando construção antes de fechar…',5000)
+            QTimer.singleShot(100,self.close);event.ignore();return
+        self.clear_recovery()
         event.accept()

@@ -1,0 +1,271 @@
+{
+  "format": "makebench.project",
+  "format_version": 5,
+  "id": "project_5e7e3c0296d5",
+  "name": "Boas-vindas em etapas",
+  "ui": {
+    "id": "window_ed50f920cdee",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Boas-vindas em etapas"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_86240ca4e6f6",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Bem-vindo ao seu Linux"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_408bfda1bdcd",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Conheça as ferramentas que acompanham seu sistema."
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_2fd3f95d0f8d",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_95ed1c9f4624",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Voltar",
+              "enabled": false
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_5ae736edec8c",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Próximo"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_14c6e33cc222",
+      "name": "Clique: Próximo",
+      "event": {
+        "kind": "click",
+        "component": "button_5ae736edec8c"
+      },
+      "body": [
+        {
+          "id": "block_5b65d244a14f",
+          "op": "go_state",
+          "state": "state_c29addc4d0f0"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "@default"
+      ]
+    },
+    {
+      "id": "flow_0e2924ea77e9",
+      "name": "Clique: Próximo",
+      "event": {
+        "kind": "click",
+        "component": "button_5ae736edec8c"
+      },
+      "body": [
+        {
+          "id": "block_6c2718c18aad",
+          "op": "go_state",
+          "state": "state_df013261401d"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_c29addc4d0f0"
+      ]
+    },
+    {
+      "id": "flow_c61af72157be",
+      "name": "Clique: Voltar",
+      "event": {
+        "kind": "click",
+        "component": "button_95ed1c9f4624"
+      },
+      "body": [
+        {
+          "id": "block_260c4d0e0c5d",
+          "op": "go_state",
+          "state": "@default"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_c29addc4d0f0"
+      ]
+    },
+    {
+      "id": "flow_270eaa26b1cf",
+      "name": "Clique: Próximo",
+      "event": {
+        "kind": "click",
+        "component": "button_5ae736edec8c"
+      },
+      "body": [
+        {
+          "id": "block_93a07578795e",
+          "op": "open_window",
+          "window": "window_7622f4b4ade8",
+          "close_current": true
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_df013261401d"
+      ]
+    },
+    {
+      "id": "flow_0010ab3402e6",
+      "name": "Clique: Voltar",
+      "event": {
+        "kind": "click",
+        "component": "button_95ed1c9f4624"
+      },
+      "body": [
+        {
+          "id": "block_5a30de705078",
+          "op": "go_state",
+          "state": "state_c29addc4d0f0"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_df013261401d"
+      ]
+    }
+  ],
+  "metadata": {
+    "logic_version": 1
+  },
+  "windows": [
+    {
+      "id": "window_7622f4b4ade8",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Painel principal"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_c9609cff0d32",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Bem-vindo! Seu painel está pronto."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {
+    "window_ed50f920cdee": [
+      {
+        "id": "state_c29addc4d0f0",
+        "name": "Conheça o sistema",
+        "overrides": {
+          "label_86240ca4e6f6": {
+            "text": "Seu sistema, do seu jeito"
+          },
+          "label_408bfda1bdcd": {
+            "text": "Personalize as ferramentas e preferências quando quiser."
+          },
+          "button_95ed1c9f4624": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "id": "state_df013261401d",
+        "name": "Tudo pronto",
+        "overrides": {
+          "label_86240ca4e6f6": {
+            "text": "Tudo pronto para começar"
+          },
+          "label_408bfda1bdcd": {
+            "text": "Conclua o assistente para abrir seu painel."
+          },
+          "button_95ed1c9f4624": {
+            "enabled": true
+          },
+          "button_5ae736edec8c": {
+            "text": "Concluir"
+          }
+        }
+      }
+    ]
+  },
+  "entry_window": "window_ed50f920cdee",
+  "variables": [],
+  "map_layout": {}
+}

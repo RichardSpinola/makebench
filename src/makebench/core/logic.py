@@ -23,7 +23,7 @@ def editable(project: Project) -> bool:
     return not project.workflows or project.metadata.get("logic_version") == LOGIC_VERSION
 
 
-def create_flow(project: Project, component_id: str) -> dict:
+def create_flow(project: Project, component_id: str, states: list[str] | None = None) -> dict:
     """Vincula início de janela ou clique de botão; reutiliza vínculo existente."""
     if not editable(project):
         raise ProjectError("Este projeto contém fluxos de outra versão. Eles foram preservados; a edição exige migração.")
@@ -32,11 +32,13 @@ def create_flow(project: Project, component_id: str) -> dict:
         raise ProjectError("Selecione a janela ou um botão para criar um evento.")
     event = {"kind": "start" if node.kind == ComponentKind.WINDOW else "click", "component": node.id}
     for flow in project.workflows:
-        if flow["event"] == event:
+        if flow["event"] == event and sorted(flow.get("states", [])) == sorted(states or []):
             return flow
     project.metadata["logic_version"] = LOGIC_VERSION
     flow = {"id": new_id("flow"), "name": "Ao iniciar" if event["kind"] == "start" else f"Clique: {node.properties.get('text', 'Botão')}",
             "event": event, "body": [], "workspace": {}}
+    if states:
+        flow["states"] = list(states)
     project.workflows.append(flow)
     return flow
 
@@ -77,7 +79,12 @@ def validate(project: Project) -> None:
         expected = ComponentKind.WINDOW if event.get("kind") == "start" else ComponentKind.BUTTON
         if event.get("kind") not in {"start", "click"} or node is None or node.kind != expected:
             raise ProjectError("O evento precisa apontar para a janela ou um botão existente.")
-        key = (event["kind"], node.id)
+        states = flow.get('states', [])
+        owner = project.window_of(node.id)
+        state_ids = {'@default', *[item['id'] for item in project.states.get(owner.id, [])]}
+        if not isinstance(states, list) or any(not isinstance(item,str) or item not in state_ids for item in states) or len(states) != len(set(states)):
+            raise ProjectError('Filtro de estado inválido.')
+        key = (event["kind"], node.id, tuple(sorted(states)))
         if key in seen_events:
             raise ProjectError("Há mais de um fluxo para o mesmo evento.")
         seen_events.add(key)
@@ -127,6 +134,7 @@ def validate(project: Project) -> None:
                         visit(item, True, depth + 1)
                 elif op == "variable":
                     text("name")
+                    if value.get("scope", "project") not in {"project", "window", "local"}:raise ProjectError("Escopo inválido.")
                 elif op == "read":
                     attribute = value.get("attribute")
                     kinds = TEXT_KINDS if attribute == "text" else {ComponentKind.CHECKBOX} if attribute == "checked" else {ComponentKind.PROGRESS} if attribute == "value" else set()
@@ -148,8 +156,15 @@ def validate(project: Project) -> None:
                 expr("value")
             elif op == "show_page":
                 target(value.get("component"), {ComponentKind.PAGE})
+            elif op in {'go_state', 'open_window', 'close_window'}:
+                if op == 'go_state' and value.get('state') not in state_ids:
+                    raise ProjectError('A transição aponta para estado inexistente.')
+                if op == 'open_window':
+                    target(value.get('window'), {ComponentKind.WINDOW})
+                    if type(value.get('close_current', False)) is not bool:raise ProjectError('Opção de fechar janela inválida.')
             elif op == "assign":
                 text("name"); expr("value")
+                if value.get('scope', 'project') not in {'project', 'window', 'local'}:raise ProjectError('Escopo inválido.')
             elif op == "if":
                 expr("condition"); body("then"); body("else")
             elif op == "repeat":
@@ -164,6 +179,7 @@ def validate(project: Project) -> None:
                 if value.get("kind") not in {"text", "choice", "file", "directory"}:
                     raise ProjectError("Tipo de pergunta desconhecido.")
                 text("name"); expr("prompt"); expr("options")
+                if value.get("scope","project") not in {"project","window","local"}:raise ProjectError("Escopo inválido na pergunta.")
             elif op == "confirm":
                 expr("prompt")
             else:

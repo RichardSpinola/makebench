@@ -26,6 +26,8 @@ def main() -> int:
     from makebench.editor.window import MainWindow
 
     app = QApplication(sys.argv[:1])
+    from makebench.ui.dialogs import install_translation
+    install_translation(app)
     app.setApplicationName("Makebench")
     app.setApplicationDisplayName("Makebench")
     app.setOrganizationName("Makebench")
@@ -50,6 +52,8 @@ def main() -> int:
     except (ProjectError, OSError) as exc:
         QMessageBox.critical(None, "Não foi possível abrir as funções", str(exc))
         return 1
+    if not args.run and not args.project:
+        window.show_home()
     window.show()
     if args.run:
         from PySide6.QtCore import QTimer

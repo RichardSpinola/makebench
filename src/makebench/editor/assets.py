@@ -38,7 +38,7 @@ class AssetStore:
         return path
 
     def import_image(self, path: Path) -> str:
-        """Valida PNG/JPEG/WebP e reserva uma cópia identificada pelo conteúdo."""
+        """Valida PNG/JPEG/WebP/SVG e reserva uma cópia identificada pelo conteúdo."""
         try:
             data = path.read_bytes()
         except OSError as exc:
@@ -48,8 +48,8 @@ class AssetStore:
         buffer.open(QIODevice.OpenModeFlag.ReadOnly)
         reader = QImageReader(buffer)
         format_name = bytes(reader.format()).decode("ascii", errors="replace").lower()
-        if format_name not in {"png", "jpeg", "jpg", "webp"} or reader.read().isNull():
-            raise StorageError("Escolha uma imagem PNG, JPEG ou WebP válida.")
+        if format_name not in {"png", "jpeg", "jpg", "webp", "svg"} or reader.read().isNull():
+            raise StorageError("Escolha uma imagem PNG, JPEG, WebP ou SVG válida.")
         extension = "jpg" if format_name == "jpeg" else format_name
         relative = f"assets/{hashlib.sha256(data).hexdigest()}.{extension}"
         self._cache[relative] = data

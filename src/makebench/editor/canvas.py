@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, Signal, QTimer
 from PySide6.QtGui import QDrag, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy, QTabWidget, QVBoxLayout, QWidget,
+    QPlainTextEdit, QProgressBar, QPushButton, QRubberBand, QSizePolicy, QTabWidget, QToolTip, QVBoxLayout, QWidget,
 )
 
 from makebench.core.project import Component, ComponentKind, LayoutKind, Project
@@ -38,6 +38,58 @@ class ResizeHandle(QWidget):
         painter.setPen(QPen(self.palette().highlight().color(), 1))
         painter.setBrush(self.palette().base())
         painter.drawRect(self.rect().adjusted(0, 0, -1, -1))
+
+
+class LayoutHandle(QWidget):
+    """Alça de espaçamento/margem que simula durante o gesto e confirma uma vez."""
+    def __init__(self,canvas,parent,node_id,key,vertical=False):
+        """Usa o layout renderizado como prévia, preservando o modelo até soltar."""
+        super().__init__(parent);self.canvas=canvas;self.node_id=node_id;self.key=key;self.vertical=vertical
+        self.setFixedSize(28,48) if vertical else self.setFixedSize(48,28)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus);self.setCursor(Qt.CursorShape.SizeHorCursor if vertical else Qt.CursorShape.SizeVerCursor)
+        self.setAccessibleName('Ajustar '+('espaçamento' if key=='spacing' else 'margens internas'))
+        self.origin=None;self.value=0
+
+    def paintEvent(self,event):
+        """Desenha a alça sobre a composição com a cor de seleção do tema."""
+        painter=QPainter(self);painter.setPen(QPen(self.palette().highlight().color(),3))
+        if self.vertical:painter.drawLine(self.width()//2,6,self.width()//2,self.height()-6)
+        else:painter.drawLine(6,self.height()//2,self.width()-6,self.height()//2)
+
+    def mousePressEvent(self,event):
+        """Inicia uma edição que pode ser cancelada por Escape."""
+        self.setFocus();self.origin=event.globalPosition().toPoint()
+        node=self.canvas._project.find(self.node_id);self.original=node.properties.get(self.key,6 if self.key=='spacing' else 8);self.value=self.original
+        event.accept()
+
+    def mouseMoveEvent(self,event):
+        """Atualiza o layout somente na representação visual do gesto."""
+        if self.origin is None:return
+        delta=event.globalPosition().toPoint()-self.origin;scale=getattr(self.canvas,'view_scale',1)
+        self.value=max(0,min(2000,round(self.original+(delta.x() if self.vertical else delta.y())/scale)))
+        self.apply_preview(self.value);QToolTip.showText(event.globalPosition().toPoint(),str(self.value)+' px',self)
+
+    def apply_preview(self,value):
+        """Altera apenas o layout Qt temporário; salvar não observa esse estado."""
+        layout=self.parentWidget().layout()
+        if self.key=='spacing':layout.setSpacing(value)
+        else:layout.setContentsMargins(value,value,value,value)
+
+    def mouseReleaseEvent(self,event):
+        """Confirma uma alteração de documento mesmo após vários movimentos."""
+        if self.origin is None:return
+        self.origin=None;QToolTip.hideText()
+        if self.value!=self.original:self.canvas.layout_requested.emit(self.node_id,self.key,self.value)
+
+    def keyPressEvent(self,event):
+        """Cancela o gesto sem gerar histórico ou aplica passo fino por teclado."""
+        if event.key()==Qt.Key.Key_Escape and self.origin is not None:
+            self.apply_preview(self.original);self.origin=None;QToolTip.hideText();event.accept();return
+        if event.key() in {Qt.Key.Key_Left,Qt.Key.Key_Down,Qt.Key.Key_Right,Qt.Key.Key_Up}:
+            node=self.canvas._project.find(self.node_id);value=node.properties.get(self.key,6 if self.key=='spacing' else 8)
+            value=max(0,min(2000,value+(-1 if event.key() in {Qt.Key.Key_Left,Qt.Key.Key_Down} else 1)))
+            self.canvas.layout_requested.emit(self.node_id,self.key,value);event.accept();return
+        super().keyPressEvent(event)
 
 
 class ComponentFrame(QFrame):
@@ -105,6 +157,11 @@ class PreviewCanvas(QFrame):
     drop_requested = Signal(object, str, int, object)
     nudge_requested = Signal(int, int)
     remove_requested = Signal()
+    inline_edit_requested = Signal()
+    components_selected = Signal(object)
+    layout_requested = Signal(str,str,object)
+    tool_changed = Signal(str)
+    image_dropped = Signal(str,str,int,object)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Prepara seleção, estado efêmero das páginas e controle dos gestos."""
@@ -115,6 +172,8 @@ class PreviewCanvas(QFrame):
         self._project: Project | None = None
         self._selected_id = ""
         self._gesture = None
+        self._rubber = None
+        self.insert_tool=None;self._tool_ghost=None;self._layout_handles=[];self._guides=[]
         self.snap = 8
         self.can_drop = lambda _payload, _parent: False
         self.read_asset = lambda _source: b""
@@ -133,6 +192,7 @@ class PreviewCanvas(QFrame):
         if self._project is None or self._project.id != project.id:
             self._visible_pages = {}
         self._project = project
+        self._layout_handles=[];self._guides=[]
         self._gesture = None
         self._frames = {}
         self._tabs = {}
@@ -141,12 +201,12 @@ class PreviewCanvas(QFrame):
             if item.widget():
                 item.widget().hide()
                 item.widget().deleteLater()
-        title = QLabel(project.root.properties.get("title", project.name))
-        font = title.font()
-        font.setPointSize(font.pointSize() + 3)
-        font.setBold(True)
-        title.setFont(font)
-        self._layout.addWidget(title)
+        chrome=QWidget();chrome.setObjectName('app_window_titlebar')
+        bar=QHBoxLayout(chrome);bar.setContentsMargins(8,4,8,4)
+        label=QLabel(project.root.properties.get('title',project.name));label.setTextFormat(Qt.TextFormat.PlainText);bar.addWidget(label,1)
+        dimensions=QLabel(f"{project.root.properties.get('width',640)} × {project.root.properties.get('height',480)}")
+        dimensions.setProperty('muted',True);bar.addWidget(dimensions);self._watch(chrome,project.root.id);self._watch(label,project.root.id)
+        self._layout.addWidget(chrome)
         surface = self._render(project.root)
         surface.setMinimumSize(surface.minimumSize().expandedTo(QSize(360, 320)))
         surface.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -179,11 +239,42 @@ class PreviewCanvas(QFrame):
             free = parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE
             frame.show_handles(bool(selected and free))
             frame.update()
+        self.show_layout_handles(component_id)
+
+    def show_layout_handles(self,identifier):
+        """Revela alças apenas no contêiner automático selecionado."""
+        for handle in self._layout_handles:handle.hide();handle.deleteLater()
+        self._layout_handles=[]
+        node=self._project.find(identifier)
+        if not node or not node.can_have_children or node.kind==ComponentKind.PAGES or node.layout==LayoutKind.FREE:return
+        parent=self._frames[identifier]
+        margin=LayoutHandle(self,parent,identifier,'padding');self._layout_handles.append(margin)
+        if len(node.children)>1:
+            vertical=node.layout==LayoutKind.HORIZONTAL or node.layout==LayoutKind.GRID and node.properties.get('columns',2)>1
+            spacing=LayoutHandle(self,parent,identifier,'spacing',vertical);self._layout_handles.append(spacing)
+        def position():
+            """Posiciona alças depois que o layout Qt calculou suas geometrias."""
+            if self._frames.get(identifier) is not parent:return
+            for handle in self._layout_handles:
+                if handle.key=='padding':handle.move(max(0,parent.width()//2-24),0)
+                else:
+                    first=self._frames[node.children[0].id].geometry();second=self._frames[node.children[1].id].geometry()
+                    if handle.vertical:handle.move(round((first.right()+second.left())/2)-14,max(0,first.center().y()-24))
+                    else:handle.move(max(0,first.center().x()-24),round((first.bottom()+second.top())/2)-14)
+                handle.show();handle.raise_()
+        QTimer.singleShot(0,position)
+
+    def select_many(self,identifiers):
+        """Destaca a seleção compartilhada sem duplicar seu estado no documento."""
+        for identifier,frame in self._frames.items():
+            frame.setProperty('selectedNode',identifier in identifiers)
+            frame.style().unpolish(frame);frame.style().polish(frame);frame.update()
 
     def _watch(self, widget: QWidget, component_id: str) -> None:
         """Associa controles ao nó de edição e preserva a navegação das abas."""
         widget.setProperty("componentId", component_id)
         widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        widget.setMouseTracking(True)
         widget.installEventFilter(self)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -191,12 +282,27 @@ class PreviewCanvas(QFrame):
         node_id = watched.property("componentId")
         if not node_id:
             return super().eventFilter(watched, event)
+        if event.type()==QEvent.Type.MouseMove and self.insert_tool:
+            self.tool_preview(watched,event);return True
+        if event.type()==QEvent.Type.MouseButtonPress and event.button()==Qt.MouseButton.LeftButton and self.insert_tool:
+            frame=self._frames[node_id];point=frame.mapFromGlobal(event.globalPosition().toPoint())
+            payload={'mode':'new','kind':self.insert_tool};location=self._drop_location(frame,point,payload)
+            if location and self.can_drop(payload,location[0]):
+                self.set_insert_tool(None);self.drop_requested.emit(payload,*location)
+            return True
+        if event.type() == QEvent.Type.MouseButtonDblClick:
+            self.component_selected.emit(node_id);self.inline_edit_requested.emit();return True
         if event.type() == QEvent.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
             self.setFocus()
             self.component_selected.emit(node_id)
             node = self._project.find(node_id)
             parent = self._project.parent_of(node_id)
             free = parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE
+            if isinstance(watched,ComponentFrame) and node.can_have_children and node.layout==LayoutKind.FREE and not watched.property('resizeEdge'):
+                self._rubber=QRubberBand(QRubberBand.Shape.Rectangle,watched)
+                self._rubber_origin=watched.mapFromGlobal(event.globalPosition().toPoint())
+                self._rubber_parent=node_id;self._rubber.setGeometry(QRect(self._rubber_origin,QSize()));self._rubber.show()
+                return True
             self._gesture = {
                 "id": node_id, "start": event.globalPosition().toPoint(),
                 "geometry": dict(node.geometry), "free": bool(free),
@@ -206,9 +312,20 @@ class PreviewCanvas(QFrame):
                 "changed": False,
             }
             return True
+        if event.type()==QEvent.Type.MouseMove and self._rubber:
+            point=self._rubber.parentWidget().mapFromGlobal(event.globalPosition().toPoint())
+            self._rubber.setGeometry(QRect(self._rubber_origin,point).normalized());return True
+        if event.type()==QEvent.Type.MouseButtonRelease and self._rubber:
+            rect=self._rubber.geometry();node=self._project.find(self._rubber_parent)
+            identifiers=[child.id for child in node.children if rect.intersects(self._frames[child.id].geometry())]
+            self._rubber.hide();self._rubber.deleteLater();self._rubber=None
+            if identifiers:self.components_selected.emit(identifiers)
+            return True
         if event.type() == QEvent.Type.MouseMove and self._gesture:
             gesture = self._gesture
-            delta = event.globalPosition().toPoint() - gesture["start"]
+            raw = event.globalPosition().toPoint() - gesture["start"]
+            scale=getattr(self,"view_scale",1)
+            delta=QPoint(round(raw.x()/scale),round(raw.y()/scale))
             if not gesture["changed"] and delta.manhattanLength() < QApplication.startDragDistance():
                 return True
             if gesture["free"] and not gesture["transfer"]:
@@ -228,6 +345,7 @@ class PreviewCanvas(QFrame):
             return True
         if event.type() == QEvent.Type.MouseButtonRelease and event.button() == Qt.MouseButton.LeftButton and self._gesture:
             gesture, self._gesture = self._gesture, None
+            self.clear_guides()
             if gesture["changed"]:
                 rect = self._frames[gesture["id"]].geometry()
                 self.geometry_committed.emit(gesture["id"], {
@@ -262,6 +380,24 @@ class PreviewCanvas(QFrame):
             if "n" in edge:
                 y = max(0, min(bottom - minimum.height(), snap(y + delta.y())))
                 height = bottom - y
+        self.clear_guides()
+        if not edge and not (QApplication.keyboardModifiers() & Qt.KeyboardModifier.AltModifier):
+            parent=self._project.parent_of(gesture['id'])
+            if parent:
+                peers=[child.geometry for child in parent.children if child.id!=gesture['id']]
+                for axis,length in [('x',width),('y',height)]:
+                    position=x if axis=='x' else y;size='width' if axis=='x' else 'height'
+                    candidates=[(g[axis]+g[size]*anchor-position-length*own, g[axis]+g[size]*anchor) for g in peers for anchor in (0,.5,1) for own in (0,.5,1)]
+                    if candidates:
+                        delta,target=min(candidates,key=lambda pair:abs(pair[0]))
+                        if abs(delta)<=5:
+                            if axis=='x':x=round(x+delta)
+                            else:y=round(y+delta)
+                            line=QFrame(frame.parentWidget());line.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+                            line.setStyleSheet('background: palette(highlight); border: 0;')
+                            if axis=='x':line.setGeometry(round(target),0,1,frame.parentWidget().height())
+                            else:line.setGeometry(0,round(target),frame.parentWidget().width(),1)
+                            line.show();line.raise_();self._guides.append(line)
         rect = QRect(max(0, min(20000, x)), max(0, min(20000, y)), min(20000, width), min(20000, height))
         frame.setGeometry(rect)
         frame.parentWidget().setMinimumSize(
@@ -272,8 +408,31 @@ class PreviewCanvas(QFrame):
 
     def keyPressEvent(self, event) -> None:
         """Permite ajuste fino por setas e cancela um gesto com Esc."""
+        if event.key()==Qt.Key.Key_Escape and self.insert_tool:
+            self.set_insert_tool(None);event.accept();return
+        tools={Qt.Key.Key_C:'container',Qt.Key.Key_T:'label',Qt.Key.Key_B:'button',Qt.Key.Key_I:'image'}
+        if not (event.modifiers() & (Qt.KeyboardModifier.ControlModifier|Qt.KeyboardModifier.AltModifier)):
+            if event.key() in tools:self.set_insert_tool(tools[event.key()]);event.accept();return
+            if event.key()==Qt.Key.Key_V:self.set_insert_tool(None);event.accept();return
+            if event.key() in {Qt.Key.Key_Return,Qt.Key.Key_Enter}:
+                node=self._project.find(self._selected_id)
+                parent=self._project.parent_of(self._selected_id)
+                if event.modifiers() & Qt.KeyboardModifier.ShiftModifier and parent:self.component_selected.emit(parent.id)
+                elif node.children:self.component_selected.emit(node.children[0].id)
+                else:self.inline_edit_requested.emit()
+                event.accept();return
+            if event.key() in {Qt.Key.Key_Tab,Qt.Key.Key_Backtab}:
+                parent=self._project.parent_of(self._selected_id)
+                if parent:
+                    index=next(i for i,n in enumerate(parent.children) if n.id==self._selected_id)
+                    step=-1 if event.key()==Qt.Key.Key_Backtab else 1
+                    self.component_selected.emit(parent.children[(index+step)%len(parent.children)].id)
+                event.accept();return
+        if event.key()==Qt.Key.Key_Escape and self._rubber:
+            self._rubber.hide();self._rubber.deleteLater();self._rubber=None;event.accept();return
         if event.key() == Qt.Key.Key_Escape and self._gesture:
             gesture, self._gesture = self._gesture, None
+            self.clear_guides()
             frame = self._frames[gesture["id"]]
             frame.setGeometry(*(gesture["geometry"][key] for key in ("x", "y", "width", "height")))
             frame.parentWidget().setMinimumSize(gesture["parent_minimum"])
@@ -289,6 +448,52 @@ class PreviewCanvas(QFrame):
             self.remove_requested.emit()
         else:
             super().keyPressEvent(event)
+
+    def clear_guides(self):
+        """Remove apenas guias temporárias de alinhamento do gesto atual."""
+        for guide in self._guides:guide.hide();guide.deleteLater()
+        self._guides=[]
+
+    def external_image(self,mime):
+        """Reconhece a escolha explícita de um arquivo local por drag-and-drop."""
+        if not mime.hasUrls() or len(mime.urls())!=1:return None
+        url=mime.urls()[0]
+        if not url.isLocalFile():return None
+        from pathlib import Path
+        path=Path(url.toLocalFile())
+        return str(path) if path.suffix.lower() in {'.png','.jpg','.jpeg','.webp','.svg'} else None
+
+    def set_insert_tool(self,kind):
+        """Arma inserção por clique; Esc ou Selecionar cancelam sem editar o projeto."""
+        self.insert_tool=kind
+        if self._tool_ghost:self._tool_ghost.hide()
+        self.setCursor(Qt.CursorShape.CrossCursor if kind else Qt.CursorShape.ArrowCursor)
+        self.tool_changed.emit(kind or '')
+        self.setFocus()
+
+    def tool_preview(self,watched,event):
+        """Mostra fantasma em Livre ou linha no ponto de inserção automático."""
+        frame=self._frames[watched.property('componentId')]
+        point=frame.mapFromGlobal(event.globalPosition().toPoint())
+        payload={'mode':'new','kind':self.insert_tool};location=self._drop_location(frame,point,payload)
+        if not location or not self.can_drop(payload,location[0]):
+            if self._tool_ghost:self._tool_ghost.hide()
+            return
+        parent_id,index,geometry=location;parent=self._frames[parent_id];node=self._project.find(parent_id)
+        if self._tool_ghost is None:
+            self._tool_ghost=QFrame(self);self._tool_ghost.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            self._tool_ghost.setStyleSheet('border: 2px dashed palette(highlight); background: palette(alternate-base);')
+        origin=parent.mapTo(self,QPoint())
+        if geometry:rect=QRect(origin+QPoint(geometry['x'],geometry['y']),QSize(140,36))
+        elif node.children:
+            child=self._frames[node.children[min(index,len(node.children)-1)].id]
+            edge=child.geometry()
+            if node.layout==LayoutKind.HORIZONTAL:
+                x=edge.left() if index<len(node.children) else edge.right();rect=QRect(origin+QPoint(x,8),QSize(2,max(24,parent.height()-16)))
+            else:
+                y=edge.top() if index<len(node.children) else edge.bottom();rect=QRect(origin+QPoint(8,y),QSize(max(24,parent.width()-16),2))
+        else:rect=QRect(origin+QPoint(8,8),QSize(max(24,parent.width()-16),2))
+        self._tool_ghost.setGeometry(rect);self._tool_ghost.show();self._tool_ghost.raise_()
 
     def _drop_location(self, frame: ComponentFrame, point: QPoint, payload: dict):
         """Escolhe um contêiner/página e uma posição apropriada ao layout."""
@@ -322,6 +527,9 @@ class PreviewCanvas(QFrame):
     def drag_on(self, frame: ComponentFrame, event) -> None:
         """Mostra aceitação apenas para destinos válidos deste documento."""
         payload = read_payload(event.mimeData())
+        image=self.external_image(event.mimeData())
+        if image:
+            payload={'mode':'new','kind':'image'}
         if payload and (payload["mode"] == "new" or (
             payload.get("project") == self._project.id and self._project.find(payload.get("id"))
         )):
@@ -340,12 +548,16 @@ class PreviewCanvas(QFrame):
         frame.style().unpolish(frame)
         frame.style().polish(frame)
         payload = read_payload(event.mimeData())
+        image=self.external_image(event.mimeData())
+        if image:
+            payload={'mode':'new','kind':'image'}
         if payload and (payload["mode"] == "new" or (
             payload.get("project") == self._project.id and self._project.find(payload.get("id"))
         )):
             location = self._drop_location(frame, event.position().toPoint(), payload)
             if location and self.can_drop(payload, location[0]):
-                self.drop_requested.emit(payload, *location)
+                if image:self.image_dropped.emit(image,*location)
+                else:self.drop_requested.emit(payload,*location)
                 event.acceptProposedAction()
                 return
         event.ignore()

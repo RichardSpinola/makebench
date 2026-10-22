@@ -93,16 +93,40 @@ def place_children(frame, node, render):
         layout = QGridLayout(frame)
     else:
         layout = QVBoxLayout(frame)
-    layout.setContentsMargins(8, 8, 8, 8)
-    layout.setSpacing(6)
+    padding=node.properties.get('padding',8)
+    layout.setContentsMargins(padding,padding,padding,padding)
+    layout.setSpacing(node.properties.get('spacing',6))
+    distribute=node.properties.get('distribute','start')
+    explicit='distribute' in node.properties
+    if not isinstance(layout,QGridLayout) and distribute in {'center','end'}:layout.addStretch(1)
     for index, child in enumerate(node.children):
         rendered = render(child)
+        modes=child.properties.get('size_mode',{})
+        for axis in ('width','height'):
+            if modes.get(axis)=='fixed':
+                getattr(rendered,'setFixed'+axis.title())(child.geometry[axis])
+            elif modes.get(axis)=='fill':
+                policy=rendered.sizePolicy()
+                if axis=='width':policy.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+                else:policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
+                rendered.setSizePolicy(policy)
+        alignment={'start':Qt.AlignmentFlag.AlignLeft if node.layout==LayoutKind.VERTICAL else Qt.AlignmentFlag.AlignTop,
+            'center':Qt.AlignmentFlag.AlignHCenter if node.layout==LayoutKind.VERTICAL else Qt.AlignmentFlag.AlignVCenter,
+            'end':Qt.AlignmentFlag.AlignRight if node.layout==LayoutKind.VERTICAL else Qt.AlignmentFlag.AlignBottom}.get(node.properties.get('align'))
+        if alignment:layout.setAlignment(rendered,alignment)
         if isinstance(layout, QGridLayout):
             columns = node.properties.get("columns", 2)
             layout.addWidget(rendered, index // columns, index % columns)
         else:
-            layout.addWidget(rendered)
-    if isinstance(layout, QVBoxLayout):
-        layout.addStretch(1)
+            axis='height' if node.layout==LayoutKind.VERTICAL else 'width'
+            layout.addWidget(rendered,1 if modes.get(axis)=='fill' else 0)
+            if alignment:layout.setAlignment(rendered,alignment)
+            if distribute=='space-between' and index<len(node.children)-1:layout.addStretch(1)
+    if isinstance(layout,QGridLayout) and node.properties.get('alignment_preset'):
+        vertical,horizontal=node.properties['alignment_preset'].split('-')
+        layout.setAlignment({'top':Qt.AlignmentFlag.AlignTop,'center':Qt.AlignmentFlag.AlignVCenter,'bottom':Qt.AlignmentFlag.AlignBottom}[vertical]|{'left':Qt.AlignmentFlag.AlignLeft,'center':Qt.AlignmentFlag.AlignHCenter,'right':Qt.AlignmentFlag.AlignRight}[horizontal])
+    if not isinstance(layout,QGridLayout) and distribute=='center':layout.addStretch(1)
+    elif isinstance(layout, QVBoxLayout) and distribute=='start':layout.addStretch(1)
+    elif explicit and not isinstance(layout,QGridLayout) and distribute=='start':layout.addStretch(1)
     elif not node.children:
         frame.setMinimumSize(220, 100)

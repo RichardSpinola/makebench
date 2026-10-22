@@ -92,7 +92,7 @@ class BlocklyTests(unittest.TestCase):
         self.assertEqual(comments[0]['text'], 'Nota solta preservada')
         line = self.window.logic.generated.lines[(saved['id'], 'log_1')]
         self.window.logic._select_block(saved['id'], 'log_1')
-        self.assertEqual(self.window.logic.code.textCursor().blockNumber() + 1, line)
+        self.assertEqual(self.window.logic.code.textCursor().blockNumber() + self.window.logic.code_start, line)
 
     def test_02_flush_save_reopen_and_source_is_never_executed(self):
         self.install_log('Salvar imediatamente')
@@ -329,6 +329,53 @@ class BlocklyTests(unittest.TestCase):
         self.assertEqual(flow['body'][0]['source']['value'],'printf one\nprintf two')
         self.assertEqual(flow['body'][0]['source']['id'],'source_shadow')
 
+
+    def test_17_navigation_and_scoped_variables_roundtrip(self):
+        from makebench.core.navigation import add_state,add_window
+        project=self.window.project
+        state=add_state(project,project.root.id,'Etapa seguinte');other=add_window(project,'Outra janela')
+        self.flow['body']=[
+            {'id':'scope_assign','op':'assign','scope':'window','name':'contador','value':{'id':'scope_value','op':'literal','value':3}},
+            {'id':'scope_log','op':'log','value':{'id':'scope_read','op':'variable','scope':'window','name':'contador'}},
+            {'id':'go_state','op':'go_state','state':state['id']},
+            {'id':'open_window','op':'open_window','window':other.id,'close_current':True},
+            {'id':'close_window','op':'close_window'}]
+        expected=json.loads(json.dumps(self.flow['body']))
+        self.window._refresh();self.window.logic.sync(self.flow['id']);QTest.qWait(150)
+        result=json.loads(self.js('JSON.stringify(window.makebench.compileWorkspace())'))
+        self.assertEqual(result['errors'],[]);self.assertEqual(result['body'],expected)
+        self.assertIn('ctx.window_variables',self.window.logic.generated.text)
+        self.assertIn('ctx.open_window',self.window.logic.generated.text)
+
+    def test_18_flow_python_panel_uses_global_line_mapping(self):
+        from makebench.core.logic import create_flow
+        self.flow['body']=[{'id':'first_log','op':'log','value':{'id':'first_text','op':'literal','value':'Primeiro'}}]
+        button=self.window.project.add(self.window.project.root.id,ComponentKind.BUTTON)
+        second=create_flow(self.window.project,button.id)
+        second['body']=[{'id':'second_log','op':'log','value':{'id':'second_text','op':'literal','value':'Segundo'}}]
+        self.window._refresh();self.window.logic.sync(second['id']);QTest.qWait(100)
+        text=self.window.logic.code.toPlainText()
+        self.assertIn('def on_event_2(',text);self.assertNotIn('def on_event_1(',text)
+        self.window.logic._select_block(second['id'],'second_log')
+        visible=self.window.logic.code.textCursor().blockNumber()+self.window.logic.code_start
+        self.assertEqual(visible,self.window.logic.generated.lines[(second['id'],'second_log')])
+
+    def test_19_pending_script_tray_is_included_in_immediate_save(self):
+        self.install_log('Texto original');self.window.logic.flush()
+        self.window.logic._select_block(self.flow['id'],'text_1');self.window.logic._edit_text()
+        deadline=time.monotonic()+3
+        while not getattr(self.window,'_script_target',None) and time.monotonic()<deadline:QTest.qWait(20)
+        self.assertTrue(self.window._script_target)
+        text='Novo texto\nSegunda linha com "aspas" e $1'
+        self.window.script_editor.setPlainText(text)
+        self.assertTrue(self.window.script_dirty())
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'project.makebench.json'
+            self.assertTrue(self.window.save_to(path))
+            saved=load_project(path)
+            self.assertEqual(saved.workflows[0]['body'][0]['value']['value'],text)
+            self.assertFalse(self.window.script_dirty())
+            self.assertEqual(saved.workflows[0]['body'][0]['value']['id'],'text_1')
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

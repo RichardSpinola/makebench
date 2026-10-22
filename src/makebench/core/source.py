@@ -74,6 +74,8 @@ class SourceBuffer:
                 raise ProjectError("O arquivo de funções mudou fora do Makebench. Salve como em outra pasta ou reabra o projeto para revisar as mudanças.")
         elif current is not None and current != data:
             raise ProjectError("O destino já contém outro arquivo de funções. Escolha outro nome ou outra pasta.")
+        if current==data:
+            self.path,self.original=path,data;return
         temporary = None
         try:
             with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".actions-", delete=False) as handle:

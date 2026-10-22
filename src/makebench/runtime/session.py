@@ -6,6 +6,7 @@ from pathlib import Path
 import os
 import signal
 import sys
+import time
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signal
 from .process import TaskProcess, signal_group
@@ -21,6 +22,7 @@ class RuntimeSession(QObject):
     event_done=Signal(dict)
     stopped=Signal()
     admin_changed=Signal(bool)
+    task_changed=Signal(dict)
 
     def __init__(self, project, source, root, source_filename, parent=None):
         """Mantém snapshot e transporte; construção não inicia execução."""
@@ -74,7 +76,8 @@ class RuntimeSession(QObject):
         """Aceita um evento por vez; cliques durante trabalho não enfileiram instalações."""
         if not self.active or self.busy or self.stopping:return False
         self.busy=True;self.busy_changed.emit(True)
-        self.send({'type':'event','flow':flow_id})
+        flow=next(f for f in self.project.workflows if f['id']==flow_id)
+        self.send({'type':'event','flow':flow_id,'window':self.project.window_of(flow['event']['component']).id})
         return True
 
     def _read(self):
@@ -118,7 +121,9 @@ class RuntimeSession(QObject):
             task=TaskProcess(message['program'],message['arguments'],self.root,message['admin'],self)
         except (ValueError,OSError) as exc:
             self.reply(message['id'],ok=False,error=str(exc));return
+        task.started_at=time.monotonic();task.identifier=message['id'];task.program_label=str(message['program'])
         self.task=task;self.tasks.append(task)
+        self.task_changed.emit({'id':task.identifier,'program':task.program_label,'admin':task.admin,'state':'Executando','duration':0})
         self.admin_active=task.admin;self.admin_changed.emit(self.admin_active)
         task.output.connect(self.output)
         task.completed.connect(lambda result:self._task_finished(task,message['id'],result))
@@ -126,6 +131,7 @@ class RuntimeSession(QObject):
 
     def _task_finished(self, task, identifier, result):
         """Libera bloqueio administrativo somente depois do término observado."""
+        self.task_changed.emit({'id':task.identifier,'program':task.program_label,'admin':task.admin,'state':'Concluído' if result.get('ok') and result.get('value',{}).get('code')==0 else 'Não concluído','duration':time.monotonic()-task.started_at})
         if self.task is task:self.task=None
         if not self.stopping and task in self.tasks:
             self.tasks.remove(task)

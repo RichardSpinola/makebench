@@ -6,6 +6,7 @@ usuário. Isto separa travamentos do editor, mas não é sandbox de código não
 from __future__ import annotations
 
 import io
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -31,6 +32,9 @@ class Context:
         self.send, self.receive = send, receive
         self.variables = {}
         self.actions = {}
+        self.window_scopes = {}
+        self.window_defaults = {}
+        self.current_window = None
         self.sequence = 0
 
     def request(self, method, **values):
@@ -62,6 +66,24 @@ class Context:
     def set_value(self, component, value):
         """Atualiza progresso inteiro no intervalo 0–100."""
         return self.request('set_value',component=component,value=int(value))
+
+    @property
+    def window_variables(self):
+        """Dados da janela atual, preservados entre seus eventos."""
+        return self.window_scopes.setdefault(self.current_window, {})
+
+    def go_state(self, state):
+        """Aplica uma variação da janela atual sem copiar sua estrutura."""
+        return self.request('go_state', state=state)
+
+    def open_window(self, window, close_current=False):
+        """Abre outra janela real, opcionalmente fechando a interface atual."""
+        result=self.request('open_window',window=window,close_current=close_current)
+        if result and result.get('reset'):self.window_scopes[window]=deepcopy(self.window_defaults.get(window,{}))
+
+    def close_window(self):
+        """Fecha a janela do evento; a última janela encerra o aplicativo."""
+        return self.request('close_window')
 
     def show_page(self, component):
         """Revela uma página e seus ancestrais na janela do aplicativo."""
@@ -159,6 +181,10 @@ def main():
     try:
         snapshot=receive()
         project=Project.from_dict(snapshot['project'])
+        for variable in project.variables:
+            scope=context.variables if variable.get('scope','project')=='project' else context.window_scopes.setdefault(variable['window'],{})
+            scope[variable['name']]=variable.get('initial')
+        context.window_defaults=deepcopy(context.window_scopes)
         source=snapshot['source'];source_filename=snapshot.get('source_filename',source_filename)
         generated=generate(project,source)
         if generated.diagnostics:raise ValueError('\n'.join(generated.diagnostics))
@@ -175,6 +201,7 @@ def main():
             message=receive()
             if message.get('type')=='shutdown':break
             if message.get('type')!='event' or message.get('flow') not in handlers:continue
+            context.current_window=message.get('window',project.root.id)
             flow_id=message['flow'];send({'type':'busy','flow':flow_id})
             outcome='success'
             try:

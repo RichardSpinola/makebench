@@ -1,0 +1,167 @@
+"""Janelas, estados e transições como dados, independentes do toolkit."""
+from copy import deepcopy
+import math
+from .project import Component,ComponentKind,LayoutKind,Project,ProjectError,create_component,new_id
+
+OVERRIDES={'text','title','source','alt_text','image_name','visible','enabled','checked','value','initial_page'}
+
+
+def validate_navigation(project):
+    """Valida escopos, alvos e sobrescritas antes de qualquer renderização."""
+    roots={r.id:r for r in project.roots}
+    if project.entry_window is not None and project.entry_window not in roots:
+        raise ProjectError('A janela inicial não pertence ao projeto.')
+    if not isinstance(project.states,dict) or not isinstance(project.variables,list) or not isinstance(project.map_layout,dict):
+        raise ProjectError('Estados, variáveis ou posições do mapa inválidos.')
+    for window_id,states in project.states.items():
+        if window_id not in roots or not isinstance(states,list) or len(states)>128:
+            raise ProjectError('Estados devem pertencer a uma janela existente (máximo 128).')
+        ids=set();components={n.id:n for n in roots[window_id].walk()}
+        for state in states:
+            if not isinstance(state,dict) or not isinstance(state.get('id'),str) or not state['id'] or state['id']=='@default' or state['id'] in ids or not isinstance(state.get('name'),str) or not state['name'].strip():
+                raise ProjectError('Estado sem nome ou identificador único.')
+            ids.add(state['id']);overrides=state.get('overrides',{})
+            if not isinstance(overrides,dict):raise ProjectError('Sobrescritas de estado inválidas.')
+            for identifier,values in overrides.items():
+                if identifier not in components or not isinstance(values,dict) or values.keys()-OVERRIDES:
+                    raise ProjectError('O estado só altera propriedades de componentes da sua janela.')
+                node=deepcopy(components[identifier]);node.properties.update(values)
+                Component.from_dict(node.to_dict())
+                for key in ('visible','enabled'):
+                    if key in values and type(values[key]) is not bool:raise ProjectError('Visibilidade e habilitação precisam ser booleanas.')
+        initial=roots[window_id].properties.get('initial_state','@default')
+        if initial!='@default' and initial not in ids:raise ProjectError('Estado inicial inexistente.')
+    seen=set()
+    for variable in project.variables:
+        if not isinstance(variable,dict) or not isinstance(variable.get('name'),str) or not variable['name'].strip():raise ProjectError('Variável sem nome.')
+        scope=variable.get('scope','project');window=variable.get('window')
+        if scope not in {'project','window'} or scope=='window' and window not in roots:raise ProjectError('Escopo da variável inválido.')
+        key=(scope,window if scope=='window' else None,variable['name'])
+        if key in seen:raise ProjectError('Variável repetida no mesmo escopo.')
+        seen.add(key)
+        value=variable.get('initial')
+        if type(value) not in {type(None),str,bool,int,float} or type(value) is float and not math.isfinite(value):raise ProjectError('Valor inicial precisa ser texto, número, booleano ou nulo.')
+    for key,point in project.map_layout.items():
+        if not isinstance(key,str) or not isinstance(point,list) or len(point)!=2 or any(type(n) not in {int,float} or not math.isfinite(n) or abs(n)>100000 for n in point):raise ProjectError('Posição do mapa inválida.')
+    code_names=set()
+    for root in project.roots:
+        valid_states={'@default',*[s['id'] for s in project.states.get(root.id,[])]}
+        if root.properties.get('initial_state','@default') not in valid_states:raise ProjectError('Estado inicial inexistente.')
+    application=project.application
+    if not isinstance(application,dict):raise ProjectError('Configuração do aplicativo inválida.')
+    for key in ('name','id','version','description','author','license','category','icon'):
+        if key in application and not isinstance(application[key],str):raise ProjectError('Metadado do aplicativo precisa ser texto: '+key)
+    if not isinstance(application.get('packages',[]),list) or any(not isinstance(v,str) for v in application.get('packages',[])):raise ProjectError('Dependências precisam ser uma lista de textos.')
+    if application.get('icon'):
+        from pathlib import PurePosixPath
+        path=PurePosixPath(application['icon'])
+        if path.is_absolute() or '..' in path.parts or '\\' in application['icon'] or len(path.parts)<2 or path.parts[0]!='assets':raise ProjectError('O ícone precisa ficar em assets.')
+    for node in project.walk():
+        p=node.properties
+        for key in ('visible','enabled','resizable'):
+            if key in p and type(p[key]) is not bool:raise ProjectError('Propriedade booleana inválida: '+key)
+        for key in ('width','height'):
+            if key in p and (type(p[key]) is not int or not 1<=p[key]<=20000):raise ProjectError('Tamanho inicial inválido.')
+        code_name=p.get('code_name','')
+        import keyword
+        if not isinstance(code_name,str) or code_name and (not code_name.isidentifier() or keyword.iskeyword(code_name) or code_name in code_names):raise ProjectError('Nome no código inválido ou repetido.')
+        if code_name:code_names.add(code_name)
+        if not isinstance(p.get('size_mode',{}),dict):raise ProjectError('Modo de tamanho inválido.')
+        for key in ('spacing','padding'):
+            if key in p and (type(p[key]) is not int or not 0<=p[key]<=2000):raise ProjectError('Espaçamento e margens devem estar entre 0 e 2000.')
+        if 'alignment_preset' in p and p['alignment_preset'] not in {y+'-'+x for y in ('top','center','bottom') for x in ('left','center','right')}:raise ProjectError('Alinhamento inválido.')
+        if p.get('align','start') not in {'start','center','end','stretch'}:raise ProjectError('Alinhamento inválido.')
+        if p.get('distribute','start') not in {'start','center','end','space-between'}:raise ProjectError('Distribuição inválida.')
+        for axis,mode in p.get('size_mode',{}).items():
+            if axis not in {'width','height'} or mode not in {'content','fill','fixed'}:raise ProjectError('Dimensionamento inválido.')
+        if 'free_geometry' in p:
+            candidate=node.to_dict();candidate['geometry']=p['free_geometry'];Component.from_dict(candidate)
+
+
+def add_window(project,name,duplicate=None):
+    """Acrescenta janela real; duplicação remapeia componentes e páginas."""
+    if not name.strip():raise ProjectError('Dê um nome à janela.')
+    root=create_component(ComponentKind.WINDOW) if duplicate is None else deepcopy(project.find(duplicate))
+    if root is None or root.kind!=ComponentKind.WINDOW:raise ProjectError('Selecione uma janela para duplicar.')
+    if duplicate:
+        from .logic import duplicate_flows
+        mapping={n.id:new_id(n.kind.value) for n in root.walk()}
+        state_mapping={s['id']:new_id('state') for s in project.states.get(duplicate,[])}
+        original_count=len(project.workflows)
+        duplicate_flows(project,mapping)
+        for node in root.walk():
+            node.id=mapping[node.id]
+            if node.kind==ComponentKind.PAGES:node.properties['initial_page']=mapping[node.properties['initial_page']]
+            if node.properties.get('code_name'):node.properties['code_name']+='_'+node.id.rsplit('_',1)[-1][:4]
+        initial=root.properties.get('initial_state')
+        if initial in state_mapping:root.properties['initial_state']=state_mapping[initial]
+        if state_mapping:
+            copies=deepcopy(project.states[duplicate])
+            for state in copies:
+                state['id']=state_mapping[state['id']]
+                state['overrides']={mapping[key]:value for key,value in state.get('overrides',{}).items()}
+                for values in state['overrides'].values():
+                    if values.get('initial_page') in mapping:values['initial_page']=mapping[values['initial_page']]
+            project.states[root.id]=copies
+        def remap(value):
+            """Atualiza referências sem reescrever texto ou código próprio."""
+            if isinstance(value,dict):
+                if value.get('state') in state_mapping:value['state']=state_mapping[value['state']]
+                if value.get('window') in mapping:value['window']=mapping[value['window']]
+                for child in value.values():remap(child)
+            elif isinstance(value,list):
+                for child in value:remap(child)
+        for variable in list(project.variables):
+            if variable.get('scope')=='window' and variable.get('window')==duplicate:
+                clone=deepcopy(variable);clone['window']=root.id;project.variables.append(clone)
+        for flow in project.workflows[original_count:]:
+            if flow.get('states'):flow['states']=[state_mapping.get(state,state) for state in flow['states']]
+            remap(flow.get('body'))
+    root.properties['title']=name.strip();project.windows.append(root)
+    return root
+
+
+def add_state(project,window_id,name,start='@default'):
+    """Cria diferenças sobre o Padrão; copiar não estabelece herança entre estados."""
+    if not name.strip() or project.window_of(window_id) is None:raise ProjectError('Informe janela e nome do estado.')
+    states=project.states.setdefault(window_id,[])
+    base=next((s for s in states if s['id']==start),None)
+    state={'id':new_id('state'),'name':name.strip(),'overrides':deepcopy(base.get('overrides',{})) if base else {}}
+    states.append(state);return state
+
+
+def navigation_edges(project):
+    """Deriva conexões dos blocos, inclusive navegação dentro de condições."""
+    edges=[]
+    def visit(value,flow):
+        """Percorre dados estruturados sem executar conteúdo do projeto."""
+        if isinstance(value,dict):
+            if value.get('op') in {'go_state','open_window','close_window','show_page'}:
+                owner=project.window_of(flow['event']['component'])
+                edges.append({'flow':flow['id'],'block':value['id'],'source':owner.id,'states':flow.get('states',[]),'event':flow['name'],'op':value['op'],'target':value.get('state') or value.get('window') or value.get('component')})
+            for child in value.values():visit(child,flow)
+        elif isinstance(value,list):
+            for child in value:visit(child,flow)
+    for flow in project.editable_flows:visit(flow.get('body'),flow)
+    return edges
+
+
+def welcome_template(name='Boas-vindas'):
+    """Exemplo executável: três estados, Voltar/Próximo e abertura de outra janela."""
+    from .logic import create_flow
+    project=Project.empty(name);root=project.root
+    heading=project.add(root.id,ComponentKind.LABEL);heading.properties['text']='Bem-vindo ao seu Linux'
+    body=project.add(root.id,ComponentKind.LABEL);body.properties['text']='Conheça as ferramentas que acompanham seu sistema.'
+    row=project.add(root.id,ComponentKind.CONTAINER);row.layout=LayoutKind.HORIZONTAL
+    back=project.add(row.id,ComponentKind.BUTTON);back.properties.update(text='Voltar',enabled=False)
+    next_button=project.add(row.id,ComponentKind.BUTTON);next_button.properties['text']='Próximo'
+    second=add_state(project,root.id,'Conheça o sistema');second['overrides']={heading.id:{'text':'Seu sistema, do seu jeito'},body.id:{'text':'Personalize as ferramentas e preferências quando quiser.'},back.id:{'enabled':True}}
+    third=add_state(project,root.id,'Tudo pronto');third['overrides']={heading.id:{'text':'Tudo pronto para começar'},body.id:{'text':'Conclua o assistente para abrir seu painel.'},back.id:{'enabled':True},next_button.id:{'text':'Concluir'}}
+    panel=add_window(project,'Painel principal');text=project.add(panel.id,ComponentKind.LABEL);text.properties['text']='Bem-vindo! Seu painel está pronto.'
+    sequence=['@default',second['id'],third['id']]
+    for index,state in enumerate(sequence):
+        flow=create_flow(project,next_button.id,states=[state])
+        flow['body']=[{'id':new_id('block'),'op':'go_state','state':sequence[index+1]}] if index<2 else [{'id':new_id('block'),'op':'open_window','window':panel.id,'close_current':True}]
+        if index:
+            create_flow(project,back.id,states=[state])['body']=[{'id':new_id('block'),'op':'go_state','state':sequence[index-1]}]
+    return project

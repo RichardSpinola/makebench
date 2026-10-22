@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "makebench"
-version = "0.4.0.dev1"
+version = "0.5.0.dev1"
 description = "Editor visual de aplicativos Linux com Qt e Python"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -17,4 +17,4 @@ makebench = "makebench.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*"]
+makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "templates/*/*.json", "templates/*/*.py"]

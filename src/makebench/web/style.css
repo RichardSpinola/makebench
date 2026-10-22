@@ -1,4 +1,4 @@
-html, body {margin:0; height:100%; overflow:hidden; background:#f5f6fa; font-family:sans-serif; color:#343949;}
+html, body {margin:0; height:100%; overflow:hidden; background:var(--mb-canvas, transparent); font-family:sans-serif; color:var(--mb-text, inherit);}
 #workspace {height:100%; width:100%;}
-#empty {position:absolute; inset:0; display:flex; justify-content:center; align-items:center; background:#f5f6fa; padding:30px; text-align:center; pointer-events:none;}
+#empty {position:absolute; inset:0; display:flex; justify-content:center; align-items:center; background:var(--mb-canvas, transparent); padding:30px; text-align:center; pointer-events:none;}
 .blocklyToolbox {font-size:13px;}

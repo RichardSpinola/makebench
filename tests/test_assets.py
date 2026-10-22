@@ -53,5 +53,5 @@ class AssetTests(unittest.TestCase):
 
     def test_non_image_files_are_rejected_before_becoming_assets(self):
         self.source.write_bytes(b"not an image")
-        with self.assertRaisesRegex(StorageError, "imagem PNG, JPEG ou WebP"):
+        with self.assertRaisesRegex(StorageError, "imagem PNG, JPEG, WebP ou SVG"):
             AssetStore().import_image(self.source)

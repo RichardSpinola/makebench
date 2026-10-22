@@ -9,18 +9,27 @@ class RuntimeView(QFrame):
     """Instância de interface independente do documento editável e de suas alças."""
     clicked=Signal(str)
 
-    def __init__(self, project, read_asset, parent=None):
+    def __init__(self, project, read_asset, parent=None, window_root=None):
         """Renderiza snapshot e mantém controles para leitura/alterações do contexto."""
         super().__init__(parent)
-        self.project=project;self.read_asset=read_asset
-        self.widgets={};self.tabs={};self.enabled={};self.busy=False
+        self.project=project;self.read_asset=read_asset;self.window_root=window_root or project.root
+        self.widgets={};self.frames={};self.tabs={};self.enabled={};self.busy=False
         self.event_buttons={f['event']['component'] for f in project.workflows if f['event']['kind']=='click'}
         layout=QVBoxLayout(self);layout.setContentsMargins(12,12,12,12)
-        layout.addWidget(self._render(project.root))
+        layout.addWidget(self._render(window_root or project.root))
+
+    def reset(self):
+        """Recria controles de uma janela fechada quando ela é aberta novamente."""
+        layout=self.layout()
+        while layout.count():
+            item=layout.takeAt(0)
+            if item.widget():item.widget().hide();item.widget().deleteLater()
+        self.widgets={};self.frames={};self.tabs={};self.enabled={};self.busy=False
+        layout.addWidget(self._render(self.window_root))
 
     def _render(self, node):
         """Monta contêineres/páginas e liga cliques somente na instância em execução."""
-        frame=QFrame();self.widgets[node.id]=frame;self.enabled[node.id]=True
+        frame=QFrame();self.frames[node.id]=frame;self.widgets[node.id]=frame;self.enabled[node.id]=node.properties.get("enabled",True)
         if node.kind==ComponentKind.PAGES:
             layout=QVBoxLayout(frame);layout.setContentsMargins(4,4,4,4)
             tabs=QTabWidget();self.tabs[node.id]=tabs
@@ -39,7 +48,7 @@ class RuntimeView(QFrame):
     def set_busy(self, busy):
         """Bloqueia cliques concorrentes sem desfazer set_enabled feito pelo aplicativo."""
         self.busy=busy
-        for identifier in self.event_buttons:
+        for identifier in self.event_buttons & self.widgets.keys():
             self.widgets[identifier].setEnabled(self.enabled[identifier] and not busy)
 
     def set_enabled(self, identifier, enabled):
