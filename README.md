@@ -2,8 +2,8 @@
 
 Crie aplicativos Linux visualmente, com Qt, blocos e funções Python.
 
-**0.6.0.dev1 — Bancada nativa.** Tela inicial, projetos recentes, Designer, Lógica, Código,
-Mapa de janelas/estados, execução supervisionada e exportação real em fonte Python.
+**0.6.0.dev2 — Bancada nativa.** Tela inicial, projetos recentes, Designer, Lógica, Código,
+Mapa de janelas/estados, execução supervisionada e exportação em janela própria, com fonte Python e construção de pacotes Linux.
 Tudo funciona localmente, sem conta, servidor ou IA em tempo de execução.
 
 ## Executar
@@ -58,18 +58,17 @@ Mudanças externas no arquivo de funções mostram **Recarregar / Manter minha v
 - **Mapa:** janelas reais agrupam suas variações. Duplo clique abre a composição;
   arrastar entre portas ou usar **Conectar** cria o bloco de navegação no evento.
   Excluir uma conexão remove esse bloco. Posições são independentes da lógica.
-- **Publicar:** abra as configurações do aplicativo para identidade, ícone, dependências e permissões; verifique
+- **Exportar (janela separada):** abra as configurações do aplicativo para identidade, ícone, dependências e permissões; verifique
   o projeto e construa **Fonte Python**. O ZIP inclui código, funções, recursos,
   runtime, `run.py` e dependências. Roda fora do Makebench com Python e o backend escolhido.
   Construção usa pasta temporária, cancelamento e resultado com SHA-256.
 
 GTK4/PyGObject é um backend real para os aplicativos criados; libadwaita é opcional.
-AppImage, Flatpak, DEB e RPM geram receitas e usam ferramentas locais quando
-presentes. Só um artefato realmente construído/inspecionado recebe esse estado.
-Neste ambiente, as receitas foram verificadas; faltam dpkg-deb, appimagetool e
-rpmbuild. Flatpak foi tentado, mas falta org.gnome.Sdk//50. Esses quatro pacotes
-binários ainda não foram construídos/instalados em VM. Consulte os limites em
-[Validação do desktop](docs/validacao-desktop.md).
+AppImage, Flatpak, DEB e RPM podem ser construídos com ferramentas preparadas em
+ambiente separado pelo Makebench. Somente receita é uma escolha explícita.
+Os quatro formatos foram construídos; bundles Flatpak Qt/GTK abriram nos runtimes.
+Instalação nativa em VMs ainda falta: DEB exige Python3.13+, AppImage ainda depende
+de Python/bibliotecas do sistema e não é autocontido. Detalhes em `.dev/handoff.md`.
 
 Lógica por fios, terminal interativo e depurador continuam **Em breve**.
 O pacote do editor Makebench é separado do aplicativo criado.
@@ -119,7 +118,7 @@ permissões do usuário. O processo separado mantém a interface responsiva e n�
 
 ## Atalhos e aparência
 
-Ctrl+1–5: Mapa, Design, Lógica, Código, Publicar. Ctrl+K: comandos e localização de
+Ctrl+1–4: Mapa, Design, Lógica, Código. Ctrl+Shift+E: Exportar. Ctrl+K: comandos e localização de
 componentes, estados, fluxos e funções. Ctrl+J: gaveta. F6: regiões de foco.
 Ctrl+0 enquadra; Ctrl+Alt+0 mostra tamanho real; Ctrl+roda ajusta zoom.
 No canvas, V/C/T/B/I escolhem ferramenta e Enter entra no contêiner, Shift+Enter
@@ -163,7 +162,7 @@ Blockly permanece preservada nos recursos incorporados.
 
 **Ctrl+,** abre preferências do Makebench com busca, aplicação imediata e
 restauração por página. **Projeto → Configurações do aplicativo** é uma central
-separada: suas alterações entram no histórico do projeto. Publicar não duplica
+separada: suas alterações entram no histórico do projeto. Exportar não duplica
 campos. **Ajuda → Diagnóstico do ambiente** copia informações sem executar
 ferramentas nem instalar pacotes.
 
