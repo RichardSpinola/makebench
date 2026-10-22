@@ -1,5 +1,7 @@
 """Arquivo Python próprio: leitura como texto, conflitos e escrita atômica."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import os
 from pathlib import Path
