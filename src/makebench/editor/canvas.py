@@ -59,15 +59,15 @@ class LayoutHandle(QWidget):
 
     def mousePressEvent(self,event):
         """Inicia uma edição que pode ser cancelada por Escape."""
-        self.setFocus();self.origin=event.globalPosition().toPoint()
+        self.setFocus();self.origin=self.mapTo(self.canvas,event.position().toPoint())
         node=self.canvas._project.find(self.node_id);self.original=node.properties.get(self.key,6 if self.key=='spacing' else 8);self.value=self.original
         event.accept()
 
     def mouseMoveEvent(self,event):
         """Atualiza o layout somente na representação visual do gesto."""
         if self.origin is None:return
-        delta=event.globalPosition().toPoint()-self.origin;scale=getattr(self.canvas,'view_scale',1)
-        self.value=max(0,min(2000,round(self.original+(delta.x() if self.vertical else delta.y())/scale)))
+        delta=self.mapTo(self.canvas,event.position().toPoint())-self.origin
+        self.value=max(0,min(2000,round(self.original+(delta.x() if self.vertical else delta.y()))))
         self.apply_preview(self.value);QToolTip.showText(event.globalPosition().toPoint(),str(self.value)+' px',self)
 
     def apply_preview(self,value):
@@ -230,10 +230,10 @@ class PreviewCanvas(QFrame):
         super().resizeEvent(event)
         if hasattr(self,'gtk_surface'):self.gtk_surface.setGeometry(self.rect())
 
-    def refresh_native_preview(self):
+    def refresh_native_preview(self,force=False):
         """Atualiza a aparência visual após editar propriedades, sem eventos de execução."""
         if hasattr(self,'title_bar'):self.title_bar.update()
-        if hasattr(self,'gtk_surface') and self._project.application.get('backend','qt')=='gtk':self.gtk_surface.request()
+        if hasattr(self,'gtk_surface') and self._project.application.get('backend','qt')=='gtk':self.gtk_surface.request(force)
 
     def close_native_preview(self):
         """A limpeza da janela encerra também o renderizador descartável GTK."""
@@ -326,7 +326,7 @@ class PreviewCanvas(QFrame):
         if event.type()==QEvent.Type.MouseMove and self.insert_tool:
             self.tool_preview(watched,event);return True
         if event.type()==QEvent.Type.MouseButtonPress and event.button()==Qt.MouseButton.LeftButton and self.insert_tool:
-            frame=self._frames[node_id];point=frame.mapFromGlobal(event.globalPosition().toPoint())
+            frame=self._frames[node_id];point=watched.mapTo(frame,event.position().toPoint())
             payload={'mode':'new','kind':self.insert_tool};location=self._drop_location(frame,point,payload)
             if location and self.can_drop(payload,location[0]):
                 self.set_insert_tool(None);self.drop_requested.emit(payload,*location)
@@ -341,11 +341,11 @@ class PreviewCanvas(QFrame):
             free = parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE
             if isinstance(watched,ComponentFrame) and node.can_have_children and node.layout==LayoutKind.FREE and not watched.property('resizeEdge'):
                 self._rubber=QRubberBand(QRubberBand.Shape.Rectangle,watched)
-                self._rubber_origin=watched.mapFromGlobal(event.globalPosition().toPoint())
+                self._rubber_origin=event.position().toPoint()
                 self._rubber_parent=node_id;self._rubber.setGeometry(QRect(self._rubber_origin,QSize()));self._rubber.show()
                 return True
             self._gesture = {
-                "id": node_id, "start": event.globalPosition().toPoint(),
+                "id": node_id, "start": watched.mapTo(self,event.position().toPoint()),
                 "geometry": dict(node.geometry), "free": bool(free),
                 "edge": watched.property("resizeEdge") or "",
                 "transfer": bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier),
@@ -354,7 +354,7 @@ class PreviewCanvas(QFrame):
             }
             return True
         if event.type()==QEvent.Type.MouseMove and self._rubber:
-            point=self._rubber.parentWidget().mapFromGlobal(event.globalPosition().toPoint())
+            point=watched.mapTo(self._rubber.parentWidget(),event.position().toPoint())
             self._rubber.setGeometry(QRect(self._rubber_origin,point).normalized());return True
         if event.type()==QEvent.Type.MouseButtonRelease and self._rubber:
             rect=self._rubber.geometry();node=self._project.find(self._rubber_parent)
@@ -364,9 +364,10 @@ class PreviewCanvas(QFrame):
             return True
         if event.type() == QEvent.Type.MouseMove and self._gesture:
             gesture = self._gesture
-            raw = event.globalPosition().toPoint() - gesture["start"]
-            scale=getattr(self,"view_scale",1)
-            delta=QPoint(round(raw.x()/scale),round(raw.y()/scale))
+            # Qt já converteu o evento do viewport para o widget embutido.
+            # Coordenadas globais (e outra divisão pelo zoom) são incorretas
+            # no Wayland e podem variar quando o próprio componente se move.
+            delta=watched.mapTo(self,event.position().toPoint())-gesture["start"]
             if not gesture["changed"] and delta.manhattanLength() < QApplication.startDragDistance():
                 return True
             if gesture["free"] and not gesture["transfer"]:
@@ -375,7 +376,7 @@ class PreviewCanvas(QFrame):
                 self._gesture = None
                 drag = QDrag(self)
                 frame = self._frames[gesture["id"]]
-                offset = frame.mapFromGlobal(gesture["start"])
+                offset = frame.mapFrom(self,gesture["start"])
                 drag.setMimeData(mime_for({
                     "mode": "move", "id": gesture["id"], "project": self._project.id,
                     "offset_x": max(0, offset.x()), "offset_y": max(0, offset.y()),
@@ -518,7 +519,7 @@ class PreviewCanvas(QFrame):
     def tool_preview(self,watched,event):
         """Mostra fantasma em Livre ou linha no ponto de inserção automático."""
         frame=self._frames[watched.property('componentId')]
-        point=frame.mapFromGlobal(event.globalPosition().toPoint())
+        point=watched.mapTo(frame,event.position().toPoint())
         payload={'mode':'new','kind':self.insert_tool};location=self._drop_location(frame,point,payload)
         if not location or not self.can_drop(payload,location[0]):
             if self._tool_ghost:self._tool_ghost.hide()
@@ -550,7 +551,7 @@ class PreviewCanvas(QFrame):
         if node is None:
             return None
         target = self._frames[node.id]
-        position = target.mapFromGlobal(frame.mapToGlobal(point))
+        position = frame.mapTo(target,point)
         index = len(node.children)
         if node.layout != LayoutKind.FREE and node.kind != ComponentKind.PAGES:
             for i, child in enumerate(node.children):
@@ -609,6 +610,8 @@ class PreviewCanvas(QFrame):
     def _render(self, node: Component) -> ComponentFrame:
         """Cria componentes Qt e seus recursos sem executar lógica do aplicativo."""
         frame = ComponentFrame(self, node.id)
+        if not node.properties.get('visible',True):frame.hide()
+        if node.can_have_children:frame.setEnabled(node.properties.get('enabled',True))
         self._frames[node.id] = frame
         self._watch(frame, node.id)
         if node.kind == ComponentKind.PAGES:

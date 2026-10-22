@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from collections.abc import Callable
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QFileDialog, QLabel, QMainWindow,
@@ -68,6 +68,21 @@ class MainWindow(StudioMixin, QMainWindow):
         self.install_studio()
         self._refresh()
         self.remember_project()
+
+    def showEvent(self,event):
+        """Aguarda o estilo polir as barras antes de conferir a paleta nativa."""
+        super().showEvent(event);QTimer.singleShot(0,self,self._sync_native_bars)
+
+    def changeEvent(self,event):
+        """Tema e ativação podem mudar as cores especiais dos cabeçalhos KDE."""
+        super().changeEvent(event)
+        if event.type() in {QEvent.Type.ActivationChange,QEvent.Type.PaletteChange,QEvent.Type.StyleChange} and hasattr(self,'workspace_toolbar'):
+            QTimer.singleShot(0,self,self._sync_native_bars)
+
+    def _sync_native_bars(self):
+        """Corrige apenas texto ilegível em barras já construídas, fora dos eventos de estilo."""
+        from .theme import manager
+        for bar in (self.menuBar(),self.workspace_toolbar):manager().repair_bar_palette(bar)
 
     def _create_actions(self) -> None:
         """Registra menus e atalhos que têm comportamento implementado."""
@@ -285,12 +300,16 @@ class MainWindow(StudioMixin, QMainWindow):
     def _refresh(self) -> None:
         """Mostra uma atualização completa sem exibir o estado vazio intermediário."""
         from .updates import hold_updates
-        with hold_updates(self):
+        # O canvas vive em QGraphicsProxyWidget, fora da hierarquia QWidget
+        # da janela. Congelar só MainWindow não impede sua repintura parcial.
+        with hold_updates(self), hold_updates(self.canvas):
             self._rebuild_views()
 
     def _rebuild_views(self) -> None:
         """Atualiza as vistas a partir do documento e preserva a seleção válida."""
         self._refreshing = True
+        expanded={key:item.isExpanded() for key,item in getattr(self,'_tree_items',{}).items()}
+        tree_scroll=self.tree.verticalScrollBar().value()
         self._tree_items = {}
         self.tree.clear()
         self.tree._hint = None
@@ -318,6 +337,9 @@ class MainWindow(StudioMixin, QMainWindow):
 
         for root in self.project.roots:append(root)
         self.tree.expandAll()
+        for key,item in self._tree_items.items():
+            if key in expanded:item.setExpanded(expanded[key])
+        self.tree.verticalScrollBar().setValue(tree_scroll)
         self.canvas.read_asset = self.assets.read
         self.sync_navigation()
         from dataclasses import replace
@@ -396,7 +418,7 @@ class MainWindow(StudioMixin, QMainWindow):
         interface_active = self.tabs.currentIndex() == 0
         home=hasattr(self,'home_page') and self.pages.currentWidget() is self.home_page
         active=self.runtime_window is not None and not self.runtime_window.session.closed
-        self.run_action.setEnabled(not home)
+        self.run_action.setEnabled(not home and not self.project.metadata.get('empty_map'))
         self.run_action.setText('Reiniciar teste' if active else 'Testar aplicativo')
         self.run_action.setToolTip(self.run_action.text()+' · F5')
         if hasattr(self,'stop_action'):self.stop_action.setEnabled(active and not self.runtime_window.session.admin_active)
@@ -439,7 +461,8 @@ class MainWindow(StudioMixin, QMainWindow):
         if component_id == "@project":
             cleaned = str(value).strip()
             if not cleaned:
-                self._refresh()
+                field=self.inspector.findChild(__import__('PySide6.QtWidgets',fromlist=['QLineEdit']).QLineEdit,'property_name')
+                if field:field.setText(self.project.name);field.setModified(False)
                 self.statusBar().showMessage("O nome do projeto não pode ficar vazio.", 5000)
                 return
             if self.project.name == cleaned:
@@ -506,6 +529,10 @@ class MainWindow(StudioMixin, QMainWindow):
                 if effective.properties.get('source'):image.loadFromData(self.assets.read(effective.properties['source']))
                 widget.image=image;widget.setAccessibleName(effective.properties.get('alt_text','Imagem'));widget.update()
         if frame:
+            if key=='visible':frame.setVisible(effective.properties.get('visible',True))
+            if key=='enabled':
+                target=frame if node.can_have_children else widget
+                if target:target.setEnabled(effective.properties.get('enabled',True))
             if key=='spacing' and frame.layout():frame.layout().setSpacing(effective.properties.get('spacing',6))
             if key=='padding' and frame.layout():
                 value=effective.properties.get('padding',8);frame.layout().setContentsMargins(value,value,value,value)
@@ -587,6 +614,18 @@ class MainWindow(StudioMixin, QMainWindow):
             return
         self.history.push(self.project)
         self._refresh()
+
+    def change_application(self,key,value):
+        """Metadados do app não precisam destruir os widgets da interface em edição."""
+        if self.project.application.get(key)==value or not self._finish_field_edit():return
+        before=deepcopy(self.project.application);self.project.application[key]=value
+        try:Project.from_dict(self.project.to_dict())
+        except ProjectError as exc:self.project.application=before;self._show_error(str(exc));return
+        self.history.push(self.project)
+        if key=='backend':self._refresh()
+        else:
+            self.canvas._project.application=deepcopy(self.project.application)
+            self._update_actions()
 
     def _can_drop(self, payload: dict, parent_id: str) -> bool:
         """Valida arraste sem alterar o documento durante a passagem do mouse."""

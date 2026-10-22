@@ -78,6 +78,13 @@ class ThemeManager(QObject):
             self.settings.setValue('v1/appearance/theme','system');self.settings.setValue('v1/appearance/accent','system');self.settings.setValue('v2/native_theme',True)
         app.styleHints().colorSchemeChanged.connect(lambda _:self.apply());app.paletteChanged.connect(self.palette_changed);self.apply()
 
+    def repair_bar_palette(self,widget):
+        """Usa só cores nativas para reparar texto ilegível de cabeçalhos Qt/KDE."""
+        native=self.app.palette()
+        # Breeze pode combinar fundo do app com texto da paleta de cabeçalho.
+        # A paleta completa do aplicativo mantém esses roles coerentes.
+        if widget.palette()!=native:widget.setPalette(native)
+
     def palette_changed(self,palette):
         """Acompanha alterações reais do desktop enquanto o aplicativo está aberto."""
         if self._applying:return
@@ -96,17 +103,20 @@ class ThemeManager(QObject):
     def apply(self):
         """Lê roles da paleta Qt para desenho do canvas, mapas e sintaxe."""
         if self._applying:return
-        self._applying=True;p=self.system_palette
-        self.app.setStyleSheet('')
+        self._applying=True;p=self.system_palette;previous=getattr(self,'tokens',None)
+        if self.app.styleSheet():self.app.setStyleSheet('')
         role=lambda name:p.color(getattr(QPalette.ColorRole,name)).name()
         dark=p.color(QPalette.ColorRole.Window).lightnessF()<.45
         self.tokens=t={'dark':dark,'canvas':role('AlternateBase'),'panel':role('Window'),'raised':role('Base'),'header':role('Window'),'sidebar':role('Window'),
             'border':role('Mid'),'control':role('Mid'),'text':role('WindowText'),'muted':role('PlaceholderText'),'accent':role('Highlight'),'fill':role('Highlight'),'on_accent':role('HighlightedText'),
             'success':role('Link'),'warning':role('LinkVisited'),'error':role('LinkVisited'),'info':role('Link'),'guide':role('Link'),'hover':role('AlternateBase'),'selection':role('Highlight'),'pressed':role('Highlight'),
             'system_accent':role('Highlight'),'accent_adjusted':False}
-        font=QFont(self.base_font);font.setPointSizeF(max(8,font.pointSizeF())*self.scale/100);self.app.setFont(font)
+        font=QFont(self.base_font);font.setPointSizeF(max(8,font.pointSizeF())*self.scale/100)
+        font_changed=self.app.font()!=font
+        if font_changed:self.app.setFont(font)
         for effect in (Qt.UIEffect.UI_AnimateMenu,Qt.UIEffect.UI_FadeMenu,Qt.UIEffect.UI_AnimateCombo,Qt.UIEffect.UI_AnimateTooltip,Qt.UIEffect.UI_FadeTooltip):self.app.setEffectEnabled(effect,not self.reduce_motion)
-        self._applying=False;self.changed.emit(t)
+        self._applying=False
+        if previous!=t or font_changed:self.changed.emit(t)
 
 
 def manager():

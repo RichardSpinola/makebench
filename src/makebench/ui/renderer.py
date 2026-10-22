@@ -77,6 +77,7 @@ def create_control(node, read_asset, editing=False):
     if isinstance(widget, QLabel):
         widget.setTextFormat(Qt.TextFormat.PlainText)
     widget.setObjectName(node.id)
+    widget.setEnabled(node.properties.get('enabled',True))
     return widget
 
 
@@ -87,6 +88,7 @@ def place_children(frame, node, render):
             rendered = render(child)
             rendered.setParent(frame)
             rendered.setGeometry(*(child.geometry[key] for key in ("x", "y", "width", "height")))
+            rendered.setVisible(child.properties.get('visible',True))
         width = max((c.geometry["x"] + c.geometry["width"] + 16 for c in node.children), default=300)
         height = max((c.geometry["y"] + c.geometry["height"] + 16 for c in node.children), default=200)
         frame.setMinimumSize(width, height)

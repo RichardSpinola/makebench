@@ -58,19 +58,23 @@ class GtkDesignSurface(QWidget):
         self.timer=QTimer(self);self.timer.setSingleShot(True);self.timer.setInterval(120);self.timer.timeout.connect(self.start_job)
         self.setAcceptDrops(True);self.setMouseTracking(True);self.hide()
 
-    def request(self):
+    def request(self,force=False):
         """Agenda o documento visual mais recente, descartando resultados antigos."""
         if not self.canvas._project or self.canvas._project.application.get('backend','qt')!='gtk':self.hide();return
-        self.show();self.raise_();self.setGeometry(self.canvas.rect());self.version+=1
+        self.show();self.raise_();self.setGeometry(self.canvas.rect())
         root=self.canvas._project.root
         key=(self.canvas._project.id,root.id)
         if key!=getattr(self,'document_key',None):
-            self.document_key=key;self.image=QPixmap();self.rectangles={};self.error='Preparando prévia GTK nativa…';self.canvas.native_size=None
+            self.document_key=key;self.payload=None;self.image=QPixmap();self.rectangles={};self.error='Preparando prévia GTK nativa…';self.canvas.native_size=None
         assets={}
         for key in self.canvas._project.asset_paths():
             try:assets[key]=base64.b64encode(self.canvas.read_asset(key)).decode()
             except (OSError,ValueError):assets[key]=''
-        self.payload={'root':root.to_dict(),'assets':assets,'visible_pages':dict(self.canvas._visible_pages)}
+        payload={'root':root.to_dict(),'assets':assets,'visible_pages':dict(self.canvas._visible_pages)}
+        if not force and payload==self.payload:
+            if not self.image.isNull():self.canvas.native_size=self.image.size()+QSize(40,40)
+            self.update();return
+        self.payload=payload;self.version+=1
         if not shutil.which('gtk4-broadwayd'):
             self.error='A prévia fiel GTK precisa de gtk4-broadwayd e PyGObject/GTK4.';self.update();return
         self.timer.start();self.update()
@@ -82,7 +86,7 @@ class GtkDesignSurface(QWidget):
         def ready(image,info):
             """Aplica somente a imagem que ainda corresponde à versão atual."""
             if version!=self.version:return
-            self.image.loadFromData(image);self.rectangles={key:QRect(*[round(n) for n in values]).translated(20,20) for key,values in info['rectangles'].items()};self.tab_rectangles={key:QRect(*[round(n) for n in values]).translated(20,20) for key,values in info.get('tabs',{}).items()};self.error='';self.canvas.native_size=QSize(info['width']+40,info['height']+40);self.update();self.canvas.native_preview_ready.emit()
+            self.rendered_version=version;self.image.loadFromData(image);self.rectangles={key:QRect(*[round(n) for n in values]).translated(20,20) for key,values in info['rectangles'].items()};self.tab_rectangles={key:QRect(*[round(n) for n in values]).translated(20,20) for key,values in info.get('tabs',{}).items()};self.error='';self.canvas.native_size=QSize(info['width']+40,info['height']+40);self.update();self.canvas.native_preview_ready.emit()
         job.ready.connect(ready);job.failed.connect(lambda error:self.failed(error) if version==self.version else None)
         def finished():
             """Um pedido mais recente substitui o anterior depois da limpeza do display."""
@@ -97,7 +101,7 @@ class GtkDesignSurface(QWidget):
     def showEvent(self,event):
         """Só consome um processo de renderização quando Design está visível."""
         super().showEvent(event)
-        if self.payload is not None:self.timer.start()
+        if self.payload is not None and getattr(self,'rendered_version',None)!=self.version:self.timer.start()
 
     def shutdown(self):
         """Encerra só o processo descartável da prévia, sem tocar no runtime do usuário."""
@@ -201,7 +205,9 @@ class GtkDesignSurface(QWidget):
 
     def insert(self,payload,point,image_file=None):
         """Resolve contêiner/ordem/posição usando os retângulos nativos e o modelo."""
-        project=self.canvas._project;node=self.hit(point);kind=ComponentKind(payload['kind']) if payload.get('mode')=='new' else project.find(payload.get('id')).kind
+        project=self.canvas._project;node=self.hit(point)
+        if payload.get('mode')!='new' and (payload.get('project')!=project.id or project.find(payload.get('id')) is None):return False
+        kind=ComponentKind(payload['kind']) if payload.get('mode')=='new' else project.find(payload.get('id')).kind
         while node and not node.accepts(kind):node=project.parent_of(node.id)
         if node is None or not self.canvas.can_drop(payload,node.id):return False
         rect=self.rectangles.get(node.id,QRect());geometry=None;index=len(node.children)
