@@ -123,6 +123,9 @@ def add_window(project,name,duplicate=None):
         for flow in project.workflows[original_count:]:
             if flow.get('states'):flow['states']=[state_mapping.get(state,state) for state in flow['states']]
             remap(flow.get('body'))
+            if flow.get('editor')=='nodes':
+                for node in flow['graph']['nodes']:
+                    if node['op']=='go_state':node['parameters']['state']=state_mapping.get(node['parameters']['state'],node['parameters']['state'])
     root.properties['title']=name.strip();project.windows.append(root)
     return root
 
@@ -148,7 +151,18 @@ def navigation_edges(project):
             for child in value.values():visit(child,flow)
         elif isinstance(value,list):
             for child in value:visit(child,flow)
-    for flow in project.editable_flows:visit(flow.get('body'),flow)
+    for flow in project.editable_flows:
+        if flow.get('editor')=='nodes':
+            reachable={flow['graph']['entry']};pending=list(reachable)
+            successors={}
+            for edge in flow['graph']['edges']:successors.setdefault(edge['from'],[]).append(edge['to'])
+            while pending:
+                for target in successors.get(pending.pop(),[]):
+                    if target not in reachable:reachable.add(target);pending.append(target)
+            for node in flow['graph']['nodes']:
+                if node['id'] not in reachable:continue
+                if node['op'] in {'go_state','open_window','close_window','show_page'}:visit({'id':node['id'],'op':node['op'],**node['parameters']},flow)
+        else:visit(flow.get('body'),flow)
     return edges
 
 
@@ -187,6 +201,7 @@ def find_navigation_block(project,flow_id,block_id):
             for child in value:
                 found=visit(child)
                 if found:return found
+    if flow and flow.get('editor')=='nodes':return flow,next((n for n in flow['graph']['nodes'] if n['id']==block_id),None)
     return (flow,visit(flow.get('body'))) if flow else (None,None)
 
 
@@ -194,6 +209,11 @@ def remove_navigation_block(project,flow_id,block_id):
     """Remove só o bloco indicado, preservando outros efeitos e comentários do fluxo."""
     flow,_=find_navigation_block(project,flow_id,block_id)
     if not flow:return
+    if flow.get('editor')=='nodes':
+        flow['graph']['nodes']=[n for n in flow['graph']['nodes'] if n['id']!=block_id]
+        flow['graph']['edges']=[e for e in flow['graph']['edges'] if block_id not in (e['from'],e['to'])]
+        flow.get('graph_layout',{}).pop(block_id,None)
+        return
     def visit(items):
         """A remoção funciona também em ramificações internas do evento."""
         for item in list(items or []):
@@ -220,6 +240,15 @@ def connect_navigation(project,source,event_component,target,close_current=False
     if flow.get('body') is None:raise ProjectError('Complete o rascunho desse evento antes de adicionar uma transição.')
     block={'id':identifier,'op':'go_state','state':target_state} if window_id==target_window else {'id':identifier,'op':'open_window','window':target_window,'close_current':bool(close_current)}
     if comment:block['comment']=comment
+    if flow.get('editor')=='nodes':
+        parameters={key:value for key,value in block.items() if key not in {'id','op','comment'}}
+        if old_block and old_flow is flow:old_block.update(op=block['op'],parameters=parameters,inputs={})
+        else:
+            entry=flow['graph']['entry']
+            if any(e['from']==entry and e['out']=='next' for e in flow['graph']['edges']):raise ProjectError('Esse evento usa Nós. Adicione e conecte a navegação no editor de Nós para escolher o caminho de execução.')
+            flow['graph']['nodes'].append({'id':identifier,'op':block['op'],'parameters':parameters,'inputs':{},'comment':comment or ''})
+            flow['graph']['edges'].append({'from':entry,'out':'next','to':identifier})
+        return flow
     if old_block and old_flow is flow:old_block.clear();old_block.update(block)
     else:
         if old_block:remove_navigation_block(project,*replace)

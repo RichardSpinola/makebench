@@ -38,6 +38,8 @@ class Context:
         self.current_window = None
         self.sequence = 0
         self.receive_response = None
+        self.debugger = None
+        self.graph_node = None
 
     def request(self, method, **values):
         """Espera a resposta correspondente, abortando em cancelamento/falha."""
@@ -52,6 +54,20 @@ class Context:
         if not reply.get('ok'):
             raise TaskError(reply.get('error', 'A tarefa falhou.'))
         return reply.get('value')
+
+    def graph_checkpoint(self, flow, node, steps):
+        """Limita cada evento a 100 mil passos e cede CPU em ciclos de execução."""
+        self.graph_node=node
+        if self.debugger:self.debugger.checkpoint()
+        if steps>100000:raise RuntimeError('Grafo interrompido após 100 mil passos no evento '+str(flow)+'.')
+        if steps%128==0:
+            import time
+            time.sleep(.001)
+
+    def graph_result(self, values, node):
+        """Exige execução prévia do produtor; fio de valor não dispara ações sozinho."""
+        if node not in values:raise RuntimeError('Execute o nó produtor antes de ler seu resultado: '+str(node))
+        return values[node]
 
     def terminal_start(self, component, program=None, arguments=None):
         """Inicia PTY de um componente Terminal durante a execução explícita."""
@@ -192,6 +208,7 @@ def main():
             if frame.filename=='<makebench-generated>':line=frame.lineno
             if frame.filename==source_filename:source_line=frame.lineno
         block=next((block for (flow,block),number in (generated.lines.items() if generated else []) if flow==flow_id and number==line),None)
+        if block is None:block=context.graph_node
         send({'type':'error','message':f'{type(exc).__name__}: {exc}', 'flow':flow_id,'block':block,'line':line,'source_line':source_line,'traceback':traceback.format_exc()})
     try:
         snapshot=receive()
@@ -203,6 +220,7 @@ def main():
         source=snapshot['source'];source_filename=snapshot.get('source_filename',source_filename)
         generated=generate(project,source)
         if generated.diagnostics:raise ValueError('\n'.join(generated.diagnostics))
+        context.debugger=debugger
         debugger.configure(snapshot.get('debug',{}),source_filename,generated,context)
         transport=WorkerTransport(receive,debugger)
         context.receive_response=lambda identifier:transport.receive(response=identifier)
@@ -223,7 +241,7 @@ def main():
             flow_id=message['flow'];debugger.flow=flow_id
             debugger.component=next(f['event']['component'] for f in project.workflows if f['id']==flow_id)
             send({'type':'busy','flow':flow_id})
-            outcome='success'
+            outcome='success';context.graph_node=None
             try:
                 if debugger.enabled:sys.settrace(debugger.trace)
                 handlers[flow_id](context)

@@ -92,6 +92,13 @@ def validate(project: Project) -> None:
             raise ProjectError("O estado visual dos blocos precisa ser um objeto.")
         if not isinstance(flow.get("errors", []), list) or any(not isinstance(e, str) for e in flow.get("errors", [])):
             raise ProjectError("Diagnósticos dos blocos inválidos.")
+        if flow.get('editor','blocks') not in ('blocks','nodes'):raise ProjectError('Editor do comportamento desconhecido.')
+        backups=flow.get('behavior_backups',[])
+        if not isinstance(backups,list) or len(backups)>1000 or any(not isinstance(item,dict) or not isinstance(item.get('id'),str) or not isinstance(item.get('name'),str) for item in backups):raise ProjectError('Versões recuperáveis do comportamento inválidas.')
+        if flow.get('editor')=='nodes':
+            from .graph import validate_graph
+            validate_graph(project,flow)
+            continue
         ids: set[str] = set()
 
         def target(value, kinds=None):
@@ -216,6 +223,7 @@ def referenced_components(flow: dict) -> set[str]:
             for child in item:
                 walk(child)
     walk(flow.get("body"))
+    walk(flow.get("graph"))
     return result
 
 
@@ -250,6 +258,10 @@ def duplicate_flows(project: Project, identifiers: dict[str, str]) -> None:
             elif isinstance(item, list):
                 for value in item:
                     remap(value)
-        remap(clone["event"]); remap(clone["body"])
+        remap(clone["event"])
+        if clone.get('editor')=='nodes':
+            from .graph import duplicate_graph
+            duplicate_graph(clone,identifiers)
+        else:remap(clone["body"])
         copies.append(clone)
     project.workflows.extend(copies)

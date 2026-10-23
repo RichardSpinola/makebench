@@ -12,7 +12,7 @@ import time
 
 def main():
     """Testa os dois toolkits em 100/125/150%, isolando compositor e configurações."""
-    parser=argparse.ArgumentParser();parser.add_argument('output',type=Path);args=parser.parse_args();output=args.output.resolve();output.mkdir(parents=True,exist_ok=True)
+    parser=argparse.ArgumentParser();parser.add_argument('output',type=Path);parser.add_argument('--check',choices=('terminal','graph'),default='terminal');args=parser.parse_args();output=args.output.resolve();output.mkdir(parents=True,exist_ok=True)
     results=[]
     for scale in ('1','1.25','1.5'):
         with tempfile.TemporaryDirectory(prefix='makebench-wayland-',ignore_cleanup_errors=True) as directory:
@@ -40,7 +40,7 @@ def main():
                         for theme in ('light','dark'):
                             target=output/f'{backend}-{theme}-{scale}';target.mkdir(exist_ok=True)
                             with (target/'run.log').open('w') as runlog:
-                                result=subprocess.run([sys.executable,'checks/terminal_debug_acceptance.py','--backend',backend,'--theme',theme,'--output',str(target)],env=environment,stdout=runlog,stderr=subprocess.STDOUT,timeout=40)
+                                result=subprocess.run([sys.executable,'checks/graph_acceptance.py' if args.check=='graph' else 'checks/terminal_debug_acceptance.py','--backend',backend,'--theme',theme,'--output',str(target)],env=environment,stdout=runlog,stderr=subprocess.STDOUT,timeout=75)
                             if result.returncode:raise RuntimeError(f'Falha em {target.name}')
                             data=json.loads((target/'results.json').read_text());data['output_scale']=configured
                             assert data['actual_scale']>=float(scale) and data['actual_scale']<=__import__('math').ceil(float(scale)),data

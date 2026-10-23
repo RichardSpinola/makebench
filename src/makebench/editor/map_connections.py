@@ -27,7 +27,7 @@ class ConnectionDialog(QDialog):
         if edge:
             flow,block=find_navigation_block(self.project,edge['flow'],edge['block'])
             if flow:self.event.setCurrentIndex(max(0,self.event.findData(flow['event']['component'])))
-            if block:self.closing.setChecked(block.get('close_current',False))
+            if block:self.closing.setChecked(block.get('parameters',block).get('close_current',False))
         self.describe()
 
     def sync(self):

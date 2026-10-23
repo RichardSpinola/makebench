@@ -11,6 +11,7 @@ import fcntl
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import sys
 import struct
@@ -77,7 +78,9 @@ class TerminalSession:
         """
         if self.running:
             raise ValueError('O terminal já está em execução.')
-        program = program or os.environ.get('SHELL') or '/bin/sh'
+        if not program:
+            shell=os.environ.get('SHELL')
+            program=shell if shell and shutil.which(shell) else '/bin/sh'
         arguments = [] if arguments is None else arguments
         if not isinstance(program, str) or not program or '\0' in program:
             raise ValueError('Programa de terminal inválido.')

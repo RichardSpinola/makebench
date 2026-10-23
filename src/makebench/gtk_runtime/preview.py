@@ -9,6 +9,12 @@ import sys
 import time
 
 
+def _walk(root):
+    """Percorre apenas dados de componentes para declarar a versão mínima da prévia."""
+    yield root
+    for child in root.get('children',[]):yield from _walk(child)
+
+
 def render(input_path, output_path):
     """Produz PNG e retângulos GTK em Broadway privado, sem conectar eventos do projeto."""
     data=json.loads(Path(input_path).read_text());directory=Path(output_path).parent
@@ -38,7 +44,7 @@ def render(input_path, output_path):
         except (ValueError,ImportError):pass
         from makebench.core.project import Project
         from .renderer import GtkView
-        document=Project.empty().to_dict();document['ui']=data['root'];document['ui']['properties'].pop('initial_state',None)
+        document=Project.empty().to_dict();document['ui']=data['root'];document['format_version']=6 if any(n.get('kind')=='terminal' for n in _walk(data['root'])) else 4;document['ui']['properties'].pop('initial_state',None)
         project=Project.from_dict(document)
         assets=data.get('assets',{});view=GtkView(project.root,lambda key:base64.b64decode(assets[key]),lambda _identifier:None)
         for identifier,page_id in data.get('visible_pages',{}).items():

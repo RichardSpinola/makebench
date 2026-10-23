@@ -10,7 +10,7 @@ from PySide6.QtCore import QObject, Signal, Slot, QUrl, QEventLoop, QTimer, Qt
 from PySide6.QtGui import QKeySequence, QColor
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSplitter, QDialog, QDialogButtonBox, QPlainTextEdit,
-    QVBoxLayout, QWidget, QToolButton,
+    QVBoxLayout, QWidget, QToolButton, QStackedWidget,
 )
 
 from makebench.core.codegen import generate
@@ -71,6 +71,9 @@ class LogicBridge(QObject):
 class LogicPanel(QWidget):
     """Seleciona eventos, mantém a sessão Blockly e mostra Python correspondente."""
     breakpoint_requested = Signal(str,str)
+    editor_requested = Signal(str,str)
+    restore_requested = Signal(str)
+    graph_changed = Signal(dict)
     add_requested = Signal(str)
     remove_requested = Signal(str)
     rename_requested = Signal(str, str)
@@ -109,6 +112,10 @@ class LogicPanel(QWidget):
         self.events.setMinimumWidth(210)
         self.events.currentIndexChanged.connect(self._switch_flow)
         row.addWidget(self.events, 1)
+        self.editor_kind=QComboBox();self.editor_kind.addItem('Blocos','blocks');self.editor_kind.addItem('Nós','nodes');self.editor_kind.setAccessibleName('Editor deste comportamento')
+        self.editor_kind.currentIndexChanged.connect(lambda _:self.editor_requested.emit(self.flow_id,self.editor_kind.currentData()) if self.flow_id else None);row.addWidget(self.editor_kind)
+        self.versions=QToolButton();self.versions.setText('Versões…');self.versions.setToolTip('Recuperar o comportamento anterior à troca de editor');self.versions.clicked.connect(lambda:self.restore_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(self.versions)
+
         self.name = QLineEdit()
         self.name.setPlaceholderText('Nome do fluxo')
         self.name.editingFinished.connect(self._rename)
@@ -138,7 +145,11 @@ class LogicPanel(QWidget):
         self.splitter = QSplitter();self.splitter.setHandleWidth(4)
         self.placeholder = QLabel('O editor de blocos será carregado ao abrir esta aba.')
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.splitter.addWidget(self.placeholder)
+        self.surfaces=QStackedWidget();self.surfaces.addWidget(self.placeholder)
+        from .graph import GraphPanel
+        self.graph_panel=GraphPanel(self.get_source,self);self.surfaces.addWidget(self.graph_panel)
+        self.graph_panel.changed.connect(self.graph_changed);self.graph_panel.error.connect(self.error);self.graph_panel.breakpoint_requested.connect(self.breakpoint_requested)
+        self.splitter.addWidget(self.surfaces)
         code_box = QWidget()
         code_layout = QVBoxLayout(code_box)
         code_layout.setContentsMargins(0, 0, 0, 0)
@@ -239,7 +250,9 @@ class LogicPanel(QWidget):
         self.bridge.failed.connect(self.error)
         self.bridge.pending_received.connect(self._mark_pending)
         self.bridge.command_received.connect(self._command)
-        self.splitter.replaceWidget(0, self.view)
+        self.surfaces.addWidget(self.view)
+        flow=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
+        if not flow or flow.get('editor','blocks')=='blocks':self.surfaces.setCurrentWidget(self.view)
         self.placeholder.deleteLater()
         self.view.load(QUrl.fromLocalFile(str(root / 'index.html')))
         self.view.loadFinished.connect(self._load_finished)
@@ -294,6 +307,13 @@ class LogicPanel(QWidget):
         from .controls import reconcile_combo
         reconcile_combo(self.events,[((project.window_of(item['event']['component']).properties.get('title','Interface')+' › ' if len(project.roots)>1 else '')+item['name'],item['id']) for item in flows],self.flow_id)
         self.name.setText(flow['name'] if flow else '')
+        nodes=bool(flow and flow.get('editor')=='nodes')
+        self.editor_kind.blockSignals(True);self.editor_kind.setCurrentIndex(1 if nodes else 0);self.editor_kind.setEnabled(flow is not None);self.editor_kind.blockSignals(False)
+        self.versions.setEnabled(bool(flow and flow.get('behavior_backups')))
+        self.surfaces.setCurrentWidget(self.graph_panel if nodes else self.view if self.view is not None else self.placeholder)
+        self.graph_panel.sync(project,flow if nodes else None)
+        self.edit_text.setVisible(not nodes)
+
         owner=project.window_of(flow['event']['component']) if flow else project.window_of(self._target_component) if self._target_component and project.find(self._target_component) else project.root
         filters=flow.get('states',[]) if flow else []
         entries=[('em qualquer estado',[]),('só no Padrão',['@default']),*[("só em "+state['name'],[state['id']]) for state in project.states.get(owner.id,[])],('Escolher vários estados…','@choose')]
@@ -321,7 +341,7 @@ class LogicPanel(QWidget):
         if flow:collect(flow.get('body'))
         payload = {'variables':variables,'function_info':function_info,'windows':[{'id':r.id,'name':r.properties.get('title','Janela')} for r in project.roots], 'states':[{'id':'@default','name':'Padrão'}, *[{'id':s['id'],'name':s['name']} for s in project.states.get(owner.id,[])]], 'project':project.id, 'flow':flow, 'components':components, 'functions':function_names(self.get_source())[0]}
         serialized = json.dumps(payload, ensure_ascii=False)
-        if self.ready and serialized != self._payload:
+        if self.ready and not nodes and serialized != self._payload:
             self._payload = serialized
             self.token = uuid4().hex
             self.pending = False
@@ -351,7 +371,7 @@ class LogicPanel(QWidget):
             text='\n'.join(lines[start:end])+'\n';self.code_start=start+1
         else:text='';self.code_start=1
         if self.code.toPlainText()!=text:self.code.setPlainText(text)
-        self.diagnostics.setText('\n'.join(self.generated.diagnostics) or 'Blocos salvos. Use F5 para testar o aplicativo e acompanhar a saída.')
+        self.diagnostics.setText('\n'.join(self.generated.diagnostics) or ('Grafo salvo. F5 executa; F6 depura o snapshot.' if self.editor_kind.currentData()=='nodes' else 'Blocos salvos. Use F5 para testar o aplicativo e acompanhar a saída.'))
 
     def _select_block(self, flow, block):
         """Mostra a linha gerada correspondente à seleção de Blockly."""
@@ -378,6 +398,10 @@ class LogicPanel(QWidget):
 
     def focus_block(self, flow, block, attempt=0):
         """Revela origem de erro assim que o workspace solicitado está disponível."""
+        target=next((f for f in self.get_project().editable_flows if f['id']==flow),None)
+        if target and target.get('editor')=='nodes':
+            if self.flow_id!=flow:self.sync(flow)
+            self.graph_panel.focus_node(block);return
         self._select_block(flow, block)
         if attempt >= 30:
             return
@@ -406,6 +430,8 @@ class LogicPanel(QWidget):
         """Ignora mensagens de sessão antiga e entrega atualização validável."""
         try:
             data = json.loads(payload)
+            current=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
+            if current and current.get('editor')=='nodes':return
             if not isinstance(data, dict) or data.get('token') != self.token or data.get('flow') != self.flow_id:
                 return
             self.pending = False
@@ -420,6 +446,11 @@ class LogicPanel(QWidget):
         O retorno JavaScript evita depender do debounce do canal. Em falha não
         autoriza uma operação que poderia perder alterações não confirmadas.
         """
+        flow=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
+        if flow and flow.get('editor')=='nodes':
+            if self.graph_panel.layout_timer.isActive():self.graph_panel.layout_timer.stop();self.graph_panel.commit_layout()
+            self.graph_panel.flush()
+            return True
         if self.view is None or self._flushing:
             return True
         if not self.ready:

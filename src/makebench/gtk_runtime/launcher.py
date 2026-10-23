@@ -45,7 +45,8 @@ def main():
                         if node.kind.value in {'label','button','text_input','checkbox','progress','output'}:
                             attribute='checked' if node.kind.value=='checkbox' else 'value' if node.kind.value=='progress' else 'text'
                             controls[identifier]=view.read(identifier,attribute)
-                observe({'type':'inspection','windows':sorted(runtime.open_windows),'states':runtime.states,'controls':controls})
+                terminals={identifier:{'screen':widget.terminal.screen.display,'running':widget.terminal.running,'pid':widget.terminal.pid} for view in runtime.views.values() for identifier,widget in view.widgets.items() if hasattr(widget,'terminal')}
+                observe({'type':'inspection','terminals':terminals,'windows':sorted(runtime.open_windows),'states':runtime.states,'controls':controls})
         threading.Thread(target=commands,daemon=True).start()
     return runtime.run()
 

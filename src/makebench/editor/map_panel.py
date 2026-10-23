@@ -234,6 +234,7 @@ class MapPanel(QWidget):
         """Editar uma ligação altera o bloco original, inclusive dentro de uma condição."""
         flow,block=find_navigation_block(self.window.project,edge['flow'],edge['block'])
         if not block:return
+        block={**block,**block.get('parameters',{})}
         state=(edge['states'] or ['@default'])[0];source=edge['source']+'|'+state;target=(edge['source']+'|'+block['state']) if block['op']=='go_state' else block['window']+'|'+self.window.project.find(block['window']).properties.get('initial_state','@default');dialog=ConnectionDialog(self,source,target,edge)
         if dialog.exec()==QDialog.DialogCode.Accepted:self.window._edit(lambda:connect_navigation(self.window.project,dialog.source.currentData(),dialog.event.currentData(),dialog.target.currentData(),dialog.closing.isChecked(),(edge['flow'],edge['block'])))
 

@@ -439,6 +439,7 @@ class MainWindow(StudioMixin, QMainWindow):
         active=self.runtime_window is not None and not self.runtime_window.session.closed
         self.debug_action.setEnabled(not home and not self.project.metadata.get('empty_map'))
         self.sync_breakpoints()
+        if hasattr(self,'behavior_templates'):self.behavior_templates.setVisible(self.logic.editor_kind.currentData()!='nodes')
         self.run_action.setEnabled(not home and not self.project.metadata.get('empty_map'))
         self.run_action.setText('Reiniciar teste' if active else 'Testar aplicativo')
         self.run_action.setToolTip(self.run_action.text()+' · F5')
@@ -1036,7 +1037,7 @@ class MainWindow(StudioMixin, QMainWindow):
     def _receive_flow(self, data):
         """Valida o modelo neutro recebido; blocos incompletos ficam como rascunho."""
         flow = next((f for f in self.project.workflows if f['id'] == data.get('flow')), None)
-        if flow is None or not isinstance(data.get('workspace'), dict):
+        if flow is None or flow.get('editor')=='nodes' or not isinstance(data.get('workspace'), dict):
             return
         if data.get('body') == flow.get('body') and data['workspace'] == flow.get('workspace', {}) and data.get('errors', []) == flow.get('errors', []):
             return

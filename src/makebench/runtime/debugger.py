@@ -4,27 +4,31 @@ import queue
 import sys
 import threading
 from collections import deque
+from itertools import islice
 
 
 class DebugStopped(BaseException):
     """Interrompe o worker inclusive se o projeto captura Exception."""
 
 
-def inspect_value(value, depth=0):
+def inspect_value(value, depth=0, budget=None):
     """Serializa valores nativos sem chamar repr, propriedades ou código do projeto."""
+    budget=[1000] if budget is None else budget
+    if budget[0]<=0:return '<limite de inspeção>'
+    budget[0]-=1
     kind = type(value)
     if kind in (str, int, float, bool, type(None)):
-        if kind is str: return value[:2000]
+        if kind is str: return value[:512]
         if kind is float:
             import math
             return value if math.isfinite(value) else str(value)
         if kind is int and value.bit_length() > 1024: return '<inteiro grande>'
         return value
-    if depth >= 3: return '<'+type.__getattribute__(kind,'__name__')+'>'
-    if kind in (list, tuple): return [inspect_value(v, depth+1) for v in value[:100]]
+    if depth >= 3: return '<'+type.__getattribute__(kind,'__name__')[:100]+'>'
+    if kind in (list, tuple): return [inspect_value(v, depth+1,budget) for v in value[:100]]
     if kind is dict:
-        return {str(k)[:100]:inspect_value(v,depth+1) for k,v in list(value.items())[:100] if type(k) in (str,int,bool)}
-    return '<'+type.__getattribute__(kind,'__name__')+'>'
+        return {str(k)[:100]:inspect_value(v,depth+1,budget) for k,v in islice(value.items(),100) if type(k) in (str,int,bool)}
+    return '<'+type.__getattribute__(kind,'__name__')[:100]+'>'
 
 
 class Debugger:
@@ -69,20 +73,25 @@ class Debugger:
         """Resolve linha própria ou ID de bloco no código gerado do snapshot."""
         if frame.f_code.co_filename == '<makebench-generated>':
             flow,block = self.lines.get(frame.f_lineno,(self.flow,None))
+            if block is None and frame.f_code.co_name=='_value':block=frame.f_locals.get('identifier')
+            if block is None and '_pc' in frame.f_locals:block=frame.f_locals.get('_pc') or self.context.graph_node
+            if block is None:
+                preceding=[(number,key[1]) for key,number in self.block_lines.items() if key[0]==self.flow and number<=frame.f_lineno]
+                if preceding:block=max(preceding,key=lambda item:item[0])[1]
             return {'flow':flow,'block':block,'line':frame.f_lineno}
         return {'flow':self.flow,'source_line':frame.f_lineno}
 
     def snapshot(self, frame, reason):
         """Captura pilha e dados limitados; nenhuma expressão é avaliada."""
-        stack = []; current = frame
+        stack = []; current = frame;budget=[1000]
         while current and len(stack)<64:
             if current.f_code.co_filename in self.files:
-                stack.append({'name':current.f_code.co_name, **self.location(current),
-                              'variables':{name:inspect_value(value) for name,value in list(current.f_locals.items())[:100] if not name.startswith('__') and name!='ctx'}})
+                stack.append({'name':current.f_code.co_name[:128], **self.location(current),
+                              'variables':{name[:100]:inspect_value(value,budget=budget) for name,value in islice(current.f_locals.items(),100) if not name.startswith('__') and name!='ctx' and (current.f_code.co_filename!='<makebench-generated>' or not name.startswith('_'))}})
             current = current.f_back
         return {'type':'debug','state':'paused','reason':reason,'component':self.component,**self.location(frame),
-                'stack':stack,'variables':inspect_value(self.context.variables),
-                'window_variables':inspect_value(self.context.window_variables)}
+                'stack':stack,'variables':inspect_value(self.context.variables,budget=budget),
+                'window_variables':inspect_value(self.context.window_variables,budget=budget)}
 
     def checkpoint(self, frame=None, waiting=False):
         """Atende pausa/cancelamento, inclusive dentro de uma espera por resposta da UI."""

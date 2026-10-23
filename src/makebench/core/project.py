@@ -13,7 +13,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 
-FORMAT_VERSION = 6
+FORMAT_VERSION = 7
 FORMAT_NAME = "makebench.project"
 
 
@@ -74,6 +74,12 @@ LAYOUT_LABELS = {
     LayoutKind.GRID: "Grade",
     LayoutKind.FREE: "Livre",
 }
+
+
+def has_graph(flow):
+    """Detecta grafo ativo ou recuperável sem pressupor dados já validados."""
+    backups=flow.get('behavior_backups',[])
+    return flow.get('editor')=='nodes' or isinstance(backups,list) and any(isinstance(item,dict) and item.get('editor')=='nodes' for item in backups)
 
 
 def new_id(prefix: str) -> str:
@@ -515,7 +521,7 @@ class Project:
         """Serializa um retrato independente do documento, mantendo extensões."""
         result = {
             "format": FORMAT_NAME,
-            "format_version": max(6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4, self.format_version, 5 if self.uses_v5() else 4),
+            "format_version": max(7 if any(has_graph(f) for f in self.workflows) else 4,6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4, self.format_version, 5 if self.uses_v5() else 4),
             "id": self.id,
             "name": self.name,
             "ui": self.root.to_dict(),
@@ -534,7 +540,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError("Este arquivo não é um projeto Makebench.")
         version = value.get("format_version")
-        if type(version) is not int or version not in (1, 2, 3, 4, 5, FORMAT_VERSION):
+        if type(version) is not int or version not in (1, 2, 3, 4, 5, 6, FORMAT_VERSION):
             raise ProjectError(
                 f"Versão de projeto não suportada: {version}. "
                 "Abra-o com uma versão compatível do Makebench."
@@ -572,6 +578,8 @@ class Project:
             format_version=version if version >= 5 else 4,
             application=deepcopy(value.get("application",{})) if version>=5 else {},
         )
+        if version<6 and any(n.kind==ComponentKind.TERMINAL for n in project.walk()):raise ProjectError('O componente Terminal requer formato 6 ou posterior.')
+        if version<7 and any(has_graph(f) for f in project.workflows):raise ProjectError('Grafos livres requerem formato 7 ou posterior.')
         from .navigation import validate_navigation
         validate_navigation(project)
         from .logic import validate

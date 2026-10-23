@@ -117,10 +117,13 @@ class ExecutionMixin:
         """Atualiza margens sem reconstruir o código nem os controles do Designer."""
         if not hasattr(self,'debug_panel'):return
         points=self.breakpoints();self.source_editor.breakpoints={p['line'] for p in points if p.get('file')=='source' and type(p.get('line')) is int}
-        blocks={p.get('block') for p in points if p.get('file')=='block'}
-        self.generated_editor.breakpoints={line for (flow,block),line in self.logic.generated.lines.items() if block in blocks}
+        block_keys={(p.get('flow'),p.get('block')) for p in points if p.get('file')=='block'}
+        blocks={block for flow,block in block_keys if flow==self.logic.flow_id}
+        self.generated_editor.breakpoints={line for (flow,block),line in self.logic.generated.lines.items() if (flow,block) in block_keys}
         self.source_editor.numbers.update();self.generated_editor.numbers.update()
-        if self.logic.ready:self.logic.page.runJavaScript('window.makebench.setBreakpoints('+__import__('json').dumps(list(blocks))+')')
+        self.logic.graph_panel.breakpoints=blocks
+        for card in self.logic.graph_panel.cards.values():card.update()
+        if self.logic.ready and self.logic.editor_kind.currentData()!='nodes':self.logic.page.runJavaScript('window.makebench.setBreakpoints('+__import__('json').dumps(list(blocks))+')')
 
     def debug_changed(self,message):
         """Exibe observações do snapshot e destaca sua origem sem editar o projeto."""
@@ -132,6 +135,8 @@ class ExecutionMixin:
             if component:message['component_label']=component.display_name
             if flow:message['flow_label']=flow['name']
         self.debug_panel.changed(message)
+        if message.get('state')!='paused':
+            for card in self.logic.graph_panel.cards.values():card.active=False;card.update()
         if message.get('state')=='paused':
             self.test_status.setText('Pausado')
             self.drawer.show();self.drawer.setCurrentWidget(self.debug_panel);self.locate_debug(message)
@@ -208,6 +213,7 @@ class ExecutionMixin:
     def runtime_stopped(self):
         """Registra encerramento com duração real, sem misturar diagnóstico de edição."""
         self.debug_panel.changed({'state':'stopped'})
+        for card in self.logic.graph_panel.cards.values():card.active=False;card.update()
         elapsed=time.monotonic()-self.test_started if self.test_started else 0
         for key in list(self.task_running):
             if key.startswith(str(self.run_number)+':'):

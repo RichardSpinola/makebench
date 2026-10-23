@@ -61,7 +61,7 @@ class DevelopmentMixin:
         templates=QToolButton();templates.setText('Comportamento');templates.setToolTip('Inserir um modelo de comportamento com blocos reais');templates.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);templates.setIcon(icon('add'));templates.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup);menu=QMenu(templates)
         from makebench.core.behaviors import TEMPLATES
         for kind,label in TEMPLATES:menu.addAction(label,lambda kind=kind:self.insert_behavior(kind))
-        templates.setMenu(menu);commands.addWidget(templates)
+        templates.setMenu(menu);self.behavior_templates=templates;commands.addWidget(templates)
         self.python_action=commands.addAction(icon('code'),'Python');self.python_action.setCheckable(True);self.python_action.setToolTip('Mostrar ou recolher Python gerado pelos blocos')
         self.python_action.toggled.connect(self.toggle_logic_python)
         self.python_action.setChecked(str(self.settings.value('workspace/logic_python',False)).lower()=='true')
@@ -96,12 +96,12 @@ class DevelopmentMixin:
         except (SyntaxError,ValueError):return
         def uses(value,name):
             """Conta referências estáticas sem importar funções Python."""
-            if isinstance(value,dict):return int(value.get('op')=='call' and value.get('function')==name)+sum(uses(v,name) for v in value.values())
+            if isinstance(value,dict):return int(value.get('op')=='call' and value.get('parameters',value).get('function')==name)+sum(uses(v,name) for v in value.values())
             if isinstance(value,list):return sum(uses(v,name) for v in value)
             return 0
         for node in tree.body:
             if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef)):
-                count=sum(uses(f.get('body'),node.name) for f in self.project.workflows)
+                count=sum(uses(f.get('graph') if f.get('editor')=='nodes' else f.get('body'),node.name) for f in self.project.workflows)
                 signature='classe '+node.name if isinstance(node,ast.ClassDef) else node.name+'('+', '.join(a.arg for a in node.args.args)+')'
                 item=QListWidgetItem(signature+f' · {count} uso(s)')
                 item.setData(Qt.ItemDataRole.UserRole,node.lineno);item.setToolTip(ast.get_docstring(node) or 'Sem descrição.')
@@ -193,6 +193,10 @@ class DevelopmentMixin:
         for flow in self.project.workflows:
             if old.get('scope')=='window' and self.project.window_of(flow['event']['component']).id!=old['window']:continue
             visit(flow.get('body'));visit(flow.get('workspace'))
+            if flow.get('editor')=='nodes':
+                for node in flow['graph']['nodes']:
+                    parameters=node.get('parameters',{})
+                    if node['op'] in {'variable','assign','ask'} and parameters.get('name')==old['name'] and parameters.get('scope','project')==old.get('scope','project'):parameters.update(name=new['name'],scope=new['scope'])
 
     def edit_data_item(self):
         """Edita variável selecionada; funções abrem o modo Código."""
@@ -211,8 +215,40 @@ class DevelopmentMixin:
         if item and isinstance(item.data(Qt.ItemDataRole.UserRole),int):
             index=item.data(Qt.ItemDataRole.UserRole);self._edit(lambda:self.project.variables.pop(index))
 
+    def change_behavior_editor(self,identifier,editor):
+        """Substitui representação por escolha explícita, preservando cópia recuperável."""
+        flow=next((f for f in self.project.editable_flows if f['id']==identifier),None)
+        if not flow or flow.get('editor','blocks')==editor:return
+        if not self.logic.flush():self.logic.sync();return
+        from PySide6.QtWidgets import QMessageBox
+        result=QMessageBox.question(self,'Trocar editor deste comportamento?',
+            'O comportamento atual será guardado em Versões. A nova representação começa com um evento vazio. Não há conversão automática entre blocos e nós.',
+            QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.Cancel,QMessageBox.StandardButton.Cancel)
+        if result!=QMessageBox.StandardButton.Yes:self.logic.sync();return
+        from makebench.core.graph import replace_editor
+        self._edit(lambda:replace_editor(flow,editor))
+
+    def restore_behavior_dialog(self,identifier):
+        """Recupera uma representação anterior por escolha do usuário, com histórico."""
+        flow=next((f for f in self.project.editable_flows if f['id']==identifier),None)
+        backups=flow.get('behavior_backups',[]) if flow else []
+        if not backups:return
+        labels=[str(index+1)+' · '+('Nós' if item.get('editor')=='nodes' else 'Blocos')+' · '+item['name'] for index,item in enumerate(backups)]
+        choice,ok=QInputDialog.getItem(self,'Recuperar comportamento','Versão anterior',labels,len(labels)-1,False)
+        if ok:
+            from makebench.core.graph import restore_behavior
+            self._edit(lambda:restore_behavior(flow,labels.index(choice)))
+
+    def receive_graph(self,data):
+        """Confirma grafo/posições como uma transação do documento, sem tocar no Python próprio."""
+        flow=next((f for f in self.project.editable_flows if f['id']==data.get('flow') and f.get('editor')=='nodes'),None)
+        if flow is None:return
+        if all(flow.get(key,[] if key=='graph_comments' else {})==data[key] for key in ('graph','graph_layout','graph_comments')):return
+        self._edit(lambda:flow.update({key:deepcopy(data[key]) for key in ('graph','graph_layout','graph_comments')}))
+
     def search_block(self):
         """Pesquisa tipos disponíveis e insere um rascunho real no Blockly."""
+        if self.logic.editor_kind.currentData()=='nodes':self.logic.graph_panel.add_dialog();return
         if not self.logic.ready:return
         entries={'Iniciar terminal':'mb_terminal_start','Enviar ao terminal':'mb_terminal_send','Encerrar terminal':'mb_terminal_stop','Mostrar mensagem':'mb_message','Registrar na saída':'mb_log','Condição se/senão':'mb_if','Repetir':'mb_repeat','Executar programa':'mb_run','Executar Bash':'mb_script','Perguntar':'mb_ask','Confirmar':'mb_confirm','Chamar função':'mb_call','Ir para estado':'mb_go_state','Abrir janela':'mb_open_window','Fechar janela':'mb_close_window','Definir variável':'mb_assign','Valor de variável':'mb_variable'}
         entries.update({'Texto':'text','Número':'math_number','Verdadeiro ou falso':'logic_boolean','Lista de valores':'lists_create_with','Texto de várias linhas':'mb_multiline','Alterar texto de componente':'mb_set_text','Habilitar componente':'mb_set_enabled','Alterar progresso':'mb_set_value','Mostrar página':'mb_show_page','Ler texto do componente':'mb_read_text','Ler seleção da caixa':'mb_read_checked','Ler progresso':'mb_read_value','Juntar textos':'mb_join','Comparar ou calcular':'mb_binary'})
@@ -251,7 +287,13 @@ class DevelopmentMixin:
         if any(f['event']['component']==target.id and f.get('states',[])==filters for f in self.project.workflows):self._show_error('Já existe um fluxo nesse evento e filtro. Escolha outro destino.');return
         def copy():
             """Duplica dados e referências, preservando o original."""
-            clone=create_flow(self.project,target.id,states=filters);clone['body']=deepcopy(flow['body']);clone['workspace']={'workspaceComments':deepcopy(flow.get('workspace',{}).get('workspaceComments',[]))}
+            clone=create_flow(self.project,target.id,states=filters)
+            if flow.get('editor')=='nodes':
+                from makebench.core.graph import duplicate_graph
+                clone.update(editor='nodes',graph=deepcopy(flow['graph']),graph_layout=deepcopy(flow.get('graph_layout',{})),graph_comments=deepcopy(flow.get('graph_comments',[])))
+                duplicate_graph(clone,{})
+                self.logic.flow_id=clone['id'];self.logic._target_component=None;return
+            clone['body']=deepcopy(flow['body']);clone['workspace']={'workspaceComments':deepcopy(flow.get('workspace',{}).get('workspaceComments',[]))}
             def reidentify(value):
                 """Cria identificadores independentes para os blocos copiados."""
                 if isinstance(value,dict):
@@ -279,6 +321,7 @@ class DevelopmentMixin:
             self.logic.new_event_dialog()
             flow=next((f for f in self.project.editable_flows if f['id']==self.logic.flow_id),None)
         if flow is None:return
+        if flow.get('editor')=='nodes':self.logic.graph_panel.add_dialog();return
         from makebench.core.behaviors import behavior_template,append_behavior
         try:blocks=behavior_template(kind,self.project,self.project.window_of(flow['event']['component']).id)
         except ProjectError as exc:self._show_error(str(exc));return

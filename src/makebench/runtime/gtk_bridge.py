@@ -13,6 +13,7 @@ class GtkSession(QObject):
     """Sinais compatíveis com a gaveta de testes existente da bancada."""
     output=Signal(str,str);busy_changed=Signal(bool);error=Signal(dict);task_changed=Signal(dict)
     debug_changed=Signal(dict)
+    inspection=Signal(dict)
     admin_changed=Signal(bool);stopped=Signal();ready=Signal();event_done=Signal(dict)
     def __init__(self,parent):
         """Somente armazena o estado observado do processo GTK."""
@@ -87,6 +88,7 @@ class GtkRuntimeBridge(QObject):
         elif kind=='admin':session.admin_active=value['value'];session.admin_changed.emit(session.admin_active)
         elif kind=='task':session.task_changed.emit(value)
         elif kind=='debug':session.debug_changed.emit(value)
+        elif kind=='inspection':session.inspection.emit(value)
         elif kind=='done':session.event_done.emit(value)
 
     def read_error(self):

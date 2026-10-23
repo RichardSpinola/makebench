@@ -21,7 +21,7 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
     """
     validate(project)
     result = GeneratedCode("")
-    lines = ["# Gerado pelo Makebench. Edite os blocos para alterar este arquivo.",
+    lines = ["# Gerado pelo Makebench. Edite a lógica para alterar este arquivo.",
              "# Funções próprias ficam no arquivo .actions.py do projeto.",
              "# Executado em processo separado ao testar o aplicativo.", ""]
     functions, syntax_error = function_names(source)
@@ -32,6 +32,13 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
     else:
         for index, flow in enumerate(project.workflows, 1):
             flow_id = flow["id"]
+            if flow.get('editor')=='nodes':
+                from .graph import compile_graph
+                graph_lines,origins,diagnostics=compile_graph(flow,index,functions)
+                offset=len(lines)
+                result.lines.update({(flow_id,node):line+offset for node,line in origins.items()})
+                result.diagnostics.extend(diagnostics);lines.extend(graph_lines)
+                continue
             if flow.get("body") is None:
                 result.diagnostics.extend(f"{flow['name']}: {e}" for e in (flow.get("errors") or ["Complete os blocos."]))
                 continue
