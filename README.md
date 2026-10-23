@@ -8,7 +8,7 @@ Tudo funciona localmente, sem conta, servidor ou IA em tempo de execução.
 
 ## Executar
 
-Requer Python 3.13+ e PySide6 6.11.2 com Widgets, SVG, WebEngine e WebChannel.
+Requer Python 3.12–3.14 e PySide6 6.11.2 com Widgets, SVG, WebEngine e WebChannel.
 
 ```bash
 python3 -m venv .venv
@@ -66,12 +66,13 @@ Mudanças externas no arquivo de funções mostram **Recarregar / Manter minha v
 GTK4/PyGObject é um backend real para os aplicativos criados; libadwaita é opcional.
 AppImage, Flatpak, DEB e RPM podem ser construídos com ferramentas preparadas em
 ambiente separado pelo Makebench. Somente receita é uma escolha explícita.
-Os quatro formatos foram construídos; bundles Flatpak Qt/GTK abriram nos runtimes.
-Instalação nativa em VMs ainda falta: DEB exige Python3.13+, AppImage ainda depende
-de Python/bibliotecas do sistema e não é autocontido. Detalhes em `.dev/handoff.md`.
+DEB, RPM e AppImage incluem Python, backend e dependências declaradas. Flatpak
+resolve seu runtime e mantém terminal/tarefas isolados. Requisitos de sistema e
+resultados de instalação por destino estão em `.dev/round-3-distribution.md`.
 
-Lógica por fios, terminal interativo e depurador continuam **Em breve**.
-O pacote do editor Makebench é separado do aplicativo criado.
+Lógica oferece blocos ou nós com fios por comportamento; terminal interativo e
+depurador de snapshot estão integrados. A exportação também oferece o próprio
+editor como AppImage. Notas técnicas das três rodadas estão em `.dev/handoff.md`.
 
 ## Janelas, páginas, estados e dados
 
