@@ -237,7 +237,7 @@ class PreviewCanvas(QFrame):
 
     def close_native_preview(self):
         """A limpeza da janela encerra também o renderizador descartável GTK."""
-        if hasattr(self,'gtk_surface'):self.gtk_surface.shutdown()
+        return self.gtk_surface.shutdown() if hasattr(self,'gtk_surface') else True
 
 
     def visible_page(self, node: Component) -> Component:

@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 import signal
 
-from PySide6.QtCore import QObject, QProcess, Signal
+from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 
 
 def signal_group(identifier, number):
@@ -39,6 +39,10 @@ class TaskProcess(QObject):
         self.process=QProcess(self)
         self.process.setUnixProcessParameters(QProcess.UnixProcessFlag.CreateNewSession)
         self.process.setWorkingDirectory(str(root))
+        from makebench.terminal.environment import external_environment
+        environment=QProcessEnvironment()
+        for key,value in external_environment(executable).items():environment.insert(key,value)
+        self.process.setProcessEnvironment(environment)
         self.process.setProgram(executable);self.process.setArguments(arguments)
         self.process.setInputChannelMode(QProcess.InputChannelMode.ManagedInputChannel)
         self.decoders={channel:codecs.getincrementaldecoder('utf-8')('replace') for channel in ('stdout','stderr')}

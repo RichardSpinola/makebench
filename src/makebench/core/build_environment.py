@@ -12,6 +12,7 @@ import urllib.request
 import uuid
 from .project import ProjectError
 from .exporter import BuildCancelled
+from makebench.terminal.environment import external_environment
 
 IMAGE='localhost/makebench-tools:1'
 APPIMAGE_URL='https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage'
@@ -42,7 +43,7 @@ def prepared():
 def run_tool(arguments,cwd=None,progress=None,cancelled=None):
     """Executa argv fixo com logs limitados, cancelamento e limpeza de processos."""
     if cancelled and cancelled():raise BuildCancelled('Operação cancelada.')
-    process=subprocess.Popen([str(a) for a in arguments],cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True)
+    process=subprocess.Popen([str(a) for a in arguments],cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True,env=external_environment(str(arguments[0])))
     selector=selectors.DefaultSelector();selector.register(process.stdout,selectors.EVENT_READ);tail=''
     try:
         while process.poll() is None or selector.get_map():
@@ -63,7 +64,7 @@ def run_tool(arguments,cwd=None,progress=None,cancelled=None):
         selector.close();process.stdout.close()
         if Path(str(arguments[0])).name=='podman' and '--name' in arguments:
             name=arguments[arguments.index('--name')+1]
-            if name.startswith('makebench-build-'):
+            if name.startswith(('makebench-build-','makebench-portable-')):
                 try:subprocess.run([arguments[0],'rm','--force',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
                 except (OSError,subprocess.TimeoutExpired):pass
 
@@ -88,7 +89,7 @@ def prepare_tools(progress=None,cancelled=None):
     with tempfile.TemporaryDirectory(prefix='prepare-',dir=root) as directory:
         context=Path(directory)
         if progress:progress(5,'Preparando ferramentas de distribuição. A primeira vez exige download.')
-        existing=subprocess.run([podman,'image','inspect','--format','{{index .Config.Labels "io.makebench.tools"}}',IMAGE],capture_output=True,text=True,timeout=15)
+        existing=subprocess.run([podman,'image','inspect','--format','{{index .Config.Labels "io.makebench.tools"}}',IMAGE],capture_output=True,text=True,timeout=15,env=external_environment(podman))
         if existing.returncode==0 and existing.stdout.strip()=='1':
             if progress:progress(80,'Reutilizando ferramentas já preparadas.')
         else:
@@ -145,6 +146,7 @@ def flatpak_requirements(project):
     packages=list(project.application.get('packages',[]))
     for package in packages:
         if not isinstance(package,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_,.-]+\])?(?:[<>=!~]=?[A-Za-z0-9.*+!_-]+(?:,[<>=!~]=?[A-Za-z0-9.*+!_-]+)*)?',package):raise ProjectError('Dependência Python inválida: '+str(package))
+    packages.insert(0,'pyte==0.8.2')
     if project.application.get('backend','qt')=='qt':packages.insert(0,'PySide6-Essentials==6.11.2')
     return packages
 

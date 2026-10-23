@@ -4,12 +4,8 @@ import json
 import os
 from pathlib import Path
 import re
-import shlex
 import shutil
-import signal
-import subprocess
 import tempfile
-import time
 import zipfile
 import xml.etree.ElementTree as ET
 from contextlib import ExitStack
@@ -32,12 +28,18 @@ def preflight(project,source,read_asset,format):
     for issue in issues:
         if issue['level']=='success':issue['message']='Verificação do projeto concluída.'
     tool=FORMATS[format][1]
-    from .build_environment import prepared
-    managed=format in {'deb','rpm','appimage'} and prepared()
-    if tool and not build_tools().get(tool) and not managed:issues.append({'level':'warning','message':f'Prepare as ferramentas de construção ({tool}) ou exporte somente a receita.','field':'destinations'})
-    if format=='flatpak' and (admin or programs):issues.append({'level':'error','message':'Flatpak isolado não permite programas do host ou ações administrativas declaradas. Use Fonte Python, DEB, RPM ou AppImage.','field':'permissions'})
-    if format=='flatpak' and project.application.get('backend','qt')=='qt':issues.append({'level':'warning','message':'Preparar ferramentas baixa as rodas Qt; construir usa somente o cache verificado.','field':'dependencies'})
-    if project.application.get('packages') and format not in {'source','flatpak'}:issues.append({'level':'warning','message':'Pacotes Python adicionais precisam ser fornecidos para a distribuição alvo; o empacotador não instala dependências automaticamente.','field':'packages'})
+    from .portable import ready
+    managed=format in {'deb','rpm','appimage'} and ready(project)
+    if format in {'deb','rpm','appimage'} and not managed:issues.append({'level':'warning','message':'Prepare o runtime portátil e as dependências em ambiente isolado antes de construir.','field':'destinations'})
+    elif tool and not build_tools().get(tool) and not managed:issues.append({'level':'warning','message':f'Prepare as ferramentas de construção ({tool}) ou exporte a receita.','field':'destinations'})
+    from .compatibility import syntax_error
+    minor=13 if format=='flatpak' else 12
+    if format!='source':
+        error=syntax_error(source,minor)
+        if error:issues.append({'level':'error','message':error,'field':'python'})
+    if format=='flatpak' and admin:issues.append({'level':'error','message':'Ações administrativas não estão disponíveis no Flatpak isolado.','field':'permissions'})
+    if format=='flatpak' and programs:issues.append({'level':'warning','message':'Tarefas e terminal executam somente dentro do Flatpak. Programas do host não ficam disponíveis.','field':'dependencies'})
+    if project.application.get('packages'):issues.append({'level':'warning','message':'As dependências Python declaradas serão resolvidas no ambiente isolado durante Preparar ferramentas.','field':'packages'})
     return issues
 
 
@@ -72,19 +74,19 @@ def write_recipe(project,source,read_asset,format,root,progress=None,cancelled=N
     if admin:(root/(identifier+'.policy')).write_text(policy_xml(project),encoding='utf-8')
     payload=root/'payload';location=payload/'opt'/identifier;location.mkdir(parents=True)
     shutil.copytree(root/'app',location,dirs_exist_ok=True)
-    binary=payload/'usr/bin'/identifier;binary.parent.mkdir(parents=True,exist_ok=True);binary.write_text('#!/bin/sh\nexec /usr/bin/python3 '+shlex.quote('/opt/'+identifier+'/run.py')+' "$@"\n');binary.chmod(0o755)
+    binary=payload/'usr/bin'/identifier;binary.parent.mkdir(parents=True,exist_ok=True);binary.write_text('#!/bin/sh\necho "Runtime ainda não montado. Use build-recipe.py." >&2\nexit 1\n');binary.chmod(0o755)
     for target,origin in [(payload/'usr/share/applications'/(identifier+'.desktop'),root/(identifier+'.desktop')),(payload/'usr/share/icons/hicolor'/('scalable' if icon_ext=='.svg' else '256x256')/'apps'/icon_name,root/icon_name)]:target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(origin,target)
     if admin:
         target=payload/'usr/share/polkit-1/actions'/(identifier+'.policy');target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(root/(identifier+'.policy'),target)
     if format=='deb':
-        control=payload/'DEBIAN';control.mkdir();deps='python3 (>= 3.13), python3-gi, gir1.2-gtk-4.0' if gtk else 'python3 (>= 3.13), python3-pyside6.qtwidgets'
+        control=payload/'DEBIAN';control.mkdir();deps='libc6 (>= 2.39), libgl1, libegl1'
         if admin:deps+=', policykit-1'
         text=f'Package: {identifier.replace("_","-")}\nVersion: {version}\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: {one_line(app.get("author") or "Autor não informado")}\nDepends: {deps}\nDescription: {one_line(app.get("description") or name)}\n'
         (control/'control').write_text(text,encoding='utf-8')
-        # Ubuntu 24.04 fornece Python 3.12; Python 3.13+ é requisito externo explícito.
+        # Python/backend e rodas são incluídos no payload pelo ambiente isolado.
     elif format=='rpm':
-        spec=f'Name: {identifier.replace("_","-")}\nVersion: {version.split("-")[0].split("+")[0]}\nRelease: 1%{{?dist}}\nSummary: {one_line(app.get("description") or name)}\nLicense: {one_line(app.get("license") or "LicenseRef-unspecified")}\nBuildArch: x86_64\nRequires: python3 >= 3.13\n'
-        spec+='Requires: python3-gobject, gtk4\n' if gtk else 'Requires: python3-pyside6\n'
+        spec=f'Name: {identifier.replace("_","-")}\nVersion: {version.split("-")[0].split("+")[0]}\nRelease: 1%{{?dist}}\nSummary: {one_line(app.get("description") or name)}\nLicense: {one_line(app.get("license") or "LicenseRef-unspecified")}\nBuildArch: x86_64\nAutoReqProv: no\nRequires: glibc >= 2.39\nRequires: libGL.so.1()(64bit), libEGL.so.1()(64bit)\n'
+        spec+='%global debug_package %{nil}\n'
         if admin:spec+='Requires: polkit\n'
         spec+='\n%description\n'+one_line(app.get('description') or name)+'\n\n%install\nmkdir -p %{buildroot}\ncp -a %{_sourcedir}/payload/. %{buildroot}/\n\n%files\n/opt/'+identifier+'\n/usr/bin/'+identifier+'\n/usr/share/applications/'+identifier+'.desktop\n/usr/share/icons/hicolor/*/apps/'+icon_name+'\n'
         if admin:spec+='/usr/share/polkit-1/actions/'+identifier+'.policy\n'
@@ -94,8 +96,8 @@ def write_recipe(project,source,read_asset,format,root,progress=None,cancelled=N
         (root/'app.spec').write_text(spec,encoding='utf-8')
     elif format=='appimage':
         appdir=root/'AppDir';shutil.copytree(root/'app',appdir/'app');shutil.copy2(root/(identifier+'.desktop'),appdir/(identifier+'.desktop'));shutil.copy2(root/icon_name,appdir/icon_name)
-        launcher=appdir/'AppRun';launcher.write_text('#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexec python3 "$HERE/app/run.py" "$@"\n');launcher.chmod(0o755)
-        (root/'DEPENDENCIAS.txt').write_text('Este AppImage inclui o aplicativo e o runtime Makebench. Requer Python 3.13+ e '+('GTK4/PyGObject' if gtk else 'PySide6 6.11.2')+' instalados no sistema. Não é um runtime Python autocontido.\n',encoding='utf-8')
+        launcher=appdir/'AppRun';launcher.write_text('#!/bin/sh\necho "Runtime ainda não montado. Construa esta receita com o Makebench." >&2\nexit 1\n');launcher.chmod(0o755)
+        (root/'DEPENDENCIAS.txt').write_text('O build isolado inclui Python 3.12, backend e dependências declaradas. Linux x86_64 com glibc2.39+, X11/Wayland e drivers do sistema. FUSE ou --appimage-extract-and-run. Programas externos usados pelo projeto continuam requisitos explícitos.\n',encoding='utf-8')
     elif format=='flatpak':
         runtime='org.gnome.Platform' if gtk else 'org.kde.Platform';sdk='org.gnome.Sdk' if gtk else 'org.kde.Sdk'
         manifest={'app-id':identifier,'runtime':runtime,'runtime-version':'50' if gtk else '6.10','sdk':sdk,'command':identifier,
@@ -111,25 +113,45 @@ def write_recipe(project,source,read_asset,format,root,progress=None,cancelled=N
         for tag,value in [('id',identifier),('metadata_license','CC0-1.0'),('project_license',app.get('license') or 'LicenseRef-unspecified'),('name',name),('summary',one_line(app.get('description') or name)[:100])]:ET.SubElement(metadata,tag).text=value
         ET.SubElement(metadata,'launchable',type='desktop-id').text=identifier+'.desktop';description=ET.SubElement(metadata,'description');ET.SubElement(description,'p').text=one_line(app.get('description') or name)
         (root/(identifier+'.metainfo.xml')).write_text('<?xml version="1.0" encoding="UTF-8"?>\n'+ET.tostring(metadata,encoding='unicode'),encoding='utf-8')
-    (root/'LEIA-ME-PACOTE.txt').write_text('Receita '+FORMATS[format][0]+' gerada pelo Makebench. Gerar não significa construir ou validar instalação.\nPython mínimo: 3.13. Ubuntu 24.04 fornece 3.12: forneça Python 3.13 por método adequado antes de instalar o DEB.\nNenhuma fonte do projeto foi executada. Dependências Python adicionais precisam ser fornecidas.\nPolítica Polkit não concede acesso automático; pkexec mantém autenticação padrão do sistema.\n',encoding='utf-8')
+    (root/'LEIA-ME-PACOTE.txt').write_text('Receita '+FORMATS[format][0]+' gerada pelo Makebench. Gerar não significa construir ou validar instalação.\nRuntime nativo incluído: Python 3.12, backend e dependências Python declaradas. Destinos: Ubuntu24.04/Fedora44 x86_64, glibc2.39+.\nNenhuma fonte do projeto foi executada. Preparar ferramentas resolve dependências em ambiente isolado; construir usa cache verificado.\nPolítica Polkit não concede acesso automático; pkexec mantém autenticação padrão do sistema.\n',encoding='utf-8')
+    (root/'build-recipe.py').write_text("""#!/usr/bin/env python3
+from pathlib import Path
+import argparse
+import sys
+root=Path(__file__).resolve().parent
+sys.path.insert(0,str(root/'app'))
+from makebench.core.storage import load_project
+from makebench.core.source import SourceBuffer
+from makebench.core.packages import build_package
+from makebench.core.portable import prepare
+from makebench.core.build_environment import prepare_flatpak
+parser=argparse.ArgumentParser();parser.add_argument('--prepare',action='store_true');parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
+project=load_project(root/'app/project.makebench.json');source=SourceBuffer.load(root/'app/project.makebench.json').text
+format="""+repr(format)+"""
+if args.prepare:
+    (prepare_flatpak if format=='flatpak' else prepare)(project,lambda n,t:print(t,flush=True))
+print(build_package(project,source,lambda name:(root/'app'/name).read_bytes(),args.output,format,lambda n,t:print(t,flush=True)))
+""",encoding='utf-8')
     return root
 
 
 def build_package(project,source,read_asset,destination,format,progress=None,cancelled=None,recipe_only=False,environment='system'):
     """Constrói com ferramentas presentes; publica exclusivamente ao terminar e verificar."""
+    if format in {'deb','rpm','appimage'} and not recipe_only:
+        issues=preflight(project,source,read_asset,format)
+        errors=[item['message'] for item in issues if item['level']=='error']
+        if errors:raise ProjectError('\n'.join(errors))
+        from .portable import build_native
+        return build_native(project,source,read_asset,destination,format,progress,cancelled)
     if format=='source':return dict(export_source(project,source,read_asset,destination,progress,cancelled),status='Construído e verificado',format=format)
     issues=preflight(project,source,read_asset,format);errors=[i['message'] for i in issues if i['level']=='error']
     if errors:raise ProjectError('\n'.join(errors))
     destination=Path(destination).resolve()
     if destination.exists():raise ProjectError('O destino já existe. Escolha outro nome.')
     tool=FORMATS[format][1];available=build_tools().get(tool)
-    from .build_environment import prepared,container_command,run_tool
-    managed=format in {'deb','rpm','appimage'} and (environment=='managed' or environment=='auto' and not available and prepared()) and not recipe_only
-    if managed:
-        if not prepared():raise ProjectError('Clique em Preparar ferramentas antes de construir este pacote.')
-        available=tool
-    if environment=='auto' and not available and not recipe_only:raise ProjectError('Prepare as ferramentas ou escolha Somente gerar receita.')
-    recipe=recipe_only or not available
+    from .build_environment import run_tool
+    if not available and not recipe_only:raise ProjectError('Prepare as ferramentas ou escolha Somente gerar receita.')
+    recipe=recipe_only
     def step(number,message):
         """Cancelamento acontece antes de publicar qualquer artefato no destino."""
         if cancelled and cancelled():raise BuildCancelled('Construção cancelada.')
@@ -137,12 +159,11 @@ def build_package(project,source,read_asset,destination,format,progress=None,can
     def run(arguments,cwd):
         """Ferramenta explícita, sem shell; logs e cancelamento da árvore de build."""
         step(50,'Executar '+Path(arguments[0]).name)
-        return run_tool(container_command(arguments,stage) if managed else arguments,cwd,progress,cancelled)
+        return run_tool(arguments,cwd,progress,cancelled)
     with ExitStack() as stack:
         directory=stack.enter_context(tempfile.TemporaryDirectory(prefix='.makebench-package-',dir=destination.parent))
         # AppStream usa caminhos IPC limitados; mantenha a construção Flatpak curta.
         build_directory=stack.enter_context(tempfile.TemporaryDirectory(prefix='mb-flatpak-')) if format=='flatpak' else directory
-        stage=Path(directory)
         root=write_recipe(project,source,read_asset,format,Path(build_directory)/'recipe',progress,cancelled);step(35,'Receita gerada')
         if recipe:
             result=Path(directory)/'recipe.zip'
@@ -151,34 +172,20 @@ def build_package(project,source,read_asset,destination,format,progress=None,can
                     if path.is_file():z.write(path,path.relative_to(root))
             status='Gerado, não construído ('+('receita solicitada' if available else 'falta '+tool)+')'
         else:
-            if project.application.get('packages') and format!='flatpak':raise ProjectError('Forneça as dependências Python adicionais para o destino. Gere a receita para preparar uma construção offline.')
             identifier=project.application['id']
-            if format=='deb':
-                result=Path(directory)/'app.deb';run([available,'--build','--root-owner-group',str(root/'payload'),str(result)],root);run([available,'--info',str(result)],root);run([available,'--contents',str(result)],root)
-            elif format=='appimage':
-                result=Path(directory)/'app.AppImage';run([available,'--no-appstream',str(root/'AppDir'),str(result)],root)
-                if result.read_bytes()[:4]!=b'\x7fELF':raise ProjectError('AppImage gerado não é um executável ELF.')
-            elif format=='rpm':
-                for name in ('BUILD','RPMS','SOURCES','SPECS','SRPMS'): (root/name).mkdir()
-                shutil.copytree(root/'payload',root/'SOURCES'/'payload');run([available,'--define','_topdir '+str(root),'-bb',str(root/'app.spec')],root)
-                packages=list((root/'RPMS').rglob('*.rpm'))
-                if len(packages)!=1:raise ProjectError('A construção não produziu exatamente um RPM.')
-                result=packages[0]
-                if shutil.which('rpm'):run([shutil.which('rpm'),'-qip',str(result)],root)
-            else:
-                from .build_environment import copy_flatpak_wheels,flatpak_requirements
-                if flatpak_requirements(project):
-                    copy_flatpak_wheels(project,root/'wheels')
-                    manifest_path=root/(identifier+'.json');manifest=json.loads(manifest_path.read_text())
-                    manifest['modules'][0]['build-commands'].insert(0,'python3 -m pip install --no-index --no-deps --target=/app/lib/python/site-packages wheels/*.whl')
-                    manifest['finish-args'].append('--env=PYTHONPATH=/app/lib/python/site-packages')
-                    manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
-                if shutil.which('appstreamcli'):run([shutil.which('appstreamcli'),'validate','--no-net','--override=url-homepage-missing=info',str(root/(identifier+'.metainfo.xml'))],root)
-                repo=Path(build_directory)/'repo';builddir=Path(build_directory)/'build-dir'
-                run([available,'--user','--disable-download','--force-clean','--repo='+str(repo),str(builddir),str(root/(identifier+'.json'))],root)
-                flatpak=shutil.which('flatpak')
-                if not flatpak:raise ProjectError('Falta flatpak para gerar o bundle final.')
-                result=Path(directory)/'app.flatpak';run([flatpak,'build-bundle',str(repo),str(result),identifier],root)
+            from .build_environment import copy_flatpak_wheels,flatpak_requirements
+            if flatpak_requirements(project):
+                copy_flatpak_wheels(project,root/'wheels')
+                manifest_path=root/(identifier+'.json');manifest=json.loads(manifest_path.read_text())
+                manifest['modules'][0]['build-commands'].insert(0,'python3 -m pip install --no-index --no-deps --target=/app/lib/python/site-packages wheels/*.whl')
+                manifest['finish-args'].append('--env=PYTHONPATH=/app/lib/python/site-packages')
+                manifest_path.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
+            if shutil.which('appstreamcli'):run([shutil.which('appstreamcli'),'validate','--no-net','--override=url-homepage-missing=info',str(root/(identifier+'.metainfo.xml'))],root)
+            repo=Path(build_directory)/'repo';builddir=Path(build_directory)/'build-dir'
+            run([available,'--user','--disable-download','--force-clean','--repo='+str(repo),str(builddir),str(root/(identifier+'.json'))],root)
+            flatpak=shutil.which('flatpak')
+            if not flatpak:raise ProjectError('Falta flatpak para gerar o bundle final.')
+            result=Path(directory)/'app.flatpak';run([flatpak,'build-bundle','--runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo',str(repo),str(result),identifier],root)
             status='Construído e verificado (instalação no destino ainda não testada)'
         step(95,'Publicar resultado completo')
         if format=='flatpak' and not recipe:

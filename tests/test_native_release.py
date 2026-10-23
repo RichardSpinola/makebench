@@ -59,8 +59,8 @@ class NativeReleaseTests(unittest.TestCase):
             with self.subTest(format=format),patch('subprocess.Popen') as process:
                 root=write_recipe(p,"raise RuntimeError('não rodar no build')\n",assets.__getitem__,format,self.root/format);process.assert_not_called()
                 self.assertTrue((root/'br.exemplo.app.desktop').exists());self.assertTrue((root/'app/run.py').exists())
-                if format=='deb':self.assertIn('Architecture: amd64',(root/'payload/DEBIAN/control').read_text());self.assertIn('python3-gi',(root/'payload/DEBIAN/control').read_text())
-                elif format=='rpm':self.assertIn('Requires: python3-gobject, gtk4',(root/'app.spec').read_text())
+                if format=='deb':self.assertIn('Architecture: amd64',(root/'payload/DEBIAN/control').read_text());self.assertNotIn('python3',(root/'payload/DEBIAN/control').read_text())
+                elif format=='rpm':self.assertNotIn('Requires: python3',(root/'app.spec').read_text());self.assertIn('AutoReqProv: no',(root/'app.spec').read_text())
                 elif format=='flatpak':
                     manifest=json.loads((root/'br.exemplo.app.json').read_text());self.assertNotIn('--filesystem=host',manifest['finish-args']);self.assertEqual(manifest['runtime'],'org.gnome.Platform')
                 elif format=='appimage':self.assertTrue((root/'AppDir/AppRun').stat().st_mode&0o111)
@@ -78,7 +78,7 @@ class NativeReleaseTests(unittest.TestCase):
     def test_missing_tools_and_cancel_never_publish_partial_package(self):
         """Receita gerada tem estado explícito; cancelamento preserva o destino vazio."""
         p,assets=self.fixture();target=self.root/'deb-recipe.zip'
-        with patch('makebench.core.packages.build_tools',return_value={}):result=build_package(p,'',assets.__getitem__,target,'deb')
+        with patch('makebench.core.packages.build_tools',return_value={}):result=build_package(p,'',assets.__getitem__,target,'deb',recipe_only=True)
         self.assertIn('Gerado, não construído',result['status']);self.assertTrue(zipfile.is_zipfile(target))
         with self.assertRaises(BuildCancelled):build_package(p,'',assets.__getitem__,self.root/'cancel.zip','rpm',cancelled=lambda:True,recipe_only=True)
         self.assertFalse((self.root/'cancel.zip').exists());self.assertFalse(list(self.root.glob('.makebench-package-*')))

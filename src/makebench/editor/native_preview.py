@@ -54,13 +54,14 @@ class GtkDesignSurface(QWidget):
     """Imagem do GTK com regiões reais para selecionar, inserir, mover e redimensionar."""
     def __init__(self,canvas):
         """Mantém a última imagem enquanto outra está sendo calculada, sem piscar."""
-        super().__init__(canvas);self.canvas=canvas;self.image=QPixmap();self.rectangles={};self.tab_rectangles={};self.job=None;self.payload=None;self.version=0;self.error='Preparando prévia GTK nativa…';self.drag=None;self.rubber=None
+        super().__init__(canvas);self.canvas=canvas;self.image=QPixmap();self.rectangles={};self.tab_rectangles={};self.job=None;self.payload=None;self.version=0;self.error='Preparando prévia GTK nativa…';self.drag=None;self.rubber=None;self._suspended=False
         self.timer=QTimer(self);self.timer.setSingleShot(True);self.timer.setInterval(120);self.timer.timeout.connect(self.start_job)
         self.setAcceptDrops(True);self.setMouseTracking(True);self.hide()
 
     def request(self,force=False):
         """Agenda o documento visual mais recente, descartando resultados antigos."""
         if not self.canvas._project or self.canvas._project.application.get('backend','qt')!='gtk':self.hide();return
+        self._suspended=False
         self.show();self.raise_();self.setGeometry(self.canvas.rect())
         root=self.canvas._project.root
         key=(self.canvas._project.id,root.id)
@@ -81,7 +82,7 @@ class GtkDesignSurface(QWidget):
 
     def start_job(self):
         """Serializa pedidos sem acumular processos durante digitação ou arraste."""
-        if not self.isVisible() or self.job and self.job.isRunning():return
+        if self._suspended or not self.isVisible() or self.job and self.job.isRunning():return
         version=self.version;self.job=job=GtkPreviewJob(self.payload,self)
         def ready(image,info):
             """Aplica somente a imagem que ainda corresponde à versão atual."""
@@ -91,7 +92,7 @@ class GtkDesignSurface(QWidget):
         def finished():
             """Um pedido mais recente substitui o anterior depois da limpeza do display."""
             self.job=None;job.deleteLater()
-            if version!=self.version and self.isVisible():self.timer.start()
+            if not self._suspended and version!=self.version and self.isVisible():self.timer.start()
         job.finished.connect(finished);job.start()
 
     def failed(self,error):
@@ -105,8 +106,9 @@ class GtkDesignSurface(QWidget):
 
     def shutdown(self):
         """Encerra só o processo descartável da prévia, sem tocar no runtime do usuário."""
-        self.timer.stop()
-        if self.job and self.job.isRunning():self.job.cancel.set();self.job.wait(3000)
+        self._suspended=True;self.timer.stop()
+        if self.job and self.job.isRunning():self.job.cancel.set();self.job.wait(100)
+        return not (self.job and self.job.isRunning())
 
     def cancel_gesture(self):
         """Escape cancela somente a composição temporária, sem alterar o documento."""

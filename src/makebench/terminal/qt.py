@@ -147,6 +147,11 @@ class TerminalWidget(QAbstractScrollArea):
         if 2004 << 5 in self.terminal.screen.mode: value = '\x1b[200~' + value + '\x1b[201~'
         self.send_terminal(value)
 
+    def focusNextPrevChild(self,next):
+        """Tab completa no terminal ativo; Ctrl+Tab permite sair da superfície."""
+        if self.terminal.running and not self.editing:return False
+        return super().focusNextPrevChild(next)
+
     def event(self, event):
         """Mantém teclas de programas de terminal fora dos atalhos globais da IDE."""
         if event.type()==QEvent.Type.ShortcutOverride and not self.editing:
@@ -157,6 +162,7 @@ class TerminalWidget(QAbstractScrollArea):
         """Encaminha teclas ao PTY, reservando Ctrl+Shift+C/V para transferência."""
         modifiers = event.modifiers(); control = bool(modifiers & Qt.KeyboardModifier.ControlModifier)
         shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
+        if control and event.key()==Qt.Key.Key_Tab:super().focusNextPrevChild(not shift);return
         if control and shift and event.key() == Qt.Key.Key_C:
             QApplication.clipboard().setText(self.selected_text()); return
         if control and shift and event.key() == Qt.Key.Key_V: self.paste(); return

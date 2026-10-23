@@ -104,4 +104,5 @@ class ThumbnailCache(QObject):
     def shutdown(self):
         """Fecha somente o helper de miniatura criado pelo editor."""
         self.closed=True;self.timer.stop();self.pending.clear()
-        if self.job and self.job.isRunning():self.job.cancel.set();self.job.wait(3000)
+        if self.job and self.job.isRunning():self.job.cancel.set();self.job.wait(100)
+        return not (self.job and self.job.isRunning())

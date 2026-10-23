@@ -184,7 +184,7 @@ class ApplicationSettings(SettingsShell):
         backend=QComboBox();backend.addItem('GTK4 / Adwaita','gtk');backend.addItem('Qt / PySide6','qt');backend.setCurrentIndex(backend.findData(app.get('backend','qt')));backend.currentIndexChanged.connect(lambda _:self.change('backend',backend.currentData()));self.row(group,'Aparência e execução',backend)
         if not gtk_support()['gtk4']:
             notice=QLabel('GTK4 ausente neste Python. O teste GTK informa os pacotes necessários, sem instalar automaticamente.');notice.setWordWrap(True);group.addWidget(notice)
-        page=self.add_page('Dependências');group=self.group(page,'Dependências','Python mínimo 3.13. GTK exige PyGObject/GTK4; Qt exige PySide6 6.11.2.')
+        page=self.add_page('Dependências');group=self.group(page,'Dependências','Python mínimo 3.12; versões suportadas 3.12–3.14. GTK exige PyGObject/GTK4; Qt exige PySide6 6.11.2.')
         from .settings_fields import Dependencies
         packages=Dependencies(app.get('packages',[]));packages.changed.connect(lambda values:self.change('packages',values));group.addWidget(packages);self.fields['packages']=packages
         programs,admin=effects(window.project);label=QLabel('Programas detectados: '+(', '.join(programs) or 'nenhum')+'. Funções próprias podem exigir outros programas.');label.setWordWrap(True);group.addWidget(label)

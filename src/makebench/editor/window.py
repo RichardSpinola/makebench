@@ -1142,7 +1142,7 @@ class MainWindow(StudioMixin, QMainWindow):
             window.show();window.raise_()
             self.statusBar().showMessage("Aguarde a tarefa administrativa terminar antes de fechar o editor.", 7000)
             event.ignore();return
-        if not self._closing_after_runtime and not getattr(self,'_closing_after_build',False) and not self._confirm_discard():
+        if not self._closing_after_runtime and not getattr(self,'_closing_after_build',False) and not getattr(self,'_closing_after_preview',False) and not self._confirm_discard():
             event.ignore();return
         if window is not None and not window.session.closed:
             if not window.stop():
@@ -1156,7 +1156,12 @@ class MainWindow(StudioMixin, QMainWindow):
             self.publish_panel.cancel_build()
             self.statusBar().showMessage('Cancelando construção antes de fechar…',5000)
             QTimer.singleShot(100,self.close);event.ignore();return
-        if hasattr(self,'map_panel'):self.map_panel.previews.shutdown()
+        canvas_ready=self.canvas.close_native_preview()
+        thumbnails_ready=self.map_panel.previews.shutdown() if hasattr(self,'map_panel') else True
+        if not canvas_ready or not thumbnails_ready:
+            self._closing_after_preview=True;self.setEnabled(False)
+            self.statusBar().showMessage('Encerrando prévias…',3000)
+            QTimer.singleShot(100,self.close);event.ignore();return
         if hasattr(self,'terminal_panel'):self.terminal_panel.surface.stop_terminal()
         self.clear_recovery()
         event.accept()

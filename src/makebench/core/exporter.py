@@ -32,7 +32,16 @@ def effects(project):
             for child in value.values():visit(child)
         elif isinstance(value,list):
             for child in value:visit(child)
-    for flow in project.editable_flows:visit(flow.get('body'))
+    for flow in project.editable_flows:
+        if flow.get('editor')=='nodes':
+            for node in flow['graph']['nodes']:
+                if node['op'] in {'run','script'}:
+                    admin=admin or node.get('parameters',{}).get('admin',False)
+                    key='program' if node['op']=='run' else 'source'
+                    binding=node.get('inputs',{}).get(key,{})
+                    if node['op']=='script':programs.add('/bin/bash')
+                    elif isinstance(binding.get('value'),str):programs.add(binding['value'])
+        else:visit(flow.get('body'))
     return sorted(programs),admin
 
 
@@ -64,6 +73,9 @@ def verify(project,source,read_asset):
         except (OSError,ProjectError) as exc:add('error','Recurso ausente: '+name,'assets')
     for dependency in app.get('packages',[]):
         if not isinstance(dependency,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_,.-]+\])?(?:[<>=!~]=?[A-Za-z0-9.*+!_-]+(?:,[<>=!~]=?[A-Za-z0-9.*+!_-]+)*)?',dependency):add('error','Dependência Python inválida: '+str(dependency),'packages')
+    from .build_environment import flatpak_requirements
+    try:flatpak_requirements(project)
+    except ProjectError as exc:add('error',str(exc),'packages')
     programs,admin=effects(project)
     for program in programs:add('warning','O destino precisa do programa '+program+'.','dependencies')
     if admin:add('warning','Ações administrativas exigem Polkit/pkexec e agente de autenticação no sistema de destino.','permissions')
@@ -149,16 +161,19 @@ def export_source(project,source,read_asset,destination,progress=None,cancelled=
         target=stage/'makebench';target.mkdir()
         shutil.copy2(package_root/'__init__.py',target/'__init__.py')
         backend=project.application.get('backend','qt')
-        for module in (('core','gtk_runtime','terminal') if backend=='gtk' else ('core','runtime','ui','terminal')):
+        for module in (('core','gtk_runtime','terminal','portable') if backend=='gtk' else ('core','runtime','ui','terminal','portable')):
             (target/module).mkdir()
             for path in sorted((package_root/module).glob('*.py')):shutil.copy2(path,target/module/path.name)
         if backend=='gtk':
             (target/'runtime').mkdir();shutil.copy2(package_root/'runtime'/'__init__.py',target/'runtime'/'__init__.py');shutil.copy2(package_root/'runtime'/'worker.py',target/'runtime'/'worker.py');shutil.copy2(package_root/'runtime'/'debugger.py',target/'runtime'/'debugger.py')
         shutil.copytree(package_root/'notices',target/'notices')
         (stage/'run.py').write_text(GTK_RUNNER if backend=='gtk' else QT_RUNNER,encoding='utf-8')
-        dependencies=['pyte==0.8.2',*(['PyGObject>=3.50'] if backend=='gtk' else ['PySide6==6.11.2']),*project.application.get('packages',[])]
+        dependencies=['pyte==0.8.2',*(['PyGObject>=3.48'] if backend=='gtk' else ['PySide6==6.11.2']),*project.application.get('packages',[])]
+        from .compatibility import minimum_minor
+        python_minor=minimum_minor(source) or 14
+        (stage/'runtime-requirements.json').write_text(json.dumps({'python':f'>=3.{python_minor}','backend':backend,'dependencies':dependencies},indent=2),encoding='utf-8')
         (stage/'requirements.txt').write_text('\n'.join(dependencies)+'\n',encoding='utf-8')
-        (stage/'LEIA-ME.txt').write_text('Aplicativo exportado pelo Makebench.\nRequer Linux, Python 3.13+ e as dependências de requirements.txt. GTK exige também GTK4 e PyGObject do sistema; libadwaita é opcional.\nCrie um ambiente Python, instale requirements.txt e execute python3 run.py.\nIniciar executa as funções e scripts do projeto com suas permissões.\nO runtime acompanha o aplicativo; a supervisão do editor não aparece.\nProgramas externos e Polkit devem estar disponíveis no sistema de destino.\nDefina a licença do seu aplicativo antes de distribuí-lo publicamente.\n',encoding='utf-8')
+        (stage/'LEIA-ME.txt').write_text(f'Aplicativo exportado pelo Makebench.\nRequer Linux, Python 3.{python_minor}+ e as dependências de requirements.txt. GTK exige também GTK4 e PyGObject do sistema; libadwaita é opcional.\nCrie um ambiente Python, instale requirements.txt e execute python3 run.py.\nIniciar executa as funções e scripts do projeto com suas permissões.\nO runtime acompanha o aplicativo; a supervisão do editor não aparece.\nProgramas externos e Polkit devem estar disponíveis no sistema de destino.\nDefina a licença do seu aplicativo antes de distribuí-lo publicamente.\n',encoding='utf-8')
         step(75,'Verificar fontes sem executá-las')
         for path in stage.rglob('*.py'):compile(path.read_text(encoding='utf-8'),str(path),'exec')
         zip_path=Path(directory)/'result.zip'

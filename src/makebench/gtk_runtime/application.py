@@ -284,7 +284,8 @@ class GtkRuntime:
             pkexec=shutil.which('pkexec')
             if not pkexec:raise ValueError('pkexec não está disponível no sistema de destino.')
             args=['--disable-internal-agent',executable,*args];executable=pkexec
-        task=subprocess.Popen([executable,*args],cwd=self.root,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,bufsize=0)
+        from makebench.terminal.environment import external_environment
+        task=subprocess.Popen([executable,*args],env=external_environment(executable),cwd=self.root,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,bufsize=0)
         self.task=task;self.admin=admin;started=time.monotonic();self.emit('admin',value=admin)
         self.emit('task',id=r['id'],program=program,admin=admin,state='Executando',duration=0)
         def wait():

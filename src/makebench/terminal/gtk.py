@@ -9,7 +9,7 @@ def create_terminal(root=None):
     from gi.repository import Gtk, Gdk, GLib, Pango
     box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
     scroll = Gtk.ScrolledWindow(min_content_height=140, hexpand=True, vexpand=True)
-    view = Gtk.TextView(editable=False, cursor_visible=False, monospace=True, wrap_mode=Gtk.WrapMode.NONE)
+    view = Gtk.TextView(editable=False, cursor_visible=False, accepts_tab=False, monospace=True, wrap_mode=Gtk.WrapMode.NONE)
     scroll.set_child(view); box.append(scroll)
     session = TerminalSession(root=root); box.terminal = session
     buffer = view.get_buffer(); tags = {}; state = {'revision':-1, 'timer':None, 'size':None,'rows':[],'cache':{},'screen_ids':set()}
@@ -120,6 +120,8 @@ def create_terminal(root=None):
                 return True
             if name.lower() == 'v': view.get_clipboard().read_text_async(None, paste); return True
         if modifiers & Gdk.ModifierType.SHIFT_MASK and name in {'Page_Up','Page_Down'}: return False
+        if control and name in {'Tab','ISO_Left_Tab'}:return False
+        if not session.running:return False
         character = Gdk.keyval_to_unicode(keyval)
         session.send(key_input(name, chr(character) if character else '', control, bool(modifiers & Gdk.ModifierType.ALT_MASK), 1 << 5 in session.screen.mode))
         return True
