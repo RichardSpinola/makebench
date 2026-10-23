@@ -37,11 +37,11 @@ def save_project(project: Project, path: str | Path) -> None:
         text = json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
     except (TypeError, ValueError) as exc:
         raise StorageError(f"O projeto contém dados que não podem ser salvos: {exc}") from exc
-    if data['format_version']==5 and destination.is_file():
+    if data['format_version']>=5 and destination.is_file():
         try:
             previous=json.loads(destination.read_text(encoding='utf-8'))
-            backup=destination.with_name(destination.name+'.bak-v4')
-            if previous.get('format_version') in (1,2,3,4) and not backup.exists():
+            backup=destination.with_name(destination.name+f".bak-v{previous.get('format_version',4)}")
+            if isinstance(previous.get('format_version'),int) and previous['format_version'] < data['format_version'] and not backup.exists():
                 with backup.open('xb') as handle:
                     handle.write(destination.read_bytes());handle.flush();os.fsync(handle.fileno())
         except (OSError,ValueError) as exc:raise StorageError(f'Não foi possível preservar a cópia anterior: {exc}') from exc

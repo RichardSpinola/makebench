@@ -13,7 +13,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 
-FORMAT_VERSION = 5
+FORMAT_VERSION = 6
 FORMAT_NAME = "makebench.project"
 
 
@@ -35,6 +35,7 @@ class ComponentKind(StrEnum):
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     OUTPUT = "output"
+    TERMINAL = "terminal"
     SEPARATOR = "separator"
     SPACER = "spacer"
 
@@ -65,6 +66,7 @@ KIND_LABELS = {
     ComponentKind.CHECKBOX: "Caixa de seleção",
     ComponentKind.PROGRESS: "Progresso",
     ComponentKind.OUTPUT: "Painel de saída",
+    ComponentKind.TERMINAL: "Terminal",
 }
 LAYOUT_LABELS = {
     LayoutKind.VERTICAL: "Coluna",
@@ -187,6 +189,14 @@ class Component:
             type(properties["columns"]) is not int or not 1 <= properties["columns"] <= 12
         ):
             raise ProjectError("A grade precisa ter entre 1 e 12 colunas.")
+        if kind == ComponentKind.TERMINAL:
+            if not isinstance(properties.get('terminal_program',''),str) or '\0' in properties.get('terminal_program',''):
+                raise ProjectError('Programa de terminal inválido.')
+            arguments=properties.get('terminal_arguments',[])
+            if not isinstance(arguments,list) or len(arguments)>256 or any(not isinstance(a,str) or '\0' in a for a in arguments):
+                raise ProjectError('Argumentos do terminal precisam ser uma lista de textos.')
+            if type(properties.get('terminal_autostart',False)) is not bool:
+                raise ProjectError('Início automático do terminal inválido.')
         node = cls(
             id=component_id,
             kind=kind,
@@ -228,13 +238,14 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.CHECKBOX: {"text": "Nova opção", "checked": False},
         ComponentKind.PROGRESS: {"value": 0},
         ComponentKind.OUTPUT: {"text": "A saída das tarefas aparecerá aqui."},
+        ComponentKind.TERMINAL: {"terminal_program":"", "terminal_arguments":[], "terminal_autostart":False},
     }
     node = Component(id=new_id(kind.value), kind=kind, properties=defaults[kind].copy())
     if node.can_have_children:
         node.geometry.update(width=360, height=240)
     elif kind == ComponentKind.IMAGE:
         node.geometry.update(width=240, height=160)
-    elif kind == ComponentKind.OUTPUT:
+    elif kind in {ComponentKind.OUTPUT, ComponentKind.TERMINAL}:
         node.geometry.update(width=360, height=140)
     if kind == ComponentKind.PAGES:
         page = create_component(ComponentKind.PAGE)
@@ -313,7 +324,7 @@ class Project:
             if isinstance(value,list):return any(new_logic(item) for item in value)
             return False
         fields = {'spacing', 'padding', 'align', 'distribute', 'size_mode', 'free_geometry', 'icon', 'tooltip'}
-        return bool(self.format_version == 5 or self.application or self.windows or self.states or self.variables or self.map_layout
+        return bool(self.format_version >= 5 or self.application or self.windows or self.states or self.variables or self.map_layout
             or any(n.kind in {ComponentKind.SEPARATOR,ComponentKind.SPACER} or fields & n.properties.keys() for n in self.walk())
             or any(f.get('states') for f in self.editable_flows)
             or new_logic(self.editable_flows))
@@ -504,14 +515,14 @@ class Project:
         """Serializa um retrato independente do documento, mantendo extensões."""
         result = {
             "format": FORMAT_NAME,
-            "format_version": 5 if self.uses_v5() else 4,
+            "format_version": max(6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4, self.format_version, 5 if self.uses_v5() else 4),
             "id": self.id,
             "name": self.name,
             "ui": self.root.to_dict(),
             "workflows": deepcopy(self.workflows),
             "metadata": deepcopy(self.metadata),
         }
-        if self.uses_v5():
+        if result["format_version"] >= 5:
             result.update(windows=[r.to_dict() for r in self.windows], states=deepcopy(self.states),
                 entry_window=self.entry_window or self.root.id, variables=deepcopy(self.variables),
                 map_layout=deepcopy(self.map_layout),application=deepcopy(self.application))
@@ -523,7 +534,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError("Este arquivo não é um projeto Makebench.")
         version = value.get("format_version")
-        if type(version) is not int or version not in (1, 2, 3, 4, FORMAT_VERSION):
+        if type(version) is not int or version not in (1, 2, 3, 4, 5, FORMAT_VERSION):
             raise ProjectError(
                 f"Versão de projeto não suportada: {version}. "
                 "Abra-o com uma versão compatível do Makebench."
@@ -534,7 +545,7 @@ class Project:
         root = Component.from_dict(value.get("ui"))
         if root.kind != ComponentKind.WINDOW:
             raise ProjectError("A interface precisa começar com uma janela.")
-        raw_windows=value.get('windows',[]) if version==5 else []
+        raw_windows=value.get('windows',[]) if version>=5 else []
         if not isinstance(raw_windows,list) or len(raw_windows)>128:raise ProjectError('Lista de janelas inválida (máximo 128).')
         windows = [Component.from_dict(item) for item in raw_windows]
         if any(item.kind != ComponentKind.WINDOW for item in windows):
@@ -548,15 +559,18 @@ class Project:
             raise ProjectError("A lista de fluxos de lógica é inválida.")
         if not isinstance(metadata, dict):
             raise ProjectError("Os metadados do projeto precisam ser um objeto.")
+        points=metadata.get('debug_breakpoints',[])
+        if not isinstance(points,list) or len(points)>10000 or any(not isinstance(point,dict) or (point.get('file')=='source' and (type(point.get('line')) is not int or not 1<=point['line']<=1000000)) or (point.get('file')=='block' and (not isinstance(point.get('block'),str) or not isinstance(point.get('flow'),str))) or point.get('file') not in {'block','source'} for point in points):
+            raise ProjectError('Lista de pontos de parada inválida.')
         project = cls(
             name=value["name"], id=value["id"], root=root,
             workflows=deepcopy(workflows), metadata=deepcopy(metadata), windows=windows,
-            states=deepcopy(value.get('states', {})) if version == 5 else {},
-            entry_window=value.get('entry_window') if version == 5 else None,
-            variables=deepcopy(value.get('variables', [])) if version == 5 else [],
-            map_layout=deepcopy(value.get('map_layout', {})) if version == 5 else {},
-            format_version=5 if version == 5 else 4,
-            application=deepcopy(value.get("application",{})) if version==5 else {},
+            states=deepcopy(value.get('states', {})) if version >= 5 else {},
+            entry_window=value.get('entry_window') if version >= 5 else None,
+            variables=deepcopy(value.get('variables', [])) if version >= 5 else [],
+            map_layout=deepcopy(value.get('map_layout', {})) if version >= 5 else {},
+            format_version=version if version >= 5 else 4,
+            application=deepcopy(value.get("application",{})) if version>=5 else {},
         )
         from .navigation import validate_navigation
         validate_navigation(project)

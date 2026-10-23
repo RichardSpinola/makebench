@@ -93,6 +93,10 @@ class MainWindow(StudioMixin, QMainWindow):
         self.run_action.setShortcut(QKeySequence("F5"))
         self.run_action.triggered.connect(self.run_project)
         run_menu.addAction(self.run_action)
+        self.debug_action=QAction('Depurar aplicativo',self);self.debug_action.setShortcut(QKeySequence('F6'));self.debug_action.triggered.connect(self.debug_project);run_menu.addAction(self.debug_action)
+        for title,shortcut,action in [('Continuar','F8','continue'),('Próximo passo','F10','step_over'),('Entrar na função','F11','step_in'),('Sair da função','Shift+F11','step_out')]:
+            command=QAction(title,self);command.setShortcut(QKeySequence(shortcut));command.triggered.connect(lambda _,action=action:self.debug_command(action));run_menu.addAction(command)
+
         help_menu = self.menuBar().addMenu("Aj&uda")
         self.new_action = QAction("Novo projeto", self)
         self.new_action.setShortcut(QKeySequence.StandardKey.New)
@@ -433,6 +437,8 @@ class MainWindow(StudioMixin, QMainWindow):
         interface_active = self.tabs.currentIndex() == 0
         home=hasattr(self,'home_page') and self.pages.currentWidget() is self.home_page
         active=self.runtime_window is not None and not self.runtime_window.session.closed
+        self.debug_action.setEnabled(not home and not self.project.metadata.get('empty_map'))
+        self.sync_breakpoints()
         self.run_action.setEnabled(not home and not self.project.metadata.get('empty_map'))
         self.run_action.setText('Reiniciar teste' if active else 'Testar aplicativo')
         self.run_action.setToolTip(self.run_action.text()+' · F5')
@@ -1080,6 +1086,10 @@ class MainWindow(StudioMixin, QMainWindow):
         window.locate_requested.connect(lambda error: self._locate_runtime_error(error, window))
         window.shutdown_finished.connect(self._runtime_stopped)
         window.destroyed.connect(lambda: self._runtime_destroyed(window))
+        self._debug_active=getattr(self,'_next_debug',False);self._next_debug=False
+        config={'enabled':self._debug_active,'breakpoints':self.breakpoints()}
+        if hasattr(window.session,'snapshot'):window.session.snapshot['debug']=config
+        else:window.debug_config=config
         self.monitor_runtime(window)
         window.show();window.start()
 
@@ -1146,5 +1156,6 @@ class MainWindow(StudioMixin, QMainWindow):
             self.statusBar().showMessage('Cancelando construção antes de fechar…',5000)
             QTimer.singleShot(100,self.close);event.ignore();return
         if hasattr(self,'map_panel'):self.map_panel.previews.shutdown()
+        if hasattr(self,'terminal_panel'):self.terminal_panel.surface.stop_terminal()
         self.clear_recovery()
         event.accept()

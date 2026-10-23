@@ -37,6 +37,7 @@ class GtkRuntime:
         self.project=project;self.source=source;self.read_asset=read_asset;self.root=Path(root).resolve();self.source_filename=source_filename
         diagnostics=generate(project,source).diagnostics
         if diagnostics:raise ProjectError('\n'.join(diagnostics))
+        self.debug_config={}
         self.observer=observer or (lambda value:None);self.windows={};self.views={};self.open_windows=set();self.states={};self.pending=[];self.current=project.entry_window or project.root.id
         self.process=None;self.task=None;self.admin=False;self.active=False;self.busy=True;self.stopping=False;self.lock=threading.Lock();self.dialogs=set()
         self.event_buttons={f['event']['component'] for f in project.editable_flows if f['event']['kind']=='click'}
@@ -61,7 +62,7 @@ class GtkRuntime:
         environment=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',PYTHONUNBUFFERED='1')
         package_root=str(Path(__file__).resolve().parents[2]);environment['PYTHONPATH']=package_root+os.pathsep+environment.get('PYTHONPATH','')
         self.process=subprocess.Popen([sys.executable,'-u','-m','makebench.runtime.worker'],cwd=self.root,env=environment,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,bufsize=0)
-        self.send({'project':self.project.to_dict(),'source':self.source,'root':str(self.root),'source_filename':str(self.source_filename or '<makebench-actions>')})
+        self.send({'project':self.project.to_dict(),'source':self.source,'root':str(self.root),'source_filename':str(self.source_filename or '<makebench-actions>'),'debug':self.debug_config})
         threading.Thread(target=self.read_worker,daemon=True).start()
         threading.Thread(target=self.read_channel,args=(self.process.stderr,'stderr'),daemon=True).start()
         self.emit('status',text='Iniciando GTK…')
@@ -115,7 +116,12 @@ class GtkRuntime:
         """Atende eventos neutros do worker exclusivamente na thread GTK."""
         if self.stopping:return
         kind=message.get('type')
-        if kind=='ready':self.active=True;self.set_busy(False);self.queue_event(self.current,'start');self.emit('ready')
+        if kind=='ready':
+            self.active=True
+            from makebench.terminal.components import start_components
+            for view in self.views.values():start_components(view.root,view.widgets,self.root)
+            self.set_busy(False);self.queue_event(self.current,'start');self.emit('ready')
+        elif kind=='debug':self.observer(message)
         elif kind=='busy':self.set_busy(True)
         elif kind=='done':self.set_busy(False);self.emit('done',**{k:v for k,v in message.items() if k!='type'});self.dispatch()
         elif kind=='log':self.output(message['channel'],message['text'])
@@ -166,7 +172,10 @@ class GtkRuntime:
             self.states[identifier]=root.properties.get('initial_state','@default');self.apply_state(identifier,self.states[identifier]);view.busy(self.busy,self.event_buttons)
         self.open_windows.add(identifier);self.windows[identifier].present()
         if close_current and self.current!=identifier:self.close_window(self.current,check_last=False)
-        if reset and queue_start:self.queue_event(identifier,'start')
+        if reset and queue_start:
+            from makebench.terminal.components import start_components
+            start_components(root,self.views[identifier].widgets,self.root)
+            self.queue_event(identifier,'start')
         self.emit('navigation',windows=sorted(self.open_windows),states=dict(self.states));return reset
 
     def apply_state(self,identifier,state):
@@ -192,6 +201,8 @@ class GtkRuntime:
     def close_window(self,identifier,check_last=True):
         """Fecha uma interface e encerra o aplicativo quando não resta outra."""
         if self.admin:raise ValueError('Aguarde a tarefa administrativa terminar.')
+        from makebench.terminal.components import stop_components
+        if identifier in self.views:stop_components(self.views[identifier].widgets)
         self.open_windows.discard(identifier)
         if identifier in self.windows:self.windows[identifier].set_visible(False)
         if check_last and not self.open_windows:self.GLib.idle_add(self.stop)
@@ -212,7 +223,11 @@ class GtkRuntime:
             if method=='run':self.run_task(r);return
             if method in {'ask','confirm','message'}:self.dialog(r);return
             result=None
-            if method=='go_state':self.apply_state(self.current,r['state'])
+            if method.startswith('terminal_'):
+                from makebench.terminal.components import terminal_request
+                view,key=self.locate(r.get('component'));view.widgets[key].terminal.root=self.root
+                result=terminal_request(view.widgets[key],method,r)
+            elif method=='go_state':self.apply_state(self.current,r['state'])
             elif method=='open_window':result={'reset':self.open_window(r['window'],r.get('close_current',False))}
             elif method=='close_window':self.close_window(self.current)
             else:
@@ -300,6 +315,8 @@ class GtkRuntime:
         if self.admin:self.emit('status',text='Aguarde a tarefa administrativa terminar.');return False
         if self.stopping:return False
         self.stopping=True;self.active=False
+        from makebench.terminal.components import stop_components
+        for view in self.views.values():stop_components(view.widgets)
         for dialog in list(self.dialogs):dialog.destroy()
         self.dialogs.clear();terminate_group(self.process);terminate_group(self.task)
         self.GLib.timeout_add(700,self.finish_stop);return False

@@ -95,7 +95,7 @@ class CodeToolsTests(unittest.TestCase):
         from makebench.editor.window import MainWindow
         window=MainWindow(Project.empty());window.recovery_timer.stop();window.show();window.drawer.show();window.drawer.setCurrentIndex(0);self.app.processEvents()
         try:
-            self.assertEqual([window.drawer.tabText(i) for i in range(window.drawer.count())],['Saída','Problemas','Script','Tarefas','Erro'])
+            self.assertEqual([window.drawer.tabText(i) for i in range(window.drawer.count())],['Saída','Problemas','Script','Tarefas','Erro','Terminal','Depurar'])
             window.add_output('stdout','saída real\n');window.add_output('stderr','aviso real\n');self.assertTrue(window.output_log.isVisible());self.assertIn('saída real',window.output_log.toPlainText())
             window.output_filter.setCurrentIndex(window.output_filter.findData('stderr'));self.assertIn('aviso real',window.output_log.toPlainText());self.assertNotIn('saída real',window.output_log.toPlainText())
             window.drawer.setCurrentIndex(2);self.assertTrue(window.script_editor.isVisible());window.drawer.setCurrentIndex(1);self.assertTrue(window.problems.isVisible())

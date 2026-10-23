@@ -21,6 +21,8 @@ def main():
         elif value['type']=='error':print(value['message'],file=sys.stderr,flush=True)
     runtime=GtkRuntime(project,source.text,lambda name:(path.parent/name).read_bytes(),args.working_directory or path.parent,args.source_filename or source.path,observe)
     if supervised:
+        config=path.parent/'debug.json'
+        if config.is_file():runtime.debug_config=json.loads(config.read_text(encoding='utf-8'))
         def commands():
             """Aceita somente comandos de supervisão no stdin privado do teste."""
             for line in sys.stdin:
@@ -32,6 +34,7 @@ def main():
             """Comandos de teste não carregam código Python adicional."""
             command=value.get('command')
             if command=='stop':runtime.stop()
+            elif command=='debug':runtime.send({'type':'debug',**{k:v for k,v in value.items() if k!='command'}})
             elif command=='raise':
                 for identifier in runtime.open_windows:runtime.windows[identifier].present()
             elif command=='click':runtime.queue_event(value['component'])

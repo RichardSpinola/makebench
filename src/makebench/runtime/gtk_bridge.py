@@ -12,10 +12,16 @@ from makebench.core.environment import gtk_support,GTK_HELP
 class GtkSession(QObject):
     """Sinais compatíveis com a gaveta de testes existente da bancada."""
     output=Signal(str,str);busy_changed=Signal(bool);error=Signal(dict);task_changed=Signal(dict)
+    debug_changed=Signal(dict)
     admin_changed=Signal(bool);stopped=Signal();ready=Signal();event_done=Signal(dict)
     def __init__(self,parent):
         """Somente armazena o estado observado do processo GTK."""
         super().__init__(parent);self.closed=True;self.active=False;self.busy=False;self.admin_active=False
+
+
+    def debug_command(self, action, **values):
+        """Encaminha comandos ao worker neutro através da ponte GTK."""
+        self.parent().command({'command':'debug','action':action,**values})
 
 
 class GtkRuntimeBridge(QObject):
@@ -35,11 +41,14 @@ class GtkRuntimeBridge(QObject):
             target=directory/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(read_asset(name))
         self.process=QProcess(self);env=QProcessEnvironment.systemEnvironment();env.insert('PYTHONPATH',str(Path(__file__).resolve().parents[2])+':'+env.value('PYTHONPATH'));self.process.setProcessEnvironment(env)
         self.process.setProgram(sys.executable);self.process.setArguments(['-u','-m','makebench.gtk_runtime.launcher',str(self.path),'--supervised','--working-directory',str(Path(root).resolve() if root else directory),'--source-filename',str(source_filename or directory/'project.actions.py')]);self.buffer=b'';self._stderr=b''
+        self.debug_config=None
         self.process.readyReadStandardOutput.connect(self.read);self.process.readyReadStandardError.connect(self.read_error)
         self.process.finished.connect(self.finished);self.process.errorOccurred.connect(self.process_error)
 
     def start(self):
         """Inicia o processo GTK explícito, mantendo o editor livre para responder."""
+        if self.debug_config:
+            (self.path.parent/'debug.json').write_text(json.dumps(self.debug_config),encoding='utf-8')
         self.session.closed=False;self.session.busy=True;self.session.busy_changed.emit(True);self.process.start()
 
     def command(self,value):
@@ -77,6 +86,7 @@ class GtkRuntimeBridge(QObject):
         elif kind=='busy':session.busy=value['value'];session.busy_changed.emit(session.busy)
         elif kind=='admin':session.admin_active=value['value'];session.admin_changed.emit(session.admin_active)
         elif kind=='task':session.task_changed.emit(value)
+        elif kind=='debug':session.debug_changed.emit(value)
         elif kind=='done':session.event_done.emit(value)
 
     def read_error(self):

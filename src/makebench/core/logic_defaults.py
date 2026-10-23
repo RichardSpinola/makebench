@@ -1,7 +1,7 @@
 """Ações e valores iniciais do modelo, sem dependência gráfica."""
 from .project import new_id
 
-OPS=[('log','Registrar na saída'),('message','Mostrar mensagem'),('set_text','Alterar texto'),('set_enabled','Habilitar componente'),('set_value','Alterar progresso'),('assign','Definir variável'),('call','Chamar função Python'),('script','Executar Bash'),('run','Executar programa'),('ask','Perguntar'),('confirm','Confirmar'),('go_state','Ir para estado'),('open_window','Abrir janela'),('close_window','Fechar janela'),('show_page','Mostrar página'),('if','Condição'),('repeat','Repetição')]
+OPS=[('terminal_start','Iniciar terminal'),('terminal_send','Enviar ao terminal'),('terminal_stop','Encerrar terminal'),('log','Registrar na saída'),('message','Mostrar mensagem'),('set_text','Alterar texto'),('set_enabled','Habilitar componente'),('set_value','Alterar progresso'),('assign','Definir variável'),('call','Chamar função Python'),('script','Executar Bash'),('run','Executar programa'),('ask','Perguntar'),('confirm','Confirmar'),('go_state','Ir para estado'),('open_window','Abrir janela'),('close_window','Fechar janela'),('show_page','Mostrar página'),('if','Condição'),('repeat','Repetição')]
 
 
 def literal(value=''):
@@ -18,6 +18,12 @@ def default_block(op,project,window):
         target=next((n for n in components if kinds is None or n.kind.value in kinds),None)
         if not target:raise ValueError('Insira um componente compatível antes de criar esta ação.')
         node['component']=target.id
+    if op.startswith('terminal_'):
+        target=next((n for n in components if n.kind.value=='terminal'),None)
+        if target is None:raise ValueError('Insira um componente Terminal nesta janela.')
+        node['component']=target.id
+        if op=='terminal_start':node.update(program=literal(''),arguments={'id':new_id('value'),'op':'list','items':[]})
+        if op=='terminal_send':node['value']=literal('help\n')
     if op=='set_enabled':node['value']=literal(True)
     if op=='set_value':node['value']=literal(50)
     if op=='assign':node.update(name='valor',scope='project')

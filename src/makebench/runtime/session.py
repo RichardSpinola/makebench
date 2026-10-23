@@ -21,6 +21,7 @@ class RuntimeSession(QObject):
     error=Signal(dict)
     event_done=Signal(dict)
     stopped=Signal()
+    debug_changed=Signal(dict)
     admin_changed=Signal(bool)
     task_changed=Signal(dict)
 
@@ -68,6 +69,10 @@ class RuntimeSession(QObject):
         if self.process.state()==QProcess.ProcessState.Running:
             self.process.write((json.dumps(value,ensure_ascii=True,allow_nan=False)+'\n').encode())
 
+    def debug_command(self, action, **values):
+        """Envia controle ao leitor independente do worker, inclusive durante diálogos."""
+        self.send({'type':'debug','action':action,**values})
+
     def reply(self, identifier, value=None, *, ok=True, cancelled=False, error=''):
         """Responde a uma requisição de UI ou tarefa externa."""
         self.send({'type':'response','id':identifier,'value':value,'ok':ok,'cancelled':cancelled,'error':error})
@@ -102,6 +107,7 @@ class RuntimeSession(QObject):
         elif kind=='busy':self.reported_error=False;self.busy=True;self.busy_changed.emit(True)
         elif kind=='done':
             self.busy=False;self.busy_changed.emit(False);self.event_done.emit(message)
+        elif kind=='debug':self.debug_changed.emit(message)
         elif kind=='log':self.output.emit(message['channel'],message['text'])
         elif kind=='error':self.reported_error=True;self.error.emit(message)
         elif kind=='request':

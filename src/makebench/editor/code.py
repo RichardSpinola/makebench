@@ -35,6 +35,18 @@ class LineNumbers(QWidget):
         """Reserva espaço conforme o número de dígitos das linhas."""
         return QSize(self.editor.number_width(),0)
 
+    def mousePressEvent(self, event):
+        """Alterna ponto de parada pela linha real, sem alterar o texto do documento."""
+        if getattr(self.editor,'breakpoints_enabled',False):
+            block=self.editor.firstVisibleBlock()
+            top=self.editor.blockBoundingGeometry(block).translated(self.editor.contentOffset()).top()
+            while block.isValid():
+                height=self.editor.blockBoundingRect(block).height()
+                if top <= event.position().y() < top+height:
+                    self.editor.breakpoint_requested.emit(block.blockNumber()+1);return
+                top+=height;block=block.next()
+        super().mousePressEvent(event)
+
     def paintEvent(self, event):
         """Pinta números alinhados às posições reais dos blocos de texto."""
         editor=self.editor; painter=QPainter(self)
@@ -44,6 +56,9 @@ class LineNumbers(QWidget):
         while block.isValid() and top <= event.rect().bottom():
             height=round(editor.blockBoundingRect(block).height())
             if block.isVisible() and top+height>=event.rect().top():
+                if number+1 in getattr(editor,'breakpoints',set()):
+                    painter.setBrush(QColor('#d34b4b'));painter.setPen(Qt.PenStyle.NoPen);painter.drawEllipse(2,top+3,9,9)
+                painter.setPen(editor.palette().placeholderText().color())
                 painter.drawText(0,top,self.width()-8,editor.fontMetrics().height(),Qt.AlignmentFlag.AlignRight,str(number+1))
             top+=height;number+=1;block=block.next()
 
@@ -54,10 +69,12 @@ from .code_tools import CodeTools
 class CodeEditor(CodeTools,QPlainTextEdit):
     """Apresenta Python e destaca a linha correspondente a um bloco."""
     origin_requested=Signal(int)
+    breakpoint_requested=Signal(int)
 
     def __init__(self, readonly=False, parent=None):
         """Configura fonte, recuo, margem e sintaxe sem habilitar execução."""
         super().__init__(parent)
+        self.breakpoints=set();self.breakpoints_enabled=False
         self.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.setReadOnly(readonly)
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)

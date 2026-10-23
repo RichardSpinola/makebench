@@ -154,6 +154,10 @@ def validate(project: Project) -> None:
             elif op in {"set_text", "set_enabled", "set_value"}:
                 target(value.get("component"), TEXT_KINDS if op == "set_text" else {ComponentKind.PROGRESS} if op == "set_value" else None)
                 expr("value")
+            elif op in {'terminal_start','terminal_send','terminal_stop'}:
+                target(value.get('component'), {ComponentKind.TERMINAL})
+                if op == 'terminal_start':expr('program');expr('arguments')
+                if op == 'terminal_send':expr('value')
             elif op == "show_page":
                 target(value.get("component"), {ComponentKind.PAGE})
             elif op in {'go_state', 'open_window', 'close_window'}:

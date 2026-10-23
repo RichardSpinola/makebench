@@ -113,6 +113,8 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
 
     def _ready(self):
         """Dispara início da janela uma vez, após carregar as funções no worker."""
+        from makebench.terminal.components import start_components
+        start_components(self.view.window_root,self.view.widgets,self.session.root)
         self.set_status('Aplicativo em execução.')
         self.queue_event(self.root_window_id,'start')
 
@@ -186,7 +188,11 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         identifier=request['id'];method=request['method']
         try:
             component=request.get('component');view,widget=self.widget_for(component)
-            if method=='read':
+            if method.startswith('terminal_'):
+                from makebench.terminal.components import terminal_request
+                if hasattr(widget,'terminal'):widget.terminal.root=self.session.root
+                self.session.reply(identifier,terminal_request(widget,method,request))
+            elif method=='read':
                 if widget is None:raise ValueError('O componente não existe.')
                 attribute=request['attribute']
                 if attribute=='text':value=widget.toPlainText() if isinstance(widget,QPlainTextEdit) else widget.text()
@@ -261,6 +267,8 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         """Interrompe instância e tarefas comuns sem tocar em tarefa administrativa."""
         if not self.session.stop():
             self.set_status('Aguarde a tarefa administrativa terminar para parar.');return False
+        from makebench.terminal.components import stop_components
+        for view in self.views.values():stop_components(view.widgets)
         self.set_status('Encerrando execução…');self.stop_button.setEnabled(False)
         for dialog in list(self.dialogs):dialog.reject()
         return True

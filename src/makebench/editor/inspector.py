@@ -78,6 +78,17 @@ class Inspector(QWidget):
             button=QPushButton('Escolher ou substituir imagem…');button.clicked.connect(lambda:self.image_requested.emit(node.id));self.fields.addRow(button)
             clear=QPushButton('Remover imagem');clear.setEnabled(bool(node.properties.get('source')));clear.clicked.connect(lambda:self.image_cleared.emit(node.id));self.fields.addRow(clear)
             self._text_field('Descrição acessível',node.id,'alt_text',node.properties.get('alt_text',''))
+        if node.kind==ComponentKind.TERMINAL:
+            self._text_field('Programa (vazio = shell)',node.id,'terminal_program',node.properties.get('terminal_program',''))
+            self._boolean_field('Iniciar ao executar o aplicativo',node.id,'terminal_autostart',node.properties.get('terminal_autostart',False))
+            import shlex
+            arguments=QLineEdit(shlex.join(node.properties.get('terminal_arguments',[])))
+            def change_arguments():
+                """Interpreta somente argv; nunca executa o texto das propriedades."""
+                try:values=shlex.split(arguments.text())
+                except ValueError:arguments.setToolTip('Aspas incompletas nos argumentos.');return
+                self.property_changed.emit(node.id,'terminal_arguments',values)
+            arguments.editingFinished.connect(change_arguments);arguments.setEnabled(not self.state_mode);self.fields.addRow('Argumentos',arguments)
         if node.kind==ComponentKind.PROGRESS:self._number_field('Progresso (%)',node.id,'value',node.properties.get('value',0),0,100)
         if node.kind==ComponentKind.PAGES:
             pages=QComboBox()

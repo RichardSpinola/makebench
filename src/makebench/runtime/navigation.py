@@ -25,6 +25,8 @@ class AppWindow(QMainWindow):
         if self.owner.session.closed:event.accept();return
         if self.owner.session.admin_active:
             self.owner.state.setText('Aguarde a tarefa administrativa terminar.');event.ignore();return
+        from makebench.terminal.components import stop_components
+        stop_components(self.owner.views[self.identifier].widgets)
         self.owner.open_windows.discard(self.identifier)
         self.hide();event.ignore()
         self.owner.stop_if_last()
@@ -85,12 +87,17 @@ class RuntimeNavigation:
         self.views[identifier].set_busy(self.session.busy)
         self.open_windows.add(identifier);window=self.app_windows[identifier];window.show();window.raise_()
         if close_current and self.current_window!=identifier:self.close_app_window(self.current_window,check_last=False)
-        if not was_open:self.queue_event(identifier,'start')
+        if not was_open:
+            from makebench.terminal.components import start_components
+            start_components(root,self.views[identifier].widgets,self.session.root)
+            self.queue_event(identifier,'start')
         return not was_open
 
     def close_app_window(self,identifier,check_last=True):
         """Fecha uma interface mantendo o controlador vivo até limpar a sessão."""
         if self.session.admin_active:raise ValueError('Aguarde a tarefa administrativa terminar.')
+        from makebench.terminal.components import stop_components
+        if identifier in self.views:stop_components(self.views[identifier].widgets)
         self.open_windows.discard(identifier)
         if identifier in self.app_windows:self.app_windows[identifier].hide()
         if check_last:self.stop_if_last()

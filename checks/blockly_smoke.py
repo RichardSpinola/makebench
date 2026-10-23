@@ -377,5 +377,21 @@ class BlocklyTests(unittest.TestCase):
             self.assertFalse(self.window.script_dirty())
             self.assertEqual(saved.workflows[0]['body'][0]['value']['id'],'text_1')
 
+    def test_20_terminal_operations_and_breakpoints_roundtrip(self):
+        """Terminais preservam ID/argv/entrada; o menu marca a origem sem executar."""
+        from makebench.core.logic_defaults import default_block
+        self.install_log('Antes');self.window.logic.flush()
+        terminal=self.window.project.add(self.window.project.root.id,ComponentKind.TERMINAL)
+        self.flow['body']=[default_block(op,self.window.project,self.window.project.root.id) for op in ('terminal_start','terminal_send','terminal_stop')]
+        expected=json.loads(json.dumps(self.flow['body']))
+        self.window._refresh();self.window.logic.sync(self.flow['id']);QTest.qWait(150)
+        self.assertTrue(self.window.logic.flush())
+        self.assertEqual(self.window.project.workflows[0]['body'],expected)
+        block=expected[0]['id']
+        self.js("bridge.toggleBreakpoint("+json.dumps(self.flow['id'])+","+json.dumps(block)+"); true")
+        QTest.qWait(100)
+        self.assertIn({'file':'block','flow':self.flow['id'],'block':block},self.window.breakpoints())
+        self.assertIn('ctx.terminal_start(',self.window.logic.generated.text)
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

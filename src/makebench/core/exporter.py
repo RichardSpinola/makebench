@@ -149,13 +149,14 @@ def export_source(project,source,read_asset,destination,progress=None,cancelled=
         target=stage/'makebench';target.mkdir()
         shutil.copy2(package_root/'__init__.py',target/'__init__.py')
         backend=project.application.get('backend','qt')
-        for module in (('core','gtk_runtime') if backend=='gtk' else ('core','runtime','ui')):
+        for module in (('core','gtk_runtime','terminal') if backend=='gtk' else ('core','runtime','ui','terminal')):
             (target/module).mkdir()
             for path in sorted((package_root/module).glob('*.py')):shutil.copy2(path,target/module/path.name)
         if backend=='gtk':
-            (target/'runtime').mkdir();shutil.copy2(package_root/'runtime'/'__init__.py',target/'runtime'/'__init__.py');shutil.copy2(package_root/'runtime'/'worker.py',target/'runtime'/'worker.py')
+            (target/'runtime').mkdir();shutil.copy2(package_root/'runtime'/'__init__.py',target/'runtime'/'__init__.py');shutil.copy2(package_root/'runtime'/'worker.py',target/'runtime'/'worker.py');shutil.copy2(package_root/'runtime'/'debugger.py',target/'runtime'/'debugger.py')
+        shutil.copytree(package_root/'notices',target/'notices')
         (stage/'run.py').write_text(GTK_RUNNER if backend=='gtk' else QT_RUNNER,encoding='utf-8')
-        dependencies=[*(['PyGObject>=3.50'] if backend=='gtk' else ['PySide6==6.11.2']),*project.application.get('packages',[])]
+        dependencies=['pyte==0.8.2',*(['PyGObject>=3.50'] if backend=='gtk' else ['PySide6==6.11.2']),*project.application.get('packages',[])]
         (stage/'requirements.txt').write_text('\n'.join(dependencies)+'\n',encoding='utf-8')
         (stage/'LEIA-ME.txt').write_text('Aplicativo exportado pelo Makebench.\nRequer Linux, Python 3.13+ e as dependências de requirements.txt. GTK exige também GTK4 e PyGObject do sistema; libadwaita é opcional.\nCrie um ambiente Python, instale requirements.txt e execute python3 run.py.\nIniciar executa as funções e scripts do projeto com suas permissões.\nO runtime acompanha o aplicativo; a supervisão do editor não aparece.\nProgramas externos e Polkit devem estar disponíveis no sistema de destino.\nDefina a licença do seu aplicativo antes de distribuí-lo publicamente.\n',encoding='utf-8')
         step(75,'Verificar fontes sem executá-las')

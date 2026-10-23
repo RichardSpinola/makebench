@@ -8,7 +8,7 @@ version = "0.7.0.dev1"
 description = "Editor visual de aplicativos Linux com Qt e Python"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["PySide6==6.11.2"]
+dependencies = ["PySide6==6.11.2", "pyte==0.8.2"]
 
 [project.scripts]
 makebench = "makebench.__main__:main"
@@ -17,4 +17,4 @@ makebench = "makebench.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "templates/*/*.json", "templates/*/*.py"]
+makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "notices/*", "templates/*/*.json", "templates/*/*.py"]

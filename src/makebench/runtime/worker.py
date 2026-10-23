@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import sys
 import traceback
+from .debugger import Debugger, DebugStopped, WorkerTransport
 
 from makebench.core.codegen import generate
 from makebench.core.project import Project
@@ -36,13 +37,14 @@ class Context:
         self.window_defaults = {}
         self.current_window = None
         self.sequence = 0
+        self.receive_response = None
 
     def request(self, method, **values):
         """Espera a resposta correspondente, abortando em cancelamento/falha."""
         self.sequence += 1
         identifier = self.sequence
         self.send({'type':'request','id':identifier,'method':method,**values})
-        reply = self.receive()
+        reply = self.receive_response(identifier) if self.receive_response else self.receive()
         if reply.get('type') != 'response' or reply.get('id') != identifier:
             raise RuntimeError('Resposta inesperada do aplicativo.')
         if reply.get('cancelled'):
@@ -50,6 +52,18 @@ class Context:
         if not reply.get('ok'):
             raise TaskError(reply.get('error', 'A tarefa falhou.'))
         return reply.get('value')
+
+    def terminal_start(self, component, program=None, arguments=None):
+        """Inicia PTY de um componente Terminal durante a execução explícita."""
+        return self.request('terminal_start',component=component,program=program,arguments=arguments or [])
+
+    def terminal_send(self, component, value):
+        """Envia entrada ao terminal; texto não é interpolado em outro comando."""
+        return self.request('terminal_send',component=component,value=str(value))
+
+    def terminal_stop(self, component):
+        """Encerra processos pertencentes ao terminal selecionado."""
+        return self.request('terminal_stop',component=component)
 
     def read(self, component, attribute):
         """Lê texto/seleção/progresso atuais, incluindo entradas alteradas pelo usuário."""
@@ -169,6 +183,7 @@ def main():
         return json.loads(line)
     sys.stdout=Output(send,'stdout');sys.stderr=Output(send,'stderr')
     context=Context(send,receive)
+    debugger=Debugger(send)
     generated=None; source_filename='<makebench-actions>'; flow_id=None
     def failure(exc):
         """Localiza erro em bloco gerado e/ou linha da função própria."""
@@ -188,6 +203,9 @@ def main():
         source=snapshot['source'];source_filename=snapshot.get('source_filename',source_filename)
         generated=generate(project,source)
         if generated.diagnostics:raise ValueError('\n'.join(generated.diagnostics))
+        debugger.configure(snapshot.get('debug',{}),source_filename,generated,context)
+        transport=WorkerTransport(receive,debugger)
+        context.receive_response=lambda identifier:transport.receive(response=identifier)
         root=Path(snapshot['root']).resolve();os.chdir(root);sys.path.insert(0,str(root))
         namespace={'__name__':'makebench_project_actions','__file__':source_filename}
         exec(compile(source,source_filename,'exec'),namespace)
@@ -198,20 +216,25 @@ def main():
             handlers[flow['id']]=compiled[f'on_event_{index}']
         send({'type':'ready'})
         while True:
-            message=receive()
+            message=transport.receive()
             if message.get('type')=='shutdown':break
             if message.get('type')!='event' or message.get('flow') not in handlers:continue
             context.current_window=message.get('window',project.root.id)
-            flow_id=message['flow'];send({'type':'busy','flow':flow_id})
+            flow_id=message['flow'];debugger.flow=flow_id
+            debugger.component=next(f['event']['component'] for f in project.workflows if f['id']==flow_id)
+            send({'type':'busy','flow':flow_id})
             outcome='success'
             try:
+                if debugger.enabled:sys.settrace(debugger.trace)
                 handlers[flow_id](context)
             except Cancelled as exc:
                 outcome='cancelled';send({'type':'log','channel':'status','text':str(exc)+'\n'})
             except Exception as exc:
                 outcome='error';failure(exc)
+            finally:
+                sys.settrace(None);debugger.last_frame=None
             send({'type':'done','flow':flow_id,'outcome':outcome})
-    except EOFError:
+    except (EOFError, DebugStopped):
         pass
     except BaseException as exc:
         failure(exc)

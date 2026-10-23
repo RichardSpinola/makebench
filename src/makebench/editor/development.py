@@ -214,7 +214,7 @@ class DevelopmentMixin:
     def search_block(self):
         """Pesquisa tipos disponíveis e insere um rascunho real no Blockly."""
         if not self.logic.ready:return
-        entries={'Mostrar mensagem':'mb_message','Registrar na saída':'mb_log','Condição se/senão':'mb_if','Repetir':'mb_repeat','Executar programa':'mb_run','Executar Bash':'mb_script','Perguntar':'mb_ask','Confirmar':'mb_confirm','Chamar função':'mb_call','Ir para estado':'mb_go_state','Abrir janela':'mb_open_window','Fechar janela':'mb_close_window','Definir variável':'mb_assign','Valor de variável':'mb_variable'}
+        entries={'Iniciar terminal':'mb_terminal_start','Enviar ao terminal':'mb_terminal_send','Encerrar terminal':'mb_terminal_stop','Mostrar mensagem':'mb_message','Registrar na saída':'mb_log','Condição se/senão':'mb_if','Repetir':'mb_repeat','Executar programa':'mb_run','Executar Bash':'mb_script','Perguntar':'mb_ask','Confirmar':'mb_confirm','Chamar função':'mb_call','Ir para estado':'mb_go_state','Abrir janela':'mb_open_window','Fechar janela':'mb_close_window','Definir variável':'mb_assign','Valor de variável':'mb_variable'}
         entries.update({'Texto':'text','Número':'math_number','Verdadeiro ou falso':'logic_boolean','Lista de valores':'lists_create_with','Texto de várias linhas':'mb_multiline','Alterar texto de componente':'mb_set_text','Habilitar componente':'mb_set_enabled','Alterar progresso':'mb_set_value','Mostrar página':'mb_show_page','Ler texto do componente':'mb_read_text','Ler seleção da caixa':'mb_read_checked','Ler progresso':'mb_read_value','Juntar textos':'mb_join','Comparar ou calcular':'mb_binary'})
         choice,ok=QInputDialog.getItem(self,'Buscar bloco','Digite para buscar',list(entries),0,True)
         if not ok:return

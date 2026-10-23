@@ -54,6 +54,9 @@ def create_control(node, read_asset, editing=False):
         case ComponentKind.PROGRESS:
             widget = QProgressBar()
             widget.setValue(node.properties.get("value", 0))
+        case ComponentKind.TERMINAL:
+            from makebench.terminal.qt import TerminalWidget
+            widget = TerminalWidget(editing=editing)
         case ComponentKind.OUTPUT:
             widget = QPlainTextEdit(text)
             widget.setReadOnly(True)

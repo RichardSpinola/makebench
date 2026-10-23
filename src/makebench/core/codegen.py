@@ -79,6 +79,12 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         emit(f"ctx.{op}({expression(node['value'])})", node, indent)
                     elif op.startswith("set_"):
                         emit(f"ctx.{op}({node['component']!r}, {expression(node['value'])})", node, indent)
+                    elif op == 'terminal_start':
+                        emit(f"ctx.terminal_start({node['component']!r}, {expression(node['program'])}, {expression(node['arguments'])})", node, indent)
+                    elif op == 'terminal_send':
+                        emit(f"ctx.terminal_send({node['component']!r}, {expression(node['value'])})", node, indent)
+                    elif op == 'terminal_stop':
+                        emit(f"ctx.terminal_stop({node['component']!r})", node, indent)
                     elif op == "show_page":
                         emit(f"ctx.show_page({node['component']!r})", node, indent)
                     elif op == 'go_state':

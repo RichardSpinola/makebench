@@ -65,6 +65,9 @@ class GtkView:
         elif k==ComponentKind.TEXT_INPUT:widget=Gtk.Entry(text=text,placeholder_text=p.get('placeholder',''))
         elif k==ComponentKind.CHECKBOX:widget=Gtk.CheckButton(label=text,active=p.get('checked',False))
         elif k==ComponentKind.PROGRESS:widget=Gtk.ProgressBar(show_text=True,fraction=p.get('value',0)/100)
+        elif k==ComponentKind.TERMINAL:
+            from makebench.terminal.gtk import create_terminal
+            widget=create_terminal()
         elif k==ComponentKind.OUTPUT:
             control=Gtk.TextView(editable=False,monospace=True,wrap_mode=Gtk.WrapMode.WORD_CHAR);control.get_buffer().set_text(text)
             widget=Gtk.ScrolledWindow(min_content_height=110);widget.set_child(control);self.widgets[node.id]=control

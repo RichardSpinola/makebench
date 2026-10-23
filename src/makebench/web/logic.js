@@ -25,6 +25,14 @@ const definitions = [
  {type:'mb_confirm',message0:'confirmar para continuar %1',args0:[{type:'input_value',name:'PROMPT'}],previousStatement:null,nextStatement:null,inputsInline:false,colour:180},
  {type:'mb_call',message0:'chamar função %1 com %2',args0:[{type:'field_input',name:'FUNCTION',text:'saudacao'},{type:'input_value',name:'VALUE'}],previousStatement:null,nextStatement:null,colour:290},
 ];
+for(const type of ['terminal_start','terminal_send','terminal_stop']) {
+ Blockly.Blocks['mb_'+type]={init(){
+   this.appendDummyInput().appendField({terminal_start:'iniciar terminal',terminal_send:'enviar ao terminal',terminal_stop:'encerrar terminal'}[type]).appendField(dropdown(['terminal']),'COMPONENT');
+   if(type==='terminal_start'){this.appendValueInput('PROGRAM').appendField('programa (vazio = shell)');this.appendValueInput('ARGUMENTS').appendField('argumentos');}
+   if(type==='terminal_send')this.appendValueInput('VALUE').appendField('entrada');
+   this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(20);
+ }};
+}
 const scopes=[['do projeto','project'],['desta janela','window'],['deste fluxo','local']];
 for(const type of ['mb_assign','mb_variable','mb_ask']) {
  const definition=definitions.find(d=>d.type===type);
@@ -75,6 +83,7 @@ const toolbox = {kind:'categoryToolbox',contents:[
  {kind:'category',name:'Texto',colour:160,contents:[block('text'),block('mb_multiline'),block('mb_join',{LEFT:value('text',{TEXT:'Olá, '}),RIGHT:value('text',{TEXT:'Linux'})})]},
  {kind:'category',name:'Eventos',colour:210,contents:[{kind:'label',text:'O evento atual fica no topo do fluxo.'},{kind:'button',text:'Conectar outro evento…',callbackKey:'MAKEBENCH_EVENT'}]},
  {kind:'category',name:'Tarefas',colour:20,contents:[block('mb_run',{PROGRAM:value('text',{TEXT:'uname'}),ARGUMENTS:emptyList()}),block('mb_script',{SOURCE:value('text',{TEXT:'printf "Olá, Linux\\n"'}),ARGUMENTS:emptyList()}),block('mb_log',{VALUE:value('text',{TEXT:'Tudo pronto'})}),block('mb_ask',{PROMPT:value('text',{TEXT:'Qual é o seu nome?'}),OPTIONS:emptyList()}),block('mb_confirm',{PROMPT:value('text',{TEXT:'Deseja continuar?'})})]},
+ {kind:'category',name:'Terminal',colour:20,contents:[block('mb_terminal_start',{PROGRAM:value('text',{TEXT:''}),ARGUMENTS:emptyList()}),block('mb_terminal_send',{VALUE:value('text',{TEXT:'help\n'})}),block('mb_terminal_stop')]},
  {kind:'category',name:'Funções próprias',colour:290,contents:[block('mb_call',{VALUE:value('text',{TEXT:'Linux'})})]}
 ]};
 
@@ -105,6 +114,7 @@ function compileWorkspace() {
    while(b) {
      if(!b.isEnabled()) throw Error('Bloco desativado: ative-o ou remova-o para gerar código.');
      const op=b.type.slice(3), n=base(b,op);
+     if(op.startsWith('terminal_')){n.component=b.getFieldValue('COMPONENT');if(op==='terminal_start'){n.program=expr(b.getInputTargetBlock('PROGRAM'));n.arguments=expr(b.getInputTargetBlock('ARGUMENTS'));}if(op==='terminal_send')n.value=expr(b.getInputTargetBlock('VALUE'));}
      if(['log','message','set_text','set_enabled','set_value','assign','call'].includes(op)) n.value=expr(b.getInputTargetBlock('VALUE'));
      if(['set_text','set_enabled','set_value','show_page'].includes(op)) n.component=b.getFieldValue('COMPONENT');
      if(op==='assign') {n.name=b.getFieldValue('NAME');n.scope=b.getFieldValue('SCOPE')||'project';if(n.scope==='project')delete n.scope;}
@@ -116,7 +126,7 @@ function compileWorkspace() {
      else if(op==='confirm') n.prompt=expr(b.getInputTargetBlock('PROMPT'));
      else if(op==='if') {n.condition=expr(b.getInputTargetBlock('CONDITION'));n.then=chain(b.getInputTargetBlock('THEN'));n.else=chain(b.getInputTargetBlock('ELSE'));}
      else if(op==='repeat') {n.count=expr(b.getInputTargetBlock('COUNT'));n.body=chain(b.getInputTargetBlock('BODY'));}
-     else if(!['log','message','set_text','set_enabled','set_value','show_page','assign','go_state','open_window','close_window'].includes(op)) throw Error('Operação desconhecida: ' + b.type);
+     else if(!['log','message','set_text','set_enabled','set_value','show_page','assign','go_state','open_window','close_window','terminal_start','terminal_send','terminal_stop'].includes(op)) throw Error('Operação desconhecida: ' + b.type);
      items.push(n); b=b.getNextBlock();
    }
    return items;
@@ -292,3 +302,9 @@ for(const type of ['mb_assign','mb_variable','mb_ask']) {
    this.appendDummyInput('VARIABLE_PICKER').appendField(picker,'VARIABLE_PICKER');
  };
 }
+
+// Marcas pertencem à IDE; não mudam a semântica dos blocos.
+Blockly.ContextMenuRegistry.registry.register({id:'makebench_breakpoint',scopeType:Blockly.ContextMenuRegistry.ScopeType.BLOCK,
+ displayText:()=> 'Alternar ponto de parada',preconditionFn:scope=>scope.block.type==='mb_event'?'hidden':'enabled',weight:1,
+ callback:scope=>{if(current)bridge.toggleBreakpoint(current.flow.id,scope.block.id);}});
+window.makebench.setBreakpoints=function(ids){if(workspace)for(const block of workspace.getAllBlocks(false))block.setWarningText(ids.includes(block.id)?'Ponto de parada':null,'makebench-breakpoint');};

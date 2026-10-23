@@ -24,6 +24,7 @@ class LogicBridge(QObject):
     documentChanged = Signal(str)
     update_received = Signal(str)
     block_selected = Signal(str, str)
+    breakpoint_requested = Signal(str,str)
     became_ready = Signal()
     failed = Signal(str)
     pending_received = Signal(str)
@@ -43,6 +44,11 @@ class LogicBridge(QObject):
     def selected(self, flow, block):
         """Relaciona a seleção de um bloco à origem no código gerado."""
         self.block_selected.emit(flow, block)
+
+    @Slot(str,str)
+    def toggleBreakpoint(self, flow, block):
+        """Solicita uma marcação de depuração por ID estável, sem executar o bloco."""
+        QTimer.singleShot(0,lambda:self.breakpoint_requested.emit(flow,block))
 
     @Slot(str)
     def pending(self, token):
@@ -64,6 +70,7 @@ class LogicBridge(QObject):
 
 class LogicPanel(QWidget):
     """Seleciona eventos, mantém a sessão Blockly e mostra Python correspondente."""
+    breakpoint_requested = Signal(str,str)
     add_requested = Signal(str)
     remove_requested = Signal(str)
     rename_requested = Signal(str, str)
@@ -223,6 +230,7 @@ class LogicPanel(QWidget):
         self.page.settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
         self.channel = QWebChannel(self.page)
         self.bridge = LogicBridge(self.channel)
+        self.bridge.breakpoint_requested.connect(self.breakpoint_requested)
         self.channel.registerObject('bridge', self.bridge)
         self.page.setWebChannel(self.channel)
         self.bridge.update_received.connect(self._receive)

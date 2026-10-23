@@ -9,6 +9,7 @@ COMPONENTS={
  'spacer':('layout','Ocupa espaço livre no layout.'),'separator':('layout','Separa visualmente grupos de controles.'),
  'label':('content','Texto exibido na interface.'),'image':('content','Imagem importada e salva junto do projeto.'),
  'button':('input','Dispara um evento de clique e suas ações.'),'text_input':('input','Recebe texto digitado pelo usuário.'),'checkbox':('input','Uma opção que pode ser marcada ou desmarcada.'),
+ 'terminal':('feedback','Terminal Linux interativo, com cores e teclado. A prévia não inicia processos.'),
  'progress':('feedback','Exibe um valor entre 0 e 100.'),'output':('feedback','Mostra mensagens e saída das tarefas.')}
 
 
