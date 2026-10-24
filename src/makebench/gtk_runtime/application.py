@@ -62,7 +62,8 @@ class GtkRuntime:
         environment=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',PYTHONUNBUFFERED='1')
         package_root=str(Path(__file__).resolve().parents[2]);environment['PYTHONPATH']=package_root+os.pathsep+environment.get('PYTHONPATH','')
         self.process=subprocess.Popen([sys.executable,'-u','-m','makebench.runtime.worker'],cwd=self.root,env=environment,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,bufsize=0)
-        self.send({'project':self.project.to_dict(),'source':self.source,'root':str(self.root),'source_filename':str(self.source_filename or '<makebench-actions>'),'debug':self.debug_config})
+        from makebench.core.source import source_files
+        self.send({'source_files':source_files(self.source),'project':self.project.to_dict(),'source':self.source,'root':str(self.root),'source_filename':str(self.source_filename or '<makebench-actions>'),'debug':self.debug_config})
         threading.Thread(target=self.read_worker,daemon=True).start()
         threading.Thread(target=self.read_channel,args=(self.process.stderr,'stderr'),daemon=True).start()
         self.emit('status',text='Iniciando GTK…')

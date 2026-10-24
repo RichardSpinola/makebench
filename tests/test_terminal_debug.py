@@ -55,9 +55,12 @@ class TerminalTests(unittest.TestCase):
             # Um filho recém-adotado pode existir brevemente como zumbi, mas não executar.
             status=Path(f'/proc/{child}/stat')
             for _ in range(100):
-                if not status.exists() or ') Z ' in status.read_text():break
+                try:
+                    if not status.exists() or ') Z ' in status.read_text():break
+                except (FileNotFoundError,ProcessLookupError):break
                 time.sleep(.01)
-            self.assertTrue(not status.exists() or ') Z ' in status.read_text())
+            try:self.assertTrue(not status.exists() or ') Z ' in status.read_text())
+            except (FileNotFoundError,ProcessLookupError):pass
 
     def test_history_bounded_and_cursor_addressing(self):
         """Saída extensa fica limitada e programas podem mover/apagar o cursor."""
@@ -96,7 +99,8 @@ class WorkerHarness:
             for line in self.process.stdout:
                 self.messages.put(json.loads(line))
         threading.Thread(target=read,daemon=True).start()
-        self.send({'project':project.to_dict(),'source':source,'source_filename':'project.actions.py','root':directory,'debug':{'enabled':True}})
+        from makebench.core.source import source_files
+        self.send({'source_files':source_files(source),'project':project.to_dict(),'source':source,'source_filename':'project.actions.py','root':directory,'debug':{'enabled':True}})
         self.until(lambda m:m['type']=='ready')
 
     def send(self,value):

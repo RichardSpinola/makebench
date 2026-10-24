@@ -29,7 +29,8 @@ class RuntimeSession(QObject):
         """Mantém snapshot e transporte; construção não inicia execução."""
         super().__init__(parent)
         self.project=project;self.root=Path(root)
-        self.snapshot={'project':project.to_dict(),'source':source,'root':str(self.root),'source_filename':str(source_filename)}
+        from makebench.core.source import source_files
+        self.snapshot={'source_files':source_files(source),'project':project.to_dict(),'source':source,'root':str(self.root),'source_filename':str(source_filename)}
         self.process=QProcess(self)
         self.process.setUnixProcessParameters(QProcess.UnixProcessFlag.CreateNewSession)
         environment=QProcessEnvironment.systemEnvironment()

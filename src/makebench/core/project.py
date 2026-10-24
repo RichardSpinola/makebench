@@ -13,7 +13,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 
-FORMAT_VERSION = 7
+FORMAT_VERSION = 8
 FORMAT_NAME = "makebench.project"
 
 
@@ -281,6 +281,7 @@ class Project:
     map_layout: dict[str, list[float]] = field(default_factory=dict)
     format_version: int = 4
     application: dict[str, Any] = field(default_factory=dict)
+    python_files: list[str] = field(default_factory=list)
 
     @property
     def editable_flows(self) -> list[dict[str, Any]]:
@@ -521,7 +522,7 @@ class Project:
         """Serializa um retrato independente do documento, mantendo extensões."""
         result = {
             "format": FORMAT_NAME,
-            "format_version": max(7 if any(has_graph(f) for f in self.workflows) else 4,6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4, self.format_version, 5 if self.uses_v5() else 4),
+            "format_version": max(8 if self.python_files else 4, 7 if any(has_graph(f) for f in self.workflows) else 4,6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4, self.format_version, 5 if self.uses_v5() else 4),
             "id": self.id,
             "name": self.name,
             "ui": self.root.to_dict(),
@@ -532,6 +533,7 @@ class Project:
             result.update(windows=[r.to_dict() for r in self.windows], states=deepcopy(self.states),
                 entry_window=self.entry_window or self.root.id, variables=deepcopy(self.variables),
                 map_layout=deepcopy(self.map_layout),application=deepcopy(self.application))
+        if self.python_files:result["python_files"]=list(self.python_files)
         return result
 
     @classmethod
@@ -540,7 +542,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError("Este arquivo não é um projeto Makebench.")
         version = value.get("format_version")
-        if type(version) is not int or version not in (1, 2, 3, 4, 5, 6, FORMAT_VERSION):
+        if type(version) is not int or version not in (1, 2, 3, 4, 5, 6, 7, FORMAT_VERSION):
             raise ProjectError(
                 f"Versão de projeto não suportada: {version}. "
                 "Abra-o com uma versão compatível do Makebench."
@@ -568,8 +570,13 @@ class Project:
         points=metadata.get('debug_breakpoints',[])
         if not isinstance(points,list) or len(points)>10000 or any(not isinstance(point,dict) or (point.get('file')=='source' and (type(point.get('line')) is not int or not 1<=point['line']<=1000000)) or (point.get('file')=='block' and (not isinstance(point.get('block'),str) or not isinstance(point.get('flow'),str))) or point.get('file') not in {'block','source'} for point in points):
             raise ProjectError('Lista de pontos de parada inválida.')
+        from .source import validate_manifest, validate_module_name
+        files=validate_manifest(value.get("python_files", []))
+        if files and version<8:raise ProjectError("Módulos Python requerem formato 8 ou posterior.")
+        for point in points:
+            if point.get("path", "@actions")!="@actions":validate_module_name(point["path"])
         project = cls(
-            name=value["name"], id=value["id"], root=root,
+            name=value["name"], id=value["id"], root=root, python_files=list(files),
             workflows=deepcopy(workflows), metadata=deepcopy(metadata), windows=windows,
             states=deepcopy(value.get('states', {})) if version >= 5 else {},
             entry_window=value.get('entry_window') if version >= 5 else None,

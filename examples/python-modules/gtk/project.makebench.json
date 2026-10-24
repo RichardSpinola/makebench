@@ -1,0 +1,453 @@
+{
+  "format": "makebench.project",
+  "format_version": 8,
+  "id": "project_177360766d85",
+  "name": "Fluxo com fios",
+  "ui": {
+    "id": "window_51b4f60d9c2b",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Fluxo com fios",
+      "width": 760,
+      "height": 480
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_ad90549e7f9e",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Execute o fluxo: três passos no terminal e uma segunda janela."
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "terminal_ab1d3a9f0a5a",
+        "kind": "terminal",
+        "layout": "vertical",
+        "properties": {
+          "terminal_program": "",
+          "terminal_arguments": [],
+          "terminal_autostart": false,
+          "code_name": "terminal",
+          "size_mode": {
+            "width": "fill",
+            "height": "fill"
+          }
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "button_a6ccf2386965",
+        "kind": "button",
+        "layout": "vertical",
+        "properties": {
+          "text": "Executar fluxo"
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_92b0cd60b0be",
+      "name": "Clique: Executar fluxo",
+      "event": {
+        "component": "window_51b4f60d9c2b",
+        "kind": "start"
+      },
+      "body": [],
+      "workspace": {},
+      "behavior_backups": [
+        {
+          "id": "flow_92b0cd60b0be",
+          "name": "Clique: Executar fluxo",
+          "event": {
+            "kind": "click",
+            "component": "button_a6ccf2386965"
+          },
+          "body": [],
+          "workspace": {}
+        }
+      ],
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "node_a83e9174b350",
+        "nodes": [
+          {
+            "id": "node_a83e9174b350",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "initial",
+            "op": "assign",
+            "parameters": {
+              "name": "passos",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "value": 0
+              }
+            }
+          },
+          {
+            "id": "terminal",
+            "op": "terminal_start",
+            "parameters": {
+              "component": "terminal_ab1d3a9f0a5a"
+            },
+            "inputs": {
+              "program": {
+                "value": "/bin/sh"
+              },
+              "arguments": {
+                "value": []
+              }
+            }
+          },
+          {
+            "id": "three",
+            "op": "constant",
+            "parameters": {
+              "value": 3
+            },
+            "inputs": {}
+          },
+          {
+            "id": "count",
+            "op": "variable",
+            "parameters": {
+              "name": "passos",
+              "scope": "project"
+            },
+            "inputs": {}
+          },
+          {
+            "id": "repeat",
+            "op": "repeat",
+            "parameters": {},
+            "inputs": {
+              "count": {
+                "node": "three",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "send",
+            "op": "terminal_send",
+            "parameters": {
+              "component": "terminal_ab1d3a9f0a5a"
+            },
+            "inputs": {
+              "value": {
+                "value": "printf 'PASSO\\n'\n"
+              }
+            }
+          },
+          {
+            "id": "plus",
+            "op": "binary",
+            "parameters": {
+              "operator": "+"
+            },
+            "inputs": {
+              "left": {
+                "node": "count",
+                "port": "value"
+              },
+              "right": {
+                "value": 1
+              }
+            }
+          },
+          {
+            "id": "increment",
+            "op": "assign",
+            "parameters": {
+              "name": "passos",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "node": "plus",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "call",
+            "op": "call",
+            "parameters": {
+              "function": "confirmar"
+            },
+            "inputs": {
+              "value": {
+                "node": "count",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "condition",
+            "op": "if",
+            "parameters": {},
+            "inputs": {
+              "condition": {
+                "node": "call",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "open",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_2d9b6a46e327",
+              "close_current": true
+            },
+            "inputs": {}
+          },
+          {
+            "id": "error",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Condição não atendida"
+              }
+            }
+          },
+          {
+            "id": "node_7453c5a51e5a",
+            "op": "assign",
+            "parameters": {
+              "name": "terminal_pid"
+            },
+            "inputs": {
+              "value": {
+                "node": "terminal",
+                "port": "value"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "node_a83e9174b350",
+            "out": "next",
+            "to": "initial"
+          },
+          {
+            "from": "initial",
+            "out": "next",
+            "to": "terminal"
+          },
+          {
+            "from": "terminal",
+            "out": "next",
+            "to": "node_7453c5a51e5a"
+          },
+          {
+            "from": "repeat",
+            "out": "body",
+            "to": "send"
+          },
+          {
+            "from": "repeat",
+            "out": "done",
+            "to": "call"
+          },
+          {
+            "from": "send",
+            "out": "next",
+            "to": "increment"
+          },
+          {
+            "from": "call",
+            "out": "next",
+            "to": "condition"
+          },
+          {
+            "from": "condition",
+            "out": "true",
+            "to": "open"
+          },
+          {
+            "from": "condition",
+            "out": "false",
+            "to": "error"
+          },
+          {
+            "from": "node_7453c5a51e5a",
+            "out": "next",
+            "to": "repeat"
+          }
+        ]
+      },
+      "graph_layout": {
+        "node_a83e9174b350": [
+          20,
+          100
+        ],
+        "initial": [
+          330,
+          100
+        ],
+        "terminal": [
+          640,
+          100
+        ],
+        "repeat": [
+          950,
+          100
+        ],
+        "send": [
+          1260,
+          0
+        ],
+        "increment": [
+          1570,
+          0
+        ],
+        "call": [
+          1260,
+          290
+        ],
+        "condition": [
+          1570,
+          290
+        ],
+        "open": [
+          1880,
+          240
+        ],
+        "error": [
+          1880,
+          450
+        ],
+        "three": [
+          640,
+          420
+        ],
+        "count": [
+          950,
+          600
+        ],
+        "plus": [
+          1260,
+          600
+        ]
+      },
+      "graph_comments": [
+        {
+          "id": "comment-main",
+          "text": "A ordem vem dos fios, não da posição.\nRepeat retorna ao corpo três vezes.\nO resultado da função própria alimenta a condição.",
+          "position": [
+            20,
+            450
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_23718f8ffd1b",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_2d9b6a46e327"
+      },
+      "body": [
+        {
+          "id": "close-qa",
+          "op": "close_window"
+        }
+      ],
+      "workspace": {}
+    }
+  ],
+  "metadata": {
+    "logic_version": 1
+  },
+  "windows": [
+    {
+      "id": "window_2d9b6a46e327",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Concluído"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_043c3560e917",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Condição atendida: três passos concluídos."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {},
+  "entry_window": "window_51b4f60d9c2b",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.qagtk",
+    "name": "Makebench QA GTK",
+    "version": "0.1.0",
+    "backend": "gtk",
+    "icon": "assets/graph.svg",
+    "packages": [
+      "packaging==25.0"
+    ]
+  },
+  "python_files": [
+    "makebench_user/__init__.py",
+    "makebench_user/calculations.py",
+    "makebench_user/checks.py"
+  ]
+}

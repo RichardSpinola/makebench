@@ -34,6 +34,7 @@ class Document:
     def save(self,path=None):
         """Preserva bytes/mtime do JSON sem edição, inclusive formatos antigos."""
         target=Path(path or self.path).resolve();self.assets.write_referenced(target.parent,self.project.asset_paths())
+        self.project.python_files=sorted(self.source.modules)
         self.source.write(target)
         if self.path!=target or self.project.to_dict()!=self.saved:save_project(self.project,target)
         self.path=target;self.assets.root=target.parent;self.saved=deepcopy(self.project.to_dict());self.source.mark_saved();self.history.mark_saved()
@@ -41,7 +42,7 @@ class Document:
     def recovery(self,path):
         """Grava snapshot inerte, incluindo texto ainda com erro de sintaxe e imagens."""
         path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
-        value={'project':self.project.to_dict(),'source':self.source.text,'path':str(self.path) if self.path else None,
+        value={'project':self.project.to_dict(),'source':self.source.text,'modules':getattr(self.source.text,'modules',{}),'path':str(self.path) if self.path else None,
             'assets':{name:base64.b64encode(self.assets.read(name)).decode() for name in self.project.asset_paths()}}
         temporary=path.with_suffix('.tmp');temporary.write_text(json.dumps(value,ensure_ascii=False),encoding='utf-8');os.replace(temporary,path)
 
@@ -49,7 +50,8 @@ class Document:
     def recover(cls,path):
         """Abre snapshot sem executar código nem substituir o projeto de origem."""
         value=json.loads(Path(path).read_text(encoding='utf-8'));doc=cls(Project.from_dict(value['project']))
-        doc.source.text=value['source'];doc.source.saved_text=value['source']+'\0'
+        from .source import SourceText
+        doc.source.text=SourceText(value['source'],value.get('modules',{}));doc.source.saved_text=value['source']+'\0'
         for name,data in value.get('assets',{}).items():
             AssetStore.inside(Path('/tmp/makebench-recovery'),name);doc.assets._cache[name]=base64.b64decode(data,validate=True)
         return doc

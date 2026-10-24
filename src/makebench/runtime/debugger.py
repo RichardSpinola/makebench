@@ -41,10 +41,11 @@ class Debugger:
         self.files = set(); self.breakpoints = set(); self.lines = {}; self.flow = None; self.component = None
         self.context = None; self.entry = True; self.last_location = None
 
-    def configure(self, config, source_filename, generated, context):
+    def configure(self, config, source_filename, generated, context, file_names=None):
         """Associa mapas do snapshot, sem aceitar avaliação ou fontes adicionais."""
         self.enabled = bool(config.get('enabled'))
-        self.files = {source_filename, '<makebench-generated>'}
+        self.file_names=file_names or {source_filename:'@actions'}
+        self.files = {*self.file_names, '<makebench-generated>'}
         for (flow,block),line in generated.lines.items(): self.lines.setdefault(line,(flow,block))
         self.block_lines=generated.lines
         self.context = context; self.command({'action':'breakpoints','items':config.get('breakpoints',[])})
@@ -54,7 +55,7 @@ class Debugger:
         action = message.get('action')
         with self.condition:
             if action == 'breakpoints':
-                self.breakpoints = {('source',item.get('line')) if item.get('file')=='source' else ('block',item.get('flow'),item.get('block')) for item in message.get('items',[]) if isinstance(item,dict)}
+                self.breakpoints = {('source',item.get('path','@actions'),item.get('line')) if item.get('file')=='source' else ('block',item.get('flow'),item.get('block')) for item in message.get('items',[]) if isinstance(item,dict)}
             elif action == 'pause': self.pause_requested = True
             elif action == 'stop': self.stopping = True; self.paused = False
             elif action in {'continue','step_over','step_in','step_out'}:
@@ -79,7 +80,7 @@ class Debugger:
                 preceding=[(number,key[1]) for key,number in self.block_lines.items() if key[0]==self.flow and number<=frame.f_lineno]
                 if preceding:block=max(preceding,key=lambda item:item[0])[1]
             return {'flow':flow,'block':block,'line':frame.f_lineno}
-        return {'flow':self.flow,'source_line':frame.f_lineno}
+        return {'flow':self.flow,'source_line':frame.f_lineno,'source_file':self.file_names[frame.f_code.co_filename]}
 
     def snapshot(self, frame, reason):
         """Captura pilha e dados limitados; nenhuma expressão é avaliada."""
@@ -121,7 +122,7 @@ class Debugger:
         generated = frame.f_code.co_filename == '<makebench-generated>'
         if generated and frame.f_lineno not in self.lines: return self.trace
         location = self.location(frame); depth = self.frame_depth(frame)
-        point = ('block',location.get('block')) if generated else ('source',frame.f_lineno)
+        point = ('block',location.get('block')) if generated else ('source',location.get('source_file','@actions'),frame.f_lineno)
         hit = any(item[0]=='block' and (item[1] is None or item[1]==self.flow) and self.block_lines.get((self.flow,item[2]))==frame.f_lineno for item in self.breakpoints) if generated else point in self.breakpoints
         step = self.mode == 'step_in' or (self.mode == 'step_over' and depth<=self.depth) or (self.mode == 'step_out' and depth<self.depth)
         if self.entry or hit or step:

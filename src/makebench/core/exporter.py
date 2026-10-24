@@ -67,6 +67,8 @@ def verify(project,source,read_asset):
                 if ET.fromstring(data).tag.split('}')[-1]!='svg':raise ValueError('O arquivo não é SVG.')
             else:raise ValueError('Use um ícone PNG ou SVG.')
         except (OSError,ValueError,ProjectError,ET.ParseError) as exc:add('error','Ícone inválido: '+str(exc),'icon')
+    from .source import source_files, ENTRY_FILE
+    if set(source_files(source))-{ENTRY_FILE}!=set(project.python_files):add('error','O manifesto e os módulos não correspondem. Reabra o projeto para revisar os arquivos.','python')
     for message in generate(project,source).diagnostics:add('error',message,'logic')
     for name in project.asset_paths():
         try:read_asset(name)
@@ -154,6 +156,12 @@ def export_source(project,source,read_asset,destination,progress=None,cancelled=
         step(5,'Preparar arquivos')
         (stage/'project.makebench.json').write_text(json.dumps(project.to_dict(),ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         (stage/'project.actions.py').write_text(source,encoding='utf-8')
+        from .source import source_files, ENTRY_FILE
+        files=source_files(source)
+        if set(files)-{ENTRY_FILE}!=set(project.python_files):raise ProjectError('O manifesto e os módulos não correspondem.')
+        for name,text in files.items():
+            if name!=ENTRY_FILE:
+                target=stage/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text,encoding='utf-8')
         (stage/'gerado.py').write_text(generate(project,source).text,encoding='utf-8')
         for name in sorted(project.asset_paths()):
             step(20,'Copiar recurso '+name);path=stage/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(read_asset(name))

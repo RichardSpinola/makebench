@@ -200,16 +200,16 @@ def main():
     sys.stdout=Output(send,'stdout');sys.stderr=Output(send,'stderr')
     context=Context(send,receive)
     debugger=Debugger(send)
-    generated=None; source_filename='<makebench-actions>'; flow_id=None
+    generated=None; source_filename='<makebench-actions>'; flow_id=None; file_names={}
     def failure(exc):
         """Localiza erro em bloco gerado e/ou linha da função própria."""
-        line=source_line=None
+        line=source_line=None;source_file=None
         for frame in traceback.extract_tb(exc.__traceback__):
             if frame.filename=='<makebench-generated>':line=frame.lineno
-            if frame.filename==source_filename:source_line=frame.lineno
+            if frame.filename in file_names or frame.filename==source_filename:source_line=frame.lineno;source_file=file_names.get(frame.filename,'@actions')
         block=next((block for (flow,block),number in (generated.lines.items() if generated else []) if flow==flow_id and number==line),None)
         if block is None:block=context.graph_node
-        send({'type':'error','message':f'{type(exc).__name__}: {exc}', 'flow':flow_id,'block':block,'line':line,'source_line':source_line,'traceback':traceback.format_exc()})
+        send({'type':'error','message':f'{type(exc).__name__}: {exc}', 'flow':flow_id,'block':block,'line':line,'source_line':source_line,'source_file':source_file,'traceback':traceback.format_exc()})
     try:
         snapshot=receive()
         project=Project.from_dict(snapshot['project'])
@@ -218,10 +218,17 @@ def main():
             scope[variable['name']]=variable.get('initial')
         context.window_defaults=deepcopy(context.window_scopes)
         source=snapshot['source'];source_filename=snapshot.get('source_filename',source_filename)
+        from makebench.core.source import SourceText
+        from makebench.core.source_runtime import SnapshotImporter
+        modules={name:text for name,text in snapshot.get('source_files',{}).items() if name!='@actions'}
+        if set(modules)!=set(project.python_files):raise ValueError('O snapshot não contém todos os módulos declarados.')
+        importer=SnapshotImporter(modules,Path(snapshot['root']).resolve());importer.install()
+        file_names={source_filename:'@actions',**importer.filenames}
+        source=SourceText(source,modules)
         generated=generate(project,source)
         if generated.diagnostics:raise ValueError('\n'.join(generated.diagnostics))
         context.debugger=debugger
-        debugger.configure(snapshot.get('debug',{}),source_filename,generated,context)
+        debugger.configure(snapshot.get('debug',{}),source_filename,generated,context,file_names)
         transport=WorkerTransport(receive,debugger)
         context.receive_response=lambda identifier:transport.receive(response=identifier)
         root=Path(snapshot['root']).resolve();os.chdir(root);sys.path.insert(0,str(root))

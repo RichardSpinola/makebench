@@ -27,6 +27,12 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
     functions, syntax_error = function_names(source)
     if syntax_error:
         result.diagnostics.append(syntax_error)
+    from .source import source_files, ENTRY_FILE
+    import ast
+    for filename,text in source_files(source).items():
+        if filename!=ENTRY_FILE:
+            try:ast.parse(text)
+            except (SyntaxError,ValueError) as exc:result.diagnostics.append(filename+": "+str(exc))
     if not editable(project):
         result.diagnostics.append("Fluxos reservados de outra versão foram preservados sem conversão.")
     else:

@@ -38,6 +38,10 @@ class GtkRuntimeBridge(QObject):
         self.temp=tempfile.TemporaryDirectory(prefix='makebench-gtk-');directory=Path(self.temp.name)
         self.path=directory/'project.makebench.json';self.path.write_text(json.dumps(project.to_dict(),ensure_ascii=False),encoding='utf-8')
         (directory/'project.actions.py').write_text(source,encoding='utf-8')
+        from makebench.core.source import source_files, ENTRY_FILE
+        for name,text in source_files(source).items():
+            if name!=ENTRY_FILE:
+                target=directory/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text,encoding='utf-8')
         for name in project.asset_paths():
             target=directory/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(read_asset(name))
         self.process=QProcess(self);env=QProcessEnvironment.systemEnvironment();env.insert('PYTHONPATH',str(Path(__file__).resolve().parents[2])+':'+env.value('PYTHONPATH'));self.process.setProcessEnvironment(env)
