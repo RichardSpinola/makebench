@@ -96,6 +96,8 @@ class EditorPreferences(SettingsShell):
             shortcut=QLabel(action.shortcut().toString() or 'Sem atalho');self.row(group,action.text().replace('&','').replace('…',''),shortcut)
         page=self.add_page('Ambiente');group=self.group(page,'Diagnóstico do ambiente');self.report=QPlainTextEdit(diagnostic(window));self.report.setReadOnly(True);self.report.setMinimumHeight(300);group.addWidget(self.report)
         copy=QPushButton('Copiar relatório');copy.clicked.connect(lambda:QApplication.clipboard().setText(self.report.toPlainText()));group.addWidget(copy)
+        page=self.add_page('Plugins');group=self.group(page,'Plugins','Suporte planejado para uma próxima etapa.')
+        label=QLabel('Este espaço será usado para gerenciar extensões do Makebench. A instalação e a execução de plugins ainda não estão disponíveis.');label.setWordWrap(True);group.addWidget(label)
         page=self.add_page('Sobre');group=self.group(page,'Makebench '+__version__)
         label=QLabel('Editor visual de aplicativos Linux. Sem conta, servidor ou IA em execução.\n\nPySide6/Qt: LGPL/GPL/comercial. Blockly 13.4.0: Apache-2.0. Backend GTK opcional: GTK4 e PyGObject (LGPL), libadwaita opcional (LGPL). Símbolos de reserva são vetores próprios.\n\nA licença do Makebench ainda precisa ser definida pelo autor.');label.setWordWrap(True);group.addWidget(label)
         documentation=QPushButton('Abrir checklist de validação');documentation.clicked.connect(lambda:open_checklist(window));group.addWidget(documentation)
@@ -138,7 +140,7 @@ def apply_preferences(window):
     """Aplica tema, código, recuperação e comportamento aos widgets existentes."""
     theme=manager();theme.mode=preference('appearance/theme');theme.accent='system';theme.scale=preference('appearance/scale');theme.reduce_motion=preference('appearance/reduce_motion');theme.apply()
     font=QFont(preference('editor/code_font'),preference('editor/code_size'));font.setStyleHint(QFont.StyleHint.Monospace)
-    for editor in (window.source_editor,window.generated_editor,window.logic.code,window.script_editor):
+    for editor in (window.source_editor,window.generated_editor,window.logic.code,window.script_editor,*getattr(window,"module_editors",{}).values()):
         editor.setFont(font);editor.setTabStopDistance(editor.fontMetrics().horizontalAdvance(' ')*4);editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth if preference('editor/wrap') else QPlainTextEdit.LineWrapMode.NoWrap)
     interval=preference('editor/recovery')
     if interval:window.recovery_timer.setInterval(interval*1000);window.recovery_timer.start()

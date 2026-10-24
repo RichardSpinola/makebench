@@ -5,6 +5,16 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication
 
 PATHS={
+    'edit':'<path d="m4 16 12-12 4 4L8 20H4zM13 7l4 4"/>',
+    'align-left':'<path d="M4 3v18M8 5h12v5H8zM8 14h8v5H8z"/>',
+    'align-right':'<path d="M20 3v18M4 5h12v5H4zM8 14h8v5H8z"/>',
+    'align-center':'<path d="M12 2v20M4 5h16v4H4zM7 15h10v4H7z"/>',
+    'align-top':'<path d="M3 4h18M5 8h5v12H5zM14 8h5v8h-5z"/>',
+    'align-bottom':'<path d="M3 20h18M5 4h5v12H5zM14 8h5v8h-5z"/>',
+    'width':'<path d="M3 4v16M21 4v16M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/>',
+    'height':'<path d="M4 3h16M4 21h16M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>',
+    'distribute':'<path d="M3 3v18M21 3v18M9 6h6v12H9zM3 12h6M15 12h6"/>',
+
     'zoom-in':'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6M10 7v6"/>',
     'zoom-out':'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6"/>',
     'fit':'<path d="M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6M7 7h10v10H7z"/>',
