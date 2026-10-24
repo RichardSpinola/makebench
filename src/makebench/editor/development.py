@@ -30,7 +30,7 @@ class DevelopmentMixin:
         self.function_outline=QListWidget();self.function_outline.setAccessibleName('Funções do arquivo e usos nos blocos')
         self.function_outline.itemActivated.connect(self.open_function)
         self.function_outline.itemClicked.connect(self.open_function)
-        pane=QWidget();pl=QVBoxLayout(pane);pl.setContentsMargins(4,4,4,4);pl.addWidget(QLabel('Funções do projeto'));self.function_search=QLineEdit();self.function_search.setPlaceholderText('Filtrar funções…');self.function_search.setClearButtonEnabled(True);self.function_search.textChanged.connect(self.filter_outline);pl.addWidget(self.function_search);pl.addWidget(self.function_outline)
+        pane=QWidget();pl=QVBoxLayout(pane);pl.setContentsMargins(4,4,4,4);pl.addWidget(QLabel('Símbolos do arquivo'));self.function_search=QLineEdit();self.function_search.setPlaceholderText('Filtrar funções…');self.function_search.setClearButtonEnabled(True);self.function_search.textChanged.connect(self.filter_outline);pl.addWidget(self.function_search);pl.addWidget(self.function_outline)
         add=QPushButton('+ Nova função');add.clicked.connect(self.new_function);pl.addWidget(add)
         splitter=QSplitter();splitter.setHandleWidth(4);splitter.addWidget(self.code_files);splitter.addWidget(pane);splitter.setSizes([900,260])
         index=layout.indexOf(old);layout.removeWidget(old);old.deleteLater();layout.insertWidget(index,splitter,1)
@@ -71,6 +71,7 @@ class DevelopmentMixin:
         self.logic.layout().insertWidget(1,commands)
         # Realce Bash no editor da gaveta; sua aplicação continua explícita.
         self.script_editor.highlighter.language='bash';self.script_editor.highlighter.rehighlight()
+        self.install_code_workspace()
 
     def change_flow_filter(self,flow_id,states):
         """Altera somente o filtro, com validação de sobreposição e histórico."""
@@ -88,11 +89,12 @@ class DevelopmentMixin:
     def sync_outline(self):
         """Lê assinaturas e docstrings com AST; arquivos inválidos continuam editáveis."""
         if not hasattr(self,'function_outline'):return
-        signature=(self.source_editor.toPlainText(),json.dumps(self.project.workflows,sort_keys=True))
+        editor=self.active_code_editor() if hasattr(self,'module_editors') else self.source_editor
+        signature=(id(editor),editor.toPlainText(),json.dumps(self.project.workflows,sort_keys=True))
         if signature==getattr(self,'_outline_signature',None):return
         self._outline_signature=signature
         self.function_outline.clear()
-        try:tree=ast.parse(self.source_editor.toPlainText())
+        try:tree=ast.parse(editor.toPlainText())
         except (SyntaxError,ValueError):return
         def uses(value,name):
             """Conta referências estáticas sem importar funções Python."""
@@ -103,14 +105,14 @@ class DevelopmentMixin:
             if isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef,ast.ClassDef)):
                 count=sum(uses(f.get('graph') if f.get('editor')=='nodes' else f.get('body'),node.name) for f in self.project.workflows)
                 signature='classe '+node.name if isinstance(node,ast.ClassDef) else node.name+'('+', '.join(a.arg for a in node.args.args)+')'
-                item=QListWidgetItem(signature+f' · {count} uso(s)')
+                item=QListWidgetItem(signature+(f' · {count} bloco(s)' if editor is self.source_editor else ''))
                 item.setData(Qt.ItemDataRole.UserRole,node.lineno);item.setToolTip(ast.get_docstring(node) or 'Sem descrição.')
                 self.function_outline.addItem(item)
         self.filter_outline()
 
     def update_code_position(self,_index=None):
         """Informa linha e coluna no arquivo ativo sem roubar foco nem alterar o texto."""
-        editor=self.generated_editor if self.code_files.currentIndex()==0 else self.source_editor;cursor=editor.textCursor()
+        editor=self.active_code_editor() if hasattr(self,'module_editors') else self.generated_editor if self.code_files.currentIndex()==0 else self.source_editor;cursor=editor.textCursor()
         self.code_position.setText(f'Linha {cursor.blockNumber()+1} · Coluna {cursor.positionInBlock()+1}')
 
     def filter_outline(self,_text=None):
@@ -122,7 +124,7 @@ class DevelopmentMixin:
 
     def open_function(self,item):
         """Localiza a definição sem executar o arquivo."""
-        self.code_files.setCurrentIndex(1);self.source_editor.show_line(item.data(Qt.ItemDataRole.UserRole))
+        self.active_code_editor().show_line(item.data(Qt.ItemDataRole.UserRole))
 
     def new_function(self):
         """Insere uma definição independente, preservando todo o texto próprio."""
@@ -131,12 +133,13 @@ class DevelopmentMixin:
         import keyword
         if not name.isidentifier() or keyword.iskeyword(name) or name.startswith('_'):
             self._show_error('Use um nome Python válido, sem espaços e sem iniciar por sublinhado.');return
-        try:names=[n.name for n in ast.parse(self.source.text).body if isinstance(n,ast.FunctionDef)]
+        editor=self.active_code_editor()
+        if editor.isReadOnly():self.code_files.setCurrentIndex(1);editor=self.source_editor
+        try:names=[n.name for n in ast.parse(editor.toPlainText()).body if isinstance(n,ast.FunctionDef)]
         except SyntaxError:self._show_error('Corrija a sintaxe antes de inserir uma função pelo assistente.');return
         if name in names:self._show_error('Já existe uma função com esse nome.');return
-        self.code_files.setCurrentIndex(1)
-        self.source_editor.appendPlainText('\n\ndef '+name+'(ctx, valor):\n    """Descreva o comportamento, a entrada e o resultado desta função."""\n    pass\n')
-        self.source_editor.show_line(self.source_editor.blockCount()-2)
+        editor.appendPlainText('\n\ndef '+name+'(ctx, valor):\n    """Descreva o comportamento, a entrada e o resultado desta função."""\n    pass\n')
+        editor.show_line(editor.blockCount()-2)
 
     def sync_variables(self):
         """Acrescenta dados por escopo sem converter nomes em código Python."""

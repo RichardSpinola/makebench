@@ -9,6 +9,7 @@ from .commands import CommandPalette, register
 from .theme import icon, manager
 
 
+from .code_workspace import CodeWorkspaceMixin
 from .projects import ProjectMixin
 from .navigation import NavigationMixin
 from .designer import DesignerMixin
@@ -17,7 +18,7 @@ from .execution import ExecutionMixin
 from .resources import ResourceMixin
 
 
-class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin, ExecutionMixin, ResourceMixin):
+class StudioMixin(CodeWorkspaceMixin, ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin, ExecutionMixin, ResourceMixin):
     """Adapta as vistas existentes sem duplicar documento, geração ou execução."""
 
     def install_studio(self):
@@ -243,17 +244,17 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
 
     def sync_problems(self):
         """Concentra diagnósticos estáticos com vínculo ao fluxo ou à linha."""
+        if not hasattr(self,"code_index"):return
         import json
-        signature=(self.source.text,json.dumps(self.project.workflows,sort_keys=True),tuple((r.id,r.properties.get('title')) for r in self.project.roots),self.project.entry_window)
+        from makebench.core.source import source_signature
+        signature=(source_signature(self.source.text),json.dumps(self.project.workflows,sort_keys=True),tuple((r.id,r.properties.get('title')) for r in self.project.roots),self.project.entry_window)
         if signature==getattr(self,'_problems_signature',None):return
         self._problems_signature=signature
         self.problems.clear();self._problem_targets=[]
         import ast
-        self.source_editor.mark_syntax_error()
-        try:ast.parse(self.source.text)
-        except (SyntaxError,ValueError) as exc:
-            self.source_editor.mark_syntax_error(getattr(exc,"lineno",1),str(exc))
-            self._add_problem('Funções Python: '+str(exc),{'source_line':getattr(exc,'lineno',1)})
+        self.refresh_code_index()
+        for error in self.code_index.errors:
+            self._add_problem(f"{error['file']}:{error['line']}:{error['column']} · {error['message']}",{'source_file':error['file'],'source_line':error['line'],'column':error['column']})
         from makebench.core.logic import function_names
         names=set(function_names(self.source.text)[0])
         def visit(value,flow):
@@ -291,7 +292,7 @@ class StudioMixin(ProjectMixin, NavigationMixin, DesignerMixin, DevelopmentMixin
         if not target:return
         if target.get('component'):self.navigate_to_item('component',target['component'])
         elif target.get('source_line'):
-            self.set_mode('Código');self.code_files.setCurrentIndex(1);self.source_editor.show_line(target['source_line'])
+            self.open_code_file(target.get('source_file','@actions'),target['source_line'],target.get('column',1))
         elif target.get('flow'):
             self.navigate_to_item('flow',target['flow'])
             if target.get('block'):self.logic.focus_block(target['flow'],target['block'])

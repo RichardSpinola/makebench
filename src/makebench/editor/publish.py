@@ -86,7 +86,8 @@ class PublishPanel(QWidget):
         selected=editor_project() if is_editor else self.window.project
         self.edit_application_button.setVisible(not is_editor)
         app=selected.application;self.summary.setText((app.get('name') or self.window.project.name)+' · '+(app.get('version') or 'Sem versão')+' · '+app.get('backend','qt').upper())
-        key=self.format.currentData();signature=(self.window.project.id,self.window.history._index,self.window.source.text,key,self.recipe_only.isChecked(),self.environment.currentData(),is_editor)
+        from makebench.core.source import source_signature
+        key=self.format.currentData();signature=(self.window.project.id,self.window.history._index,source_signature(self.window.source.text),key,self.recipe_only.isChecked(),self.environment.currentData(),is_editor)
         if signature!=getattr(self,'_check_signature',None):
             self._check_signature=signature;self.checks.clear();self.checks.hide();self.check_hint.show();self.stages.setText('1 Formato  →  2 Verificação  →  3 Construção  →  4 Resultado');self.result.clear();self.open_folder.hide();self.copy_path.hide()
         name,tool,_=FORMATS[key];available=build_tools().get(tool) if tool else True;managed=ready(selected,is_editor);busy=bool(self.job and self.job.isRunning())

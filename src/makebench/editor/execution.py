@@ -52,7 +52,8 @@ class ExecutionMixin:
         """Compara código e documento do snapshot, excluindo marcas de depuração."""
         import hashlib,json
         data=self.project.to_dict();data['metadata'].pop('debug_breakpoints',None)
-        return hashlib.sha256((json.dumps(data,sort_keys=True)+self.source.text).encode()).hexdigest()
+        from makebench.core.source import source_signature
+        return hashlib.sha256((json.dumps(data,sort_keys=True)+repr(source_signature(self.source.text))).encode()).hexdigest()
 
     def monitor_runtime(self,window):
         """Conecta um processo real antes de seu início explícito."""
@@ -90,9 +91,9 @@ class ExecutionMixin:
         """Lê marcas declarativas do projeto, sem executá-las ao abrir."""
         return self.project.metadata.get('debug_breakpoints',[])
 
-    def toggle_source_breakpoint(self,line):
+    def toggle_source_breakpoint(self,line,path='@actions'):
         """Alterna uma linha própria e atualiza o worker se houver depuração ativa."""
-        self._toggle_breakpoint({'file':'source','line':line})
+        self._toggle_breakpoint({'file':'source','line':line,**({'path':path} if path!='@actions' else {})})
 
     def toggle_generated_breakpoint(self,line):
         """Resolve linha gerada para o ID original em vez de armazenar linha instável."""
@@ -116,7 +117,9 @@ class ExecutionMixin:
     def sync_breakpoints(self):
         """Atualiza margens sem reconstruir o código nem os controles do Designer."""
         if not hasattr(self,'debug_panel'):return
-        points=self.breakpoints();self.source_editor.breakpoints={p['line'] for p in points if p.get('file')=='source' and type(p.get('line')) is int}
+        points=self.breakpoints();self.source_editor.breakpoints={p['line'] for p in points if p.get('file')=='source' and p.get('path','@actions')=='@actions' and type(p.get('line')) is int}
+        for name,editor in getattr(self,'module_editors',{}).items():
+            editor.breakpoints={p['line'] for p in points if p.get('file')=='source' and p.get('path')==name};editor.numbers.update()
         block_keys={(p.get('flow'),p.get('block')) for p in points if p.get('file')=='block'}
         blocks={block for flow,block in block_keys if flow==self.logic.flow_id}
         self.generated_editor.breakpoints={line for (flow,block),line in self.logic.generated.lines.items() if (flow,block) in block_keys}
@@ -148,7 +151,7 @@ class ExecutionMixin:
         if self.execution_fingerprint()!=self._runtime_project_fingerprint:
             self.debug_panel.status.setText('Snapshot pausado · projeto alterado; reinicie para aplicar as mudanças.');return
         if message.get('source_line'):
-            self.set_mode('Código');self.code_files.setCurrentIndex(1);self.source_editor.show_line(message['source_line'])
+            self.open_code_file(message.get('source_file','@actions'),message['source_line'])
         elif message.get('block'):
             self.set_mode('Lógica');self.logic.focus_block(message['flow'],message['block'])
 

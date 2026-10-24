@@ -153,10 +153,10 @@ class InteractionTests(unittest.TestCase):
         self.assertNotEqual(clone_id, button.id)
         original_x = self.window.project.find(clone_id).geometry["x"]
         QTest.keyClick(self.window.canvas, Qt.Key.Key_Right, Qt.KeyboardModifier.ShiftModifier)
-        self.assertEqual(self.window.project.find(clone_id).geometry["x"], original_x + 10)
+        self.assertEqual(self.window.project.find(clone_id).geometry["x"], original_x + 80)
         path = self.root / "document.makebench.json"
         self.assertTrue(self.window.save_to(path))
-        self.assertEqual(load_project(path).find(clone_id).geometry["x"], original_x + 10)
+        self.assertEqual(load_project(path).find(clone_id).geometry["x"], original_x + 80)
         self.window.undo()
         self.assertEqual(self.window.project.find(clone_id).geometry["x"], original_x)
         self.window.undo()

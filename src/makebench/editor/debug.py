@@ -18,7 +18,7 @@ class DebugPanel(QWidget):
             button.clicked.connect(lambda _, action=action:self.command.emit(action)); row.addWidget(button); self.buttons[action] = button
         row.addStretch(); layout.addLayout(row)
         self.status = QLabel('F6 inicia a depuração. Clique na margem do código ou use o menu de um bloco para marcar uma parada.'); self.status.setWordWrap(True); layout.addWidget(self.status)
-        split = QSplitter(); self.stack = QTreeWidget(); self.stack.setHeaderLabels(['Pilha','Linha']); self.values = QTreeWidget(); self.values.setHeaderLabels(['Variável','Valor'])
+        split = QSplitter(); self.stack = QTreeWidget(); self.stack.setHeaderLabels(['Pilha','Arquivo','Linha']); self.values = QTreeWidget(); self.values.setHeaderLabels(['Variável','Valor'])
         split.addWidget(self.stack); split.addWidget(self.values); layout.addWidget(split,1)
         self.stack.itemActivated.connect(lambda item,_:self.locate.emit(item.data(0,Qt.ItemDataRole.UserRole)))
         self.changed({'state':'stopped'})
@@ -32,7 +32,7 @@ class DebugPanel(QWidget):
         self.status.setText('Pausado · '+str(message.get('component_label') or message.get('component') or '')+' · '+str(message.get('flow_label') or message.get('flow') or '')+' · '+message.get('reason',''))
         self.stack.clear(); self.values.clear()
         for frame in message.get('stack',[]):
-            item = QTreeWidgetItem([frame['name'],str(frame.get('source_line') or frame.get('line') or '')]); item.setData(0,Qt.ItemDataRole.UserRole,frame); self.stack.addTopLevelItem(item)
+            item = QTreeWidgetItem([frame['name'],frame.get('source_file','gerado.py'),str(frame.get('source_line') or frame.get('line') or '')]); item.setData(0,Qt.ItemDataRole.UserRole,frame); self.stack.addTopLevelItem(item)
         values = [('Projeto',message.get('variables',{})),('Janela',message.get('window_variables',{}))]
         for index,frame in enumerate(message.get('stack',[])): values.append((frame['name']+f' [{index}]',frame.get('variables',{})))
         def add(parent, name, value):

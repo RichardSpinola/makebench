@@ -296,7 +296,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.source_timer = QTimer(self)
         self.source_timer.setSingleShot(True)
         self.source_timer.setInterval(250)
-        self.source_timer.timeout.connect(self._update_code)
+        self.source_timer.timeout.connect(self._source_analysis_ready)
         self.source_editor.textChanged.connect(self._source_changed)
         self.source_editor.undoAvailable.connect(lambda _: self._update_actions())
         self.source_editor.redoAvailable.connect(lambda _: self._update_actions())
@@ -433,7 +433,7 @@ class MainWindow(StudioMixin, QMainWindow):
 
     def _update_actions(self) -> None:
         """Atualiza comandos, título e indicador de alterações não salvas."""
-        source_active = self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()==1)
+        source_active = self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()>0)
         interface_active = self.tabs.currentIndex() == 0
         home=hasattr(self,'home_page') and self.pages.currentWidget() is self.home_page
         active=self.runtime_window is not None and not self.runtime_window.session.closed
@@ -446,8 +446,8 @@ class MainWindow(StudioMixin, QMainWindow):
         if hasattr(self,'stop_action'):self.stop_action.setEnabled(active and not self.runtime_window.session.admin_active)
         self.save_action.setEnabled(not home)
         self.snap_check.setEnabled(interface_active and not home)
-        self.undo_action.setEnabled(self.source_editor.document().isUndoAvailable() if source_active else self.history.can_undo or self.logic.pending)
-        self.redo_action.setEnabled(self.source_editor.document().isRedoAvailable() if source_active else self.history.can_redo)
+        self.undo_action.setEnabled(self.active_code_editor().document().isUndoAvailable() if source_active else self.history.can_undo or self.logic.pending)
+        self.redo_action.setEnabled(self.active_code_editor().document().isRedoAvailable() if source_active else self.history.can_redo)
         self.remove_action.setEnabled(interface_active and (self.selected_id != self.project.root.id or len(self.project.roots)>1))
         node = self.project.find(self.selected_id)
         parent = self.project.parent_of(self.selected_id)
@@ -521,7 +521,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.history.push(self.project)
         self._refresh_property(component_id,key)
 
-    def _refresh_property(self,identifier,key):
+    def _refresh_property(self,identifier,key,finish=True):
         """Atualiza valores sem destruir o campo em edição nem a árvore de widgets."""
         structural={'layout','size_mode','align','distribute','alignment_preset','initial_page'}
         if key in structural or key in {'width','height','resizable'} or key=='icon' and self.project.find(identifier).kind==ComponentKind.WINDOW:
@@ -584,6 +584,7 @@ class MainWindow(StudioMixin, QMainWindow):
             if key=='icon':self.inspector._binding_signature=None;self._select(identifier)
             elif not key.startswith('geometry.'):self.inspector.patch_value(key,effective.properties.get(key,''))
         self._presentation_signature=self.presentation_signature()
+        if not finish:return
         self.logic.sync();self._update_code();self._update_actions()
         if hasattr(self,'zoom_view'):self.zoom_view.update_bounds()
 
@@ -729,8 +730,11 @@ class MainWindow(StudioMixin, QMainWindow):
                     item=self.project.find(identifier)
                     if self.project.parent_of(identifier) is self.project.parent_of(node_id):
                         self.project.set_geometry(identifier,{'x':max(0,min(20000,item.geometry['x']+dx)),'y':max(0,min(20000,item.geometry['y']+dy))})
-            self._edit(move_group)
-        else:self._edit(lambda:self.project.set_geometry(node_id,geometry))
+            self._edit(move_group,refresh=False)
+            self.patch_geometries(ids)
+        else:
+            self._edit(lambda:self.project.set_geometry(node_id,geometry),refresh=False)
+            self.patch_geometries([node_id])
 
     def duplicate_component(self) -> None:
         """Duplica a seleção com identificadores próprios e mantém a cópia selecionada."""
@@ -838,8 +842,8 @@ class MainWindow(StudioMixin, QMainWindow):
 
     def undo(self) -> None:
         """Restaura o documento anterior, incluindo propriedades e ordem dos nós."""
-        if self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()==1):
-            self.source_editor.undo()
+        if self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()>0):
+            self.active_code_editor().undo()
             return
         if not self._finish_field_edit():
             return
@@ -848,8 +852,8 @@ class MainWindow(StudioMixin, QMainWindow):
 
     def redo(self) -> None:
         """Reaplica uma alteração previamente desfeita."""
-        if self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()==1):
-            self.source_editor.redo()
+        if self.tabs.currentIndex() == 2 and (not hasattr(self,"code_files") or self.code_files.currentIndex()>0):
+            self.active_code_editor().redo()
             return
         if not self._finish_field_edit():
             return
@@ -933,6 +937,7 @@ class MainWindow(StudioMixin, QMainWindow):
             try:upgraded=json.loads(path.read_text(encoding='utf-8')).get('format_version') in (1,2,3,4)
             except (OSError,ValueError):pass
         try:
+            self.project.python_files=sorted(self.source.modules)
             Project.from_dict(self.project.to_dict())
             self.assets.write_referenced(path.parent, self.project.asset_paths())
             self.source.write(path)
@@ -990,10 +995,16 @@ class MainWindow(StudioMixin, QMainWindow):
         """Mantém fonte própria independente da geração e do histórico visual."""
         self.source.text = self.source_editor.toPlainText()
         self.source_timer.start()
-        self._update_actions()
+        self.setWindowModified(True)
+        if hasattr(self,"code_files"):self.code_files.setTabText(1,"Funções próprias •")
+
+    def _source_analysis_ready(self):
+        """Analisa após uma pausa na digitação, sem atualizar todos os painéis por tecla."""
+        self._update_code();self._update_actions()
 
     def _update_code(self):
         """Mostra código e diagnósticos sem importar o arquivo de funções."""
+        self.sync_code_workspace()
         self.logic.update_code()
         generated = self.logic.generated
         if self.generated_editor.toPlainText() != generated.text:
@@ -1111,9 +1122,9 @@ class MainWindow(StudioMixin, QMainWindow):
         """Localiza o bloco atual; linhas próprias só valem se o texto não mudou."""
         if self.project.id != window.project.id:
             self.statusBar().showMessage("O erro pertence a outro projeto aberto na execução.", 7000);return
-        if error.get('source_line') and self.source.text == window.source:
-            self.tabs.setCurrentIndex(2)
-            self.source_editor.show_line(error['source_line'])
+        from makebench.core.source import source_signature
+        if error.get('source_line') and source_signature(self.source.text)==source_signature(window.source):
+            self.open_code_file(error.get('source_file','@actions'),error['source_line'])
         elif error.get('block'):
             flow = next((f for f in self.project.workflows if f['id'] == error.get('flow')), None)
             if flow:

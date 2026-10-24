@@ -97,6 +97,7 @@ class DesignerMixin:
         self.tree.itemSelectionChanged.connect(self.tree_multi_selected)
         self.canvas.components_selected.connect(self.select_multiple)
         self.inspector.selection_command.connect(self.selection_command)
+        self.inspector.batch_changed.connect(self.change_multiple_properties)
         self.inspector.layout_preview_requested.connect(self.preview_layout)
         self.canvas.layout_requested.connect(self._change_property)
         self.inspector.restore_requested.connect(self.restore_state_property)
@@ -190,7 +191,7 @@ class DesignerMixin:
         for identifier,item in self._tree_items.items():item.setSelected(identifier in ids)
         self.tree.blockSignals(False);self._multi_syncing=False
         self.canvas.select_many(ids)
-        if len(ids)>1:self.inspector.set_multiple([self.project.find(identifier) for identifier in ids])
+        if len(ids)>1:self.inspector.set_multiple([self.canvas._project.find(identifier) or self.project.find(identifier) for identifier in sorted(ids)],self.project,self.active_state!='@default')
         else:
             node=self.canvas._project.find(self.selected_id)
             if node:
@@ -199,6 +200,38 @@ class DesignerMixin:
                     state=next(s for s in self.project.states[self.active_window] if s['id']==self.active_state)
                     overrides=state.get('overrides',{}).get(node.id,{})
                 self.inspector.set_component(self.project,node,overrides,self.active_state!='@default')
+
+    def change_multiple_properties(self,key,value):
+        """Valida o lote completo antes de atualizar vistas, com uma entrada de histórico."""
+        from copy import deepcopy
+        from makebench.core.project import Project
+        from makebench.core.navigation import OVERRIDES
+        ids=sorted(self.selected_ids)
+        if len(ids)<2:return
+        before=self.project.to_dict()
+        try:
+            for identifier in ids:
+                node=self.project.find(identifier)
+                if self.active_state!='@default':
+                    if key not in OVERRIDES:raise ProjectError('Edite a estrutura no estado Padrão.')
+                    state=next(s for s in self.project.states[self.active_window] if s['id']==self.active_state)
+                    state.setdefault('overrides',{}).setdefault(identifier,{})[key]=value
+                elif key.startswith('geometry.'):
+                    parent=self.project.parent_of(identifier)
+                    if not parent or parent.layout!=LayoutKind.FREE:raise ProjectError('Geometria de grupo exige contêiner Livre.')
+                    node.geometry[key.split('.',1)[1]]=int(value)
+                else:node.properties[key]=deepcopy(value)
+            Project.from_dict(self.project.to_dict())
+        except (ProjectError,ValueError) as exc:
+            self.project=Project.from_dict(before);self.statusBar().showMessage(str(exc),6000);return
+        if before==self.project.to_dict():return
+        self.history.push(self.project)
+        from .updates import hold_updates
+        with hold_updates(self.canvas):
+            for identifier in ids:self._refresh_property(identifier,key,finish=False)
+        self._presentation_signature=self.presentation_signature();self._update_actions();self.zoom_view.update_bounds()
+        # Campos mistos conservam o widget em edição; próxima seleção recompõe os valores.
+        self.inspector._binding_signature=None
 
     def selection_command(self,mode):
         """Alinha, distribui ou iguala dimensões em uma única entrada do histórico."""
@@ -230,7 +263,21 @@ class DesignerMixin:
                 gap=(end-start-sum(n.geometry[size] for n in ordered))/(len(ordered)-1)
                 position=start
                 for node in ordered:node.geometry[axis]=round(position);position+=node.geometry[size]+gap
-        self._edit(apply)
+        self._edit(apply,refresh=False)
+        self.patch_geometries([node.id for node in nodes])
+
+    def patch_geometries(self,identifiers):
+        """Reutiliza controles e renderizador GTK ao confirmar movimento/alinhamento."""
+        from .updates import hold_updates
+        with hold_updates(self.canvas):
+            for identifier in identifiers:
+                node=self.project.find(identifier);shown=self.canvas._project.find(identifier)
+                if not node or not shown:continue
+                shown.geometry=dict(node.geometry);frame=self.canvas._frames.get(identifier)
+                if frame:frame.setGeometry(*(node.geometry[key] for key in ("x","y","width","height")))
+                if identifier==self.selected_id:
+                    for key,value in node.geometry.items():self.inspector.patch_value("geometry."+key,value)
+        self.canvas.refresh_native_preview();self._presentation_signature=self.presentation_signature();self.zoom_view.update_bounds();self._update_actions()
 
     def preview_layout(self,node_id,mode):
         """Mostra uma simulação em cópia; somente clicar confirma e gera histórico."""

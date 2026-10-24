@@ -8,6 +8,7 @@ from makebench.core.project import KIND_LABELS,LAYOUT_LABELS,ComponentKind,Layou
 class Inspector(QWidget):
     """Mostra conteúdo, organização, tamanho e eventos pertinentes à seleção."""
     property_changed=Signal(str,str,object)
+    batch_changed=Signal(str,object)
     image_requested=Signal(str);image_cleared=Signal(str);logic_requested=Signal(str);icon_requested=Signal(str);navigation_requested=Signal(dict)
     selection_command=Signal(str);layout_preview_requested=Signal(str,str)
     restore_requested=Signal(str,str)
@@ -196,13 +197,50 @@ class Inspector(QWidget):
         field.setEnabled(not self.state_mode)
         field.currentIndexChanged.connect(lambda _:self.property_changed.emit(node_id,key,field.currentData()));self.fields.addRow(label,field)
 
-    def set_multiple(self,nodes):
-        """Limita o formulário a comandos comuns a todos os selecionados."""
-        signature=('multi',tuple(sorted(node.id for node in nodes)))
+    def set_multiple(self,nodes,project=None,state_mode=False):
+        """Expõe valores comuns/mistos e bloqueia operações incompatíveis com o layout."""
+        from makebench.core.navigation import OVERRIDES
+        ids=tuple(sorted(node.id for node in nodes))
+        parents=[project.parent_of(node.id) for node in nodes] if project else []
+        free=bool(parents) and all(p and p.id==parents[0].id and p.layout==LayoutKind.FREE for p in parents)
+        import json
+        signature=('multi',ids,json.dumps([n.to_dict() for n in nodes],sort_keys=True),free,state_mode)
         if signature==getattr(self,'_binding_signature',None):return
-        self.clear();self._binding_signature=signature;self.form.addRow(QLabel(f'{len(nodes)} componentes selecionados'))
-        for label,mode in [('Alinhar à esquerda','left'),('Centralizar horizontalmente','center_x'),('Alinhar à direita','right'),('Alinhar no topo','top'),('Centralizar verticalmente','center_y'),('Alinhar na base','bottom'),('Mesma largura','same_width'),('Mesma altura','same_height'),('Distribuir horizontalmente','distribute_x'),('Distribuir verticalmente','distribute_y')]:
-            button=QPushButton(label);button.setEnabled(not mode.startswith('distribute') or len(nodes)>=3);button.clicked.connect(lambda _,mode=mode:self.selection_command.emit(mode));self.form.addRow(button)
+        self.clear();self._binding_signature=signature;self.state_mode=state_mode;self._kind='multiple'
+        self.form.addRow(QLabel(f'{len(nodes)} componentes'))
+        self.section('Propriedades comuns')
+        labels={'text':'Texto','tooltip':'Dica','visible':'Visível','enabled':'Habilitado','checked':'Marcado','placeholder':'Dica do campo'}
+        common=set.intersection(*(set(n.properties) for n in nodes))|{'visible','enabled','tooltip'}
+        for key,label in labels.items():
+            if key not in common or state_mode and key not in OVERRIDES:continue
+            values=[n.properties.get(key,True if key in {'visible','enabled'} else '') for n in nodes];mixed=any(v!=values[0] for v in values[1:])
+            if all(type(v) is bool for v in values):
+                field=QCheckBox();field.setTristate(mixed);field.setCheckState(Qt.CheckState.PartiallyChecked if mixed else Qt.CheckState.Checked if values[0] else Qt.CheckState.Unchecked)
+                field.checkStateChanged.connect(lambda state,key=key:self.batch_changed.emit(key,state==Qt.CheckState.Checked) if state!=Qt.CheckState.PartiallyChecked else None)
+            elif all(isinstance(v,str) for v in values):
+                field=QLineEdit('' if mixed else values[0]);field.setPlaceholderText('Múltiplos valores' if mixed else '')
+                def finish(field=field,key=key):
+                    """Não confirma campo misto que só recebeu foco."""
+                    if field.isModified():field.setModified(False);self.batch_changed.emit(key,field.text())
+                field.editingFinished.connect(finish)
+            else:continue
+            field.setObjectName('batch_'+key);field.setAccessibleName(label);self.fields.addRow(label,field)
+        if free and not state_mode:
+            for key,label in [('x','X'),('y','Y'),('width','Largura'),('height','Altura')]:
+                values=[n.geometry[key] for n in nodes];mixed=len(set(values))>1
+                field=QSpinBox();field.setRange(-1,20000);field.setSpecialValueText('Múltiplos valores');field.setKeyboardTracking(False);field.setValue(-1 if mixed else values[0]);field.setObjectName('batch_geometry.'+key);field.setAccessibleName(label)
+                field.valueChanged.connect(lambda value,key=key:self.batch_changed.emit('geometry.'+key,value) if value>=0 else None);self.fields.addRow(label,field)
+        self.section('Alinhar e distribuir')
+        wrapper=QWidget();grid=QGridLayout(wrapper);grid.setContentsMargins(0,0,0,0)
+        commands=[('Esquerda','left','align-left'),('Centro horizontal','center_x','align-center'),('Direita','right','align-right'),('Topo','top','align-top'),('Centro vertical','center_y','align-center'),('Base','bottom','align-bottom'),('Mesma largura','same_width','width'),('Mesma altura','same_height','height'),('Distribuir horizontalmente','distribute_x','distribute'),('Distribuir verticalmente','distribute_y','distribute')]
+        from .theme import icon
+        for index,(label,mode,symbol) in enumerate(commands):
+            button=QToolButton();button.setIcon(icon(symbol));button.setAccessibleName(label);button.setObjectName('selection_'+mode)
+            enabled=free and not state_mode and (not mode.startswith('distribute') or len(nodes)>=3)
+            reason='Selecione irmãos em um contêiner Livre no estado Padrão.' if not free or state_mode else 'Selecione pelo menos três componentes.'
+            button.setEnabled(enabled);button.setToolTip(label if enabled else label+' · '+reason)
+            button.clicked.connect(lambda _,mode=mode:self.selection_command.emit(mode));grid.addWidget(button,index//5,index%5)
+        self.fields.addRow(wrapper)
 
     def emit_preview(self):
         """Entrega a simulação após 400 ms de hover deliberado."""

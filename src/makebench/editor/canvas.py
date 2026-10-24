@@ -485,7 +485,7 @@ class PreviewCanvas(QFrame):
             return
         vectors = {Qt.Key.Key_Left: (-1, 0), Qt.Key.Key_Right: (1, 0), Qt.Key.Key_Up: (0, -1), Qt.Key.Key_Down: (0, 1)}
         if event.key() in vectors:
-            step = 10 if event.modifiers() & Qt.KeyboardModifier.ShiftModifier else 1
+            step = self.snap * (10 if event.modifiers() & Qt.KeyboardModifier.ShiftModifier else 1)
             dx, dy = vectors[event.key()]
             self.nudge_requested.emit(dx * step, dy * step)
             event.accept()
