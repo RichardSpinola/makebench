@@ -160,10 +160,14 @@ class SourceBuffer:
         for parent in PurePosixPath(name).parents:
             if str(parent)=='.':break
             init=(parent/'__init__.py').as_posix()
-            if init not in self.modules:names.append(PurePosixPath(init))
+            if init not in self.modules and init!=name:names.append(PurePosixPath(init))
         if len(self.modules)+len(names)>MAX_FILES:raise ProjectError('Máximo de 256 arquivos Python.')
         validate_manifest([*self.modules,*(path.as_posix() for path in names)])
-        for path in reversed(names):self.modules[path.as_posix()]=SourceBuffer(text if str(path)==name else '', '\0')
+        for path in reversed(names):
+            key=path.as_posix();buffer=SourceBuffer(text if key==name else '', '\0')
+            target=module_path(self.path.parent,key) if self.path else None
+            if target in self._deleted:buffer.path=target;buffer.original=self._deleted.pop(target)
+            self.modules[key]=buffer
 
     def rename_module(self,old,new):
         """Renomeia arquivo sem reescrever imports nem descartar edições pendentes."""

@@ -38,6 +38,7 @@ def read_bundle(source, destination):
             members=archive.infolist()
             if len(members)>2000 or sum(item.file_size for item in members)>MAX_BUNDLE_SIZE:
                 raise ProjectError('O projeto excede o limite de 100 MiB ou 2000 arquivos.')
+            if 'project.makebench.json' not in archive.namelist():raise ProjectError('O pacote não contém project.makebench.json.')
             from .project import Project
             project=Project.from_dict(json.loads(archive.read('project.makebench.json')))
             allowed_modules=set(project.python_files)
@@ -48,7 +49,7 @@ def read_bundle(source, destination):
                     or stat.S_ISLNK(item.external_attr >> 16) or item.filename in names):
                     raise ProjectError('O arquivo contém um caminho ou link não permitido.')
                 names.add(item.filename)
-                if not (item.is_dir() and path.parts[0]=='assets' or item.filename in {'project.makebench.json','project.actions.py','LEIA-ME.txt'} or len(path.parts)>1 and path.parts[0]=='assets' or item.filename in allowed_modules):
+                if not (item.is_dir() and path.parts[0]=='assets' or item.filename in {'project.makebench.json','project.actions.py','LEIA-ME.txt'} or len(path.parts)>1 and path.parts[0]=='assets' or item.filename in allowed_modules or item.is_dir() and any(name.startswith(item.filename) for name in allowed_modules)):
                     raise ProjectError('O pacote contém arquivos fora do projeto e de assets.')
             if 'project.makebench.json' not in names:raise ProjectError('O pacote não contém project.makebench.json.')
             from .project import Project

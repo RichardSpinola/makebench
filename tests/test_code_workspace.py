@@ -77,6 +77,26 @@ class SourceWorkspaceTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectError,'destino'):self.doc.save()
         self.assertTrue((self.root/'makebench_user/helpers.py').exists())
 
+    def test_rename_back_and_recreate_keep_ownership_and_detect_external_changes(self):
+        self.doc.save(self.path);source=self.doc.source
+        source.rename_module('makebench_user/helpers.py','makebench_user/util.py')
+        source.modules['makebench_user/util.py'].text='# edição preservada\n'
+        source.rename_module('makebench_user/util.py','makebench_user/helpers.py');self.doc.save()
+        self.assertEqual((self.root/'makebench_user/helpers.py').read_text(),'# edição preservada\n')
+        source.remove_module('makebench_user/helpers.py');source.add_module('makebench_user/helpers.py','# recriado\n')
+        (self.root/'makebench_user/helpers.py').write_text('# alteração externa\n')
+        with self.assertRaises(ProjectError):self.doc.save()
+
+    def test_bundle_reports_missing_manifest_and_accepts_declared_directories(self):
+        import zipfile
+        archive=self.root/'invalid.zip'
+        with zipfile.ZipFile(archive,'w') as output:output.writestr('other.txt','sem projeto')
+        with self.assertRaisesRegex(ProjectError,'project.makebench.json'):read_bundle(archive,self.root/'invalid')
+        self.doc.project.python_files=sorted(self.doc.source.modules);archive=self.root/'valid.zip'
+        write_bundle(self.doc.project,self.doc.source.text,lambda _:b'',archive)
+        with zipfile.ZipFile(archive,'a') as output:output.writestr('makebench_user/','')
+        self.assertEqual(SourceBuffer.load(read_bundle(archive,self.root/'valid')).text,self.doc.source.text)
+
     def test_snapshot_signature_includes_unsaved_modules(self):
         snapshot=self.doc.source.text;before=source_signature(snapshot)
         self.doc.source.modules['makebench_user/helpers.py'].text='# novo texto\n'
