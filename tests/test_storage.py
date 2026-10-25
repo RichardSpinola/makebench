@@ -48,7 +48,9 @@ class StorageTests(unittest.TestCase):
 
     def test_format_upgrade_reports_the_backup_actually_created(self):
         """O aviso de atualização usa o nome real da cópia, de qualquer formato anterior."""
-        example = Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        example = (
+            Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        )
         self.path.write_bytes(example.read_bytes())
         project = load_project(self.path)
         project.application["name"] = "Atualizado"

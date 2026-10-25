@@ -57,7 +57,9 @@ class EditorTests(unittest.TestCase):
 
         self.window.new_project()
         self.assertEqual(len(self.window.project.root.children), 0)
-        with patch("makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(self.path), "")):
+        with patch(
+            "makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(self.path), "")
+        ):
             self.window.open_project()
         self.assertEqual(self.window.project.find(button.id).properties["text"], "Executar tarefa")
         self.window._select(button.id)
@@ -74,11 +76,16 @@ class EditorTests(unittest.TestCase):
         field.selectAll()
         QTest.keyClicks(field, "Texto nao confirmado")
         self.assertTrue(self.window.save_to(self.path))
-        self.assertEqual(load_project(self.path).find(button.id).properties["text"], "Texto nao confirmado")
+        self.assertEqual(
+            load_project(self.path).find(button.id).properties["text"], "Texto nao confirmado"
+        )
 
     def test_canceling_unsaved_changes_keeps_the_document(self):
         button = self.add(ComponentKind.BUTTON)
-        with patch("makebench.editor.window.QMessageBox.warning", return_value=QMessageBox.StandardButton.Cancel):
+        with patch(
+            "makebench.editor.window.QMessageBox.warning",
+            return_value=QMessageBox.StandardButton.Cancel,
+        ):
             self.window.new_project()
         self.assertIsNotNone(self.window.project.find(button.id))
         self.assertTrue(self.window.history.dirty)
@@ -94,7 +101,9 @@ class EditorTests(unittest.TestCase):
     def test_corrupt_open_does_not_replace_current_document(self):
         original_id = self.window.project.id
         self.path.write_text("broken", encoding="utf-8")
-        with patch("makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(self.path), "")):
+        with patch(
+            "makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(self.path), "")
+        ):
             with patch.object(self.window, "_show_error") as show_error:
                 self.window.open_project()
         show_error.assert_called_once()
@@ -126,7 +135,9 @@ class EditorTests(unittest.TestCase):
 
     def test_format_upgrade_message_names_the_real_backup(self):
         """Salvar um formato 1 avisa o formato novo e a cópia .bak-v1 criada."""
-        example = Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        example = (
+            Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        )
         self.path.write_bytes(example.read_bytes())
         self.window._replace_project(load_project(self.path), self.path)
         self.window.project.application["name"] = "Atualizado"
@@ -137,7 +148,9 @@ class EditorTests(unittest.TestCase):
 
     def test_editor_save_keeps_untouched_json_and_commits_modules_last(self):
         """Salvar pela janela usa o caminho comum: JSON intacto sem edição e módulos no manifesto."""
-        example = Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        example = (
+            Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        )
         self.path.write_bytes(example.read_bytes())
         self.window._replace_project(load_project(self.path), self.path)
         self.window.source_editor.setPlainText("def ola(ctx):\n    return 1\n")
@@ -166,7 +179,8 @@ class EditorTests(unittest.TestCase):
         self.assertTrue(self.window.save_to(self.path))
         self.assertEqual(load_project(self.path).name, original_name)
         self.assertEqual(
-            self.window.inspector.findChild(QLineEdit, "property_name").text(), original_name,
+            self.window.inspector.findChild(QLineEdit, "property_name").text(),
+            original_name,
         )
 
 

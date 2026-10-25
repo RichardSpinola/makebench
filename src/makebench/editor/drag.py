@@ -35,7 +35,10 @@ def read_payload(mime: QMimeData) -> dict | None:
         if value.get("mode") == "move" and all(
             isinstance(value.get(key), str) for key in ("id", "project")
         ):
-            if any(type(value.get(key, 0)) is not int or not 0 <= value.get(key, 0) <= 20000 for key in ("offset_x", "offset_y")):
+            if any(
+                type(value.get(key, 0)) is not int or not 0 <= value.get(key, 0) <= 20000
+                for key in ("offset_x", "offset_y")
+            ):
                 return None
             return value
     except (ValueError, KeyError, TypeError, UnicodeError):
@@ -68,7 +71,14 @@ class ComponentPalette(QListWidget):
 
     def findData(self, value: str) -> int:
         """Localiza um tipo por seu identificador, sem depender do texto traduzido."""
-        return next((i for i in range(self.count()) if self.item(i).data(Qt.ItemDataRole.UserRole) == value), -1)
+        return next(
+            (
+                i
+                for i in range(self.count())
+                if self.item(i).data(Qt.ItemDataRole.UserRole) == value
+            ),
+            -1,
+        )
 
     def startDrag(self, _supported_actions) -> None:
         """Inicia a inserção com uma prévia do item da paleta."""
@@ -89,7 +99,7 @@ class ComponentTree(QTreeWidget):
         super().__init__(parent)
         self.project = project
         self.can_drop = can_drop
-        self.active_root=lambda:self.project().root.id
+        self.active_root = lambda: self.project().root.id
         self._hint = None
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
@@ -116,14 +126,20 @@ class ComponentTree(QTreeWidget):
         project = self.project()
         item = self.itemAt(point)
         if item is None:
-            root=project.find(self.active_root());return root.id,len(root.children),None,"inside"
+            root = project.find(self.active_root())
+            return root.id, len(root.children), None, "inside"
         node = project.find(item.data(0, Qt.ItemDataRole.UserRole))
         rect = self.visualItemRect(item)
-        zone = "before" if point.y() < rect.top() + rect.height() / 3 else (
-            "after" if point.y() > rect.bottom() - rect.height() / 3 else "inside"
+        zone = (
+            "before"
+            if point.y() < rect.top() + rect.height() / 3
+            else ("after" if point.y() > rect.bottom() - rect.height() / 3 else "inside")
         )
-        if node is None:return None,0,None,"inside"
-        if node.id in {r.id for r in project.roots} or (zone == "inside" and node.can_have_children):
+        if node is None:
+            return None, 0, None, "inside"
+        if node.id in {r.id for r in project.roots} or (
+            zone == "inside" and node.can_have_children
+        ):
             return node.id, len(node.children), item, "inside"
         parent = project.parent_of(node.id)
         index = parent.children.index(node) + (zone != "before")

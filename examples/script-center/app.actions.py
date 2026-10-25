@@ -1,4 +1,5 @@
 """Funções da central. Executam apenas ao testar o aplicativo com F5."""
+
 import sys
 
 
@@ -16,4 +17,11 @@ def simular_instalacao(ctx, valor):
 
 def tarefa_longa(ctx, valor):
     """Produz saída durante um minuto; Parar execução cancela esta tarefa comum."""
-    ctx.run(sys.executable, ["-u", "-c", "import time\nfor i in range(60):\n print(f'Etapa {i+1}/60', flush=True)\n time.sleep(1)"])
+    ctx.run(
+        sys.executable,
+        [
+            "-u",
+            "-c",
+            "import time\nfor i in range(60):\n print(f'Etapa {i+1}/60', flush=True)\n time.sleep(1)",
+        ],
+    )

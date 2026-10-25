@@ -30,7 +30,13 @@ class AssetStore:
     def _inside(root: Path, source: str) -> Path:
         """Recusa caminhos absolutos, travessia e links que escapem do projeto."""
         parts = PurePosixPath(source)
-        if parts.is_absolute() or ".." in parts.parts or "\\" in source or not parts.parts or parts.parts[0] != "assets":
+        if (
+            parts.is_absolute()
+            or ".." in parts.parts
+            or "\\" in source
+            or not parts.parts
+            or parts.parts[0] != "assets"
+        ):
             raise StorageError("O recurso precisa estar dentro da pasta assets do projeto.")
         path = (root / source).resolve()
         if not path.is_relative_to(root.resolve()):
@@ -78,7 +84,9 @@ class AssetStore:
             try:
                 if destination.exists():
                     if destination.read_bytes() != data:
-                        raise StorageError(f"Já existe outra imagem em {source}; escolha outra pasta de destino.")
+                        raise StorageError(
+                            f"Já existe outra imagem em {source}; escolha outra pasta de destino."
+                        )
                     continue
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 with tempfile.NamedTemporaryFile(dir=destination.parent, delete=False) as stream:

@@ -41,7 +41,10 @@ class ProjectTests(unittest.TestCase):
         project = Project.empty()
         button = project.add(project.root.id, ComponentKind.BUTTON)
         for invalid_geometry in (
-            {"x": -1}, {"width": 0}, {"height": True}, {"x": 2**100},
+            {"x": -1},
+            {"width": 0},
+            {"height": True},
+            {"x": 2**100},
         ):
             with self.subTest(invalid_geometry=invalid_geometry):
                 data = project.to_dict()

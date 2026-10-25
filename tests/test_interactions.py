@@ -46,9 +46,13 @@ class InteractionTests(unittest.TestCase):
 
     def drop(self, widget, payload, point, action=Qt.DropAction.CopyAction):
         mime = mime_for(payload)
-        enter = QDragEnterEvent(point, action, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        enter = QDragEnterEvent(
+            point, action, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier
+        )
         self.app.sendEvent(widget, enter)
-        event = QDropEvent(QPointF(point), action, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        event = QDropEvent(
+            QPointF(point), action, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier
+        )
         self.app.sendEvent(widget, event)
         self.app.processEvents()
         return event.isAccepted()
@@ -56,16 +60,24 @@ class InteractionTests(unittest.TestCase):
     def move_mouse(self, widget, global_point):
         local = widget.mapFromGlobal(global_point)
         event = QMouseEvent(
-            QEvent.Type.MouseMove, QPointF(local), QPointF(global_point),
-            Qt.MouseButton.NoButton, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier,
+            QEvent.Type.MouseMove,
+            QPointF(local),
+            QPointF(global_point),
+            Qt.MouseButton.NoButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
         )
         self.app.sendEvent(widget, event)
         self.app.processEvents()
 
     def release_mouse(self, widget, global_point):
         event = QMouseEvent(
-            QEvent.Type.MouseButtonRelease, QPointF(widget.mapFromGlobal(global_point)), QPointF(global_point),
-            Qt.MouseButton.LeftButton, Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier,
+            QEvent.Type.MouseButtonRelease,
+            QPointF(widget.mapFromGlobal(global_point)),
+            QPointF(global_point),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.NoButton,
+            Qt.KeyboardModifier.NoModifier,
         )
         self.app.sendEvent(widget, event)
         self.app.processEvents()
@@ -93,7 +105,9 @@ class InteractionTests(unittest.TestCase):
         self.assertEqual(self.window.project.root.children[0].id, second.id)
         item = self.window._tree_items[group.id]
         point = self.window.tree.visualItemRect(item).center()
-        self.assertTrue(self.drop(self.window.tree.viewport(), payload, point, Qt.DropAction.MoveAction))
+        self.assertTrue(
+            self.drop(self.window.tree.viewport(), payload, point, Qt.DropAction.MoveAction)
+        )
         self.assertEqual(self.window.project.parent_of(second.id).id, group.id)
         self.window.undo()
         self.assertEqual(self.window.project.parent_of(second.id).id, project.root.id)
@@ -170,7 +184,9 @@ class InteractionTests(unittest.TestCase):
         initial_id = pages.properties["initial_page"]
         self.load(project)
         tabs = self.window.canvas._tabs[pages.id]
-        QTest.mouseClick(tabs.tabBar(), Qt.MouseButton.LeftButton, pos=tabs.tabBar().tabRect(1).center())
+        QTest.mouseClick(
+            tabs.tabBar(), Qt.MouseButton.LeftButton, pos=tabs.tabBar().tabRect(1).center()
+        )
         self.assertEqual(self.window.selected_id, second.id)
         self.assertFalse(self.window.history.dirty)
         self.assertEqual(self.window.project.find(pages.id).properties["initial_page"], initial_id)
@@ -204,7 +220,9 @@ class InteractionTests(unittest.TestCase):
         node = project.add(project.root.id, Kind.IMAGE)
         self.load(project)
         self.window._select(node.id)
-        with patch("makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(source), "")):
+        with patch(
+            "makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(source), "")
+        ):
             self.window.choose_image(node.id)
         original = source.read_bytes()
         source.unlink()
@@ -217,7 +235,9 @@ class InteractionTests(unittest.TestCase):
         self.assertTrue(self.window.save_to(second / "project.makebench.json"))
         self.assertEqual((second / source_path).read_bytes(), original)
         restored = load_project(second / "project.makebench.json")
-        self.assertEqual(AssetStore(second).read(restored.find(node.id).properties["source"]), original)
+        self.assertEqual(
+            AssetStore(second).read(restored.find(node.id).properties["source"]), original
+        )
         self.window.clear_image(node.id)
         self.window.undo()
         self.assertEqual(self.window.project.find(node.id).properties["source"], source_path)
@@ -228,7 +248,13 @@ class InteractionTests(unittest.TestCase):
         self.assertFalse(self.drop(frame, payload, QPoint(20, 20), Qt.DropAction.MoveAction))
         mime = QMimeData()
         mime.setText("not a Makebench component")
-        event = QDragEnterEvent(QPoint(20, 20), Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        event = QDragEnterEvent(
+            QPoint(20, 20),
+            Qt.DropAction.CopyAction,
+            mime,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
         self.app.sendEvent(frame, event)
         self.assertFalse(event.isAccepted())
         self.assertFalse(self.window.history.dirty)
@@ -239,7 +265,13 @@ class InteractionTests(unittest.TestCase):
         container = project.add(project.root.id, Kind.CONTAINER)
         button = project.add(container.id, Kind.BUTTON)
         self.load(project)
-        payload = {"mode": "move", "project": project.id, "id": button.id, "offset_x": 20, "offset_y": 8}
+        payload = {
+            "mode": "move",
+            "project": project.id,
+            "id": button.id,
+            "offset_x": 20,
+            "offset_y": 8,
+        }
         frame = self.window.canvas._frames[project.root.id]
         self.assertTrue(self.drop(frame, payload, QPoint(500, 280), Qt.DropAction.MoveAction))
         moved = self.window.project.find(button.id)

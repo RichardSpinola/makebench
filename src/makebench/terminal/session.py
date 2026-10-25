@@ -4,6 +4,7 @@ A emulação usa pyte 0.8.2 (LGPL-3.0-or-later); consulte THIRD_PARTY.md.
 Somente start cria um processo. A leitura é não bloqueante e cabe ao toolkit
 chamar poll; o histórico nunca ultrapassa 10 mil linhas.
 """
+
 from __future__ import annotations
 
 import errno
@@ -23,29 +24,35 @@ from copy import deepcopy
 
 class TerminalScreen(pyte.HistoryScreen):
     """Acrescenta tela alternativa xterm sem acumular seu conteúdo no histórico."""
+
     def __init__(self, *args, **kwargs):
         """Guarda a tela principal quando um programa de tela cheia solicita outra."""
-        self.alternate=None
-        super().__init__(*args,**kwargs)
+        self.alternate = None
+        super().__init__(*args, **kwargs)
 
     def set_mode(self, *modes, **kwargs):
         """Entra em 47/1047/1049, preservando conteúdo e cursor da tela principal."""
-        if kwargs.get('private') and set(modes)&{47,1047,1049} and self.alternate is None:
-            self.alternate=(deepcopy(self.buffer),deepcopy(self.cursor),deepcopy(self.history))
-            self.erase_in_display(2);self.cursor_position();self.history.top.clear();self.history.bottom.clear()
-        super().set_mode(*modes,**kwargs)
+        if kwargs.get("private") and set(modes) & {47, 1047, 1049} and self.alternate is None:
+            self.alternate = (deepcopy(self.buffer), deepcopy(self.cursor), deepcopy(self.history))
+            self.erase_in_display(2)
+            self.cursor_position()
+            self.history.top.clear()
+            self.history.bottom.clear()
+        super().set_mode(*modes, **kwargs)
 
     def reset_mode(self, *modes, **kwargs):
         """Restaura a tela principal quando o programa deixa a tela alternativa."""
-        super().reset_mode(*modes,**kwargs)
-        if kwargs.get('private') and set(modes)&{47,1047,1049} and self.alternate is not None:
-            self.buffer,self.cursor,self.history=self.alternate;self.alternate=None
-            self.cursor.x=min(self.cursor.x,self.columns-1);self.cursor.y=min(self.cursor.y,self.lines-1)
+        super().reset_mode(*modes, **kwargs)
+        if kwargs.get("private") and set(modes) & {47, 1047, 1049} and self.alternate is not None:
+            self.buffer, self.cursor, self.history = self.alternate
+            self.alternate = None
+            self.cursor.x = min(self.cursor.x, self.columns - 1)
+            self.cursor.y = min(self.cursor.y, self.lines - 1)
             self.dirty.update(range(self.lines))
 
     def reset(self):
         """Limpa também uma tela alternativa ao iniciar outra sessão."""
-        self.alternate=None
+        self.alternate = None
         super().reset()
 
 
@@ -77,27 +84,42 @@ class TerminalSession:
         possui sessão própria; abrir o documento ou construir este objeto é inerte.
         """
         if self.running:
-            raise ValueError('O terminal já está em execução.')
+            raise ValueError("O terminal já está em execução.")
         if not program:
-            shell=os.environ.get('SHELL')
-            program=shell if shell and shutil.which(shell) else '/bin/sh'
+            shell = os.environ.get("SHELL")
+            program = shell if shell and shutil.which(shell) else "/bin/sh"
         arguments = [] if arguments is None else arguments
-        if not isinstance(program, str) or not program or '\0' in program:
-            raise ValueError('Programa de terminal inválido.')
-        if not isinstance(arguments, list) or any(not isinstance(a, str) or '\0' in a for a in arguments):
-            raise ValueError('Argumentos precisam ser uma lista de textos.')
+        if not isinstance(program, str) or not program or "\0" in program:
+            raise ValueError("Programa de terminal inválido.")
+        if not isinstance(arguments, list) or any(
+            not isinstance(a, str) or "\0" in a for a in arguments
+        ):
+            raise ValueError("Argumentos precisam ser uma lista de textos.")
         import pty
+
         master, slave = pty.openpty()
         try:
-            fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',self.screen.lines,self.screen.columns,0,0))
-            environment=dict(os.environ,TERM='xterm-256color',COLORTERM='truecolor')
-            self.process=subprocess.Popen([sys.executable,str(Path(__file__).with_name('child.py')),program,*arguments],
-                stdin=slave,stdout=slave,stderr=slave,cwd=self.root,env=environment,start_new_session=True)
+            fcntl.ioctl(
+                slave,
+                termios.TIOCSWINSZ,
+                struct.pack("HHHH", self.screen.lines, self.screen.columns, 0, 0),
+            )
+            environment = dict(os.environ, TERM="xterm-256color", COLORTERM="truecolor")
+            self.process = subprocess.Popen(
+                [sys.executable, str(Path(__file__).with_name("child.py")), program, *arguments],
+                stdin=slave,
+                stdout=slave,
+                stderr=slave,
+                cwd=self.root,
+                env=environment,
+                start_new_session=True,
+            )
         except BaseException:
-            os.close(master);raise
+            os.close(master)
+            raise
         finally:
             os.close(slave)
-        self.pid,self.master=self.process.pid,master
+        self.pid, self.master = self.process.pid, master
         self.exit_code = None
         self.pending.clear()
         self.screen.reset()
@@ -113,15 +135,15 @@ class TerminalSession:
             self.screen.resize(lines=rows, columns=columns)
             self.revision += 1
         if self.master is not None:
-            fcntl.ioctl(self.master, termios.TIOCSWINSZ, struct.pack('HHHH', rows, columns, 0, 0))
+            fcntl.ioctl(self.master, termios.TIOCSWINSZ, struct.pack("HHHH", rows, columns, 0, 0))
 
     def send(self, value):
         """Enfileira entrada UTF-8/bytes, incluindo sequências de controle."""
         if self.master is None:
             return False
-        data = value.encode('utf-8') if isinstance(value, str) else bytes(value)
+        data = value.encode("utf-8") if isinstance(value, str) else bytes(value)
         if len(self.pending) + len(data) > 1_000_000:
-            raise ValueError('A entrada do terminal excedeu o limite de 1 MB.')
+            raise ValueError("A entrada do terminal excedeu o limite de 1 MB.")
         self.pending.extend(data)
         self._flush()
         return True
@@ -158,11 +180,11 @@ class TerminalSession:
                     break
         if self.pid is not None:
             # WNOWAIT mantém o PID reservado durante a limpeza dos grupos.
-            result=os.waitid(os.P_PID,self.pid,os.WEXITED|os.WNOHANG|os.WNOWAIT)
+            result = os.waitid(os.P_PID, self.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
             if result is not None:
                 self._cleanup()
-                self.exit_code=self.process.wait()
-                self.process=None
+                self.exit_code = self.process.wait()
+                self.process = None
                 self.revision += 1
         return self.revision
 
@@ -171,11 +193,11 @@ class TerminalSession:
         if self.pid is None:
             return
         groups = {self.pid}
-        for entry in Path('/proc').iterdir():
+        for entry in Path("/proc").iterdir():
             if not entry.name.isdecimal():
                 continue
             try:
-                fields = (entry / 'stat').read_text().rsplit(')', 1)[1].split()
+                fields = (entry / "stat").read_text().rsplit(")", 1)[1].split()
                 if int(fields[3]) == self.pid:
                     groups.add(int(fields[2]))
             except (OSError, ValueError, IndexError):
@@ -201,7 +223,7 @@ class TerminalSession:
         if pid is not None:
             try:
                 self.exit_code = self.process.wait()
-                self.process=None
+                self.process = None
             except ChildProcessError:
                 pass
         self.revision += 1
@@ -209,36 +231,75 @@ class TerminalSession:
     def lines(self):
         """Retorna histórico e tela como células ANSI, sem interpretar HTML."""
         screen = self.screen
-        return [*([] if screen.alternate is not None else screen.history.top), *(screen.buffer[y] for y in range(screen.lines))]
+        return [
+            *([] if screen.alternate is not None else screen.history.top),
+            *(screen.buffer[y] for y in range(screen.lines)),
+        ]
 
 
-ANSI_COLORS = {'black':'#1d2021','red':'#cc4444','green':'#50a050','brown':'#c0a040',
-               'blue':'#5599dd','magenta':'#b060c0','cyan':'#40b0b0','white':'#dddddd',
-               'brightblack':'#777777','brightred':'#ff6666','brightgreen':'#88cc66',
-               'brightbrown':'#ffdd77','brightblue':'#88bbff','brightmagenta':'#dd88ee',
-               'brightcyan':'#88eeee','brightwhite':'#ffffff'}
+ANSI_COLORS = {
+    "black": "#1d2021",
+    "red": "#cc4444",
+    "green": "#50a050",
+    "brown": "#c0a040",
+    "blue": "#5599dd",
+    "magenta": "#b060c0",
+    "cyan": "#40b0b0",
+    "white": "#dddddd",
+    "brightblack": "#777777",
+    "brightred": "#ff6666",
+    "brightgreen": "#88cc66",
+    "brightbrown": "#ffdd77",
+    "brightblue": "#88bbff",
+    "brightmagenta": "#dd88ee",
+    "brightcyan": "#88eeee",
+    "brightwhite": "#ffffff",
+}
 
 
 def color(value, default):
     """Resolve cores pyte indexadas ou RGB usando o padrão da paleta nativa."""
-    if value == 'default':
+    if value == "default":
         return default
-    return ANSI_COLORS.get(value, '#' + value if len(value) == 6 else default)
+    return ANSI_COLORS.get(value, "#" + value if len(value) == 6 else default)
 
 
-def key_input(name, text='', control=False, alt=False, application=False):
+def key_input(name, text="", control=False, alt=False, application=False):
     """Traduz teclas comuns dos dois toolkits em sequências de terminal."""
-    keys = {'Return':'\r','Enter':'\r','BackSpace':'\x7f','Tab':'\t','ISO_Left_Tab':'\x1b[Z',
-            'Escape':'\x1b','Up':'\x1b[A','Down':'\x1b[B','Right':'\x1b[C','Left':'\x1b[D',
-            'Home':'\x1b[H','End':'\x1b[F','Insert':'\x1b[2~','Delete':'\x1b[3~',
-            'Page_Up':'\x1b[5~','Page_Down':'\x1b[6~',
-            'F1':'\x1bOP','F2':'\x1bOQ','F3':'\x1bOR','F4':'\x1bOS',
-            'F5':'\x1b[15~','F6':'\x1b[17~','F7':'\x1b[18~','F8':'\x1b[19~',
-            'F9':'\x1b[20~','F10':'\x1b[21~','F11':'\x1b[23~','F12':'\x1b[24~'}
+    keys = {
+        "Return": "\r",
+        "Enter": "\r",
+        "BackSpace": "\x7f",
+        "Tab": "\t",
+        "ISO_Left_Tab": "\x1b[Z",
+        "Escape": "\x1b",
+        "Up": "\x1b[A",
+        "Down": "\x1b[B",
+        "Right": "\x1b[C",
+        "Left": "\x1b[D",
+        "Home": "\x1b[H",
+        "End": "\x1b[F",
+        "Insert": "\x1b[2~",
+        "Delete": "\x1b[3~",
+        "Page_Up": "\x1b[5~",
+        "Page_Down": "\x1b[6~",
+        "F1": "\x1bOP",
+        "F2": "\x1bOQ",
+        "F3": "\x1bOR",
+        "F4": "\x1bOS",
+        "F5": "\x1b[15~",
+        "F6": "\x1b[17~",
+        "F7": "\x1b[18~",
+        "F8": "\x1b[19~",
+        "F9": "\x1b[20~",
+        "F10": "\x1b[21~",
+        "F11": "\x1b[23~",
+        "F12": "\x1b[24~",
+    }
     if control and len(text) == 1 and 64 <= ord(text.upper()) <= 95:
         value = chr(ord(text.upper()) - 64)
     else:
         value = keys.get(name, text)
-    if application and name in {'Up','Down','Right','Left','Home','End'}:
-        value = value.replace('[', 'O')
-    return ('\x1b' if alt else '') + value
+    if application and name in {"Up", "Down", "Right", "Left", "Home", "End"}:
+        value = value.replace("[", "O")
+    return ("\x1b" if alt else "") + value

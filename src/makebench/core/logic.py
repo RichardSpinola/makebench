@@ -14,8 +14,13 @@ if TYPE_CHECKING:
     from .project import Project
 
 LOGIC_VERSION = 1
-TEXT_KINDS = {ComponentKind.LABEL, ComponentKind.BUTTON, ComponentKind.TEXT_INPUT,
-              ComponentKind.CHECKBOX, ComponentKind.OUTPUT}
+TEXT_KINDS = {
+    ComponentKind.LABEL,
+    ComponentKind.BUTTON,
+    ComponentKind.TEXT_INPUT,
+    ComponentKind.CHECKBOX,
+    ComponentKind.OUTPUT,
+}
 
 
 def editable(project: Project) -> bool:
@@ -26,17 +31,29 @@ def editable(project: Project) -> bool:
 def create_flow(project: Project, component_id: str, states: list[str] | None = None) -> dict:
     """Vincula início de janela ou clique de botão; reutiliza vínculo existente."""
     if not editable(project):
-        raise ProjectError("Este projeto contém fluxos de outra versão. Eles foram preservados; a edição exige migração.")
+        raise ProjectError(
+            "Este projeto contém fluxos de outra versão. Eles foram preservados; a edição exige migração."
+        )
     node = project.find(component_id)
     if node is None or node.kind not in {ComponentKind.WINDOW, ComponentKind.BUTTON}:
         raise ProjectError("Selecione a janela ou um botão para criar um evento.")
-    event = {"kind": "start" if node.kind == ComponentKind.WINDOW else "click", "component": node.id}
+    event = {
+        "kind": "start" if node.kind == ComponentKind.WINDOW else "click",
+        "component": node.id,
+    }
     for flow in project.workflows:
         if flow["event"] == event and sorted(flow.get("states", [])) == sorted(states or []):
             return flow
     project.metadata["logic_version"] = LOGIC_VERSION
-    flow = {"id": new_id("flow"), "name": "Ao iniciar" if event["kind"] == "start" else f"Clique: {node.properties.get('text', 'Botão')}",
-            "event": event, "body": [], "workspace": {}}
+    flow = {
+        "id": new_id("flow"),
+        "name": "Ao iniciar"
+        if event["kind"] == "start"
+        else f"Clique: {node.properties.get('text', 'Botão')}",
+        "event": event,
+        "body": [],
+        "workspace": {},
+    }
     if states:
         flow["states"] = list(states)
     project.workflows.append(flow)
@@ -49,8 +66,11 @@ def function_names(source: str) -> tuple[list[str], str | None]:
         tree = ast.parse(source)
     except (SyntaxError, ValueError) as exc:
         return [], f"Funções Python: {exc}"
-    names = [node.name for node in tree.body if isinstance(node, ast.FunctionDef)
-             and not node.name.startswith("_")]
+    names = [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
+    ]
     return names, None
 
 
@@ -79,25 +99,43 @@ def validate(project: Project) -> None:
         expected = ComponentKind.WINDOW if event.get("kind") == "start" else ComponentKind.BUTTON
         if event.get("kind") not in {"start", "click"} or node is None or node.kind != expected:
             raise ProjectError("O evento precisa apontar para a janela ou um botão existente.")
-        states = flow.get('states', [])
+        states = flow.get("states", [])
         owner = project.window_of(node.id)
-        state_ids = {'@default', *[item['id'] for item in project.states.get(owner.id, [])]}
-        if not isinstance(states, list) or any(not isinstance(item,str) or item not in state_ids for item in states) or len(states) != len(set(states)):
-            raise ProjectError('Filtro de estado inválido.')
+        state_ids = {"@default", *[item["id"] for item in project.states.get(owner.id, [])]}
+        if (
+            not isinstance(states, list)
+            or any(not isinstance(item, str) or item not in state_ids for item in states)
+            or len(states) != len(set(states))
+        ):
+            raise ProjectError("Filtro de estado inválido.")
         key = (event["kind"], node.id, tuple(sorted(states)))
         if key in seen_events:
             raise ProjectError("Há mais de um fluxo para o mesmo evento.")
         seen_events.add(key)
         if not isinstance(flow.get("workspace", {}), dict):
             raise ProjectError("O estado visual dos blocos precisa ser um objeto.")
-        if not isinstance(flow.get("errors", []), list) or any(not isinstance(e, str) for e in flow.get("errors", [])):
+        if not isinstance(flow.get("errors", []), list) or any(
+            not isinstance(e, str) for e in flow.get("errors", [])
+        ):
             raise ProjectError("Diagnósticos dos blocos inválidos.")
-        if flow.get('editor','blocks') not in ('blocks','nodes'):raise ProjectError('Editor do comportamento desconhecido.')
-        backups=flow.get('behavior_backups',[])
-        if not isinstance(backups,list) or len(backups)>1000 or any(not isinstance(item,dict) or not isinstance(item.get('id'),str) or not isinstance(item.get('name'),str) for item in backups):raise ProjectError('Versões recuperáveis do comportamento inválidas.')
-        if flow.get('editor')=='nodes':
+        if flow.get("editor", "blocks") not in ("blocks", "nodes"):
+            raise ProjectError("Editor do comportamento desconhecido.")
+        backups = flow.get("behavior_backups", [])
+        if (
+            not isinstance(backups, list)
+            or len(backups) > 1000
+            or any(
+                not isinstance(item, dict)
+                or not isinstance(item.get("id"), str)
+                or not isinstance(item.get("name"), str)
+                for item in backups
+            )
+        ):
+            raise ProjectError("Versões recuperáveis do comportamento inválidas.")
+        if flow.get("editor") == "nodes":
             from .graph import validate_graph
-            validate_graph(project,flow)
+
+            validate_graph(project, flow)
             continue
         ids: set[str] = set()
 
@@ -111,27 +149,49 @@ def validate(project: Project) -> None:
             """Valida os nós de uma árvore sem aceitar Python arbitrário como expressão."""
             if depth > 48 or len(ids) >= 5000:
                 raise ProjectError("Lógica excede 48 níveis ou 5000 blocos por evento.")
-            if not isinstance(value, dict) or not isinstance(value.get("id"), str) or not value["id"] or value["id"] in ids:
+            if (
+                not isinstance(value, dict)
+                or not isinstance(value.get("id"), str)
+                or not value["id"]
+                or value["id"] in ids
+            ):
                 raise ProjectError("Bloco sem identificador único.")
             ids.add(value["id"])
             if "comment" in value and not isinstance(value["comment"], str):
                 raise ProjectError("Comentário de bloco precisa ser texto.")
             op = value.get("op")
+
             def expr(key):
                 """Valida uma entrada de valor obrigatória."""
                 visit(value.get(key), True, depth + 1)
+
             def body(key):
                 """Valida uma sequência ordenada de instruções."""
                 sequence(value.get(key), depth + 1)
+
             def text(key, identifier=False):
                 """Valida campos textuais e nomes de funções Python."""
                 item = value.get(key)
-                if not isinstance(item, str) or not item.strip() or (identifier and (not item.isidentifier() or keyword.iskeyword(item) or item.startswith("_"))):
+                if (
+                    not isinstance(item, str)
+                    or not item.strip()
+                    or (
+                        identifier
+                        and (
+                            not item.isidentifier()
+                            or keyword.iskeyword(item)
+                            or item.startswith("_")
+                        )
+                    )
+                ):
                     raise ProjectError(f"Campo inválido no bloco: {key}.")
+
             if expression:
                 if op == "literal":
                     item = value.get("value")
-                    if type(item) not in {str, bool, int, float} or (type(item) is float and not math.isfinite(item)):
+                    if type(item) not in {str, bool, int, float} or (
+                        type(item) is float and not math.isfinite(item)
+                    ):
                         raise ProjectError("Valor literal inválido.")
                 elif op == "list":
                     items = value.get("items")
@@ -141,56 +201,101 @@ def validate(project: Project) -> None:
                         visit(item, True, depth + 1)
                 elif op == "variable":
                     text("name")
-                    if value.get("scope", "project") not in {"project", "window", "local"}:raise ProjectError("Escopo inválido.")
+                    if value.get("scope", "project") not in {"project", "window", "local"}:
+                        raise ProjectError("Escopo inválido.")
                 elif op == "read":
                     attribute = value.get("attribute")
-                    kinds = TEXT_KINDS if attribute == "text" else {ComponentKind.CHECKBOX} if attribute == "checked" else {ComponentKind.PROGRESS} if attribute == "value" else set()
+                    kinds = (
+                        TEXT_KINDS
+                        if attribute == "text"
+                        else {ComponentKind.CHECKBOX}
+                        if attribute == "checked"
+                        else {ComponentKind.PROGRESS}
+                        if attribute == "value"
+                        else set()
+                    )
                     if not kinds:
                         raise ProjectError("Propriedade de leitura desconhecida.")
                     target(value.get("component"), kinds)
                 elif op == "binary":
-                    if value.get("operator") not in {"+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">=", "and", "or"}:
+                    if value.get("operator") not in {
+                        "+",
+                        "-",
+                        "*",
+                        "/",
+                        "==",
+                        "!=",
+                        "<",
+                        "<=",
+                        ">",
+                        ">=",
+                        "and",
+                        "or",
+                    }:
                         raise ProjectError("Operador desconhecido.")
-                    expr("left"); expr("right")
+                    expr("left")
+                    expr("right")
                 elif op == "join":
-                    expr("left"); expr("right")
+                    expr("left")
+                    expr("right")
                 else:
                     raise ProjectError(f"Expressão desconhecida: {op}.")
             elif op in {"log", "message"}:
                 expr("value")
             elif op in {"set_text", "set_enabled", "set_value"}:
-                target(value.get("component"), TEXT_KINDS if op == "set_text" else {ComponentKind.PROGRESS} if op == "set_value" else None)
+                target(
+                    value.get("component"),
+                    TEXT_KINDS
+                    if op == "set_text"
+                    else {ComponentKind.PROGRESS}
+                    if op == "set_value"
+                    else None,
+                )
                 expr("value")
-            elif op in {'terminal_start','terminal_send','terminal_stop'}:
-                target(value.get('component'), {ComponentKind.TERMINAL})
-                if op == 'terminal_start':expr('program');expr('arguments')
-                if op == 'terminal_send':expr('value')
+            elif op in {"terminal_start", "terminal_send", "terminal_stop"}:
+                target(value.get("component"), {ComponentKind.TERMINAL})
+                if op == "terminal_start":
+                    expr("program")
+                    expr("arguments")
+                if op == "terminal_send":
+                    expr("value")
             elif op == "show_page":
                 target(value.get("component"), {ComponentKind.PAGE})
-            elif op in {'go_state', 'open_window', 'close_window'}:
-                if op == 'go_state' and value.get('state') not in state_ids:
-                    raise ProjectError('A transição aponta para estado inexistente.')
-                if op == 'open_window':
-                    target(value.get('window'), {ComponentKind.WINDOW})
-                    if type(value.get('close_current', False)) is not bool:raise ProjectError('Opção de fechar janela inválida.')
+            elif op in {"go_state", "open_window", "close_window"}:
+                if op == "go_state" and value.get("state") not in state_ids:
+                    raise ProjectError("A transição aponta para estado inexistente.")
+                if op == "open_window":
+                    target(value.get("window"), {ComponentKind.WINDOW})
+                    if type(value.get("close_current", False)) is not bool:
+                        raise ProjectError("Opção de fechar janela inválida.")
             elif op == "assign":
-                text("name"); expr("value")
-                if value.get('scope', 'project') not in {'project', 'window', 'local'}:raise ProjectError('Escopo inválido.')
+                text("name")
+                expr("value")
+                if value.get("scope", "project") not in {"project", "window", "local"}:
+                    raise ProjectError("Escopo inválido.")
             elif op == "if":
-                expr("condition"); body("then"); body("else")
+                expr("condition")
+                body("then")
+                body("else")
             elif op == "repeat":
-                expr("count"); body("body")
+                expr("count")
+                body("body")
             elif op == "call":
-                text("function", True); expr("value")
+                text("function", True)
+                expr("value")
             elif op in {"run", "script"}:
-                expr("program" if op == "run" else "source"); expr("arguments")
+                expr("program" if op == "run" else "source")
+                expr("arguments")
                 if type(value.get("admin")) is not bool:
                     raise ProjectError("A permissão administrativa precisa ser declarada no bloco.")
             elif op == "ask":
                 if value.get("kind") not in {"text", "choice", "file", "directory"}:
                     raise ProjectError("Tipo de pergunta desconhecido.")
-                text("name"); expr("prompt"); expr("options")
-                if value.get("scope","project") not in {"project","window","local"}:raise ProjectError("Escopo inválido na pergunta.")
+                text("name")
+                expr("prompt")
+                expr("options")
+                if value.get("scope", "project") not in {"project", "window", "local"}:
+                    raise ProjectError("Escopo inválido na pergunta.")
             elif op == "confirm":
                 expr("prompt")
             else:
@@ -212,6 +317,7 @@ def validate(project: Project) -> None:
 def referenced_components(flow: dict) -> set[str]:
     """Coleta referências de componentes sem confundir textos com identificadores."""
     result = {flow["event"]["component"]}
+
     def walk(item):
         """Percorre somente a representação de lógica, ignorando a vista Blockly."""
         if isinstance(item, dict):
@@ -222,6 +328,7 @@ def referenced_components(flow: dict) -> set[str]:
         elif isinstance(item, list):
             for child in item:
                 walk(child)
+
     walk(flow.get("body"))
     walk(flow.get("graph"))
     return result
@@ -233,7 +340,9 @@ def guard_removal(project: Project, ids: set[str]) -> None:
         raise ProjectError("Fluxos reservados exigem validação de referências antes da exclusão.")
     for flow in project.workflows:
         if flow.get("body") is None or ids & referenced_components(flow):
-            raise ProjectError(f"Revise ou remova o fluxo ‘{flow['name']}’ na aba Lógica antes de excluir este componente.")
+            raise ProjectError(
+                f"Revise ou remova o fluxo ‘{flow['name']}’ na aba Lógica antes de excluir este componente."
+            )
 
 
 def duplicate_flows(project: Project, identifiers: dict[str, str]) -> None:
@@ -245,7 +354,16 @@ def duplicate_flows(project: Project, identifiers: dict[str, str]) -> None:
         if flow.get("body") is None:
             raise ProjectError("Complete os blocos deste componente antes de duplicá-lo.")
         clone = deepcopy(flow)
-        clone.update(id=new_id("flow"), name=flow["name"] + " (cópia)", workspace={"workspaceComments": deepcopy(flow.get("workspace", {}).get("workspaceComments", []))})
+        clone.update(
+            id=new_id("flow"),
+            name=flow["name"] + " (cópia)",
+            workspace={
+                "workspaceComments": deepcopy(
+                    flow.get("workspace", {}).get("workspaceComments", [])
+                )
+            },
+        )
+
         def remap(item):
             """Regenera IDs de nós e remapeia alvos preservando referências externas."""
             if isinstance(item, dict):
@@ -258,10 +376,13 @@ def duplicate_flows(project: Project, identifiers: dict[str, str]) -> None:
             elif isinstance(item, list):
                 for value in item:
                     remap(value)
+
         remap(clone["event"])
-        if clone.get('editor')=='nodes':
+        if clone.get("editor") == "nodes":
             from .graph import duplicate_graph
-            duplicate_graph(clone,identifiers)
-        else:remap(clone["body"])
+
+            duplicate_graph(clone, identifiers)
+        else:
+            remap(clone["body"])
         copies.append(clone)
     project.workflows.extend(copies)

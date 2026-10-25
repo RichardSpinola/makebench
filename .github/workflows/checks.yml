@@ -9,11 +9,21 @@ permissions:
   contents: read
 
 jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Verificar formatação
+        run: python -m pip install ruff==0.17.2 && ruff format --check src tests checks examples
+
   test:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ['3.13', '3.14']
+        python-version: ['3.12', '3.13', '3.14']
     env:
       QT_QPA_PLATFORM: offscreen
     steps:

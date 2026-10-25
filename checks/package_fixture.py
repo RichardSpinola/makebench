@@ -1,4 +1,5 @@
 """Aplicativo descartável para validar instalação e execução real dos pacotes."""
+
 from copy import deepcopy
 from pathlib import Path
 from makebench.core.storage import load_project
@@ -8,19 +9,33 @@ from makebench.core.project import new_id
 
 def fixture(backend):
     """Grafo com terminal, dependência declarada, tarefas, duas janelas e fechamento próprio."""
-    root=Path(__file__).resolve().parents[1]/'examples/free-graph'
-    project=load_project(root/(backend+'.makebench.json'))
-    project.application.update(id='org.makebench.qa'+backend,name='Makebench QA '+backend.upper(),packages=['packaging==25.0'])
-    project.metadata.pop('debug_breakpoints',None)
-    flow=project.workflows[0];flow['event']={'component':project.root.id,'kind':'start'}
-    graph=flow['graph'];identifier=new_id('node')
-    graph['nodes'].append({'id':identifier,'op':'assign','parameters':{'name':'terminal_pid'},'inputs':{'value':{'node':'terminal','port':'value'}}})
-    for edge in graph['edges']:
-        if edge['from']=='terminal' and edge['out']=='next':edge['to']=identifier
-    graph['edges'].append({'from':identifier,'out':'next','to':'repeat'})
-    next(n for n in graph['nodes'] if n['id']=='open')['parameters']['close_current']=True
-    create_flow(project,project.windows[0].id)['body']=[{'id':'close-qa','op':'close_window'}]
-    source='''"""Rotina exclusiva de QA: só executa após iniciar o aplicativo construído."""
+    root = Path(__file__).resolve().parents[1] / "examples/free-graph"
+    project = load_project(root / (backend + ".makebench.json"))
+    project.application.update(
+        id="org.makebench.qa" + backend,
+        name="Makebench QA " + backend.upper(),
+        packages=["packaging==25.0"],
+    )
+    project.metadata.pop("debug_breakpoints", None)
+    flow = project.workflows[0]
+    flow["event"] = {"component": project.root.id, "kind": "start"}
+    graph = flow["graph"]
+    identifier = new_id("node")
+    graph["nodes"].append(
+        {
+            "id": identifier,
+            "op": "assign",
+            "parameters": {"name": "terminal_pid"},
+            "inputs": {"value": {"node": "terminal", "port": "value"}},
+        }
+    )
+    for edge in graph["edges"]:
+        if edge["from"] == "terminal" and edge["out"] == "next":
+            edge["to"] = identifier
+    graph["edges"].append({"from": identifier, "out": "next", "to": "repeat"})
+    next(n for n in graph["nodes"] if n["id"] == "open")["parameters"]["close_current"] = True
+    create_flow(project, project.windows[0].id)["body"] = [{"id": "close-qa", "op": "close_window"}]
+    source = '''"""Rotina exclusiva de QA: só executa após iniciar o aplicativo construído."""
 import json
 import os
 from pathlib import Path
@@ -40,4 +55,4 @@ def confirmar(ctx, valor):
     ctx.run('/bin/sleep',['2'])
     return valor == 3
 '''
-    return project,source,lambda name:(root/name).read_bytes()
+    return project, source, lambda name: (root / name).read_bytes()

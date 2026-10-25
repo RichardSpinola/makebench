@@ -1,4 +1,5 @@
 """Transações de apresentação: uma edição não mostra painéis intermediários vazios."""
+
 from contextlib import contextmanager
 
 

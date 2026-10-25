@@ -1,4 +1,5 @@
 """Painel nativo de eventos com Blockly offline e ponte limitada a dados."""
+
 from __future__ import annotations
 
 import json
@@ -9,8 +10,20 @@ from uuid import uuid4
 from PySide6.QtCore import QObject, Signal, Slot, QUrl, QEventLoop, QTimer, Qt
 from PySide6.QtGui import QKeySequence, QColor
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSplitter, QDialog, QDialogButtonBox, QPlainTextEdit,
-    QVBoxLayout, QWidget, QToolButton, QStackedWidget,
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSplitter,
+    QDialog,
+    QDialogButtonBox,
+    QPlainTextEdit,
+    QVBoxLayout,
+    QWidget,
+    QToolButton,
+    QStackedWidget,
 )
 
 from makebench.core.codegen import generate
@@ -21,10 +34,11 @@ from .code import CodeEditor
 
 class LogicBridge(QObject):
     """Transporta JSON; não expõe arquivos, shell, importação ou execução ao HTML."""
+
     documentChanged = Signal(str)
     update_received = Signal(str)
     block_selected = Signal(str, str)
-    breakpoint_requested = Signal(str,str)
+    breakpoint_requested = Signal(str, str)
     became_ready = Signal()
     failed = Signal(str)
     pending_received = Signal(str)
@@ -45,10 +59,10 @@ class LogicBridge(QObject):
         """Relaciona a seleção de um bloco à origem no código gerado."""
         self.block_selected.emit(flow, block)
 
-    @Slot(str,str)
+    @Slot(str, str)
     def toggleBreakpoint(self, flow, block):
         """Solicita uma marcação de depuração por ID estável, sem executar o bloco."""
-        QTimer.singleShot(0,lambda:self.breakpoint_requested.emit(flow,block))
+        QTimer.singleShot(0, lambda: self.breakpoint_requested.emit(flow, block))
 
     @Slot(str)
     def pending(self, token):
@@ -58,9 +72,9 @@ class LogicBridge(QObject):
     @Slot(str)
     def command(self, name):
         """Encaminha apenas salvar/desfazer/refazer originados por teclado."""
-        if name in {'save', 'undo', 'redo', 'find_block', 'python', 'function', 'new_event'}:
+        if name in {"save", "undo", "redo", "find_block", "python", "function", "new_event"}:
             # Sair do callback WebChannel antes de avaliar JS durante flush.
-            QTimer.singleShot(0,lambda:self.command_received.emit(name))
+            QTimer.singleShot(0, lambda: self.command_received.emit(name))
 
     @Slot(str)
     def problem(self, message):
@@ -70,8 +84,9 @@ class LogicBridge(QObject):
 
 class LogicPanel(QWidget):
     """Seleciona eventos, mantém a sessão Blockly e mostra Python correspondente."""
-    breakpoint_requested = Signal(str,str)
-    editor_requested = Signal(str,str)
+
+    breakpoint_requested = Signal(str, str)
+    editor_requested = Signal(str, str)
     restore_requested = Signal(str)
     graph_changed = Signal(dict)
     add_requested = Signal(str)
@@ -84,7 +99,7 @@ class LogicPanel(QWidget):
     redo_requested = Signal()
     pending_changed = Signal()
     script_requested = Signal(dict)
-    filter_requested = Signal(str,object)
+    filter_requested = Signal(str, object)
     full_code_requested = Signal(int)
     search_requested = Signal()
     function_requested = Signal(str)
@@ -96,69 +111,150 @@ class LogicPanel(QWidget):
         super().__init__(parent)
         self.get_project, self.get_source = project_getter, source_getter
         self.flow_id = None
-        self.before_switch=lambda:True
-        self._target_component=None
+        self.before_switch = lambda: True
+        self._target_component = None
         self.view = None
         self.ready = False
         self.pending = False
         self._had_ready = False
-        self.token = ''
+        self.token = ""
         self._payload = None
         self._flushing = False
-        layout = QVBoxLayout(self);layout.setContentsMargins(4,4,4,4);layout.setSpacing(4)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
         row = QHBoxLayout()
-        row.addWidget(QLabel('Quando'))
+        row.addWidget(QLabel("Quando"))
         self.events = QComboBox()
         self.events.setMinimumWidth(210)
         self.events.currentIndexChanged.connect(self._switch_flow)
         row.addWidget(self.events, 1)
-        self.editor_kind=QComboBox();self.editor_kind.addItem('Blocos','blocks');self.editor_kind.addItem('Nós','nodes');self.editor_kind.setAccessibleName('Editor deste comportamento')
-        self.editor_kind.currentIndexChanged.connect(lambda _:self.editor_requested.emit(self.flow_id,self.editor_kind.currentData()) if self.flow_id else None);row.addWidget(self.editor_kind)
-        self.versions=QToolButton();self.versions.setText('Versões…');self.versions.setToolTip('Recuperar o comportamento anterior à troca de editor');self.versions.clicked.connect(lambda:self.restore_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(self.versions)
+        self.editor_kind = QComboBox()
+        self.editor_kind.addItem("Blocos", "blocks")
+        self.editor_kind.addItem("Nós", "nodes")
+        self.editor_kind.setAccessibleName("Editor deste comportamento")
+        self.editor_kind.currentIndexChanged.connect(
+            lambda _: (
+                self.editor_requested.emit(self.flow_id, self.editor_kind.currentData())
+                if self.flow_id
+                else None
+            )
+        )
+        row.addWidget(self.editor_kind)
+        self.versions = QToolButton()
+        self.versions.setText("Versões…")
+        self.versions.setToolTip("Recuperar o comportamento anterior à troca de editor")
+        self.versions.clicked.connect(
+            lambda: self.restore_requested.emit(self.flow_id) if self.flow_id else None
+        )
+        row.addWidget(self.versions)
 
         self.name = QLineEdit()
-        self.name.setPlaceholderText('Nome do fluxo')
+        self.name.setPlaceholderText("Nome do fluxo")
         self.name.editingFinished.connect(self._rename)
         self.name.hide()
-        self.state_filter=QComboBox();self.state_filter.setMaximumWidth(220);self.state_filter.setAccessibleName('Filtro de estado do fluxo')
+        self.state_filter = QComboBox()
+        self.state_filter.setMaximumWidth(220)
+        self.state_filter.setAccessibleName("Filtro de estado do fluxo")
         self.state_filter.currentIndexChanged.connect(self._change_filter)
         row.addWidget(self.state_filter)
         from .theme import icon
-        self.remove = QToolButton();self.remove.setIcon(icon('remove'));self.remove.setToolTip('Remover fluxo');self.remove.setAccessibleName('Remover fluxo');self.remove.setAutoRaise(True)
-        self.remove.clicked.connect(lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None)
+
+        self.remove = QToolButton()
+        self.remove.setIcon(icon("remove"))
+        self.remove.setToolTip("Remover fluxo")
+        self.remove.setAccessibleName("Remover fluxo")
+        self.remove.setAutoRaise(True)
+        self.remove.clicked.connect(
+            lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None
+        )
         row.addWidget(self.remove)
-        duplicate=QToolButton();duplicate.setIcon(icon('duplicate'));duplicate.setToolTip('Duplicar fluxo…');duplicate.setAccessibleName('Duplicar fluxo');duplicate.setAutoRaise(True);duplicate.clicked.connect(lambda:self.duplicate_requested.emit(self.flow_id) if self.flow_id else None);row.addWidget(duplicate)
+        duplicate = QToolButton()
+        duplicate.setIcon(icon("duplicate"))
+        duplicate.setToolTip("Duplicar fluxo…")
+        duplicate.setAccessibleName("Duplicar fluxo")
+        duplicate.setAutoRaise(True)
+        duplicate.clicked.connect(
+            lambda: self.duplicate_requested.emit(self.flow_id) if self.flow_id else None
+        )
+        row.addWidget(duplicate)
         layout.addLayout(row)
-        self.context_widget=QWidget();context_row=QHBoxLayout(self.context_widget);context_row.setContentsMargins(0,0,0,0);self.context_label=QLabel();self.context_label.setWordWrap(True);context_row.addWidget(self.context_label,1)
-        back=QToolButton();back.setIcon(icon('design'));back.setText('Ver no Design');back.setToolTip('Selecionar a origem deste evento no Designer');back.setAccessibleName('Ver origem no Designer');back.clicked.connect(self.show_origin);context_row.addWidget(back);layout.addWidget(self.context_widget)
-        self.targets=QComboBox(self);self.targets.hide()
-        self.add_event=QPushButton('+ Evento…');self.add_event.setToolTip('Conectar um clique ou a abertura de uma janela à lógica.');self.add_event.clicked.connect(self.new_event_dialog);row.addWidget(self.add_event)
-        hint = QLabel('Encaixe os blocos em “fazer”. Botão direito adiciona comentários. Selecione um bloco para localizar sua linha Python.')
+        self.context_widget = QWidget()
+        context_row = QHBoxLayout(self.context_widget)
+        context_row.setContentsMargins(0, 0, 0, 0)
+        self.context_label = QLabel()
+        self.context_label.setWordWrap(True)
+        context_row.addWidget(self.context_label, 1)
+        back = QToolButton()
+        back.setIcon(icon("design"))
+        back.setText("Ver no Design")
+        back.setToolTip("Selecionar a origem deste evento no Designer")
+        back.setAccessibleName("Ver origem no Designer")
+        back.clicked.connect(self.show_origin)
+        context_row.addWidget(back)
+        layout.addWidget(self.context_widget)
+        self.targets = QComboBox(self)
+        self.targets.hide()
+        self.add_event = QPushButton("+ Evento…")
+        self.add_event.setToolTip("Conectar um clique ou a abertura de uma janela à lógica.")
+        self.add_event.clicked.connect(self.new_event_dialog)
+        row.addWidget(self.add_event)
+        hint = QLabel(
+            "Encaixe os blocos em “fazer”. Botão direito adiciona comentários. Selecione um bloco para localizar sua linha Python."
+        )
         hint.setWordWrap(True)
         hint.hide()
-        self.selected_block=''
-        self.edit_text=QPushButton('Editar texto ou script…')
-        self.edit_text.setToolTip('Selecione um bloco de texto ou de execução Bash para editar várias linhas.')
+        self.selected_block = ""
+        self.edit_text = QPushButton("Editar texto ou script…")
+        self.edit_text.setToolTip(
+            "Selecione um bloco de texto ou de execução Bash para editar várias linhas."
+        )
         self.edit_text.setEnabled(False)
         self.edit_text.clicked.connect(self._edit_text)
-        layout.addWidget(self.edit_text,0,Qt.AlignmentFlag.AlignLeft)
-        self.splitter = QSplitter();self.splitter.setHandleWidth(4)
-        self.placeholder = QLabel('O editor de blocos será carregado ao abrir esta aba.')
+        layout.addWidget(self.edit_text, 0, Qt.AlignmentFlag.AlignLeft)
+        self.splitter = QSplitter()
+        self.splitter.setHandleWidth(4)
+        self.placeholder = QLabel("O editor de blocos será carregado ao abrir esta aba.")
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.surfaces=QStackedWidget();self.surfaces.addWidget(self.placeholder)
+        self.surfaces = QStackedWidget()
+        self.surfaces.addWidget(self.placeholder)
         from .graph import GraphPanel
-        self.graph_panel=GraphPanel(self.get_source,self);self.surfaces.addWidget(self.graph_panel)
-        self.graph_panel.changed.connect(self.graph_changed);self.graph_panel.error.connect(self.error);self.graph_panel.breakpoint_requested.connect(self.breakpoint_requested)
+
+        self.graph_panel = GraphPanel(self.get_source, self)
+        self.surfaces.addWidget(self.graph_panel)
+        self.graph_panel.changed.connect(self.graph_changed)
+        self.graph_panel.error.connect(self.error)
+        self.graph_panel.breakpoint_requested.connect(self.breakpoint_requested)
         self.splitter.addWidget(self.surfaces)
         code_box = QWidget()
         code_layout = QVBoxLayout(code_box)
         code_layout.setContentsMargins(0, 0, 0, 0)
-        code_header=QHBoxLayout();code_header.addWidget(QLabel('Python gerado'),1)
-        complete=QToolButton();complete.setIcon(icon('code'));complete.setToolTip('Ver arquivo completo');complete.setAccessibleName('Ver arquivo completo');complete.clicked.connect(lambda:self.full_code_requested.emit(self.code_start+self.code.textCursor().blockNumber()));code_header.addWidget(complete)
-        self.code_start=1;self._selecting_code=False
+        code_header = QHBoxLayout()
+        code_header.addWidget(QLabel("Python gerado"), 1)
+        complete = QToolButton()
+        complete.setIcon(icon("code"))
+        complete.setToolTip("Ver arquivo completo")
+        complete.setAccessibleName("Ver arquivo completo")
+        complete.clicked.connect(
+            lambda: self.full_code_requested.emit(
+                self.code_start + self.code.textCursor().blockNumber()
+            )
+        )
+        code_header.addWidget(complete)
+        self.code_start = 1
+        self._selecting_code = False
         self.code = CodeEditor(True)
         self.code.origin_requested.connect(self.focus_code_origin)
-        wrap=QCheckBox('Quebrar linhas');wrap.toggled.connect(lambda enabled:self.code.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth if enabled else QPlainTextEdit.LineWrapMode.NoWrap));code_header.addWidget(wrap);code_layout.addLayout(code_header)
+        wrap = QCheckBox("Quebrar linhas")
+        wrap.toggled.connect(
+            lambda enabled: self.code.setLineWrapMode(
+                QPlainTextEdit.LineWrapMode.WidgetWidth
+                if enabled
+                else QPlainTextEdit.LineWrapMode.NoWrap
+            )
+        )
+        code_header.addWidget(wrap)
+        code_layout.addLayout(code_header)
         code_layout.addWidget(self.code)
         self.code.cursorPositionChanged.connect(self._select_line)
         self.splitter.addWidget(code_box)
@@ -172,54 +268,79 @@ class LogicPanel(QWidget):
 
     def new_event_dialog(self):
         """Uma ação curta abre a escolha de origem, sem uma segunda barra permanente."""
-        dialog=QDialog(self);dialog.setWindowTitle('Novo evento');dialog.setFixedWidth(460);layout=QVBoxLayout(dialog)
-        layout.addWidget(QLabel('Quando acontecer'))
-        choices=QComboBox()
-        for index in range(self.targets.count()):choices.addItem(self.targets.itemText(index),self.targets.itemData(index))
-        choices.setCurrentIndex(max(0,choices.findData(self.targets.currentData())));layout.addWidget(choices)
-        buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel);buttons.button(QDialogButtonBox.StandardButton.Save).setText('Conectar evento');buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Novo evento")
+        dialog.setFixedWidth(460)
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(QLabel("Quando acontecer"))
+        choices = QComboBox()
+        for index in range(self.targets.count()):
+            choices.addItem(self.targets.itemText(index), self.targets.itemData(index))
+        choices.setCurrentIndex(max(0, choices.findData(self.targets.currentData())))
+        layout.addWidget(choices)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText("Conectar evento")
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
         dialog.setFixedHeight(dialog.sizeHint().height())
-        if dialog.exec()==QDialog.DialogCode.Accepted and choices.currentData():self.add_requested.emit(choices.currentData())
+        if dialog.exec() == QDialog.DialogCode.Accepted and choices.currentData():
+            self.add_requested.emit(choices.currentData())
 
     def ensure_loaded(self):
         """Abre exclusivamente recursos locais, com perfil temporário sem rede."""
         if self.view is not None:
             return
-        from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings, QWebEngineUrlRequestInterceptor
+        from PySide6.QtWebEngineCore import (
+            QWebEnginePage,
+            QWebEngineProfile,
+            QWebEngineSettings,
+            QWebEngineUrlRequestInterceptor,
+        )
         from PySide6.QtWebEngineWidgets import QWebEngineView
         from PySide6.QtWebChannel import QWebChannel
-        root = Path(__file__).resolve().parent.parent / 'web'
+
+        root = Path(__file__).resolve().parent.parent / "web"
 
         class LocalRequests(QWebEngineUrlRequestInterceptor):
             """Bloqueia rede e arquivos fora dos recursos incorporados."""
+
             def interceptRequest(self, info):
                 """Permite apenas o diretório web e o script interno do Qt."""
                 url = info.requestUrl()
-                allowed = url.toString() == 'qrc:///qtwebchannel/qwebchannel.js'
-                if url.scheme() == 'file':
+                allowed = url.toString() == "qrc:///qtwebchannel/qwebchannel.js"
+                if url.scheme() == "file":
                     allowed = Path(url.toLocalFile()).resolve().is_relative_to(root)
-                info.block(not allowed and url.scheme() != 'data')
+                info.block(not allowed and url.scheme() != "data")
 
         class LocalPage(QWebEnginePage):
             """Recusa navegação para fora da entrada HTML do editor."""
+
             def acceptNavigationRequest(self, url, navigation_type, main_frame):
                 """Só a entrada incorporada pode ocupar a página principal."""
-                return url == QUrl.fromLocalFile(str(root / 'index.html'))
+                return url == QUrl.fromLocalFile(str(root / "index.html"))
 
             def javaScriptConsoleMessage(page_self, level, message, line, source):
                 """Encaminha erros de inicialização ao painel nativo."""
                 if level == QWebEnginePage.JavaScriptConsoleMessageLevel.ErrorMessageLevel:
-                    self.diagnostics.setText(f'Blockly: {message} (linha {line})')
+                    self.diagnostics.setText(f"Blockly: {message} (linha {line})")
 
         class LocalView(QWebEngineView):
             """Encaminha atalhos de arquivo/histórico para o documento nativo."""
+
             def keyPressEvent(view_self, event):
                 """Evita um segundo histórico de desfazer dentro do navegador."""
                 if event.matches(QKeySequence.StandardKey.Save):
                     self.save_requested.emit()
                 elif event.matches(QKeySequence.StandardKey.Undo):
                     self.undo_requested.emit()
-                elif event.matches(QKeySequence.StandardKey.Redo) or event.keyCombination().toCombined() == QKeySequence('Ctrl+Shift+Z')[0].toCombined():
+                elif (
+                    event.matches(QKeySequence.StandardKey.Redo)
+                    or event.keyCombination().toCombined()
+                    == QKeySequence("Ctrl+Shift+Z")[0].toCombined()
+                ):
                     self.redo_requested.emit()
                 else:
                     super().keyPressEvent(event)
@@ -233,16 +354,23 @@ class LogicPanel(QWidget):
         self.page = LocalPage(self.profile, self.view)
         self.view.setPage(self.page)
         from .theme import manager
+
         self.page.setBackgroundColor(QColor(manager().tokens["canvas"]))
         # Ordem de destruição: a vista/página morre antes do perfil Chromium.
         self.profile.setParent(self)
-        self.page.settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, False)
-        self.page.settings().setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanOpenWindows, False)
-        self.page.settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
+        self.page.settings().setAttribute(
+            QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, False
+        )
+        self.page.settings().setAttribute(
+            QWebEngineSettings.WebAttribute.JavascriptCanOpenWindows, False
+        )
+        self.page.settings().setAttribute(
+            QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True
+        )
         self.channel = QWebChannel(self.page)
         self.bridge = LogicBridge(self.channel)
         self.bridge.breakpoint_requested.connect(self.breakpoint_requested)
-        self.channel.registerObject('bridge', self.bridge)
+        self.channel.registerObject("bridge", self.bridge)
         self.page.setWebChannel(self.channel)
         self.bridge.update_received.connect(self._receive)
         self.bridge.block_selected.connect(self._select_block)
@@ -251,10 +379,11 @@ class LogicPanel(QWidget):
         self.bridge.pending_received.connect(self._mark_pending)
         self.bridge.command_received.connect(self._command)
         self.surfaces.addWidget(self.view)
-        flow=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
-        if not flow or flow.get('editor','blocks')=='blocks':self.surfaces.setCurrentWidget(self.view)
+        flow = next((f for f in self.get_project().editable_flows if f["id"] == self.flow_id), None)
+        if not flow or flow.get("editor", "blocks") == "blocks":
+            self.surfaces.setCurrentWidget(self.view)
         self.placeholder.deleteLater()
-        self.view.load(QUrl.fromLocalFile(str(root / 'index.html')))
+        self.view.load(QUrl.fromLocalFile(str(root / "index.html")))
         self.view.loadFinished.connect(self._load_finished)
         self.page.renderProcessTerminated.connect(lambda *_: self._load_finished(False))
 
@@ -262,7 +391,9 @@ class LogicPanel(QWidget):
         """Explica falha de recurso sem fingir que há editor de blocos disponível."""
         if not ok:
             self.ready = False
-            self.diagnostics.setText('Não foi possível carregar Blockly. Reabra o Makebench; a interface e os arquivos salvos continuam disponíveis.')
+            self.diagnostics.setText(
+                "Não foi possível carregar Blockly. Reabra o Makebench; a interface e os arquivos salvos continuam disponíveis."
+            )
 
     def _became_ready(self):
         """Envia o contexto inicial assim que o canal está pronto."""
@@ -271,6 +402,7 @@ class LogicPanel(QWidget):
         self._payload = None
         self.sync()
         from .theme import manager
+
         manager().changed.connect(self.apply_theme)
         self.apply_theme(manager().tokens)
 
@@ -284,7 +416,7 @@ class LogicPanel(QWidget):
             self.events.setCurrentIndex(self.events.findData(self.flow_id))
             self.events.blockSignals(False)
             return
-        self._target_component=None
+        self._target_component = None
         self.flow_id = requested
         self.sync()
 
@@ -296,120 +428,286 @@ class LogicPanel(QWidget):
     def sync(self, flow_id=None):
         """Atualiza eventos/componentes sem recarregar a página web inteira."""
         project = self.get_project()
-        if flow_id is not None and flow_id!=self.flow_id and not self.before_switch():return
+        if flow_id is not None and flow_id != self.flow_id and not self.before_switch():
+            return
         if flow_id is not None:
             self.flow_id = flow_id
         flows = project.workflows if editable(project) else []
-        if self.flow_id not in {f['id'] for f in flows}:
-            candidates=[f for f in flows if not self._target_component or f['event']['component']==self._target_component]
-            self.flow_id=candidates[0]['id'] if candidates else None
-        flow = next((f for f in flows if f['id'] == self.flow_id), None)
+        if self.flow_id not in {f["id"] for f in flows}:
+            candidates = [
+                f
+                for f in flows
+                if not self._target_component or f["event"]["component"] == self._target_component
+            ]
+            self.flow_id = candidates[0]["id"] if candidates else None
+        flow = next((f for f in flows if f["id"] == self.flow_id), None)
         from .controls import reconcile_combo
-        reconcile_combo(self.events,[((project.window_of(item['event']['component']).properties.get('title','Interface')+' › ' if len(project.roots)>1 else '')+item['name'],item['id']) for item in flows],self.flow_id)
-        self.name.setText(flow['name'] if flow else '')
-        nodes=bool(flow and flow.get('editor')=='nodes')
-        self.editor_kind.blockSignals(True);self.editor_kind.setCurrentIndex(1 if nodes else 0);self.editor_kind.setEnabled(flow is not None);self.editor_kind.blockSignals(False)
-        self.versions.setEnabled(bool(flow and flow.get('behavior_backups')))
-        self.surfaces.setCurrentWidget(self.graph_panel if nodes else self.view if self.view is not None else self.placeholder)
-        self.graph_panel.sync(project,flow if nodes else None)
+
+        reconcile_combo(
+            self.events,
+            [
+                (
+                    (
+                        project.window_of(item["event"]["component"]).properties.get(
+                            "title", "Interface"
+                        )
+                        + " › "
+                        if len(project.roots) > 1
+                        else ""
+                    )
+                    + item["name"],
+                    item["id"],
+                )
+                for item in flows
+            ],
+            self.flow_id,
+        )
+        self.name.setText(flow["name"] if flow else "")
+        nodes = bool(flow and flow.get("editor") == "nodes")
+        self.editor_kind.blockSignals(True)
+        self.editor_kind.setCurrentIndex(1 if nodes else 0)
+        self.editor_kind.setEnabled(flow is not None)
+        self.editor_kind.blockSignals(False)
+        self.versions.setEnabled(bool(flow and flow.get("behavior_backups")))
+        self.surfaces.setCurrentWidget(
+            self.graph_panel if nodes else self.view if self.view is not None else self.placeholder
+        )
+        self.graph_panel.sync(project, flow if nodes else None)
         self.edit_text.setVisible(not nodes)
 
-        owner=project.window_of(flow['event']['component']) if flow else project.window_of(self._target_component) if self._target_component and project.find(self._target_component) else project.root
-        filters=flow.get('states',[]) if flow else []
-        entries=[('em qualquer estado',[]),('só no Padrão',['@default']),*[("só em "+state['name'],[state['id']]) for state in project.states.get(owner.id,[])],('Escolher vários estados…','@choose')]
-        if filters not in [value for _,value in entries]:entries.append(('filtro de vários estados',filters))
-        reconcile_combo(self.state_filter,entries,filters);self.state_filter.setEnabled(flow is not None)
+        owner = (
+            project.window_of(flow["event"]["component"])
+            if flow
+            else project.window_of(self._target_component)
+            if self._target_component and project.find(self._target_component)
+            else project.root
+        )
+        filters = flow.get("states", []) if flow else []
+        entries = [
+            ("em qualquer estado", []),
+            ("só no Padrão", ["@default"]),
+            *[
+                ("só em " + state["name"], [state["id"]])
+                for state in project.states.get(owner.id, [])
+            ],
+            ("Escolher vários estados…", "@choose"),
+        ]
+        if filters not in [value for _, value in entries]:
+            entries.append(("filtro de vários estados", filters))
+        reconcile_combo(self.state_filter, entries, filters)
+        self.state_filter.setEnabled(flow is not None)
         self.name.setEnabled(flow is not None)
         self.remove.setEnabled(flow is not None)
         target = self._target_component or self.targets.currentData()
-        targets=[(('Ao iniciar: ' if node.kind==ComponentKind.WINDOW else 'Ao clicar: ')+(project.window_of(node.id).properties.get('title','Interface')+' › ' if len(project.roots)>1 else '')+node.display_name,node.id) for node in project.walk() if node.kind in {ComponentKind.WINDOW,ComponentKind.BUTTON}]
-        reconcile_combo(self.targets,targets,target if target in [value for _,value in targets] else targets[0][1] if targets else None)
-        components = [{'id':n.id,'kind':n.kind.value,'name':project.window_of(n.id).properties.get('title','Janela')+' › '+(n.properties.get('code_name') or n.display_name)} for n in project.walk()]
+        targets = [
+            (
+                ("Ao iniciar: " if node.kind == ComponentKind.WINDOW else "Ao clicar: ")
+                + (
+                    project.window_of(node.id).properties.get("title", "Interface") + " › "
+                    if len(project.roots) > 1
+                    else ""
+                )
+                + node.display_name,
+                node.id,
+            )
+            for node in project.walk()
+            if node.kind in {ComponentKind.WINDOW, ComponentKind.BUTTON}
+        ]
+        reconcile_combo(
+            self.targets,
+            targets,
+            target
+            if target in [value for _, value in targets]
+            else targets[0][1]
+            if targets
+            else None,
+        )
+        components = [
+            {
+                "id": n.id,
+                "kind": n.kind.value,
+                "name": project.window_of(n.id).properties.get("title", "Janela")
+                + " › "
+                + (n.properties.get("code_name") or n.display_name),
+            }
+            for n in project.walk()
+        ]
         try:
-            function_info=[{'name':n.name,'signature':n.name+'('+', '.join(a.arg for a in n.args.args)+')','description':(ast.get_docstring(n) or '').split('\n')[0]} for n in ast.parse(self.get_source()).body if isinstance(n,ast.FunctionDef)]
-        except (SyntaxError,ValueError):function_info=[]
-        variables=[dict(item) for item in project.variables if item.get('scope','project')=='project' or item.get('window')==owner.id]
+            function_info = [
+                {
+                    "name": n.name,
+                    "signature": n.name + "(" + ", ".join(a.arg for a in n.args.args) + ")",
+                    "description": (ast.get_docstring(n) or "").split("\n")[0],
+                }
+                for n in ast.parse(self.get_source()).body
+                if isinstance(n, ast.FunctionDef)
+            ]
+        except (SyntaxError, ValueError):
+            function_info = []
+        variables = [
+            dict(item)
+            for item in project.variables
+            if item.get("scope", "project") == "project" or item.get("window") == owner.id
+        ]
+
         def collect(value):
             """Reúne variáveis declaradas e implícitas sem avaliar expressões."""
-            if isinstance(value,dict):
-                if value.get('op') in {'assign','variable','ask'} and value.get('name'):
-                    candidate={'name':value['name'],'scope':value.get('scope','project')}
-                    if not any(item['name']==candidate['name'] and item.get('scope','project')==candidate['scope'] for item in variables):variables.append(candidate)
-                for child in value.values():collect(child)
-            elif isinstance(value,list):
-                for child in value:collect(child)
-        if flow:collect(flow.get('body'))
-        payload = {'variables':variables,'function_info':function_info,'windows':[{'id':r.id,'name':r.properties.get('title','Janela')} for r in project.roots], 'states':[{'id':'@default','name':'Padrão'}, *[{'id':s['id'],'name':s['name']} for s in project.states.get(owner.id,[])]], 'project':project.id, 'flow':flow, 'components':components, 'functions':function_names(self.get_source())[0]}
+            if isinstance(value, dict):
+                if value.get("op") in {"assign", "variable", "ask"} and value.get("name"):
+                    candidate = {"name": value["name"], "scope": value.get("scope", "project")}
+                    if not any(
+                        item["name"] == candidate["name"]
+                        and item.get("scope", "project") == candidate["scope"]
+                        for item in variables
+                    ):
+                        variables.append(candidate)
+                for child in value.values():
+                    collect(child)
+            elif isinstance(value, list):
+                for child in value:
+                    collect(child)
+
+        if flow:
+            collect(flow.get("body"))
+        payload = {
+            "variables": variables,
+            "function_info": function_info,
+            "windows": [
+                {"id": r.id, "name": r.properties.get("title", "Janela")} for r in project.roots
+            ],
+            "states": [
+                {"id": "@default", "name": "Padrão"},
+                *[{"id": s["id"], "name": s["name"]} for s in project.states.get(owner.id, [])],
+            ],
+            "project": project.id,
+            "flow": flow,
+            "components": components,
+            "functions": function_names(self.get_source())[0],
+        }
         serialized = json.dumps(payload, ensure_ascii=False)
         if self.ready and not nodes and serialized != self._payload:
             self._payload = serialized
             self.token = uuid4().hex
             self.pending = False
             self.pending_changed.emit()
-            payload['token'] = self.token
+            payload["token"] = self.token
             self.bridge.documentChanged.emit(json.dumps(payload, ensure_ascii=False))
         if flow:
-            component=project.find(flow['event']['component']);verb='iniciar' if component.kind==ComponentKind.WINDOW else 'clicar em '+component.display_name
-            self.context_label.setText('Quando '+verb+' · '+owner.properties.get('title','Janela'))
-        else:self.context_label.setText('Escolha um evento ou conecte um novo para começar.')
+            component = project.find(flow["event"]["component"])
+            verb = (
+                "iniciar"
+                if component.kind == ComponentKind.WINDOW
+                else "clicar em " + component.display_name
+            )
+            self.context_label.setText(
+                "Quando " + verb + " · " + owner.properties.get("title", "Janela")
+            )
+        else:
+            self.context_label.setText("Escolha um evento ou conecte um novo para começar.")
         self.update_code()
 
     def show_origin(self):
         """Retorna ao componente que dispara o fluxo sem alterar seu comportamento."""
-        flow=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
-        if flow:self.design_requested.emit(flow['event']['component'])
+        flow = next((f for f in self.get_project().editable_flows if f["id"] == self.flow_id), None)
+        if flow:
+            self.design_requested.emit(flow["event"]["component"])
 
     def update_code(self):
         """Regenera Python visível a partir do modelo, sem executar funções."""
         self.generated = generate(self.get_project(), self.get_source())
-        lines=self.generated.text.splitlines()
-        flow_index=next((index for index,f in enumerate(self.get_project().editable_flows,1) if f['id']==self.flow_id),None)
-        start=next((i for i,line in enumerate(lines) if line.startswith(f'def on_event_{flow_index}(')),None)
+        lines = self.generated.text.splitlines()
+        flow_index = next(
+            (
+                index
+                for index, f in enumerate(self.get_project().editable_flows, 1)
+                if f["id"] == self.flow_id
+            ),
+            None,
+        )
+        start = next(
+            (i for i, line in enumerate(lines) if line.startswith(f"def on_event_{flow_index}(")),
+            None,
+        )
         if start is not None:
-            end=next((i for i in range(start+1,len(lines)) if lines[i].startswith('# Evento:')),len(lines))
-            while end>start and (not lines[end-1].strip() or lines[end-1].startswith('# ')):end-=1
-            text='\n'.join(lines[start:end])+'\n';self.code_start=start+1
-        else:text='';self.code_start=1
-        if self.code.toPlainText()!=text:self.code.setPlainText(text)
-        self.diagnostics.setText('\n'.join(self.generated.diagnostics) or ('Grafo salvo. F5 executa; F6 depura o snapshot.' if self.editor_kind.currentData()=='nodes' else 'Blocos salvos. Use F5 para testar o aplicativo e acompanhar a saída.'))
+            end = next(
+                (i for i in range(start + 1, len(lines)) if lines[i].startswith("# Evento:")),
+                len(lines),
+            )
+            while end > start and (not lines[end - 1].strip() or lines[end - 1].startswith("# ")):
+                end -= 1
+            text = "\n".join(lines[start:end]) + "\n"
+            self.code_start = start + 1
+        else:
+            text = ""
+            self.code_start = 1
+        if self.code.toPlainText() != text:
+            self.code.setPlainText(text)
+        self.diagnostics.setText(
+            "\n".join(self.generated.diagnostics)
+            or (
+                "Grafo salvo. F5 executa; F6 depura o snapshot."
+                if self.editor_kind.currentData() == "nodes"
+                else "Blocos salvos. Use F5 para testar o aplicativo e acompanhar a saída."
+            )
+        )
 
     def _select_block(self, flow, block):
         """Mostra a linha gerada correspondente à seleção de Blockly."""
-        self.selected_block=block
+        self.selected_block = block
         self.edit_text.setEnabled(bool(block))
         line = self.generated.lines.get((flow, block))
         if line:
-            self._selecting_code=True
-            try:self.code.show_line(line-self.code_start+1)
-            finally:self._selecting_code=False
+            self._selecting_code = True
+            try:
+                self.code.show_line(line - self.code_start + 1)
+            finally:
+                self._selecting_code = False
 
     def _edit_text(self):
         """Edita texto multilinha sem executar scripts nem concatenar argumentos."""
         if not self.ready or not self.selected_block:
             return
-        self.page.runJavaScript("JSON.stringify(window.makebench.textValue("+json.dumps(self.selected_block)+"))", self._text_dialog)
+        self.page.runJavaScript(
+            "JSON.stringify(window.makebench.textValue(" + json.dumps(self.selected_block) + "))",
+            self._text_dialog,
+        )
 
     def _text_dialog(self, result):
         """Abre um editor nativo para um literal textual do workspace atual."""
-        if not result or result=='null':
-            self.diagnostics.setText('Selecione um bloco de texto ou um bloco “executar Bash” com texto conectado.')
+        if not result or result == "null":
+            self.diagnostics.setText(
+                "Selecione um bloco de texto ou um bloco “executar Bash” com texto conectado."
+            )
             return
         self.script_requested.emit(json.loads(result))
 
     def focus_block(self, flow, block, attempt=0):
         """Revela origem de erro assim que o workspace solicitado está disponível."""
-        target=next((f for f in self.get_project().editable_flows if f['id']==flow),None)
-        if target and target.get('editor')=='nodes':
-            if self.flow_id!=flow:self.sync(flow)
-            self.graph_panel.focus_node(block);return
+        target = next((f for f in self.get_project().editable_flows if f["id"] == flow), None)
+        if target and target.get("editor") == "nodes":
+            if self.flow_id != flow:
+                self.sync(flow)
+            self.graph_panel.focus_node(block)
+            return
         self._select_block(flow, block)
         if attempt >= 30:
             return
         if not self.ready:
             QTimer.singleShot(100, lambda: self.focus_block(flow, block, attempt + 1))
             return
-        code = "(() => {const ws=window.makebench?.workspace;const b=ws?.getBlockById(" + json.dumps(block) + ");if(!b)return false;b.select();ws.centerOnBlock(b.id);return true;})()"
-        self.page.runJavaScript(code, lambda found: QTimer.singleShot(50, lambda: self.focus_block(flow, block, attempt + 1)) if not found else None)
+        code = (
+            "(() => {const ws=window.makebench?.workspace;const b=ws?.getBlockById("
+            + json.dumps(block)
+            + ");if(!b)return false;b.select();ws.centerOnBlock(b.id);return true;})()"
+        )
+        self.page.runJavaScript(
+            code,
+            lambda found: (
+                QTimer.singleShot(50, lambda: self.focus_block(flow, block, attempt + 1))
+                if not found
+                else None
+            ),
+        )
 
     def _mark_pending(self, token):
         """Mantém desfazer e aviso de alterações disponíveis antes do debounce."""
@@ -419,26 +717,43 @@ class LogicPanel(QWidget):
 
     def _command(self, name):
         """Entrega atalhos capturados no DOM ao documento nativo."""
-        if name=='find_block':self.search_requested.emit()
-        elif name=='new_event':self.new_event_dialog()
-        elif name=='python':self.full_code_requested.emit(self.code_start+self.code.textCursor().blockNumber())
-        elif name=='function':
-            if self.ready:self.page.runJavaScript('window.makebench.selectedFunction()',lambda value:self.function_requested.emit(value) if value else None)
-        else:{'save':self.save_requested,'undo':self.undo_requested,'redo':self.redo_requested}[name].emit()
+        if name == "find_block":
+            self.search_requested.emit()
+        elif name == "new_event":
+            self.new_event_dialog()
+        elif name == "python":
+            self.full_code_requested.emit(self.code_start + self.code.textCursor().blockNumber())
+        elif name == "function":
+            if self.ready:
+                self.page.runJavaScript(
+                    "window.makebench.selectedFunction()",
+                    lambda value: self.function_requested.emit(value) if value else None,
+                )
+        else:
+            {"save": self.save_requested, "undo": self.undo_requested, "redo": self.redo_requested}[
+                name
+            ].emit()
 
     def _receive(self, payload):
         """Ignora mensagens de sessão antiga e entrega atualização validável."""
         try:
             data = json.loads(payload)
-            current=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
-            if current and current.get('editor')=='nodes':return
-            if not isinstance(data, dict) or data.get('token') != self.token or data.get('flow') != self.flow_id:
+            current = next(
+                (f for f in self.get_project().editable_flows if f["id"] == self.flow_id), None
+            )
+            if current and current.get("editor") == "nodes":
+                return
+            if (
+                not isinstance(data, dict)
+                or data.get("token") != self.token
+                or data.get("flow") != self.flow_id
+            ):
                 return
             self.pending = False
             self.flow_changed.emit(data)
             self.pending_changed.emit()
         except (ValueError, TypeError) as exc:
-            self.error.emit(f'Dados de blocos inválidos: {exc}')
+            self.error.emit(f"Dados de blocos inválidos: {exc}")
 
     def flush(self):
         """Obtém mudanças ainda na web antes de salvar, trocar ou desfazer.
@@ -446,26 +761,32 @@ class LogicPanel(QWidget):
         O retorno JavaScript evita depender do debounce do canal. Em falha não
         autoriza uma operação que poderia perder alterações não confirmadas.
         """
-        flow=next((f for f in self.get_project().editable_flows if f['id']==self.flow_id),None)
-        if flow and flow.get('editor')=='nodes':
-            if self.graph_panel.layout_timer.isActive():self.graph_panel.layout_timer.stop();self.graph_panel.commit_layout()
+        flow = next((f for f in self.get_project().editable_flows if f["id"] == self.flow_id), None)
+        if flow and flow.get("editor") == "nodes":
+            if self.graph_panel.layout_timer.isActive():
+                self.graph_panel.layout_timer.stop()
+                self.graph_panel.commit_layout()
             self.graph_panel.flush()
             return True
         if self.view is None or self._flushing:
             return True
         if not self.ready:
             if self._had_ready:
-                self.error.emit('O processo Blockly foi encerrado. Reabra o Makebench para continuar; o último arquivo salvo foi preservado.')
+                self.error.emit(
+                    "O processo Blockly foi encerrado. Reabra o Makebench para continuar; o último arquivo salvo foi preservado."
+                )
                 return False
             return True
         self._flushing = True
         loop = QEventLoop()
         results = []
+
         def finished(value):
             """Finaliza a espera curta quando JavaScript devolve o retrato."""
             results.append(value)
             loop.quit()
-        self.page.runJavaScript('JSON.stringify(window.makebench.flush(true))', finished)
+
+        self.page.runJavaScript("JSON.stringify(window.makebench.flush(true))", finished)
         timer = QTimer()
         timer.setSingleShot(True)
         timer.timeout.connect(loop.quit)
@@ -474,50 +795,95 @@ class LogicPanel(QWidget):
         timer.stop()
         self._flushing = False
         if not results:
-            self.error.emit('Blockly não respondeu. Aguarde e tente salvar novamente antes de fechar.')
+            self.error.emit(
+                "Blockly não respondeu. Aguarde e tente salvar novamente antes de fechar."
+            )
             return False
-        if results[0] and results[0] != 'null':
+        if results[0] and results[0] != "null":
             self._receive(results[0])
         return True
 
     def _change_filter(self):
         """Confirma o workspace antes de alterar o filtro declarativo do evento."""
-        if not self.flow_id or not self.flush():return
-        if self.state_filter.currentData()=='@choose':
-            from PySide6.QtWidgets import QListWidget,QListWidgetItem
-            flow=next(f for f in self.get_project().workflows if f['id']==self.flow_id)
-            owner=self.get_project().window_of(flow['event']['component'])
-            dialog=QDialog(self);dialog.setWindowTitle('Executar neste(s) estado(s)');layout=QVBoxLayout(dialog)
-            choices=QListWidget();choices.setSelectionMode(choices.SelectionMode.MultiSelection)
-            for state in [{'id':'@default','name':'Padrão'},*self.get_project().states.get(owner.id,[])]:
-                item=QListWidgetItem(state['name']);item.setData(Qt.ItemDataRole.UserRole,state['id']);choices.addItem(item);item.setSelected(state['id'] in flow.get('states',[]))
-            layout.addWidget(choices);buttons=QDialogButtonBox(QDialogButtonBox.StandardButton.Save|QDialogButtonBox.StandardButton.Cancel)
-            buttons.accepted.connect(dialog.accept);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons)
-            if dialog.exec()==QDialog.DialogCode.Accepted:self.filter_requested.emit(self.flow_id,[item.data(Qt.ItemDataRole.UserRole) for item in choices.selectedItems()])
-            else:self.sync()
-        else:self.filter_requested.emit(self.flow_id,self.state_filter.currentData())
+        if not self.flow_id or not self.flush():
+            return
+        if self.state_filter.currentData() == "@choose":
+            from PySide6.QtWidgets import QListWidget, QListWidgetItem
+
+            flow = next(f for f in self.get_project().workflows if f["id"] == self.flow_id)
+            owner = self.get_project().window_of(flow["event"]["component"])
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Executar neste(s) estado(s)")
+            layout = QVBoxLayout(dialog)
+            choices = QListWidget()
+            choices.setSelectionMode(choices.SelectionMode.MultiSelection)
+            for state in [
+                {"id": "@default", "name": "Padrão"},
+                *self.get_project().states.get(owner.id, []),
+            ]:
+                item = QListWidgetItem(state["name"])
+                item.setData(Qt.ItemDataRole.UserRole, state["id"])
+                choices.addItem(item)
+                item.setSelected(state["id"] in flow.get("states", []))
+            layout.addWidget(choices)
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+            )
+            buttons.accepted.connect(dialog.accept)
+            buttons.rejected.connect(dialog.reject)
+            layout.addWidget(buttons)
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                self.filter_requested.emit(
+                    self.flow_id,
+                    [item.data(Qt.ItemDataRole.UserRole) for item in choices.selectedItems()],
+                )
+            else:
+                self.sync()
+        else:
+            self.filter_requested.emit(self.flow_id, self.state_filter.currentData())
 
     def _select_line(self):
         """Relaciona a linha visível ao bloco, sem recarregar ou alterar a lógica."""
-        if not self.ready or self._selecting_code:return
-        line=self.code_start+self.code.textCursor().blockNumber()
-        match=next(((flow,block) for (flow,block),number in self.generated.lines.items() if flow==self.flow_id and number==line),None)
-        if match and match[1]!=self.selected_block:self.focus_block(*match)
+        if not self.ready or self._selecting_code:
+            return
+        line = self.code_start + self.code.textCursor().blockNumber()
+        match = next(
+            (
+                (flow, block)
+                for (flow, block), number in self.generated.lines.items()
+                if flow == self.flow_id and number == line
+            ),
+            None,
+        )
+        if match and match[1] != self.selected_block:
+            self.focus_block(*match)
 
-    def apply_theme(self,tokens):
+    def apply_theme(self, tokens):
         """Entrega apenas tokens visuais à página local pelo canal JavaScript."""
-        if self.ready:self.page.runJavaScript('window.makebench.applyTheme('+json.dumps(tokens)+')')
+        if self.ready:
+            self.page.runJavaScript("window.makebench.applyTheme(" + json.dumps(tokens) + ")")
 
-    def select_component_event(self,component,state):
+    def select_component_event(self, component, state):
         """Seleciona o comportamento da origem atual ou mostra um estado vazio honesto."""
-        if not self.before_switch() or not self.flush():return
-        self._target_component=component
-        flows=[f for f in self.get_project().editable_flows if f['event']['component']==component]
-        flow=next((f for f in flows if state in f.get('states',[])),None) or next((f for f in flows if not f.get('states')),None)
-        self.flow_id=flow['id'] if flow else None;self.sync()
+        if not self.before_switch() or not self.flush():
+            return
+        self._target_component = component
+        flows = [
+            f for f in self.get_project().editable_flows if f["event"]["component"] == component
+        ]
+        flow = next((f for f in flows if state in f.get("states", [])), None) or next(
+            (f for f in flows if not f.get("states")), None
+        )
+        self.flow_id = flow["id"] if flow else None
+        self.sync()
 
-    def focus_code_origin(self,line):
+    def focus_code_origin(self, line):
         """O menu do Python recolhível localiza o bloco pela linha global correspondente."""
-        candidates=[(number,key) for key,number in self.generated.lines.items() if key[0]==self.flow_id and number<=self.code_start+line-1]
+        candidates = [
+            (number, key)
+            for key, number in self.generated.lines.items()
+            if key[0] == self.flow_id and number <= self.code_start + line - 1
+        ]
         if candidates:
-            _,key=max(candidates,key=lambda item:item[0]);self.focus_block(*key)
+            _, key = max(candidates, key=lambda item: item[0])
+            self.focus_block(*key)

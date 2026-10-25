@@ -50,7 +50,10 @@ class LayoutKind(StrEnum):
 
 
 CONTAINER_KINDS = {
-    ComponentKind.WINDOW, ComponentKind.CONTAINER, ComponentKind.PAGES, ComponentKind.PAGE,
+    ComponentKind.WINDOW,
+    ComponentKind.CONTAINER,
+    ComponentKind.PAGES,
+    ComponentKind.PAGE,
 }
 KIND_LABELS = {
     ComponentKind.SEPARATOR: "Separador",
@@ -78,8 +81,12 @@ LAYOUT_LABELS = {
 
 def has_graph(flow):
     """Detecta grafo ativo ou recuperável sem pressupor dados já validados."""
-    backups=flow.get('behavior_backups',[])
-    return flow.get('editor')=='nodes' or isinstance(backups,list) and any(isinstance(item,dict) and item.get('editor')=='nodes' for item in backups)
+    backups = flow.get("behavior_backups", [])
+    return (
+        flow.get("editor") == "nodes"
+        or isinstance(backups, list)
+        and any(isinstance(item, dict) and item.get("editor") == "nodes" for item in backups)
+    )
 
 
 def new_id(prefix: str) -> str:
@@ -176,7 +183,11 @@ class Component:
             type(properties["value"]) is not int or not 0 <= properties["value"] <= 100
         ):
             raise ProjectError(f"O progresso de {component_id} precisa estar entre 0 e 100.")
-        if kind == ComponentKind.IMAGE and "source" in properties and not isinstance(properties["source"], str):
+        if (
+            kind == ComponentKind.IMAGE
+            and "source" in properties
+            and not isinstance(properties["source"], str)
+        ):
             raise ProjectError("O caminho da imagem precisa ser texto.")
         if kind == ComponentKind.IMAGE and properties.get("source"):
             source = properties["source"]
@@ -184,8 +195,11 @@ class Component:
                 raise ProjectError("O caminho da imagem precisa ser texto.")
             path = PurePosixPath(source)
             if (
-                path.is_absolute() or ".." in path.parts or "\\" in source
-                or len(path.parts) < 2 or path.parts[0] != "assets"
+                path.is_absolute()
+                or ".." in path.parts
+                or "\\" in source
+                or len(path.parts) < 2
+                or path.parts[0] != "assets"
             ):
                 raise ProjectError("A imagem precisa estar na pasta assets do projeto.")
         for key in ("alt_text", "image_name"):
@@ -196,13 +210,19 @@ class Component:
         ):
             raise ProjectError("A grade precisa ter entre 1 e 12 colunas.")
         if kind == ComponentKind.TERMINAL:
-            if not isinstance(properties.get('terminal_program',''),str) or '\0' in properties.get('terminal_program',''):
-                raise ProjectError('Programa de terminal inválido.')
-            arguments=properties.get('terminal_arguments',[])
-            if not isinstance(arguments,list) or len(arguments)>256 or any(not isinstance(a,str) or '\0' in a for a in arguments):
-                raise ProjectError('Argumentos do terminal precisam ser uma lista de textos.')
-            if type(properties.get('terminal_autostart',False)) is not bool:
-                raise ProjectError('Início automático do terminal inválido.')
+            if not isinstance(
+                properties.get("terminal_program", ""), str
+            ) or "\0" in properties.get("terminal_program", ""):
+                raise ProjectError("Programa de terminal inválido.")
+            arguments = properties.get("terminal_arguments", [])
+            if (
+                not isinstance(arguments, list)
+                or len(arguments) > 256
+                or any(not isinstance(a, str) or "\0" in a for a in arguments)
+            ):
+                raise ProjectError("Argumentos do terminal precisam ser uma lista de textos.")
+            if type(properties.get("terminal_autostart", False)) is not bool:
+                raise ProjectError("Início automático do terminal inválido.")
         node = cls(
             id=component_id,
             kind=kind,
@@ -233,7 +253,7 @@ def create_component(kind: ComponentKind) -> Component:
     defaults = {
         ComponentKind.WINDOW: {"title": "Meu aplicativo"},
         ComponentKind.SEPARATOR: {},
-        ComponentKind.SPACER: {"size_mode":{"width":"fill","height":"fill"}},
+        ComponentKind.SPACER: {"size_mode": {"width": "fill", "height": "fill"}},
         ComponentKind.CONTAINER: {},
         ComponentKind.PAGES: {},
         ComponentKind.PAGE: {"title": "Nova página"},
@@ -244,7 +264,11 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.CHECKBOX: {"text": "Nova opção", "checked": False},
         ComponentKind.PROGRESS: {"value": 0},
         ComponentKind.OUTPUT: {"text": "A saída das tarefas aparecerá aqui."},
-        ComponentKind.TERMINAL: {"terminal_program":"", "terminal_arguments":[], "terminal_autostart":False},
+        ComponentKind.TERMINAL: {
+            "terminal_program": "",
+            "terminal_arguments": [],
+            "terminal_autostart": False,
+        },
     }
     node = Component(id=new_id(kind.value), kind=kind, properties=defaults[kind].copy())
     if node.can_have_children:
@@ -287,6 +311,7 @@ class Project:
     def editable_flows(self) -> list[dict[str, Any]]:
         """Retorna somente lógica reconhecida; extensões antigas continuam opacas."""
         from .logic import editable
+
         return self.workflows if editable(self) else []
 
     @property
@@ -301,40 +326,72 @@ class Project:
 
     def window_of(self, component_id: str) -> Component | None:
         """Resolve o escopo de janela de um componente, inclusive a própria janela."""
-        return next((root for root in self.roots if any(n.id == component_id for n in root.walk())), None)
+        return next(
+            (root for root in self.roots if any(n.id == component_id for n in root.walk())), None
+        )
 
-    def effective_root(self, window_id: str, state_id: str = '@default') -> Component:
+    def effective_root(self, window_id: str, state_id: str = "@default") -> Component:
         """Aplica sobrescritas a uma cópia; nunca modifica a composição padrão."""
         root = next((r for r in self.roots if r.id == window_id), None)
         if root is None:
-            raise ProjectError('A janela não existe.')
+            raise ProjectError("A janela não existe.")
         clone = deepcopy(root)
-        if state_id == '@default':
+        if state_id == "@default":
             return clone
-        state = next((item for item in self.states.get(window_id, []) if item['id'] == state_id), None)
+        state = next(
+            (item for item in self.states.get(window_id, []) if item["id"] == state_id), None
+        )
         if state is None:
-            raise ProjectError('O estado não pertence a esta janela.')
+            raise ProjectError("O estado não pertence a esta janela.")
         for node in clone.walk():
-            node.properties.update(deepcopy(state.get('overrides', {}).get(node.id, {})))
+            node.properties.update(deepcopy(state.get("overrides", {}).get(node.id, {})))
         return clone
 
     def uses_v5(self) -> bool:
         """Mantém escrita v4 até uma mudança que exige o contrato novo."""
+
         def new_logic(value):
             """Detecta semântica v5 em lógica completa ou em blocos ainda incompletos."""
-            if isinstance(value,dict):
-                if value.get('op') in {'go_state','open_window','close_window'} or value.get('scope') in {'window','local'}:return True
-                if value.get('type') in {'mb_go_state','mb_open_window','mb_close_window'}:return True
-                fields=value.get('fields',{})
-                if isinstance(fields,dict) and fields.get('SCOPE') in {'window','local'}:return True
+            if isinstance(value, dict):
+                if value.get("op") in {"go_state", "open_window", "close_window"} or value.get(
+                    "scope"
+                ) in {"window", "local"}:
+                    return True
+                if value.get("type") in {"mb_go_state", "mb_open_window", "mb_close_window"}:
+                    return True
+                fields = value.get("fields", {})
+                if isinstance(fields, dict) and fields.get("SCOPE") in {"window", "local"}:
+                    return True
                 return any(new_logic(item) for item in value.values())
-            if isinstance(value,list):return any(new_logic(item) for item in value)
+            if isinstance(value, list):
+                return any(new_logic(item) for item in value)
             return False
-        fields = {'spacing', 'padding', 'align', 'distribute', 'size_mode', 'free_geometry', 'icon', 'tooltip'}
-        return bool(self.format_version >= 5 or self.application or self.windows or self.states or self.variables or self.map_layout
-            or any(n.kind in {ComponentKind.SEPARATOR,ComponentKind.SPACER} or fields & n.properties.keys() for n in self.walk())
-            or any(f.get('states') for f in self.editable_flows)
-            or new_logic(self.editable_flows))
+
+        fields = {
+            "spacing",
+            "padding",
+            "align",
+            "distribute",
+            "size_mode",
+            "free_geometry",
+            "icon",
+            "tooltip",
+        }
+        return bool(
+            self.format_version >= 5
+            or self.application
+            or self.windows
+            or self.states
+            or self.variables
+            or self.map_layout
+            or any(
+                n.kind in {ComponentKind.SEPARATOR, ComponentKind.SPACER}
+                or fields & n.properties.keys()
+                for n in self.walk()
+            )
+            or any(f.get("states") for f in self.editable_flows)
+            or new_logic(self.editable_flows)
+        )
 
     @classmethod
     def empty(cls, name: str = "Novo aplicativo") -> Project:
@@ -360,7 +417,9 @@ class Project:
         if parent is None or not parent.can_have_children:
             raise ProjectError("Selecione uma janela ou um contêiner para inserir o componente.")
         if not parent.accepts(ComponentKind(kind)):
-            raise ProjectError("Adicione páginas a um conjunto de páginas e controles a uma página ou contêiner.")
+            raise ProjectError(
+                "Adicione páginas a um conjunto de páginas e controles a uma página ou contêiner."
+            )
         child = create_component(kind)
         self._check_depth(parent, child)
         if child.kind == ComponentKind.PAGE:
@@ -379,16 +438,19 @@ class Project:
             raise ProjectError("A janela principal não pode ser excluída.")
         subtree = {node.id for node in self.find(component_id).walk()}
         from .logic import guard_removal
+
         guard_removal(self, subtree)
         self._check_last_page(parent)
         parent.children = [child for child in parent.children if child.id not in subtree]
         self._repair_initial_page(parent)
         for states in self.states.values():
             for state in states:
-                overrides=state.get('overrides',{})
+                overrides = state.get("overrides", {})
                 for identifier in list(overrides):
-                    if identifier in subtree:del overrides[identifier]
-                    elif overrides[identifier].get('initial_page') in subtree:overrides[identifier].pop('initial_page',None)
+                    if identifier in subtree:
+                        del overrides[identifier]
+                    elif overrides[identifier].get("initial_page") in subtree:
+                        overrides[identifier].pop("initial_page", None)
         return parent.id
 
     def _check_last_page(self, parent: Component) -> None:
@@ -433,11 +495,17 @@ class Project:
         if not parent.accepts(node.kind):
             raise ProjectError("Este destino não aceita esse tipo de componente.")
         self._check_depth(parent, node)
-        original_window=self.window_of(node.id);target_window=self.window_of(parent.id)
-        if original_window.id!=target_window.id:
-            subtree={child.id for child in node.walk()}
-            if any(subtree & set(state.get('overrides',{})) for state in self.states.get(original_window.id,[])) or any(flow['event']['component'] in subtree for flow in self.editable_flows):
-                raise ProjectError('Revise estados e eventos antes de mover este componente para outra janela.')
+        original_window = self.window_of(node.id)
+        target_window = self.window_of(parent.id)
+        if original_window.id != target_window.id:
+            subtree = {child.id for child in node.walk()}
+            if any(
+                subtree & set(state.get("overrides", {}))
+                for state in self.states.get(original_window.id, [])
+            ) or any(flow["event"]["component"] in subtree for flow in self.editable_flows):
+                raise ProjectError(
+                    "Revise estados e eventos antes de mover este componente para outra janela."
+                )
         if previous.id != parent.id:
             self._check_last_page(previous)
         index = len(parent.children) if index is None else max(0, min(index, len(parent.children)))
@@ -457,6 +525,7 @@ class Project:
         if parent is None or node is None:
             raise ProjectError("A janela principal não pode ser duplicada.")
         from .logic import editable, duplicate_flows
+
         if not editable(self):
             raise ProjectError("Fluxos reservados impedem duplicação sem migração.")
         clone = deepcopy(node)
@@ -465,7 +534,8 @@ class Project:
             old_id = item.id
             item.id = new_id(item.kind.value)
             identifiers[old_id] = item.id
-            if item.properties.get("code_name"):item.properties["code_name"]+="_"+item.id.rsplit("_",1)[-1][:4]
+            if item.properties.get("code_name"):
+                item.properties["code_name"] += "_" + item.id.rsplit("_", 1)[-1][:4]
         for item in clone.walk():
             if item.kind == ComponentKind.PAGES:
                 item.properties["initial_page"] = identifiers[item.properties["initial_page"]]
@@ -476,14 +546,15 @@ class Project:
         clone.geometry["x"] = min(20000, clone.geometry["x"] + 16)
         clone.geometry["y"] = min(20000, clone.geometry["y"] + 16)
         duplicate_flows(self, identifiers)
-        owner=self.window_of(component_id)
-        for state in self.states.get(owner.id,[]):
-            overrides=state.setdefault('overrides',{})
-            for old,new in identifiers.items():
+        owner = self.window_of(component_id)
+        for state in self.states.get(owner.id, []):
+            overrides = state.setdefault("overrides", {})
+            for old, new in identifiers.items():
                 if old in overrides:
-                    copied=deepcopy(overrides[old])
-                    if copied.get('initial_page') in identifiers:copied['initial_page']=identifiers[copied['initial_page']]
-                    overrides[new]=copied
+                    copied = deepcopy(overrides[old])
+                    if copied.get("initial_page") in identifiers:
+                        copied["initial_page"] = identifiers[copied["initial_page"]]
+                    overrides[new] = copied
         parent.children.insert(parent.children.index(node) + 1, clone)
         return clone
 
@@ -491,8 +562,15 @@ class Project:
         """Confirma posição/tamanho de um gesto livre, em uma única alteração."""
         node = self.find(component_id)
         parent = self.parent_of(component_id)
-        if node is None or parent is None or parent.layout != LayoutKind.FREE or parent.kind == ComponentKind.PAGES:
-            raise ProjectError("Posição e tamanho manuais exigem um contêiner de organização livre.")
+        if (
+            node is None
+            or parent is None
+            or parent.layout != LayoutKind.FREE
+            or parent.kind == ComponentKind.PAGES
+        ):
+            raise ProjectError(
+                "Posição e tamanho manuais exigem um contêiner de organização livre."
+            )
         candidate = node.to_dict()
         candidate["geometry"].update(geometry)
         validated = Component.from_dict(candidate)
@@ -504,25 +582,34 @@ class Project:
     def asset_paths(self) -> set[str]:
         """Retorna imagens referenciadas para preservar os recursos no Salvar como."""
         paths = {
-            node.properties["source"] for node in self.walk()
+            node.properties["source"]
+            for node in self.walk()
             if node.kind == ComponentKind.IMAGE and node.properties.get("source")
         }
         for states in self.states.values():
             for state in states:
-                for override in state.get('overrides', {}).values():
-                    if override.get('source'):
-                        paths.add(override['source'])
+                for override in state.get("overrides", {}).values():
+                    if override.get("source"):
+                        paths.add(override["source"])
         for node in self.walk():
-            if node.properties.get('icon'):paths.add(node.properties['icon'])
-        icon=self.application.get('icon')
-        if icon:paths.add(icon)
+            if node.properties.get("icon"):
+                paths.add(node.properties["icon"])
+        icon = self.application.get("icon")
+        if icon:
+            paths.add(icon)
         return paths
 
     def to_dict(self) -> dict[str, Any]:
         """Serializa um retrato independente do documento, mantendo extensões."""
         result = {
             "format": FORMAT_NAME,
-            "format_version": max(8 if self.python_files else 4, 7 if any(has_graph(f) for f in self.workflows) else 4,6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4, self.format_version, 5 if self.uses_v5() else 4),
+            "format_version": max(
+                8 if self.python_files else 4,
+                7 if any(has_graph(f) for f in self.workflows) else 4,
+                6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4,
+                self.format_version,
+                5 if self.uses_v5() else 4,
+            ),
             "id": self.id,
             "name": self.name,
             "ui": self.root.to_dict(),
@@ -530,10 +617,16 @@ class Project:
             "metadata": deepcopy(self.metadata),
         }
         if result["format_version"] >= 5:
-            result.update(windows=[r.to_dict() for r in self.windows], states=deepcopy(self.states),
-                entry_window=self.entry_window or self.root.id, variables=deepcopy(self.variables),
-                map_layout=deepcopy(self.map_layout),application=deepcopy(self.application))
-        if self.python_files:result["python_files"]=list(self.python_files)
+            result.update(
+                windows=[r.to_dict() for r in self.windows],
+                states=deepcopy(self.states),
+                entry_window=self.entry_window or self.root.id,
+                variables=deepcopy(self.variables),
+                map_layout=deepcopy(self.map_layout),
+                application=deepcopy(self.application),
+            )
+        if self.python_files:
+            result["python_files"] = list(self.python_files)
         return result
 
     @classmethod
@@ -553,11 +646,12 @@ class Project:
         root = Component.from_dict(value.get("ui"))
         if root.kind != ComponentKind.WINDOW:
             raise ProjectError("A interface precisa começar com uma janela.")
-        raw_windows=value.get('windows',[]) if version>=5 else []
-        if not isinstance(raw_windows,list) or len(raw_windows)>128:raise ProjectError('Lista de janelas inválida (máximo 128).')
+        raw_windows = value.get("windows", []) if version >= 5 else []
+        if not isinstance(raw_windows, list) or len(raw_windows) > 128:
+            raise ProjectError("Lista de janelas inválida (máximo 128).")
         windows = [Component.from_dict(item) for item in raw_windows]
         if any(item.kind != ComponentKind.WINDOW for item in windows):
-            raise ProjectError('Cada interface adicional precisa ser uma janela.')
+            raise ProjectError("Cada interface adicional precisa ser uma janela.")
         ids = [node.id for item in [root, *windows] for node in item.walk()]
         if len(set(ids)) != len(ids):
             raise ProjectError("O projeto contém identificadores de componentes repetidos.")
@@ -567,28 +661,59 @@ class Project:
             raise ProjectError("A lista de fluxos de lógica é inválida.")
         if not isinstance(metadata, dict):
             raise ProjectError("Os metadados do projeto precisam ser um objeto.")
-        points=metadata.get('debug_breakpoints',[])
-        if not isinstance(points,list) or len(points)>10000 or any(not isinstance(point,dict) or (point.get('file')=='source' and (type(point.get('line')) is not int or not 1<=point['line']<=1000000)) or (point.get('file')=='block' and (not isinstance(point.get('block'),str) or not isinstance(point.get('flow'),str))) or point.get('file') not in {'block','source'} for point in points):
-            raise ProjectError('Lista de pontos de parada inválida.')
+        points = metadata.get("debug_breakpoints", [])
+        if (
+            not isinstance(points, list)
+            or len(points) > 10000
+            or any(
+                not isinstance(point, dict)
+                or (
+                    point.get("file") == "source"
+                    and (type(point.get("line")) is not int or not 1 <= point["line"] <= 1000000)
+                )
+                or (
+                    point.get("file") == "block"
+                    and (
+                        not isinstance(point.get("block"), str)
+                        or not isinstance(point.get("flow"), str)
+                    )
+                )
+                or point.get("file") not in {"block", "source"}
+                for point in points
+            )
+        ):
+            raise ProjectError("Lista de pontos de parada inválida.")
         from .source import validate_manifest, validate_module_name
-        files=validate_manifest(value.get("python_files", []))
-        if files and version<8:raise ProjectError("Módulos Python requerem formato 8 ou posterior.")
+
+        files = validate_manifest(value.get("python_files", []))
+        if files and version < 8:
+            raise ProjectError("Módulos Python requerem formato 8 ou posterior.")
         for point in points:
-            if point.get("path", "@actions")!="@actions":validate_module_name(point["path"])
+            if point.get("path", "@actions") != "@actions":
+                validate_module_name(point["path"])
         project = cls(
-            name=value["name"], id=value["id"], root=root, python_files=list(files),
-            workflows=deepcopy(workflows), metadata=deepcopy(metadata), windows=windows,
-            states=deepcopy(value.get('states', {})) if version >= 5 else {},
-            entry_window=value.get('entry_window') if version >= 5 else None,
-            variables=deepcopy(value.get('variables', [])) if version >= 5 else [],
-            map_layout=deepcopy(value.get('map_layout', {})) if version >= 5 else {},
+            name=value["name"],
+            id=value["id"],
+            root=root,
+            python_files=list(files),
+            workflows=deepcopy(workflows),
+            metadata=deepcopy(metadata),
+            windows=windows,
+            states=deepcopy(value.get("states", {})) if version >= 5 else {},
+            entry_window=value.get("entry_window") if version >= 5 else None,
+            variables=deepcopy(value.get("variables", [])) if version >= 5 else [],
+            map_layout=deepcopy(value.get("map_layout", {})) if version >= 5 else {},
             format_version=version if version >= 5 else 4,
-            application=deepcopy(value.get("application",{})) if version>=5 else {},
+            application=deepcopy(value.get("application", {})) if version >= 5 else {},
         )
-        if version<6 and any(n.kind==ComponentKind.TERMINAL for n in project.walk()):raise ProjectError('O componente Terminal requer formato 6 ou posterior.')
-        if version<7 and any(has_graph(f) for f in project.workflows):raise ProjectError('Grafos livres requerem formato 7 ou posterior.')
+        if version < 6 and any(n.kind == ComponentKind.TERMINAL for n in project.walk()):
+            raise ProjectError("O componente Terminal requer formato 6 ou posterior.")
+        if version < 7 and any(has_graph(f) for f in project.workflows):
+            raise ProjectError("Grafos livres requerem formato 7 ou posterior.")
         from .navigation import validate_navigation
+
         validate_navigation(project)
         from .logic import validate
+
         validate(project)
         return project
