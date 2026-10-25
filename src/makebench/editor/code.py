@@ -377,6 +377,12 @@ class CodeEditor(CodeTools, QPlainTextEdit):
                 self._error_selections = [selection]
         self.highlight_cursor()
 
+    def changeEvent(self, event):
+        """Recompute line highlights when the palette changes, so no stale color remains."""
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange:
+            self.highlight_cursor()
+
     @Slot(dict)
     def theme_changed(self, _tokens):
         """Repaint code and numbers; the connection follows the Qt widget's lifetime."""
