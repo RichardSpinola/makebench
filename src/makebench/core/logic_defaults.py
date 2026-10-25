@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Model actions and starting values, with no graphical dependency."""
 
 from .project import new_id

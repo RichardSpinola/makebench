@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Our own vector symbols, with no external icon library dependency."""
 
 from PySide6.QtCore import QByteArray, Qt

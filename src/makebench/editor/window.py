@@ -1737,7 +1737,9 @@ class MainWindow(StudioMixin, QMainWindow):
             )
             + "</p>"
             + "<p>"
-            + tr("Free software under the GNU GPL, version 3 or later.")
+            + tr(
+                "Free software: editor under the GNU GPL 3 or later, runtime under the MIT license."
+            )
             + "</p>",
         )
 

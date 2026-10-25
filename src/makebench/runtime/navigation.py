@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Coordination of real windows and states over a single run session."""
 
 from PySide6.QtCore import QTimer, Qt

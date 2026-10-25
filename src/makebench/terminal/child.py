@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Minimal PTY helper, started by subprocess with no callbacks after fork."""
 
 import fcntl

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Whole-document history, independent of the editor widgets."""
 
 from __future__ import annotations

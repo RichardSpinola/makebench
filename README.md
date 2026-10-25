@@ -1,7 +1,7 @@
 # Makebench
 
 [![Checks](https://github.com/RichardSpinola/makebench/actions/workflows/checks.yml/badge.svg)](https://github.com/RichardSpinola/makebench/actions/workflows/checks.yml)
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![License: GPL-3.0-or-later + MIT](https://img.shields.io/badge/license-GPL--3.0--or--later%20%2B%20MIT-blue.svg)](#license)
 
 **Build Linux desktop applications visually — and keep the code.**
 
@@ -93,9 +93,10 @@ system's own authentication dialog; Makebench never asks for passwords. See
 
 ## License
 
-Makebench is free software under the [GNU GPL, version 3 or later](LICENSE).
-Applications you export with Makebench bundle its runtime under the
-[Makebench Runtime Exception](RUNTIME-EXCEPTION.txt), so **you choose the license
-of your own applications**. Third-party components (Blockly, PySide6/Qt, pyte,
+- The **editor** is free software under the [GNU GPL, version 3 or later](LICENSE).
+- The **runtime** that goes into the applications you export (`core`, `runtime`,
+  `gtk_runtime`, `ui`, `terminal`, `portable`, `i18n.py` and the translations),
+  plus the templates and examples, is under the [MIT license](LICENSE-MIT). So
+  **you choose the license of your own applications**. Third-party components (Blockly, PySide6/Qt, pyte,
 wcwidth) keep their licenses; see
 [`src/makebench/notices/THIRD_PARTY.md`](src/makebench/notices/THIRD_PARTY.md).

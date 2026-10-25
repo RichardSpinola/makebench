@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Isolated, inert GTK rendering: receives only components and images, never code."""
 
 import base64

@@ -1,2 +1,2 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Linux terminal shared by Qt and GTK; importing never starts processes."""

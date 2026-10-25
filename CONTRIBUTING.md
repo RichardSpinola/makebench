@@ -54,6 +54,8 @@ details behind **Show details**.
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the
-[GPL-3.0-or-later](LICENSE), with the [Makebench Runtime Exception](RUNTIME-EXCEPTION.txt)
-for runtime code that exported applications include.
+By contributing, you agree that your contributions are licensed like the code
+they change: [GPL-3.0-or-later](LICENSE) for the editor (`editor/`), and the
+[MIT license](LICENSE-MIT) for the runtime that exported applications include
+(`core/`, `runtime/`, `gtk_runtime/`, `ui/`, `terminal/`, `portable/`, `i18n.py`).
+New files start with the matching `SPDX-License-Identifier` line.

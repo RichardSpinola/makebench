@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Inert Python sources, local modules, conflicts and atomic per-file writes."""
 
 from __future__ import annotations

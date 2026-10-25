@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Qt terminal surface: native cells, input and selection without WebEngine."""
 
 from __future__ import annotations

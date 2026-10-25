@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Distribution tools prepared by the application, outside the main system."""
 
 import hashlib

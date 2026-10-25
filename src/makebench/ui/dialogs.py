@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Editor-controlled dialogs, with explicit actions in the active language."""
 
 from PySide6.QtCore import QLibraryInfo, QTranslator

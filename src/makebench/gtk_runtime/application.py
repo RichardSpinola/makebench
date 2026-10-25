@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Real GTK application, Python worker and supervised tasks with no Qt dependency."""
 
 from copy import deepcopy

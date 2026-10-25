@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Project contract shared by the editor and the generators.
 
 The visual document is the source of truth. The user's own Python code lives in

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Free graph independent of Blockly: ports, validation and state-machine compiler."""
 
 from __future__ import annotations

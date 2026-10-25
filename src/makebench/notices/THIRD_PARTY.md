@@ -1,9 +1,12 @@
 # Third-party components
 
-Makebench is free software under the GNU General Public License, version 3 or
-later (see `GPL-3.0.txt`). Applications exported by Makebench may also use the
-Makebench Runtime Exception (`RUNTIME-EXCEPTION.txt`). The components below keep
-their own licenses; packages that redistribute them must keep these notices.
+The Makebench editor is free software under the GNU General Public License,
+version 3 or later (see `GPL-3.0.txt`). The runtime that Makebench copies into
+the applications you export (the `core`, `runtime`, `gtk_runtime`, `ui`,
+`terminal` and `portable` packages, `i18n.py`, the locale catalogs and these
+notices) is under the MIT license (see `MIT.txt`), so you may choose the license
+of your own applications. The components below keep their own licenses; packages
+that redistribute them must keep these notices.
 
 ## Blockly 13.4.0 — Apache-2.0
 

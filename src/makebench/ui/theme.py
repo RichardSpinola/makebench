@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Makebench's Qt visual identity, with the desktop's contrast and accent."""
 
 from PySide6.QtCore import QObject, QSettings, Qt, Signal

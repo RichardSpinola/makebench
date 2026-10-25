@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Read-only environment report, with no subprocesses or installation."""
 
 import importlib.metadata

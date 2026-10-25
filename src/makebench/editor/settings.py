@@ -275,7 +275,7 @@ class EditorPreferences(SettingsShell):
         group = self.group(page, "Makebench " + __version__)
         label = QLabel(
             tr(
-                "Visual editor for Linux applications. No account, server or AI at run time.\n\nPySide6/Qt: LGPL/GPL/commercial. Blockly 13.4.0: Apache-2.0. Optional GTK backend: GTK4 and PyGObject (LGPL), optional libadwaita (LGPL). Fallback symbols are our own vectors.\n\nMakebench is free software under the GNU GPL, version 3 or later."
+                "Visual editor for Linux applications. No account, server or AI at run time.\n\nPySide6/Qt: LGPL/GPL/commercial. Blockly 13.4.0: Apache-2.0. Optional GTK backend: GTK4 and PyGObject (LGPL), optional libadwaita (LGPL). Fallback symbols are our own vectors.\n\nMakebench is free software: the editor is under the GNU GPL, version 3 or later, and the runtime that goes into your applications is under the MIT license."
             )
         )
         label.setWordWrap(True)

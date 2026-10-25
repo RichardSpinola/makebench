@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Helper run only in the isolated Ubuntu 24.04 SDK, never importing the project."""
 
 from __future__ import annotations

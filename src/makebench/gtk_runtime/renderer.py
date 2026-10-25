@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Translation of the neutral model into real GTK4 controls."""
 
 from makebench.core.project import ComponentKind, LayoutKind

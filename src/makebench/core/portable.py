@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Portable SDK and dependencies; explicit online preparation and isolated offline assembly."""
 
 from __future__ import annotations

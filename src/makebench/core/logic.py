@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Portable logic: events and operations independent of Blockly and Qt."""
 
 from __future__ import annotations

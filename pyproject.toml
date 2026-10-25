@@ -8,8 +8,8 @@ version = "0.7.0.dev1"
 description = "Visual editor for Linux applications with Qt, GTK and Python"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
-license = "GPL-3.0-or-later"
-license-files = ["LICENSE", "RUNTIME-EXCEPTION.txt"]
+license = "GPL-3.0-or-later AND MIT"
+license-files = ["LICENSE", "LICENSE-MIT"]
 authors = [{ name = "Richard Spinola" }]
 keywords = ["visual editor", "gui builder", "qt", "gtk", "pyside6", "blockly", "linux", "ide"]
 classifiers = [
