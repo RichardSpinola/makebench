@@ -106,9 +106,10 @@ def assemble(project,appdir,progress=None,cancelled=None,editor=False):
     root=wheel_root(project,editor);receipt=json.loads((root/'receipt.json').read_text())
     for name,digest in receipt['files'].items():
         if Path(name).name!=name or not name.endswith('.whl'):raise ProjectError('Cache de rodas inválido.')
-        path=root/name
-        if hashlib.file_digest(path.open('rb'),'sha256').hexdigest()!=digest:raise ProjectError('Dependência alterada no cache; prepare novamente.')
-        shutil.copy2(path,wheels/name)
+        # Confere a cópia usada no staging, não o cache que pode mudar depois.
+        target=wheels/name;shutil.copy2(root/name,target)
+        with target.open('rb') as handle:matches=hashlib.file_digest(handle,'sha256').hexdigest()==digest
+        if not matches:target.unlink(missing_ok=True);raise ProjectError('Dependência alterada no cache; prepare novamente.')
     helper=stage/'makebench-payload.py';shutil.copy2(Path(__file__).parents[1]/'portable/payload.py',helper)
     arguments=['python3.12',str(helper),str(appdir),project.application.get('backend','qt')]
     if editor:arguments.append('--editor')

@@ -34,7 +34,7 @@ class PortableTests(unittest.TestCase):
         self.assertEqual(args.count('--volume'),1);self.assertIn(str(self.root)+':/work:rw,Z',args);self.assertIn('/work/payload.py',args)
 
     def test_changed_wheel_never_reaches_installer(self):
-        """O hash é conferido antes de rodar a ferramenta ou produzir o pacote."""
+        """O hash da cópia em staging é conferido antes de rodar a ferramenta."""
         project=Project.empty();project.application['backend']='gtk';root=wheel_root(project);root.mkdir(parents=True)
         wheel=root/'sample-1-py3-none-any.whl';wheel.write_bytes(b'original')
         (root/'receipt.json').write_text(json.dumps({'requirements':requirements(project),'files':{wheel.name:hashlib.sha256(b'original').hexdigest()}}))
@@ -44,6 +44,7 @@ class PortableTests(unittest.TestCase):
         with patch('subprocess.Popen') as popen:
             with self.assertRaisesRegex(ProjectError,'alterada'):assemble(project,appdir)
             popen.assert_not_called()
+        self.assertFalse((appdir.parent/'wheels'/wheel.name).exists())
 
     def test_target_grammar_is_checked_without_running_code(self):
         """Uma construção para Python3.12 rejeita gramática incompatível antes de preparar."""
