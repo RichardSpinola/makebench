@@ -19,7 +19,7 @@ server and no AI at run time.
 
 ![The Design area with a native Qt preview, component tree and properties](docs/images/design.png)
 
-> **Status: alpha (0.7.0.dev1).** The editor is usable and covered by an
+> **Status: alpha (0.7.0).** The editor is usable and covered by an
 > automated test suite, but the project format and APIs may still change.
 > No prebuilt release has been published yet; run it from source (below).
 
