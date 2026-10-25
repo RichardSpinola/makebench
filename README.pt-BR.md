@@ -21,7 +21,8 @@ servidor e sem IA em tempo de execução.
 
 > **Situação: alfa (0.7.0).** O editor é utilizável e coberto por testes
 > automatizados, mas o formato dos projetos e as APIs ainda podem mudar. Ainda
-> não há versão pronta publicada; rode a partir do código-fonte (abaixo).
+> há um AppImage na
+> [página de versões](https://github.com/RichardSpinola/makebench/releases); ou rode a partir do código-fonte (abaixo).
 
 ## O que dá para fazer
 

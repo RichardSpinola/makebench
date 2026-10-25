@@ -21,7 +21,8 @@ server and no AI at run time.
 
 > **Status: alpha (0.7.0).** The editor is usable and covered by an
 > automated test suite, but the project format and APIs may still change.
-> No prebuilt release has been published yet; run it from source (below).
+> Download the AppImage from the
+> [releases page](https://github.com/RichardSpinola/makebench/releases), or run it from source (below).
 
 ## What you can do
 
