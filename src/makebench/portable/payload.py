@@ -26,6 +26,23 @@ GLIBC = {
     "libnss_files.so.2",
 }
 
+# The graphics stack must match the host's drivers (Mesa, NVIDIA); bundled copies from the
+# SDK cannot load them and Qt WebEngine aborts without EGL.
+GRAPHICS = {
+    "libEGL.so.1",
+    "libGL.so.1",
+    "libGLX.so.0",
+    "libGLdispatch.so.0",
+    "libOpenGL.so.0",
+    "libGLESv2.so.2",
+    "libgbm.so.1",
+    "libdrm.so.2",
+    "libwayland-client.so.0",
+    "libwayland-cursor.so.0",
+    "libwayland-egl.so.1",
+    "libwayland-server.so.0",
+}
+
 
 def copy_tree(source, destination):
     """Copy an SDK tree keeping relative links, skipping Python caches."""
@@ -76,7 +93,12 @@ def collect_libraries(appdir):
                 continue
             source = Path(match[1])
             name = line.split()[0]
-            if name in GLIBC or name.startswith("ld-linux") or source.is_relative_to(appdir):
+            if (
+                name in GLIBC
+                or name in GRAPHICS
+                or name.startswith("ld-linux")
+                or source.is_relative_to(appdir)
+            ):
                 continue
             target = library / name
             if not target.exists():

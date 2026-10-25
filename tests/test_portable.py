@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+import unittest.mock
 from unittest.mock import patch
 from makebench.core.project import Project, ProjectError
 from makebench.core.portable import (
@@ -302,6 +303,29 @@ class PortableInterfaceTests(unittest.TestCase):
                     job.wait(2000)
                     window.close()
                     app.processEvents()
+
+
+class PayloadLibraryTests(unittest.TestCase):
+    """Bundled libraries leave the host's C library and graphics drivers alone."""
+
+    def test_graphics_stack_comes_from_the_host(self):
+        from makebench.portable import payload
+
+        with tempfile.TemporaryDirectory() as folder:
+            appdir = Path(folder) / "app"
+            system = Path(folder) / "system"
+            system.mkdir()
+            (appdir / "usr/bin").mkdir(parents=True)
+            (appdir / "usr/bin/python3.12").write_bytes(b"\x7fELF")
+            lines = []
+            for name in ("libEGL.so.1", "libwayland-egl.so.1", "libc.so.6", "libpng16.so.16"):
+                (system / name).write_bytes(b"plain")
+                lines.append(f"\t{name} => {system / name} (0x0)")
+            result = unittest.mock.Mock(stdout="\n".join(lines))
+            with patch.object(payload.subprocess, "run", return_value=result):
+                payload.collect_libraries(appdir)
+            bundled = sorted(path.name for path in (appdir / "usr/lib").iterdir())
+        self.assertEqual(bundled, ["libpng16.so.16"])
 
 
 if __name__ == "__main__":
