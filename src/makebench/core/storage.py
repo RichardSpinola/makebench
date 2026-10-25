@@ -79,7 +79,7 @@ def save_workspace(project: Project, source, assets, path: str | Path, saved: di
     são removidos. `saved` é o dicionário do último salvamento no mesmo caminho:
     se for igual ao atual, o JSON não é regravado e formatos antigos mantêm seus
     bytes. Não é uma transação única: falha no JSON deixa as fontes já gravadas e
-    o documento continua não salvo. Retorna o dicionário salvo e a cópia
+    o documento continua não salvo, com StorageError explicando esse estado. Retorna o dicionário salvo e a cópia
     `.bak-vN` criada, ou None.
     """
     target = Path(path).resolve()
@@ -90,7 +90,14 @@ def save_workspace(project: Project, source, assets, path: str | Path, saved: di
     source.write(target)
     backup = None
     if saved is None or data != saved or not target.is_file():
-        backup = save_project(project, target)
+        try:
+            backup = save_project(project, target)
+        except (OSError, ProjectError) as exc:
+            raise StorageError(
+                f"{exc} Os arquivos Python e recursos já foram gravados, mas o arquivo do "
+                f"projeto ({target.name}) não. O projeto continua com alterações pendentes: "
+                "libere espaço ou verifique permissões e salve novamente."
+            ) from exc
     source.mark_saved()
     assets.root = target.parent
     return deepcopy(data), backup

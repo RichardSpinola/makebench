@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 from makebench.core.project import Project,ProjectError,ComponentKind,LayoutKind
 from makebench.core.source import SourceBuffer,SourceText,source_files,source_signature
-from makebench.core.storage import load_project,save_project
+from makebench.core.storage import StorageError,load_project,save_project
 from makebench.core.document import Document
 from makebench.core.bundle import write_bundle,read_bundle
 from makebench.core.code_index import CodeIndex
@@ -42,7 +42,7 @@ class SourceWorkspaceTests(unittest.TestCase):
     def test_failed_json_preserves_deleted_file_and_retry(self):
         self.doc.save(self.path);original=self.root/'makebench_user/helpers.py';self.doc.source.remove_module('makebench_user/helpers.py')
         with patch('makebench.core.storage.save_project',side_effect=OSError('Sem espaço')):
-            with self.assertRaises(OSError):self.doc.save()
+            with self.assertRaisesRegex(StorageError,'Python.*já foram gravados.*não'):self.doc.save()
         self.assertTrue(original.exists());self.assertTrue(self.doc.dirty)
         self.doc.save();self.assertFalse(original.exists());self.assertFalse(self.doc.dirty)
 
