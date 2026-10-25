@@ -1,15 +1,16 @@
-"""Índice estático de Python: sugestões, assinaturas e destinos sem executar imports."""
+"""Static Python index: suggestions, signatures and targets without running imports."""
 
 import ast
 from dataclasses import dataclass
 from pathlib import Path
 import re
 from .source import ENTRY_FILE, source_files
+from makebench.i18n import tr
 
 
 @dataclass(frozen=True)
 class Definition:
-    """Local e assinatura de um símbolo extraído do texto do projeto."""
+    """Location and signature of a symbol taken from the project text."""
 
     name: str
     file: str
@@ -20,16 +21,16 @@ class Definition:
 
 
 def module_name(filename):
-    """Converte caminho reservado em nome importável, inclusive inicializadores."""
+    """Turn a reserved path into an importable name, including initializers."""
     value = filename[:-3].replace("/", ".")
     return value[:-9] if value.endswith(".__init__") else value
 
 
 class CodeIndex:
-    """Conserva o último AST válido por arquivo durante digitação incompleta."""
+    """Keep the last valid AST per file while typing incomplete code."""
 
     def __init__(self):
-        """Prepara caches locais; nenhuma linguagem/servidor adicional é iniciado."""
+        """Prepare local caches; no extra language server is started."""
         self.trees = {}
         self.texts = {}
         self.errors = []
@@ -56,7 +57,7 @@ class CodeIndex:
             self.ctx.setdefault("ctx." + name, Definition("ctx." + name, "", 1, 1, "ctx." + name))
 
     def update(self, source, components=()):
-        """Atualiza arquivos alterados e diagnostica imports locais sem tocar no disco."""
+        """Update changed files and diagnose local imports without touching the disk."""
         files = source_files(source)
         self.components = list(components)
         self.errors = []
@@ -157,18 +158,18 @@ class CodeIndex:
         self.known = known
 
     def _missing(self, name, node, module):
-        """Registra referência local quebrada, comum depois de renomear um módulo."""
+        """Record a broken local reference, common after renaming a module."""
         self.errors.append(
             {
                 "file": name,
                 "line": node.lineno,
                 "column": node.col_offset + 1,
-                "message": "Referência local não encontrada: " + module,
+                "message": tr("Local reference not found: {module}").format(module=module),
             }
         )
 
     def resolve(self, file, token):
-        """Resolve definição local ou import explícito; não infere tipos dinâmicos."""
+        """Resolve a local definition or explicit import; never infers dynamic types."""
         if token in self.ctx:
             return self.ctx[token]
         first, _, rest = token.partition(".")
@@ -186,7 +187,7 @@ class CodeIndex:
         return None
 
     def complete(self, file, prefix):
-        """Sugere APIs conhecidas, símbolos próprios e nomes importados."""
+        """Suggest known APIs, the project's own symbols and imported names."""
         candidates = dict(self.definitions.get(file, {}))
         candidates.update(self.ctx)
         for name in self.imports.get(file, {}):
@@ -204,7 +205,7 @@ class CodeIndex:
         ]
 
     def call_signature(self, file, before):
-        """Mostra a assinatura da chamada local mais próxima ainda aberta."""
+        """Show the signature of the nearest local call that is still open."""
         match = re.search(r"([\w.]+)\([^()]*$", before)
         target = self.resolve(file, match.group(1)) if match else None
         return target.signature if target else ""

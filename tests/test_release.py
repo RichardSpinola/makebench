@@ -1,4 +1,4 @@
-"""Aceitação da primeira versão: paleta, modelos, GTK e pacotes inertes."""
+"""First-release acceptance: palette, templates, GTK and inert packages."""
 
 import os
 
@@ -10,15 +10,15 @@ from makebench.ui.theme import derive_tokens, contrast, ThemeManager
 
 
 class PaletteTests(unittest.TestCase):
-    """O destaque segue a origem e continua visível nos dois esquemas."""
+    """The accent follows its origin and stays visible in both schemes."""
 
     @classmethod
     def setUpClass(cls):
-        """Compartilha a aplicação de teste sem tocar em configurações do autor."""
+        """Share the test application without touching the author's settings."""
         cls.app = QApplication.instance() or QApplication([])
 
     def test_simulated_accents_and_contrast(self):
-        """Paletas diferentes alteram seleção; textos/controles têm razão mínima."""
+        """Different palettes change the selection; texts/controls keep a minimum ratio."""
         accents = []
         for color in ("#3584e4", "#26a269"):
             palette = QPalette()
@@ -36,7 +36,7 @@ class PaletteTests(unittest.TestCase):
         self.assertNotEqual(accents[0], accents[2])
 
     def test_theme_does_not_replace_system_palette(self):
-        """Aplicar preferências não chama setPalette no aplicativo."""
+        """Applying preferences never calls setPalette on the application."""
         from unittest.mock import patch
 
         theme = getattr(self.app, "makebench_theme", None) or ThemeManager(self.app)
@@ -50,10 +50,10 @@ class PaletteTests(unittest.TestCase):
 
 
 class TemplateTests(unittest.TestCase):
-    """Modelos são documentos independentes e preservam o backend escolhido."""
+    """Templates are independent documents and keep the chosen backend."""
 
     def test_five_models_and_backend_roundtrip(self):
-        """Todos os modelos validam sem executar código e legados continuam Qt."""
+        """Every template validates without running code and legacy ones stay Qt."""
         from makebench.core.templates import MODELS, make_template
         from makebench.core.project import Project
         from makebench.core.codegen import generate
@@ -62,7 +62,7 @@ class TemplateTests(unittest.TestCase):
         for key, _, _ in MODELS:
             if key == "tasks":
                 continue
-            p = make_template(key, "Teste")
+            p = make_template(key, "Testing")
             self.assertEqual(generate(p, "").diagnostics, [])
             self.assertEqual(Project.from_dict(p.to_dict()).application.get("backend", "qt"), "qt")
             for backend in ("gtk", "qt"):

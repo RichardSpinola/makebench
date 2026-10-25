@@ -1,4 +1,4 @@
-"""Compatibilidade, recuperação, navegação e exportação da bancada real."""
+"""Compatibility, recovery, navigation and export of the real workbench."""
 
 import json
 import os
@@ -259,13 +259,13 @@ class RedesignQtTests(unittest.TestCase):
         w.show()
         w.start()
         self.wait(lambda: w.session.active and not w.session.busy)
-        button = next(n for n in p.root.walk() if n.properties.get("text") == "Próximo")
+        button = next(n for n in p.root.walk() if n.properties.get("text") == "Next")
         heading = next(n for n in p.root.walk() if n.kind == ComponentKind.LABEL)
         original = heading.properties["text"]
         for _ in range(3):
             w.view.widgets[button.id].click()
             self.wait(lambda: not w.session.busy)
-        self.assertEqual(w.view.widgets[button.id].text(), "Concluir")
+        self.assertEqual(w.view.widgets[button.id].text(), "Finish")
         self.assertEqual(w.open_windows, {p.windows[0].id})
         self.assertTrue(w.app_windows[p.windows[0].id].isVisible())
         self.assertEqual(heading.properties["text"], original)
@@ -282,7 +282,7 @@ class RedesignQtTests(unittest.TestCase):
         w.show()
         self.app.processEvents()
         w._select(b.id)
-        for mode in ("Código", "Mapa", "Publicar", "Design"):
+        for mode in ("code", "map", "publish", "design"):
             w.set_mode(mode)
             self.assertEqual(w.selected_id, b.id)
         w._change_property(p.root.id, "layout", "vertical")
@@ -334,8 +334,22 @@ class RedesignQtTests(unittest.TestCase):
         self.assertEqual(len(list(w.project.walk())), count)
 
     def test_pt_buttons_without_catalog_or_desktop_locale(self):
+        """Brazilian Portuguese labels Qt's own dialogs even without the system catalog."""
+        from makebench.i18n import set_language
         from makebench.ui.dialogs import install_translation, translate_buttons
 
+        set_language("pt_BR")
+
+        def restore():
+            """Leave English and the app's translators as the other tests expect."""
+            set_language("en")
+            for name in ("_makebench_translator", "_makebench_translation_fallback"):
+                translator = getattr(self.app, name, None)
+                if translator is not None:
+                    self.app.removeTranslator(translator)
+                    delattr(self.app, name)
+
+        self.addCleanup(restore)
         install_translation(self.app)
         from PySide6.QtCore import QCoreApplication
 
@@ -370,7 +384,7 @@ class RedesignQtTests(unittest.TestCase):
 
 
 class ExtendedRedesignTests(unittest.TestCase):
-    """Jornadas adicionadas que exercitam gestos e escopos, além da serialização."""
+    """Added journeys that exercise gestures and scopes, beyond serialization."""
 
     setUpClass = classmethod(RedesignQtTests.setUpClass.__func__)
     setUp = RedesignQtTests.setUp
@@ -569,7 +583,7 @@ class FinalJourneyTests(unittest.TestCase):
         self.windows.append(w)
         w.show()
         self.app.processEvents()
-        w.set_mode("Mapa")
+        w.set_mode("map")
         self.app.processEvents()
         self.assertEqual(w.project.workflows, data["workflows"])
         self.assertTrue(w.save_to(self.root / "legacy.makebench.json"))
@@ -594,7 +608,7 @@ class FinalJourneyTests(unittest.TestCase):
         self.assertIsNotNone(editor)
         editor.setText("Cancelar alteração")
         QTest.keyClick(editor, Qt.Key.Key_Escape)
-        self.assertEqual(w.project.find(b.id).properties["text"], "Novo botão")
+        self.assertEqual(w.project.find(b.id).properties["text"], "New button")
         self.assertFalse(w.history.dirty)
         self.app.processEvents()
         w.rename_selected()
@@ -603,7 +617,7 @@ class FinalJourneyTests(unittest.TestCase):
         QTest.keyClick(editor, Qt.Key.Key_Return)
         self.assertEqual(w.project.find(b.id).properties["text"], "Confirmado")
         w.undo()
-        self.assertEqual(w.project.find(b.id).properties["text"], "Novo botão")
+        self.assertEqual(w.project.find(b.id).properties["text"], "New button")
 
     def test_admin_task_starting_during_close_does_not_disable_editor(self):
         from types import SimpleNamespace

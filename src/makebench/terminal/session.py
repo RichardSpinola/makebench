@@ -1,8 +1,8 @@
-"""PTY e emulação VT compartilhados, sem dependência de interface gráfica.
+"""Shared PTY and VT emulation, with no graphical interface dependency.
 
-A emulação usa pyte 0.8.2 (LGPL-3.0-or-later); consulte THIRD_PARTY.md.
-Somente start cria um processo. A leitura é não bloqueante e cabe ao toolkit
-chamar poll; o histórico nunca ultrapassa 10 mil linhas.
+Emulation uses pyte 0.8.2 (LGPL-3.0-or-later); see THIRD_PARTY.md.
+Only start creates a process. Reading is non-blocking and it is up to the
+toolkit to call poll; the history never exceeds 10,000 lines.
 """
 
 from __future__ import annotations
@@ -20,18 +20,19 @@ import termios
 
 import pyte
 from copy import deepcopy
+from makebench.i18n import tr
 
 
 class TerminalScreen(pyte.HistoryScreen):
-    """Acrescenta tela alternativa xterm sem acumular seu conteúdo no histórico."""
+    """Add the xterm alternate screen without piling its content into the history."""
 
     def __init__(self, *args, **kwargs):
-        """Guarda a tela principal quando um programa de tela cheia solicita outra."""
+        """Keep the main screen when a full-screen program asks for another one."""
         self.alternate = None
         super().__init__(*args, **kwargs)
 
     def set_mode(self, *modes, **kwargs):
-        """Entra em 47/1047/1049, preservando conteúdo e cursor da tela principal."""
+        """Enter 47/1047/1049, keeping the main screen's content and cursor."""
         if kwargs.get("private") and set(modes) & {47, 1047, 1049} and self.alternate is None:
             self.alternate = (deepcopy(self.buffer), deepcopy(self.cursor), deepcopy(self.history))
             self.erase_in_display(2)
@@ -41,7 +42,7 @@ class TerminalScreen(pyte.HistoryScreen):
         super().set_mode(*modes, **kwargs)
 
     def reset_mode(self, *modes, **kwargs):
-        """Restaura a tela principal quando o programa deixa a tela alternativa."""
+        """Restore the main screen when the program leaves the alternate screen."""
         super().reset_mode(*modes, **kwargs)
         if kwargs.get("private") and set(modes) & {47, 1047, 1049} and self.alternate is not None:
             self.buffer, self.cursor, self.history = self.alternate
@@ -51,16 +52,16 @@ class TerminalScreen(pyte.HistoryScreen):
             self.dirty.update(range(self.lines))
 
     def reset(self):
-        """Limpa também uma tela alternativa ao iniciar outra sessão."""
+        """Also clear an alternate screen when starting another session."""
         self.alternate = None
         super().reset()
 
 
 class TerminalSession:
-    """Possui uma sessão Linux e sua tela; não oferece elevação administrativa."""
+    """Own a Linux session and its screen; offers no administrative elevation."""
 
     def __init__(self, columns=80, rows=24, root=None):
-        """Prepara emulação inerte e diretório inicial, sem abrir shell."""
+        """Prepare an inert emulation and starting directory, without opening a shell."""
         self.screen = TerminalScreen(columns, rows, history=10_000)
         self.screen.write_process_input = self.send
         self.stream = pyte.ByteStream(self.screen)
@@ -74,27 +75,27 @@ class TerminalSession:
 
     @property
     def running(self):
-        """Indica se há filho ainda pertencente ao terminal."""
+        """Whether a child still belongs to the terminal."""
         return self.pid is not None
 
     def start(self, program=None, arguments=None):
-        """Abre PTY controladora e executa argv sem shell intermediário.
+        """Open a controlling PTY and run argv with no intermediate shell.
 
-        Sem programa explícito, usa o shell do usuário, ou /bin/sh. Cada início
-        possui sessão própria; abrir o documento ou construir este objeto é inerte.
+        With no explicit program, it uses the user's shell, or /bin/sh. Each start
+        has its own session; opening the document or building this object is inert.
         """
         if self.running:
-            raise ValueError("O terminal já está em execução.")
+            raise ValueError(tr("The terminal is already running."))
         if not program:
             shell = os.environ.get("SHELL")
             program = shell if shell and shutil.which(shell) else "/bin/sh"
         arguments = [] if arguments is None else arguments
         if not isinstance(program, str) or not program or "\0" in program:
-            raise ValueError("Programa de terminal inválido.")
+            raise ValueError(tr("Invalid terminal program."))
         if not isinstance(arguments, list) or any(
             not isinstance(a, str) or "\0" in a for a in arguments
         ):
-            raise ValueError("Argumentos precisam ser uma lista de textos.")
+            raise ValueError(tr("Arguments must be a list of texts."))
         import pty
 
         master, slave = pty.openpty()
@@ -129,7 +130,7 @@ class TerminalSession:
         return self.pid
 
     def resize(self, columns, rows):
-        """Atualiza tela e PTY, provocando SIGWINCH no grupo em primeiro plano."""
+        """Update the screen and PTY, sending SIGWINCH to the foreground group."""
         columns, rows = max(2, min(1000, int(columns))), max(2, min(500, int(rows)))
         if (columns, rows) != (self.screen.columns, self.screen.lines):
             self.screen.resize(lines=rows, columns=columns)
@@ -138,18 +139,18 @@ class TerminalSession:
             fcntl.ioctl(self.master, termios.TIOCSWINSZ, struct.pack("HHHH", rows, columns, 0, 0))
 
     def send(self, value):
-        """Enfileira entrada UTF-8/bytes, incluindo sequências de controle."""
+        """Queue UTF-8/byte input, including control sequences."""
         if self.master is None:
             return False
         data = value.encode("utf-8") if isinstance(value, str) else bytes(value)
         if len(self.pending) + len(data) > 1_000_000:
-            raise ValueError("A entrada do terminal excedeu o limite de 1 MB.")
+            raise ValueError(tr("Terminal input exceeded the 1 MB limit."))
         self.pending.extend(data)
         self._flush()
         return True
 
     def _flush(self):
-        """Escreve somente bytes aceitos pela PTY, sem bloquear a interface."""
+        """Write only bytes the PTY accepts, without blocking the interface."""
         if self.master is None or not self.pending:
             return
         try:
@@ -162,7 +163,7 @@ class TerminalSession:
                 raise
 
     def poll(self):
-        """Consome até 256 KiB por turno e recolhe o filho sem espera bloqueante."""
+        """Consume up to 256 KiB per turn and reap the child without a blocking wait."""
         self._flush()
         if self.master is not None:
             for _ in range(16):
@@ -179,7 +180,7 @@ class TerminalSession:
                         raise
                     break
         if self.pid is not None:
-            # WNOWAIT mantém o PID reservado durante a limpeza dos grupos.
+            # WNOWAIT keeps the PID reserved while the groups are cleaned up.
             result = os.waitid(os.P_PID, self.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
             if result is not None:
                 self._cleanup()
@@ -189,7 +190,7 @@ class TerminalSession:
         return self.revision
 
     def _signal_session(self, sig):
-        """Encerra grupos da sessão, inclusive jobs em segundo plano do shell."""
+        """End the session's groups, including the shell's background jobs."""
         if self.pid is None:
             return
         groups = {self.pid}
@@ -209,7 +210,7 @@ class TerminalSession:
                 pass
 
     def _cleanup(self):
-        """Elimina jobs restantes antes de abandonar o identificador da sessão."""
+        """Kill remaining jobs before letting go of the session identifier."""
         self._signal_session(signal.SIGKILL)
         if self.master is not None:
             os.close(self.master)
@@ -217,7 +218,7 @@ class TerminalSession:
         self.pending.clear()
 
     def stop(self):
-        """Fecha toda a sessão e recolhe o filho; operação idempotente."""
+        """Close the whole session and reap the child; idempotent."""
         pid = self.pid
         self._cleanup()
         if pid is not None:
@@ -229,7 +230,7 @@ class TerminalSession:
         self.revision += 1
 
     def lines(self):
-        """Retorna histórico e tela como células ANSI, sem interpretar HTML."""
+        """Return history and screen as ANSI cells, never interpreting HTML."""
         screen = self.screen
         return [
             *([] if screen.alternate is not None else screen.history.top),
@@ -258,14 +259,14 @@ ANSI_COLORS = {
 
 
 def color(value, default):
-    """Resolve cores pyte indexadas ou RGB usando o padrão da paleta nativa."""
+    """Resolve indexed or RGB pyte colors using the native palette default."""
     if value == "default":
         return default
     return ANSI_COLORS.get(value, "#" + value if len(value) == 6 else default)
 
 
 def key_input(name, text="", control=False, alt=False, application=False):
-    """Traduz teclas comuns dos dois toolkits em sequências de terminal."""
+    """Translate common keys of both toolkits into terminal sequences."""
     keys = {
         "Return": "\r",
         "Enter": "\r",

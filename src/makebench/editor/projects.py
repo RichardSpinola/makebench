@@ -1,4 +1,4 @@
-"""Início, projetos locais, recentes, recuperação e compartilhamento portátil."""
+"""Start page, local projects, recents, recovery and portable sharing."""
 
 import hashlib
 import json
@@ -32,24 +32,26 @@ from makebench.core.storage import load_project, save_project
 from makebench.core.source import SourceBuffer
 from makebench.core.bundle import read_bundle, write_bundle
 from .assets import AssetStore
+from makebench.i18n import language, tr
+from makebench.i18n import ntr
 
 
 def slug(text):
-    """Produz nome de pasta simples, sem usar texto como caminho arbitrário."""
+    """Produce a simple folder name, never using text as an arbitrary path."""
     clean = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
-    return re.sub(r"[^a-z0-9]+", "-", clean).strip("-") or "meu-aplicativo"
+    return re.sub(r"[^a-z0-9]+", "-", clean).strip("-") or "my-application"
 
 
 class ProjectMixin:
-    """Mantém operações de arquivo independentes da execução do aplicativo."""
+    """Keep file operations independent of running the application."""
 
     def project_dialog_parent(self):
-        """Mantém seletores e mensagens sobre o iniciador enquanto a bancada está oculta."""
+        """Keep selectors and messages above the launcher while the workbench is hidden."""
         startup = getattr(self, "startup_dialog", None)
         return startup if startup and startup.isVisible() else self
 
     def install_projects(self):
-        """Monta a entrada e comandos sem substituir um projeto aberto por argumento."""
+        """Build the start page and commands without replacing a project opened by argument."""
         from PySide6.QtWidgets import QGridLayout, QToolButton, QScrollArea, QFrame, QSizePolicy
         from PySide6.QtCore import QSize
         from .theme import icon
@@ -73,8 +75,8 @@ class ProjectMixin:
         header.addWidget(title)
         header.addStretch()
         for symbol, label, callback in [
-            ("new", "Novo…", lambda: self.new_project_dialog("blank")),
-            ("open", "Abrir projeto…", self.open_project),
+            ("new", tr("New…"), lambda: self.new_project_dialog("blank")),
+            ("open", tr("Open project…"), self.open_project),
         ]:
             button = QPushButton(icon(symbol), label)
             button.clicked.connect(callback)
@@ -83,21 +85,21 @@ class ProjectMixin:
         self.recovery_row = QFrame()
         self.recovery_row.setFrameShape(QFrame.Shape.StyledPanel)
         rr = QHBoxLayout(self.recovery_row)
-        rr.addWidget(QLabel("Sessão anterior disponível."), 1)
-        recover = QPushButton("Recuperar")
+        rr.addWidget(QLabel(tr("Previous session available.")), 1)
+        recover = QPushButton(tr("Recover"))
         recover.clicked.connect(self.recover_latest)
         rr.addWidget(recover)
         discard = QToolButton()
         discard.setIcon(icon("remove"))
-        discard.setToolTip("Descartar recuperação")
+        discard.setToolTip(tr("Discard recovery"))
         discard.clicked.connect(self.discard_recovery)
         rr.addWidget(discard)
         body.addWidget(self.recovery_row)
         recent_header = QHBoxLayout()
-        recent_header.addWidget(QLabel("Recentes"))
+        recent_header.addWidget(QLabel(tr("Recent")))
         recent_header.addStretch()
         self.recent_search = QLineEdit()
-        self.recent_search.setPlaceholderText("Buscar projeto…")
+        self.recent_search.setPlaceholderText(tr("Search projects…"))
         self.recent_search.setClearButtonEnabled(True)
         self.recent_search.setMaximumWidth(320)
         self.recent_search.textChanged.connect(self.filter_recents)
@@ -106,21 +108,21 @@ class ProjectMixin:
         self.recent_list = QListWidget()
         self.recent_list.setObjectName("recent_list")
         self.recent_list.setFrameShape(QFrame.Shape.NoFrame)
-        self.recent_list.setAccessibleName("Projetos recentes")
+        self.recent_list.setAccessibleName(tr("Recent projects"))
         self.recent_list.itemActivated.connect(self.open_recent)
         self.recent_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.recent_list.customContextMenuRequested.connect(self.recent_context)
         body.addWidget(self.recent_list)
-        self.no_recents = QLabel("Nenhum projeto recente.")
+        self.no_recents = QLabel(tr("No recent projects."))
         self.no_recents.setAlignment(Qt.AlignmentFlag.AlignCenter)
         body.addWidget(self.no_recents)
         actions = QHBoxLayout()
         actions.addStretch()
         for symbol, label, callback in [
-            ("open", "Abrir", lambda: self.open_recent(self.recent_list.currentItem())),
-            ("search", "Localizar…", self.locate_recent),
-            ("remove", "Remover da lista", self.remove_recent),
-            ("trash", "Mover para a lixeira…", self.trash_recent),
+            ("open", tr("Open"), lambda: self.open_recent(self.recent_list.currentItem())),
+            ("search", tr("Locate…"), self.locate_recent),
+            ("remove", tr("Remove from list"), self.remove_recent),
+            ("trash", tr("Move to trash…"), self.trash_recent),
         ]:
             button = QToolButton()
             button.setIcon(icon(symbol))
@@ -143,7 +145,7 @@ class ProjectMixin:
         self.new_action.triggered.connect(lambda: self.new_project_dialog("blank"))
         menu = self.menuBar().actions()[0].menu()
         menu.addSeparator()
-        share = menu.addAction("Compartilhar projeto…")
+        share = menu.addAction(tr("Share project…"))
         share.triggered.connect(self.share_project)
         self.refresh_recents()
         self.refresh_recovery()
@@ -155,37 +157,37 @@ class ProjectMixin:
         self.pages.currentChanged.connect(lambda _: self._update_actions())
         self.external_change_row = QWidget()
         row = QHBoxLayout(self.external_change_row)
-        row.addWidget(QLabel("Funções alteradas fora do Makebench."), 1)
-        reload = QPushButton("Recarregar arquivo")
+        row.addWidget(QLabel(tr("Functions changed outside Makebench.")), 1)
+        reload = QPushButton(tr("Reload file"))
         reload.clicked.connect(self.reload_source)
         row.addWidget(reload)
-        keep = QPushButton("Manter minha versão")
+        keep = QPushButton(tr("Keep my version"))
         keep.clicked.connect(self.keep_source)
         row.addWidget(keep)
         self.editor_page.layout().insertWidget(1, self.external_change_row)
         self.external_change_row.hide()
         self.trust_row = QWidget()
-        tr = QHBoxLayout(self.trust_row)
+        trust_layout = QHBoxLayout(self.trust_row)
         self.trust_label = QLabel()
         self.trust_label.setWordWrap(True)
-        tr.addWidget(self.trust_label, 1)
-        review = QPushButton("Revisar código")
-        review.clicked.connect(lambda: self.set_mode("Código"))
-        tr.addWidget(review)
-        trust = QPushButton("Confiar e continuar")
+        trust_layout.addWidget(self.trust_label, 1)
+        review = QPushButton(tr("Review code"))
+        review.clicked.connect(lambda: self.set_mode("code"))
+        trust_layout.addWidget(review)
+        trust = QPushButton(tr("Trust and continue"))
         trust.clicked.connect(lambda: (self.trust_project(), self.refresh_trust_banner()))
-        tr.addWidget(trust)
+        trust_layout.addWidget(trust)
         self.editor_page.layout().insertWidget(1, self.trust_row)
         self.trust_row.hide()
         self.refresh_trust_banner()
 
     def reload_source(self):
-        """Recarrega por escolha explícita, sem importar o arquivo Python."""
+        """Reload by explicit choice, without importing the Python file."""
         if not self.path:
             return
         if self.source.path and not self.source.path.exists():
             self.statusBar().showMessage(
-                "O arquivo foi removido. Sua edição permanece aqui; use Manter minha versão ou Salvar como.",
+                tr("The file was removed. Your edits remain here; use Keep my version or Save As."),
                 10000,
             )
             return
@@ -203,7 +205,7 @@ class ProjectMixin:
             self._show_error(str(exc))
 
     def keep_source(self):
-        """Autoriza preservar o buffer atual; a próxima gravação continua explícita."""
+        """Allow keeping the current buffer; the next write stays explicit."""
         if self.source.path:
             try:
                 self.source.original = (
@@ -217,7 +219,7 @@ class ProjectMixin:
         self.refresh_trust_banner()
 
     def show_home(self, compact=False):
-        """Mostra a entrada sem descartar ou executar o documento em edição."""
+        """Show the start page without discarding or running the document being edited."""
         if not self._finish_field_edit():
             return
         self.refresh_recents()
@@ -230,7 +232,7 @@ class ProjectMixin:
             self.resize(820, 500)
 
     def refresh_recents(self):
-        """Apresenta caminhos reais e indica documentos movidos ou removidos."""
+        """Show real paths and flag documents that were moved or removed."""
         self.recent_list.clear()
         paths = self.settings.value("projects/recent", [], type=list)
         from .theme import icon
@@ -246,7 +248,7 @@ class ProjectMixin:
                 path.parent.name
                 + "\n"
                 + folder
-                + (" · Não encontrado" if not path.is_file() else "")
+                + (" · " + tr("Not found") if not path.is_file() else "")
             )
             item = QListWidgetItem(icon("document"), text)
             item.setSizeHint(QSize(320, 58))
@@ -261,14 +263,14 @@ class ProjectMixin:
         self.filter_recents()
 
     def filter_recents(self):
-        """Filtra localmente sem remover arquivos nem referências da lista."""
+        """Filter locally without removing files or list references."""
         query = self.recent_search.text().casefold() if hasattr(self, "recent_search") else ""
         for index in range(self.recent_list.count()):
             item = self.recent_list.item(index)
             item.setHidden(query not in (item.text() + " " + item.toolTip()).casefold())
 
     def recent_context(self, point):
-        """Menu do projeto distingue abrir, localizar, remover referência e lixeira."""
+        """The project menu separates opening, locating, removing the reference and trash."""
         item = self.recent_list.itemAt(point)
         if not item:
             return
@@ -278,21 +280,21 @@ class ProjectMixin:
         from PySide6.QtCore import QUrl
 
         menu = QMenu(self)
-        menu.addAction("Abrir", lambda: self.open_recent(item))
+        menu.addAction(tr("Open"), lambda: self.open_recent(item))
         menu.addAction(
-            "Abrir pasta",
+            tr("Open folder"),
             lambda: QDesktopServices.openUrl(
                 QUrl.fromLocalFile(str(Path(item.data(Qt.ItemDataRole.UserRole)).parent))
             ),
         )
-        menu.addAction("Localizar…", self.locate_recent)
+        menu.addAction(tr("Locate…"), self.locate_recent)
         menu.addSeparator()
-        menu.addAction("Remover dos recentes", self.remove_recent)
-        menu.addAction("Mover para a lixeira…", self.trash_recent)
+        menu.addAction(tr("Remove from recents"), self.remove_recent)
+        menu.addAction(tr("Move to trash…"), self.trash_recent)
         menu.exec(self.recent_list.viewport().mapToGlobal(point))
 
     def trash_recent(self):
-        """Oferece lixeira recuperável; nunca apaga pastas silenciosamente."""
+        """Offer a recoverable trash; never deletes folders silently."""
         item = self.recent_list.currentItem()
         if not item:
             return
@@ -302,7 +304,7 @@ class ProjectMixin:
             return
         if self.runtime_window and not self.runtime_window.session.closed:
             self.statusBar().showMessage(
-                "Encerre o teste antes de mover um projeto para a lixeira.", 6000
+                tr("Stop the test before moving a project to the trash."), 6000
             )
             return
         if self.path == path and not self._confirm_discard():
@@ -311,9 +313,9 @@ class ProjectMixin:
         from makebench.core.source import source_path
 
         dialog = QDialog(self.project_dialog_parent())
-        dialog.setWindowTitle("Mover projeto para a lixeira")
+        dialog.setWindowTitle(tr("Move project to trash"))
         layout = QVBoxLayout(dialog)
-        caption = QLabel("Mover estes arquivos para a lixeira?")
+        caption = QLabel(tr("Move these files to the trash?"))
         layout.addWidget(caption)
         paths = [path]
         own = source_path(path)
@@ -323,25 +325,27 @@ class ProjectMixin:
         listing.setTextFormat(Qt.TextFormat.PlainText)
         listing.setWordWrap(True)
         layout.addWidget(listing)
-        folder = QCheckBox("Incluir toda a pasta do projeto e seu conteúdo")
+        folder = QCheckBox(tr("Include the whole project folder and its contents"))
         layout.addWidget(folder)
         safe = path.parent.resolve() not in {
             Path.home().resolve(),
             Path("/"),
             Path(
                 self.settings.value(
-                    "v1/projects/folder", str(Path.home() / "Makebench" / "Projetos")
+                    "v1/projects/folder", str(Path.home() / "Makebench" / "Projects")
                 )
             ).resolve(),
         }
         folder.setEnabled(safe)
         folder.setToolTip(
-            "A pasta inteira só é incluída se você marcar esta opção. Imagens permanecem quando apenas os arquivos são movidos."
+            tr(
+                "The whole folder is included only if you check this option. Images stay when only the files are moved."
+            )
         )
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Mover para a lixeira")
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(tr("Move to trash"))
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
@@ -350,7 +354,7 @@ class ProjectMixin:
         self.move_project_to_trash(path, whole_folder=folder.isChecked())
 
     def move_project_to_trash(self, path, whole_folder=False):
-        """Move só o conjunto escolhido; uma falha não vira exclusão permanente."""
+        """Move only the chosen set; a failure never becomes a permanent deletion."""
         from PySide6.QtCore import QFile
         from makebench.core.source import source_path
 
@@ -360,11 +364,11 @@ class ProjectMixin:
             Path("/"),
             Path(
                 self.settings.value(
-                    "v1/projects/folder", str(Path.home() / "Makebench" / "Projetos")
+                    "v1/projects/folder", str(Path.home() / "Makebench" / "Projects")
                 )
             ).resolve(),
         }:
-            self._show_error("Esta pasta não pode ser movida como um projeto inteiro.")
+            self._show_error(tr("This folder cannot be moved as a whole project."))
             return False
         targets = (
             [path.parent] if whole_folder else [p for p in (source_path(path), path) if p.exists()]
@@ -375,10 +379,9 @@ class ProjectMixin:
             ok = result[0] if isinstance(result, tuple) else result
             if not ok:
                 self._show_error(
-                    "Não foi possível mover para a lixeira: "
-                    + str(target)
-                    + "\nJá movidos: "
-                    + (", ".join(moved) or "nenhum")
+                    tr("Could not move to trash: {path}").format(path=target)
+                    + "\n"
+                    + tr("Already moved: {items}").format(items=", ".join(moved) or tr("none"))
                 )
                 return False
             moved.append(str(target))
@@ -388,11 +391,11 @@ class ProjectMixin:
         if self.path == path:
             self._replace_project(Project.empty(), None)
             self.show_home()
-        self.statusBar().showMessage("Projeto movido para a lixeira.", 6000)
+        self.statusBar().showMessage(tr("Project moved to the trash."), 6000)
         return True
 
     def remember_project(self):
-        """Adiciona o caminho ao topo dos recentes após abertura ou gravação bem-sucedida."""
+        """Add the path to the top of the recents after a successful open or save."""
         if self.path:
             paths = self.settings.value("projects/recent", [], type=list)
             paths = [str(self.path), *[p for p in paths if p != str(self.path)]]
@@ -404,13 +407,13 @@ class ProjectMixin:
         self.refresh_trust_banner()
 
     def open_recent(self, item):
-        """Abre um recente existente sem destruir o projeto atual em caso de erro."""
+        """Open an existing recent without destroying the current project on error."""
         if not item:
             return
         path = Path(item.data(Qt.ItemDataRole.UserRole))
         if not path.is_file():
             self.statusBar().showMessage(
-                "Projeto não encontrado. Use Localizar ou remova da lista.", 6000
+                tr("Project not found. Use Locate or remove it from the list."), 6000
             )
             return
         if not self._confirm_discard():
@@ -423,12 +426,12 @@ class ProjectMixin:
             self._show_error(str(exc))
 
     def locate_recent(self):
-        """Substitui somente a entrada selecionada; não movimenta arquivos do usuário."""
+        """Replace only the selected entry; never moves the user's files."""
         item = self.recent_list.currentItem()
         if not item:
             return
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Localizar projeto", "", "Projetos Makebench (*.makebench.json)"
+            self, tr("Locate project"), "", tr("Makebench projects (*.makebench.json)")
         )
         if not filename:
             return
@@ -443,7 +446,7 @@ class ProjectMixin:
         self.refresh_recents()
 
     def remove_recent(self):
-        """Remove o atalho sem excluir o projeto em disco."""
+        """Remove the shortcut without deleting the project on disk."""
         item = self.recent_list.currentItem()
         if item:
             self.settings.setValue(
@@ -457,7 +460,7 @@ class ProjectMixin:
             self.refresh_recents()
 
     def new_project_dialog(self, template="blank"):
-        """Cria uma pasta somente após validar nome, destino e alterações pendentes."""
+        """Create a folder only after validating the name, destination and pending changes."""
         from makebench.core.templates import MODELS
         from makebench.core.environment import gtk_support
         from .theme import manager
@@ -465,92 +468,94 @@ class ProjectMixin:
         from PySide6.QtGui import QPixmap, QPainter, QPen, QColor, QIcon
 
         dialog = QDialog(self.project_dialog_parent())
-        dialog.setWindowTitle("Novo projeto")
+        dialog.setWindowTitle(tr("New project"))
         dialog.setFixedWidth(560)
         form = QFormLayout(dialog)
         model = QComboBox()
         for key, label, description in MODELS:
             model.addItem(label, key)
         model.setCurrentIndex(max(0, model.findData(template)))
-        form.addRow("Modelo", model)
+        form.addRow(tr("Template"), model)
         backend = QComboBox()
-        backend.addItem("GTK — aparência Adwaita", "gtk")
-        backend.addItem("Qt — controles do desktop", "qt")
+        backend.addItem(tr("GTK — Adwaita look"), "gtk")
+        backend.addItem(tr("Qt — desktop controls"), "qt")
         supported = gtk_support()["gtk4"]
         preferred = self.settings.value("v1/projects/backend", "gtk" if supported else "qt")
         backend.setCurrentIndex(backend.findData(preferred if supported else "qt"))
-        form.addRow("Aparência do aplicativo", backend)
+        form.addRow(tr("Application look"), backend)
         if not supported:
-            note = QLabel("GTK4 não disponível; Qt selecionado.")
+            note = QLabel(tr("GTK4 not available; Qt selected."))
             form.addRow(note)
-        name = QLineEdit("Meu aplicativo")
-        form.addRow("Nome", name)
+        name = QLineEdit(tr("My application"))
+        form.addRow(tr("Name"), name)
         folder = QLineEdit(
             str(
                 Path(
                     self.settings.value(
-                        "v1/projects/folder", str(Path.home() / "Makebench" / "Projetos")
+                        "v1/projects/folder", str(Path.home() / "Makebench" / "Projects")
                     )
                 )
-                / "meu-aplicativo"
+                / "my-application"
             )
         )
         folder_row = QWidget()
         row = QHBoxLayout(folder_row)
         row.setContentsMargins(0, 0, 0, 0)
         row.addWidget(folder)
-        choose = QPushButton("Escolher…")
+        choose = QPushButton(tr("Choose…"))
         row.addWidget(choose)
 
         def choose_folder():
-            """Recebe uma escolha de pasta sem criar ou modificar arquivos."""
-            value = QFileDialog.getExistingDirectory(dialog, "Pasta do novo projeto", folder.text())
+            """Receive a folder choice without creating or changing files."""
+            value = QFileDialog.getExistingDirectory(
+                dialog, tr("Folder for the new project"), folder.text()
+            )
             if value:
                 folder.setText(value)
 
         choose.clicked.connect(choose_folder)
-        form.addRow("Pasta", folder_row)
+        form.addRow(tr("Folder"), folder_row)
         name.textEdited.connect(
             lambda text: folder.setText(str(Path(folder.text()).parent / slug(text)))
         )
-        info = QLabel("Será criada uma pasta com o projeto, suas funções e imagens.")
+        info = QLabel(tr("A folder will be created with the project, its functions and images."))
         info.setWordWrap(True)
         form.addRow(info)
-        identifier = QLineEdit("br.exemplo.meuaplicativo")
-        identifier.setPlaceholderText("br.exemplo.meuapp")
+        identifier = QLineEdit("com.example.myapplication")
+        identifier.setPlaceholderText("com.example.myapp")
         identifier.setObjectName("new_application_id")
-        form.addRow("Identificador", identifier)
+        form.addRow(tr("Identifier"), identifier)
         version = QLineEdit("0.1.0")
         version.setObjectName("new_application_version")
-        form.addRow("Versão", version)
+        form.addRow(tr("Version"), version)
 
         def suggest_identifier(text):
-            """Sugere um identificador editável, sem substituir uma escolha da pessoa."""
+            """Suggest an editable identifier, never replacing a choice the user made."""
             if not identifier.isModified():
-                identifier.setText("br.exemplo.app_" + slug(text).replace("-", "_"))
+                identifier.setText("com.example.app_" + slug(text).replace("-", "_"))
 
         name.textEdited.connect(suggest_identifier)
         icon_path = QLineEdit()
         icon_path.setReadOnly(True)
-        icon_path.setPlaceholderText("Escolher depois")
+        icon_path.setPlaceholderText(tr("Choose later"))
         icon_path.setObjectName("new_application_icon")
         icon_row = QWidget()
         icons = QHBoxLayout(icon_row)
         icons.setContentsMargins(0, 0, 0, 0)
         icons.addWidget(icon_path)
-        choose_icon = QPushButton("Escolher…")
+        choose_icon = QPushButton(tr("Choose…"))
         icons.addWidget(choose_icon)
 
         def select_icon():
-            """O ícone é copiado como recurso somente ao confirmar a criação."""
+            """The icon is copied as an asset only when creation is confirmed."""
             filename, _ = QFileDialog.getOpenFileName(
-                dialog, "Ícone do aplicativo", "", "Ícones (*.png *.svg)"
+                dialog, tr("Application icon"), "", tr("Icons (*.png *.svg)")
             )
             if filename:
                 icon_path.setText(filename)
 
         choose_icon.clicked.connect(select_icon)
-        form.addRow("Ícone", icon_row)
+        form.addRow(tr("Icon"), icon_row)
         name.setObjectName("new_application_name")
         folder.setObjectName("new_project_folder")
         backend.setObjectName("new_application_backend")
@@ -562,26 +567,26 @@ class ProjectMixin:
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Save).setText("Criar projeto")
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText(tr("Create project"))
         buttons.rejected.connect(dialog.reject)
         form.addRow(buttons)
 
         def create():
-            """Cria o item solicitado com os valores validados do diálogo."""
+            """Create the requested item with the dialog's validated values."""
             destination = Path(folder.text()).expanduser()
             if not name.text().strip():
-                error.setText("Informe um nome para o projeto.")
+                error.setText(tr("Enter a name for the project."))
                 return
             if not re.fullmatch(
                 r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}", identifier.text().strip()
             ):
-                error.setText("Use um identificador como br.exemplo.meuapp.")
+                error.setText(tr("Use an identifier such as com.example.myapp."))
                 return
             if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version.text().strip()):
-                error.setText("Informe a versão, por exemplo 0.1.0.")
+                error.setText(tr("Enter the version, for example 0.1.0."))
                 return
             if destination.exists() and any(destination.iterdir()):
-                error.setText("Escolha uma pasta nova ou vazia.")
+                error.setText(tr("Choose a new or empty folder."))
                 return
             if not self._confirm_discard():
                 return
@@ -593,6 +598,7 @@ class ProjectMixin:
                     backend=backend.currentData(),
                     name=name.text().strip(),
                     version=version.text().strip(),
+                    language=language(),
                 )
                 used = self.settings.value("projects/templates/recent", [], type=list)
                 self.settings.setValue(
@@ -612,7 +618,7 @@ class ProjectMixin:
                     return
                 self._created_here = True
                 self.trust_project()
-                self.set_mode("Mapa")
+                self.set_mode("map")
                 dialog.accept()
             except (OSError, ProjectError) as exc:
                 error.setText(str(exc))
@@ -622,7 +628,7 @@ class ProjectMixin:
         dialog.exec()
 
     def project_template(self, key, name):
-        """Copia modelos distribuídos, mantendo os exemplos originais intactos."""
+        """Copy the shipped templates, keeping the original examples intact."""
         if key != "tasks":
             from makebench.core.templates import make_template
 
@@ -630,9 +636,19 @@ class ProjectMixin:
             if key == "blank":
                 project.metadata["empty_map"] = True
             return project, SourceBuffer().text, AssetStore()
-        root = Path(__file__).resolve().parents[3] / "examples" / "script-center"
+        # The task-center template exists in each interface language.
+        portuguese = language() == "pt_BR"
+        root = (
+            Path(__file__).resolve().parents[3]
+            / "examples"
+            / ("script-center" if portuguese else "en/script-center")
+        )
         if not (root / "app.makebench.json").is_file():
-            root = Path(__file__).resolve().parent.parent / "templates" / "script-center"
+            root = (
+                Path(__file__).resolve().parent.parent
+                / "templates"
+                / ("script-center.pt_BR" if portuguese else "script-center")
+            )
         project = load_project(root / "app.makebench.json")
         from makebench.core.project import new_id
 
@@ -642,30 +658,30 @@ class ProjectMixin:
         return project, SourceBuffer.load(root / "app.makebench.json").text, AssetStore(root)
 
     def share_project(self):
-        """Exporta o documento editável e recursos; não é o exportador de aplicativo."""
+        """Export the editable document and assets; this is not the application exporter."""
         if not self._finish_field_edit():
             return
         filename, _ = QFileDialog.getSaveFileName(
             self,
-            "Compartilhar projeto",
+            tr("Share project"),
             slug(self.project.name) + ".zip",
-            "Projeto compartilhado (*.zip)",
+            tr("Shared project (*.zip)"),
         )
         if not filename:
             return
         try:
             write_bundle(self.project, self.source.text, self.assets.read, filename)
-            self.statusBar().showMessage("Projeto compartilhado em " + filename, 7000)
+            self.statusBar().showMessage(tr("Project shared at {path}").format(path=filename), 7000)
         except (OSError, ProjectError) as exc:
             self._show_error(str(exc))
 
     def recovery_root(self):
-        """Resolve estado XDG; não usa a pasta original do projeto para snapshots."""
+        """Resolve the XDG state folder; never uses the project's original folder for snapshots."""
         base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
         return Path(base) / "makebench" / "recovery"
 
     def snapshot_recovery(self):
-        """Grava cópia completa, inclusive recursos ainda não salvos; nunca executa código."""
+        """Write a complete copy, including assets not saved yet; never runs code."""
         if not (
             self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
         ):
@@ -699,20 +715,22 @@ class ProjectMixin:
             if previous.exists():
                 shutil.rmtree(previous)
         except (OSError, ProjectError) as exc:
-            self.statusBar().showMessage("Não foi possível criar recuperação: " + str(exc), 6000)
+            self.statusBar().showMessage(
+                tr("Could not create recovery: {error}").format(error=exc), 6000
+            )
         finally:
             if temporary.exists():
                 shutil.rmtree(temporary)
 
     def clear_recovery(self, project_id=None):
-        """Apaga apenas o snapshot do projeto confirmado como salvo ou descartado."""
+        """Delete only the snapshot of the project confirmed as saved or discarded."""
         for suffix in ("", ".previous"):
             path = self.recovery_root() / ((project_id or self.project.id) + suffix)
             if path.exists():
                 shutil.rmtree(path)
 
     def refresh_recovery(self):
-        """Detecta snapshots válidos de sessões anteriores sem carregar código."""
+        """Detect valid snapshots from previous sessions without loading code."""
         root = self.recovery_root()
         self.recoveries = (
             sorted(
@@ -730,7 +748,7 @@ class ProjectMixin:
         self.recovery_row.setVisible(bool(self.recoveries))
 
     def recover_latest(self):
-        """Recupera em uma pasta de sessão isolada, deixando o original intocado."""
+        """Recover into an isolated session folder, leaving the original untouched."""
         if not self.recoveries or not self._confirm_discard():
             return
         snapshot = self.recoveries[0]
@@ -743,7 +761,7 @@ class ProjectMixin:
             self.source.text = source.text
             self.source_editor.setPlainText(source.text)
             self.assets = AssetStore(path.parent)
-            # Recuperação precisa de Salvar como; não associa fingerprints ao original.
+            # Recovery requires Save As; fingerprints are not bound to the original.
             self.history.push(project)
             self.source.saved_text = source.text + chr(0)
             self._recovered = True
@@ -751,26 +769,26 @@ class ProjectMixin:
             self.pages.setCurrentWidget(self.editor_page)
             self.workspace_toolbar.show()
             self.statusBar().showMessage(
-                "Alterações recuperadas. Salve em uma pasta para continuar.", 10000
+                tr("Changes recovered. Save to a folder to continue."), 10000
             )
         except (OSError, ProjectError, ValueError) as exc:
             self._show_error(str(exc))
 
     def discard_recovery(self):
-        """Descarta só a recuperação selecionada, preservando o projeto original."""
+        """Discard only the selected recovery, keeping the original project."""
         if self.recoveries:
             shutil.rmtree(self.recoveries[0])
             self.refresh_recovery()
 
     def fingerprint(self):
-        """Vincula confiança ao conteúdo que será executado, não apenas ao caminho."""
+        """Bind trust to the content that will run, not just to the path."""
         data = (
             json.dumps(self.project.to_dict(), sort_keys=True, ensure_ascii=True) + self.source.text
         )
         return hashlib.sha256(data.encode()).hexdigest()
 
     def trust_project(self):
-        """Registra consentimento para o snapshot atual do projeto."""
+        """Record consent for the project's current snapshot."""
         self._trusted_session = True
         self._trusted = self.fingerprint()
         if self.path:
@@ -779,7 +797,7 @@ class ProjectMixin:
             )
 
     def confirm_trust(self):
-        """Pede consentimento uma vez por conteúdo importado antes de executar."""
+        """Ask for consent once per imported content before running."""
         from .settings import preference
 
         if (
@@ -796,21 +814,23 @@ class ProjectMixin:
         ):
             return True
         dialog = QMessageBox(self)
-        dialog.setWindowTitle("Testar este projeto?")
+        dialog.setWindowTitle(tr("Test this project?"))
         dialog.setText(
-            "Testar executará funções Python e scripts com suas permissões. O processo separado não é uma sandbox. Abra Código para revisar o projeto antes de continuar."
+            tr(
+                "Testing will run Python functions and scripts with your permissions. The separate process is not a sandbox. Open Code to review the project before continuing."
+            )
         )
-        run = dialog.addButton("Confiar e testar", QMessageBox.ButtonRole.AcceptRole)
-        dialog.addButton("Revisar código", QMessageBox.ButtonRole.RejectRole)
+        run = dialog.addButton(tr("Trust and test"), QMessageBox.ButtonRole.AcceptRole)
+        dialog.addButton(tr("Review code"), QMessageBox.ButtonRole.RejectRole)
         dialog.exec()
         if dialog.clickedButton() is run:
             self.trust_project()
             return True
-        self.set_mode("Código")
+        self.set_mode("code")
         return False
 
     def watch_source(self):
-        """Acompanha o arquivo próprio sem substituir uma edição automaticamente."""
+        """Watch your own file without replacing an edit automatically."""
         if not hasattr(self, "source_watcher"):
             return
         old = self.source_watcher.files()
@@ -820,7 +840,7 @@ class ProjectMixin:
             self.source_watcher.addPath(str(self.source.path))
 
     def source_changed_externally(self, _path):
-        """Sinaliza conflito; o fingerprint de SourceBuffer continua protegendo a gravação."""
+        """Flag a conflict; the SourceBuffer fingerprint keeps protecting the write."""
         try:
             data = (
                 self.source.path.read_bytes()
@@ -833,17 +853,17 @@ class ProjectMixin:
         if self.source.path and data != self.source.original:
             self.external_change_row.show()
             self.statusBar().showMessage(
-                "Funções alteradas fora do Makebench. Escolha Recarregar ou Manter minha versão.",
+                tr("Functions changed outside Makebench. Choose Reload or Keep my version."),
                 15000,
             )
         self.watch_source()
 
     def save_as_dialog(self):
-        """Solicita nome e pasta, copiando funções e recursos pelos mecanismos existentes."""
+        """Ask for a name and folder, copying functions and assets through the existing mechanisms."""
         if not self._finish_field_edit():
             return False
         dialog = QDialog(self)
-        dialog.setWindowTitle("Salvar projeto como")
+        dialog.setWindowTitle(tr("Save project as"))
         dialog.resize(620, 210)
         form = QFormLayout(dialog)
         name = QLineEdit(
@@ -852,26 +872,28 @@ class ProjectMixin:
         folder = QLineEdit(
             str(self.path.parent)
             if self.path
-            else str(Path.home() / "Makebench" / "Projetos" / slug(self.project.name))
+            else str(Path.home() / "Makebench" / "Projects" / slug(self.project.name))
         )
-        form.addRow("Nome do arquivo", name)
+        form.addRow(tr("File name"), name)
         row = QWidget()
         rl = QHBoxLayout(row)
         rl.setContentsMargins(0, 0, 0, 0)
         rl.addWidget(folder)
-        choose = QPushButton("Escolher…")
+        choose = QPushButton(tr("Choose…"))
         rl.addWidget(choose)
 
         def choose_folder():
-            """Recebe uma escolha de pasta sem criar ou modificar arquivos."""
-            path = QFileDialog.getExistingDirectory(dialog, "Pasta do projeto", folder.text())
+            """Receive a folder choice without creating or changing files."""
+            path = QFileDialog.getExistingDirectory(dialog, tr("Project folder"), folder.text())
             if path:
                 folder.setText(path)
 
         choose.clicked.connect(choose_folder)
-        form.addRow("Pasta", row)
+        form.addRow(tr("Folder"), row)
         note = QLabel(
-            "Inclui o arquivo de funções e os recursos do projeto. Fontes diferentes no destino são preservadas."
+            tr(
+                "Includes the functions file and the project's assets. Different sources at the destination are preserved."
+            )
         )
         note.setWordWrap(True)
         form.addRow(note)
@@ -886,10 +908,10 @@ class ProjectMixin:
         saved = []
 
         def save():
-            """Valida os campos e só confirma depois de salvar com sucesso."""
+            """Validate the fields and confirm only after saving successfully."""
             filename = name.text().strip()
             if not filename or Path(filename).name != filename or filename in {".", ".."}:
-                error.setText("Informe um nome de arquivo, sem pastas.")
+                error.setText(tr("Enter a file name, without folders."))
                 return
             if not filename.endswith(".makebench.json"):
                 filename += ".makebench.json"
@@ -898,8 +920,10 @@ class ProjectMixin:
                 if (
                     QMessageBox.warning(
                         dialog,
-                        "Substituir projeto?",
-                        "O destino já contém um projeto. Suas funções e recursos ainda serão verificados antes de salvar.",
+                        tr("Replace project?"),
+                        tr(
+                            "The destination already contains a project. Your functions and assets will still be checked before saving."
+                        ),
                         QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Cancel,
                         QMessageBox.StandardButton.Cancel,
                     )
@@ -920,7 +944,7 @@ class ProjectMixin:
         return bool(saved)
 
     def refresh_trust_banner(self):
-        """Explica execução futura sem bloquear a leitura e a edição do projeto."""
+        """Explain future execution without blocking reading and editing the project."""
         if not hasattr(self, "trust_row"):
             return
         from .settings import preference
@@ -943,7 +967,7 @@ class ProjectMixin:
             count = len(function_names(self.source.text)[0])
 
             def scripts(value):
-                """Conta scripts declarados, sem executar seus textos."""
+                """Count declared scripts, without running their texts."""
                 if isinstance(value, dict):
                     return int(value.get("op") == "script") + sum(
                         scripts(v) for v in value.values()
@@ -954,5 +978,14 @@ class ProjectMixin:
 
             script_count = sum(scripts(f.get("body")) for f in self.project.workflows)
             self.trust_label.setText(
-                f"Projeto ainda não revisado: {count} função(ões) Python e {script_count} script(s). Nada foi executado. Testar executa esse código com suas permissões."
+                tr(
+                    "Project not reviewed yet: {functions} and {scripts}. Nothing was run. Testing runs this code with your permissions."
+                ).format(
+                    functions=ntr(
+                        "{count} Python function", "{count} Python functions", count
+                    ).format(count=count),
+                    scripts=ntr("{count} script", "{count} scripts", script_count).format(
+                        count=script_count
+                    ),
+                )
             )

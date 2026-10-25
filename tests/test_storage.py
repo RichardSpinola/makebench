@@ -1,4 +1,4 @@
-"""Persistência real e recuperação de falhas sem perder o arquivo anterior."""
+"""Real persistence and failure recovery without losing the previous file."""
 
 import json
 import tempfile
@@ -47,7 +47,7 @@ class StorageTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), original)
 
     def test_format_upgrade_reports_the_backup_actually_created(self):
-        """O aviso de atualização usa o nome real da cópia, de qualquer formato anterior."""
+        """The upgrade notice uses the real name of the copy, from any previous format."""
         example = (
             Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
         )

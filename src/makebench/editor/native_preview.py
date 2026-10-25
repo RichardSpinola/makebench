@@ -1,4 +1,4 @@
-"""Prévia GTK real sobre o canvas Qt; seleção e edição não disparam eventos do app."""
+"""Real GTK preview over the Qt canvas; selection and editing never fire app events."""
 
 import base64
 import json
@@ -15,22 +15,23 @@ from PySide6.QtGui import QPainter, QPen, QPixmap, QDrag
 from PySide6.QtWidgets import QWidget, QApplication, QRubberBand
 from makebench.core.project import ComponentKind, LayoutKind
 from .drag import read_payload, mime_for
+from makebench.i18n import language, tr
 
 
 class GtkPreviewJob(QThread):
-    """Apenas componentes e bytes de imagens atravessam a fronteira de processo."""
+    """Only components and image bytes cross the process boundary."""
 
     ready = Signal(bytes, dict)
     failed = Signal(str)
 
     def __init__(self, payload, parent):
-        """Não recebe fonte Python, fluxos, scripts ou eventos do projeto."""
+        """Never receives Python source, flows, scripts or project events."""
         super().__init__(parent)
         self.payload = payload
         self.cancel = threading.Event()
 
     def run(self):
-        """Renderiza fora da interface e limpa o display temporário ao sair."""
+        """Render outside the interface and clean up the temporary display on exit."""
         try:
             self.render()
         except Exception as exc:
@@ -38,7 +39,7 @@ class GtkPreviewJob(QThread):
                 self.failed.emit(str(exc))
 
     def render(self):
-        """Arquivos intermediários são privados e removidos também em caso de falha."""
+        """Intermediate files are private and removed even on failure."""
         with tempfile.TemporaryDirectory(prefix="makebench-gtk-preview-") as directory:
             root = Path(directory)
             source = root / "input.json"
@@ -49,6 +50,7 @@ class GtkPreviewJob(QThread):
                 PYTHONPATH=str(Path(__file__).resolve().parents[2])
                 + os.pathsep
                 + os.environ.get("PYTHONPATH", ""),
+                MAKEBENCH_LANGUAGE=language(),
             )
             process = subprocess.Popen(
                 [sys.executable, "-m", "makebench.gtk_runtime.preview", str(source), str(target)],
@@ -73,17 +75,17 @@ class GtkPreviewJob(QThread):
                 return
             if process.returncode or not target.is_file():
                 self.failed.emit(
-                    error.decode(errors="replace")[-1800:] or "GTK não produziu a prévia."
+                    error.decode(errors="replace")[-1800:] or tr("GTK did not produce the preview.")
                 )
                 return
             self.ready.emit(target.with_suffix(".png").read_bytes(), json.loads(target.read_text()))
 
 
 class GtkDesignSurface(QWidget):
-    """Imagem do GTK com regiões reais para selecionar, inserir, mover e redimensionar."""
+    """GTK image with real regions to select, insert, move and resize."""
 
     def __init__(self, canvas):
-        """Mantém a última imagem enquanto outra está sendo calculada, sem piscar."""
+        """Keep the last image while another is being computed, without flicker."""
         super().__init__(canvas)
         self.canvas = canvas
         self.image = QPixmap()
@@ -92,7 +94,7 @@ class GtkDesignSurface(QWidget):
         self.job = None
         self.payload = None
         self.version = 0
-        self.error = "Preparando prévia GTK nativa…"
+        self.error = tr("Preparing native GTK preview…")
         self.drag = None
         self.rubber = None
         self._suspended = False
@@ -105,7 +107,7 @@ class GtkDesignSurface(QWidget):
         self.hide()
 
     def request(self, force=False):
-        """Agenda o documento visual mais recente, descartando resultados antigos."""
+        """Schedule the most recent visual document, discarding old results."""
         if (
             not self.canvas._project
             or self.canvas._project.application.get("backend", "qt") != "gtk"
@@ -123,7 +125,7 @@ class GtkDesignSurface(QWidget):
             self.payload = None
             self.image = QPixmap()
             self.rectangles = {}
-            self.error = "Preparando prévia GTK nativa…"
+            self.error = tr("Preparing native GTK preview…")
             self.canvas.native_size = None
         assets = {}
         for key in self.canvas._project.asset_paths():
@@ -144,21 +146,21 @@ class GtkDesignSurface(QWidget):
         self.payload = payload
         self.version += 1
         if not shutil.which("gtk4-broadwayd"):
-            self.error = "A prévia fiel GTK precisa de gtk4-broadwayd e PyGObject/GTK4."
+            self.error = tr("The faithful GTK preview needs gtk4-broadwayd and PyGObject/GTK4.")
             self.update()
             return
         self.timer.start()
         self.update()
 
     def start_job(self):
-        """Serializa pedidos sem acumular processos durante digitação ou arraste."""
+        """Serialize requests without piling up processes while typing or dragging."""
         if self._suspended or not self.isVisible() or self.job and self.job.isRunning():
             return
         version = self.version
         self.job = job = GtkPreviewJob(self.payload, self)
 
         def ready(image, info):
-            """Aplica somente a imagem que ainda corresponde à versão atual."""
+            """Apply only the image that still matches the current version."""
             if version != self.version:
                 return
             self.rendered_version = version
@@ -180,7 +182,7 @@ class GtkDesignSurface(QWidget):
         job.failed.connect(lambda error: self.failed(error) if version == self.version else None)
 
         def finished():
-            """Um pedido mais recente substitui o anterior depois da limpeza do display."""
+            """A newer request replaces the previous one after the display is cleaned up."""
             self.job = None
             job.deleteLater()
             if not self._suspended and version != self.version and self.isVisible():
@@ -190,19 +192,19 @@ class GtkDesignSurface(QWidget):
         job.start()
 
     def failed(self, error):
-        """Nunca apresenta controles Qt como se fossem GTK quando falta uma biblioteca."""
-        self.error = "Prévia GTK indisponível. " + error
+        """Never present Qt controls as if they were GTK when a library is missing."""
+        self.error = tr("GTK preview unavailable.") + " " + error
         self.setToolTip(self.error)
         self.update()
 
     def showEvent(self, event):
-        """Só consome um processo de renderização quando Design está visível."""
+        """Use a rendering process only while Design is visible."""
         super().showEvent(event)
         if self.payload is not None and getattr(self, "rendered_version", None) != self.version:
             self.timer.start()
 
     def shutdown(self):
-        """Encerra só o processo descartável da prévia, sem tocar no runtime do usuário."""
+        """End only the disposable preview process, never touching the user's runtime."""
         self._suspended = True
         self.timer.stop()
         if self.job and self.job.isRunning():
@@ -211,7 +213,7 @@ class GtkDesignSurface(QWidget):
         return not (self.job and self.job.isRunning())
 
     def cancel_gesture(self):
-        """Escape cancela somente a composição temporária, sem alterar o documento."""
+        """Escape cancels only the temporary composition, without changing the document."""
         self.drag = None
         if self.rubber:
             self.rubber.hide()
@@ -220,7 +222,7 @@ class GtkDesignSurface(QWidget):
         self.update()
 
     def paintEvent(self, event):
-        """O próprio GTK desenha controles e cabeçalho; Qt desenha apenas guias de edição."""
+        """GTK draws its own controls and header; Qt draws only the editing guides."""
         painter = QPainter(self)
         painter.fillRect(self.rect(), self.palette().alternateBase())
         if self.image.isNull():
@@ -260,14 +262,14 @@ class GtkDesignSurface(QWidget):
             )
 
     def hit(self, point):
-        """Percorre da folha ao contêiner, usando alocações fornecidas pelo GTK."""
+        """Walk from leaf to container, using the allocations GTK provides."""
         for node in reversed(list(self.canvas._project.root.walk())):
             if node.id in self.rectangles and self.rectangles[node.id].contains(point):
                 return node
         return self.canvas._project.root
 
     def mousePressEvent(self, event):
-        """Seleciona componentes sem clicar no botão GTK ou executar callbacks."""
+        """Select components without clicking the GTK button or running callbacks."""
         if event.button() != Qt.MouseButton.LeftButton:
             return
         point = event.position().toPoint()
@@ -313,7 +315,7 @@ class GtkDesignSurface(QWidget):
         self.update()
 
     def mouseMoveEvent(self, event):
-        """Mostra o gesto sem reconstruir GTK a cada pixel; confirma somente ao soltar."""
+        """Show the gesture without rebuilding GTK on every pixel; commit only on release."""
         if self.rubber:
             self.rubber.setGeometry(
                 QRect(self.rubber_origin, event.position().toPoint()).normalized()
@@ -374,7 +376,7 @@ class GtkDesignSurface(QWidget):
         self.update()
 
     def mouseReleaseEvent(self, event):
-        """Registra uma alteração reversível, como no canvas Qt."""
+        """Record a reversible change, as in the Qt canvas."""
         if self.rubber:
             rect = self.rubber.geometry()
             self.rubber.hide()
@@ -395,27 +397,27 @@ class GtkDesignSurface(QWidget):
         self.update()
 
     def mouseDoubleClickEvent(self, event):
-        """O editor de texto pertence à ferramenta, nunca ao app sendo desenhado."""
+        """The text editor belongs to the tool, never to the app being drawn."""
         node = self.hit(event.position().toPoint())
         self.canvas.component_selected.emit(node.id)
         self.canvas.inline_edit_requested.emit()
 
     def contextMenuEvent(self, event):
-        """Oferece o mesmo catálogo e os mesmos comandos da bancada Qt."""
+        """Offer the same catalog and commands as the Qt workbench."""
         self.canvas.context_requested.emit(self.hit(event.pos()).id, event.globalPos())
 
     def dragEnterEvent(self, event):
-        """Recebe apenas o formato de componentes já reconhecido pelo editor."""
+        """Receive only the component format the editor already recognizes."""
         if read_payload(event.mimeData()) or self.canvas.external_image(event.mimeData()):
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event):
-        """Mantém o arraste sobre o retrato nativo, sem repassar eventos para GTK."""
+        """Keep the drag over the native snapshot without forwarding events to GTK."""
         if read_payload(event.mimeData()) or self.canvas.external_image(event.mimeData()):
             event.acceptProposedAction()
 
     def insert(self, payload, point, image_file=None):
-        """Resolve contêiner/ordem/posição usando os retângulos nativos e o modelo."""
+        """Resolve container/order/position using the native rectangles and the model."""
         project = self.canvas._project
         node = self.hit(point)
         if payload.get("mode") != "new" and (
@@ -455,7 +457,7 @@ class GtkDesignSurface(QWidget):
         return True
 
     def dropEvent(self, event):
-        """Insere ou transfere somente depois da mesma validação usada no canvas Qt."""
+        """Insert or move only after the same validation used in the Qt canvas."""
         payload = read_payload(event.mimeData())
         image = self.canvas.external_image(event.mimeData())
         if image:

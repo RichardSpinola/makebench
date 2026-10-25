@@ -1,0 +1,5553 @@
+# Makebench — Brazilian Portuguese translation.
+# English is the source language; this catalog is read directly by makebench.i18n.
+msgid ""
+msgstr ""
+"Project-Id-Version: Makebench\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pt_BR\n"
+
+#: src/makebench/editor/window.py
+msgid "&Edit"
+msgstr "&Editar"
+
+#: src/makebench/editor/window.py
+msgid "&File"
+msgstr "&Arquivo"
+
+#: src/makebench/editor/window.py
+msgid "&Help"
+msgstr "Aj&uda"
+
+#: src/makebench/editor/navigation.py
+msgid "&Project"
+msgstr "&Projeto"
+
+#: src/makebench/editor/window.py
+msgid "&Run"
+msgstr "E&xecutar"
+
+#: src/makebench/editor/studio.py
+msgid "&View"
+msgstr "E&xibir"
+
+#: src/makebench/core/logic.py
+msgid "(copy)"
+msgstr "(cópia)"
+
+#: src/makebench/editor/studio.py
+msgid "(ctx, value)"
+msgstr "(ctx, valor)"
+
+#: src/makebench/editor/logic.py
+msgid "+ Event…"
+msgstr "+ Evento…"
+
+#: src/makebench/editor/development.py
+msgid "+ New function"
+msgstr "+ Nova função"
+
+#: src/makebench/editor/graph.py
+msgid "+ Node…"
+msgstr "+ Nó…"
+
+#: src/makebench/editor/inspector.py
+msgid "+ On click"
+msgstr "+ Ao clicar"
+
+#: src/makebench/editor/inspector.py
+msgid "+ On start"
+msgstr "+ Ao iniciar"
+
+#: src/makebench/editor/development.py
+msgid "+ Variable"
+msgstr "+ Variável"
+
+#: src/makebench/__main__.py
+msgid "--run requires a project file"
+msgstr "--run exige um arquivo de projeto"
+
+#: src/makebench/editor/window.py
+msgid ".actions.py file created when saving"
+msgstr "arquivo .actions.py criado ao salvar"
+
+#: src/makebench/__main__.py
+msgid ".makebench.json project to open"
+msgstr "Projeto .makebench.json para abrir"
+
+#: src/makebench/editor/settings.py
+msgid "15 seconds"
+msgstr "15 segundos"
+
+#: src/makebench/editor/settings.py
+msgid "30 seconds"
+msgstr "30 segundos"
+
+#: src/makebench/editor/settings.py
+msgid "60 seconds"
+msgstr "60 segundos"
+
+#: src/makebench/runtime/window.py
+msgid "[Error]"
+msgstr "[Erro]"
+
+#: src/makebench/runtime/navigation.py
+msgid "[Test]"
+msgstr "[Teste]"
+
+#: src/makebench/core/logic.py
+msgid "A block comment must be text."
+msgstr "Comentário de bloco precisa ser texto."
+
+#: src/makebench/core/logic.py
+msgid "A block points to a missing or incompatible component."
+msgstr "Um bloco aponta para componente inexistente ou incompatível."
+
+#: src/makebench/core/project.py
+msgid "A component cannot be placed inside itself or its children."
+msgstr "Um componente não pode ficar dentro de si mesmo ou de seus filhos."
+
+#: src/makebench/editor/development.py
+msgid "A flow already exists for that event and filter. Choose another destination."
+msgstr "Já existe um fluxo nesse evento e filtro. Escolha outro destino."
+
+#: src/makebench/editor/projects.py
+msgid "A folder will be created with the project, its functions and images."
+msgstr "Será criada uma pasta com o projeto, suas funções e imagens."
+
+#: src/makebench/editor/development.py
+msgid "A function with that name already exists."
+msgstr "Já existe uma função com esse nome."
+
+#: src/makebench/core/source.py
+msgid "A module and a package have the same name."
+msgstr "Há um módulo e um pacote com o mesmo nome."
+
+#: src/makebench/core/graph.py
+msgid "A node comment must be text."
+msgstr "Comentário de nó precisa ser texto."
+
+#: src/makebench/core/graph.py
+msgid "A node points to a missing or incompatible component."
+msgstr "Nó aponta para componente inexistente ou incompatível."
+
+#: src/makebench/editor/catalog.py
+msgid "A page that belongs to a set of tabs."
+msgstr "Uma página que pertence a um conjunto de abas."
+
+#: src/makebench/editor/settings.py
+msgid "A result is marked as built only after passing through the tool and the verification."
+msgstr "O resultado só é marcado como construído depois de passar pela ferramenta e pela verificação."
+
+#: src/makebench/core/graph.py
+msgid "A sequence accepts between 2 and 8 outputs."
+msgstr "Sequência aceita entre 2 e 8 saídas."
+
+#: src/makebench/core/project.py
+msgid "A set of pages needs at least one page."
+msgstr "Um conjunto de páginas precisa de pelo menos uma página."
+
+#: src/makebench/editor/catalog.py
+msgid "A set of tabbed pages inside the same window."
+msgstr "Um conjunto de páginas com abas dentro da mesma janela."
+
+#: src/makebench/core/navigation.py
+msgid "A state only changes properties of components in its own window."
+msgstr "O estado só altera propriedades de componentes da sua janela."
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/session.py
+msgid "A task is already running."
+msgstr "Já existe uma tarefa em execução."
+
+#: src/makebench/editor/window.py
+msgid "A task is in progress. Restarting ends the test and the ordinary processes."
+msgstr "Uma tarefa está em andamento. Reiniciar encerra o teste e os processos comuns."
+
+#: src/makebench/core/graph.py
+msgid "A value connection points to a port that does not exist."
+msgstr "Conexão de valor aponta para porta inexistente."
+
+#: src/makebench/core/logic.py
+msgid "A value list accepts up to 256 items."
+msgstr "Uma lista de valores aceita até 256 itens."
+
+#: src/makebench/core/project.py
+msgid "A window cannot be inside another component."
+msgstr "Uma janela não pode ficar dentro de outro componente."
+
+#: src/makebench/editor/settings.py
+msgid "About"
+msgstr "Sobre"
+
+#: src/makebench/editor/window.py
+msgid "About Makebench"
+msgstr "Sobre o Makebench"
+
+#: src/makebench/editor/settings.py
+msgid "Accent adjusted for contrast"
+msgstr "Destaque ajustado para contraste"
+
+#: src/makebench/editor/settings.py
+msgid "Accent color"
+msgstr "Cor de destaque"
+
+#: src/makebench/editor/inspector.py
+msgid "Accessible description"
+msgstr "Descrição acessível"
+
+#: src/makebench/editor/designer.py
+msgid "Actual size"
+msgstr "Tamanho real"
+
+#: src/makebench/core/behaviors.py
+msgid "Add a text field to this interface first."
+msgstr "Adicione um campo de texto a esta interface primeiro."
+
+#: src/makebench/editor/window.py
+msgid "Add component"
+msgstr "Adicionar componente"
+
+#: src/makebench/editor/window.py
+msgid "Add components in the Default state."
+msgstr "Adicione componentes no estado Padrão."
+
+#: src/makebench/editor/graph.py
+msgid "Add node"
+msgstr "Adicionar nó"
+
+#: src/makebench/editor/graph.py
+msgid "Add node…"
+msgstr "Adicionar nó…"
+
+#: src/makebench/editor/window.py
+msgid "Add page"
+msgstr "Adicionar página"
+
+#: src/makebench/core/project.py
+msgid "Add pages to a set of pages and controls to a page or container."
+msgstr "Adicione páginas a um conjunto de páginas e controles a uma página ou contêiner."
+
+#: src/makebench/editor/window.py
+msgid "Add to interface"
+msgstr "Adicionar à interface"
+
+#: src/makebench/editor/settings.py src/makebench/editor/settings_fields.py
+msgid "Add…"
+msgstr "Adicionar…"
+
+#: src/makebench/editor/canvas.py
+msgid "Adjust inner margins"
+msgstr "Ajustar margens internas"
+
+#: src/makebench/editor/canvas.py
+msgid "Adjust spacing"
+msgstr "Ajustar espaçamento"
+
+#: src/makebench/editor/execution.py src/makebench/editor/graph.py
+msgid "Administrative"
+msgstr "Administrativa"
+
+#: src/makebench/editor/execution.py
+msgid "administrative"
+msgstr "administrativa"
+
+#: src/makebench/core/packages.py
+msgid "Administrative action of {name}"
+msgstr "Ação administrativa de {name}"
+
+#: src/makebench/core/packages.py
+msgid "Administrative actions are not available in the isolated Flatpak."
+msgstr "Ações administrativas não estão disponíveis no Flatpak isolado."
+
+#: src/makebench/core/exporter.py
+msgid "Administrative actions require Polkit/pkexec and an authentication agent on the target system."
+msgstr "Ações administrativas exigem Polkit/pkexec e agente de autenticação no sistema de destino."
+
+#: src/makebench/core/logic.py
+msgid "Administrative permission must be declared in the block."
+msgstr "A permissão administrativa precisa ser declarada no bloco."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "Administrative task not completed (code {code})."
+msgstr "Tarefa administrativa não concluída (código {code})."
+
+#: src/makebench/runtime/process.py
+msgid "Administrative task not completed (code {code}). Authentication may have been cancelled or refused; check the output."
+msgstr "Tarefa administrativa não concluída (código {code}). A autenticação pode ter sido cancelada ou recusada; confira a saída."
+
+#: src/makebench/runtime/window.py
+msgid "Administrative task: complete or cancel authentication in the system dialog. Wait for it to finish before closing."
+msgstr "Tarefa administrativa: conclua ou cancele a autenticação no diálogo do sistema. Aguarde o término para fechar."
+
+#: src/makebench/editor/inspector.py
+msgid "Advanced"
+msgstr "Avançado"
+
+#: src/makebench/editor/inspector.py
+msgid "Align"
+msgstr "Alinhar"
+
+#: src/makebench/editor/inspector.py
+msgid "Align and distribute"
+msgstr "Alinhar e distribuir"
+
+#: src/makebench/editor/window.py
+msgid "Align in the free area"
+msgstr "Alinhar na área livre"
+
+#: src/makebench/editor/inspector.py
+msgid "Alignment"
+msgstr "Alinhamento"
+
+#: src/makebench/editor/inspector.py
+msgid "Alignment {vertical} {horizontal}"
+msgstr "Alinhamento {vertical} {horizontal}"
+
+#: src/makebench/editor/code.py
+msgid "All"
+msgstr "Todas"
+
+#: src/makebench/editor/studio.py
+msgid "All components"
+msgstr "Todos os componentes"
+
+#: src/makebench/core/navigation.py
+msgid "All set"
+msgstr "Tudo pronto"
+
+#: src/makebench/core/navigation.py
+msgid "All set to start"
+msgstr "Tudo pronto para começar"
+
+#: src/makebench/editor/settings.py
+msgid "Allow resizing"
+msgstr "Permitir redimensionar"
+
+#: src/makebench/editor/projects.py
+msgid "Already moved: {items}"
+msgstr "Já movidos: {items}"
+
+#: src/makebench/core/logic.py
+msgid "An incomplete flow must keep its blocks."
+msgstr "Um fluxo incompleto precisa preservar seus blocos."
+
+#: src/makebench/editor/catalog.py
+msgid "An option that can be checked or unchecked."
+msgstr "Uma opção que pode ser marcada ou desmarcada."
+
+#: src/makebench/editor/assets.py
+msgid "Another image already exists at {source}; choose another destination folder."
+msgstr "Já existe outra imagem em {source}; escolha outra pasta de destino."
+
+#: src/makebench/core/navigation.py
+msgid "Another window opens in its initial state. Choose that state as the destination."
+msgstr "Outra janela abre em seu estado inicial. Escolha esse estado como destino."
+
+#: src/makebench/editor/settings.py
+msgid "Appearance"
+msgstr "Aparência"
+
+#: src/makebench/editor/settings.py
+msgid "Appearance and execution"
+msgstr "Aparência e execução"
+
+#: src/makebench/editor/window_chrome.py src/makebench/gtk_runtime/preview.py
+msgid "Application"
+msgstr "Aplicativo"
+
+#: src/makebench/editor/settings.py
+msgid "Application backend"
+msgstr "Backend do aplicativo"
+
+#: src/makebench/core/exporter.py
+msgid ""
+"Application exported by Makebench.\n"
+"Requires Linux, Python 3.{minor}+ and the dependencies in requirements.txt. GTK also requires the system's GTK4 and PyGObject; libadwaita is optional.\n"
+"Create a Python environment, install requirements.txt and run python3 run.py.\n"
+"Starting it runs the project's functions and scripts with your permissions.\n"
+"The runtime ships with the application; the editor's supervision does not appear.\n"
+"External programs and Polkit must be available on the target system.\n"
+"Choose a license for your application before distributing it publicly.\n"
+msgstr ""
+"Aplicativo exportado pelo Makebench.\n"
+"Requer Linux, Python 3.{minor}+ e as dependências de requirements.txt. GTK exige também GTK4 e PyGObject do sistema; libadwaita é opcional.\n"
+"Crie um ambiente Python, instale requirements.txt e execute python3 run.py.\n"
+"Iniciar executa as funções e scripts do projeto com suas permissões.\n"
+"O runtime acompanha o aplicativo; a supervisão do editor não aparece.\n"
+"Programas externos e Polkit devem estar disponíveis no sistema de destino.\n"
+"Defina a licença do seu aplicativo antes de distribuí-lo publicamente.\n"
+
+#: src/makebench/editor/projects.py src/makebench/editor/settings.py
+msgid "Application icon"
+msgstr "Ícone do aplicativo"
+
+#: src/makebench/core/project.py
+msgid "Application image"
+msgstr "Imagem do aplicativo"
+
+#: src/makebench/editor/settings.py
+msgid "Application language"
+msgstr "Idioma do aplicativo"
+
+#: src/makebench/editor/projects.py
+msgid "Application look"
+msgstr "Aparência do aplicativo"
+
+#: src/makebench/core/navigation.py
+msgid "Application metadata must be text: {key}"
+msgstr "Metadado do aplicativo precisa ser texto: {key}"
+
+#: src/makebench/editor/settings_fields.py
+msgid "Application Python requirements"
+msgstr "Requisitos Python do aplicativo"
+
+#: src/makebench/editor/execution.py
+msgid "Application running"
+msgstr "Aplicativo em execução"
+
+#: src/makebench/runtime/window.py
+msgid "Application running."
+msgstr "Aplicativo em execução."
+
+#: src/makebench/editor/settings.py src/makebench/editor/studio.py
+msgid "Application settings"
+msgstr "Configurações do aplicativo"
+
+#: src/makebench/editor/studio.py
+msgid "Application settings…"
+msgstr "Configurações do aplicativo…"
+
+#: src/makebench/editor/development.py
+msgid "Application variable"
+msgstr "Variável do aplicativo"
+
+#: src/makebench/editor/settings.py
+msgid "Application windows"
+msgstr "Janelas do aplicativo"
+
+#: src/makebench/editor/map_panel.py src/makebench/editor/publish.py
+msgid "Application…"
+msgstr "Aplicativo…"
+
+#: src/makebench/editor/map_connections.py src/makebench/ui/dialogs.py
+msgid "Apply"
+msgstr "Aplicar"
+
+#: src/makebench/editor/studio.py
+msgid "Apply script"
+msgstr "Aplicar script"
+
+#: src/makebench/editor/studio.py
+msgid "Apply to block · Ctrl+Enter"
+msgstr "Aplicar ao bloco · Ctrl+Enter"
+
+#: src/makebench/editor/inspector.py
+msgid "Arguments"
+msgstr "Argumentos"
+
+#: src/makebench/runtime/worker.py src/makebench/terminal/session.py
+msgid "Arguments must be a list of texts."
+msgstr "Argumentos precisam ser uma lista de textos."
+
+#: src/makebench/runtime/process.py
+msgid "Arguments must be a list of up to 256 texts."
+msgstr "Argumentos precisam ser uma lista com até 256 textos."
+
+#: src/makebench/editor/map_panel.py
+msgid "Arrange"
+msgstr "Organizar"
+
+#: src/makebench/editor/inspector.py
+msgid "Arrange as {layout}"
+msgstr "Organizar em {layout}"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Ask"
+msgstr "Perguntar"
+
+#: src/makebench/core/behaviors.py
+msgid "Ask for confirmation"
+msgstr "Solicitar confirmação"
+
+#: src/makebench/core/assets.py
+msgid "Asset not found: {name}"
+msgstr "Recurso não encontrado: {name}"
+
+#: src/makebench/core/source.py
+msgid "At most 256 Python files."
+msgstr "Máximo de 256 arquivos Python."
+
+#: src/makebench/editor/settings.py
+msgid "Author"
+msgstr "Autor"
+
+#: src/makebench/core/packages.py
+msgid "Author not specified"
+msgstr "Autor não informado"
+
+#: src/makebench/core/packages.py
+msgid "Authorize the administrative action requested by the application."
+msgstr "Autorize a ação administrativa solicitada pelo aplicativo."
+
+#: src/makebench/editor/publish.py
+msgid "Automatic"
+msgstr "Automático"
+
+#: src/makebench/editor/settings.py
+msgid "Automatic recovery"
+msgstr "Recuperação automática"
+
+#: src/makebench/editor/settings_fields.py
+msgid "Availability in this Python. The Flatpak build uses its own SDK and cache."
+msgstr "Disponibilidade neste Python. A construção Flatpak usa seu próprio SDK e cache."
+
+#: src/makebench/editor/catalog.py
+msgid "Available in Qt and GTK4."
+msgstr "Disponível em Qt e GTK4."
+
+#: src/makebench/core/navigation.py
+msgid "Back"
+msgstr "Voltar"
+
+#: src/makebench/editor/navigation.py
+msgid "Base"
+msgstr "Base"
+
+#: src/makebench/editor/development.py src/makebench/editor/map_connections.py
+msgid "Behavior"
+msgstr "Comportamento"
+
+#: src/makebench/editor/graph.py
+msgid "Behavior graph"
+msgstr "Grafo de comportamento"
+
+#: src/makebench/editor/inspector.py
+msgid "Between elements"
+msgstr "Entre elementos"
+
+#: src/makebench/core/templates.py src/makebench/editor/navigation.py
+msgid "Blank"
+msgstr "Em branco"
+
+#: src/makebench/core/logic.py
+msgid "Block without a unique identifier."
+msgstr "Bloco sem identificador único."
+
+#: src/makebench/editor/logic.py
+msgid "Blockly did not respond. Wait and try saving again before closing."
+msgstr "Blockly não respondeu. Aguarde e tente salvar novamente antes de fechar."
+
+#: src/makebench/editor/logic.py
+msgid "Blockly: {message} (line {line})"
+msgstr "Blockly: {message} (linha {line})"
+
+#: src/makebench/editor/development.py src/makebench/editor/logic.py
+msgid "Blocks"
+msgstr "Blocos"
+
+#: src/makebench/editor/development.py
+msgid "Blocks found"
+msgstr "Blocos encontrados"
+
+#: src/makebench/editor/logic.py
+msgid "Blocks saved. Press F5 to test the application and follow its output."
+msgstr "Blocos salvos. Use F5 para testar o aplicativo e acompanhar a saída."
+
+#: src/makebench/editor/settings.py
+msgid "Boolean"
+msgstr "Booleano"
+
+#: src/makebench/editor/inspector.py
+msgid "Bottom"
+msgstr "Base"
+
+#: src/makebench/editor/inspector.py
+msgid "bottom"
+msgstr "inferior"
+
+#: src/makebench/editor/graph.py
+msgid "Breakpoint"
+msgstr "Ponto de parada"
+
+#: src/makebench/editor/debug.py
+msgid "breakpoint"
+msgstr "ponto de parada"
+
+#: src/makebench/editor/publish.py
+msgid "Build"
+msgstr "Construção"
+
+#: src/makebench/core/exporter.py src/makebench/core/packages.py src/makebench/core/portable.py
+msgid "Build cancelled."
+msgstr "Construção cancelada."
+
+#: src/makebench/editor/settings.py
+msgid "Build from the Export window"
+msgstr "Construção pela janela Exportar"
+
+#: src/makebench/editor/publish.py
+msgid "Build with"
+msgstr "Construir com"
+
+#: src/makebench/editor/publish.py
+msgid "Build {name}…"
+msgstr "Construir {name}…"
+
+#: src/makebench/editor/publish.py
+msgid "Building…"
+msgstr "Construindo…"
+
+#: src/makebench/editor/publish.py
+msgid "Build…"
+msgstr "Construir…"
+
+#: src/makebench/core/packages.py
+msgid "Built and verified"
+msgstr "Construído e verificado"
+
+#: src/makebench/core/packages.py
+msgid "Built and verified (installation on the target not tested yet)"
+msgstr "Construído e verificado (instalação no destino ainda não testada)"
+
+#: src/makebench/core/portable.py
+msgid "Built with the runtime included (installation on the target not validated yet)"
+msgstr "Construído com runtime incluído (instalação no destino ainda não validada)"
+
+#: src/makebench/core/logic.py
+msgid "Button"
+msgstr "Botão"
+
+#: src/makebench/editor/window.py
+msgid "Button icon"
+msgstr "Ícone do botão"
+
+#: src/makebench/editor/development.py
+msgid "Call function"
+msgstr "Chamar função"
+
+#: src/makebench/core/logic_defaults.py
+msgid "Call Python function"
+msgstr "Chamar função Python"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Call signature"
+msgstr "Assinatura da chamada"
+
+#: src/makebench/editor/publish.py src/makebench/gtk_runtime/application.py src/makebench/runtime/window.py
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: src/makebench/editor/execution.py
+msgid "Cancel ordinary task and end test"
+msgstr "Cancelar tarefa comum e encerrar teste"
+
+#: src/makebench/editor/window.py
+msgid "Cancelling build before closing…"
+msgstr "Cancelando construção antes de fechar…"
+
+#: src/makebench/editor/publish.py
+msgid "Cancelling…"
+msgstr "Cancelando…"
+
+#: src/makebench/editor/settings.py
+msgid "Categories"
+msgstr "Categorias"
+
+#: src/makebench/editor/inspector.py
+msgid "Center"
+msgstr "Centro"
+
+#: src/makebench/editor/inspector.py
+msgid "center"
+msgstr "ao centro"
+
+#: src/makebench/editor/window.py
+msgid "Center horizontally"
+msgstr "Centralizar horizontalmente"
+
+#: src/makebench/editor/window.py
+msgid "Center vertically"
+msgstr "Centralizar verticalmente"
+
+#: src/makebench/editor/development.py
+msgid "Change component text"
+msgstr "Alterar texto de componente"
+
+#: src/makebench/editor/inspector.py
+msgid "Change icon…"
+msgstr "Trocar ícone…"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Change progress"
+msgstr "Alterar progresso"
+
+#: src/makebench/core/behaviors.py
+msgid "Change state"
+msgstr "Mudar estado"
+
+#: src/makebench/core/behaviors.py src/makebench/core/graph.py src/makebench/core/logic_defaults.py
+msgid "Change text"
+msgstr "Alterar texto"
+
+#: src/makebench/editor/map_connections.py
+msgid "Change the state of the same window, keeping its structure."
+msgstr "Mudar o estado da mesma janela, preservando sua estrutura."
+
+#: src/makebench/editor/map_panel.py
+msgid "Change to"
+msgstr "Mudar para"
+
+#: src/makebench/editor/settings.py
+msgid "Changes apply immediately."
+msgstr "As alterações são aplicadas imediatamente."
+
+#: src/makebench/editor/projects.py
+msgid "Changes recovered. Save to a folder to continue."
+msgstr "Alterações recuperadas. Salve em uma pasta para continuar."
+
+#: src/makebench/editor/execution.py
+msgid "Changes · F5 to restart"
+msgstr "Alterações · F5 para reiniciar"
+
+#: src/makebench/editor/publish.py
+msgid "Check"
+msgstr "Verificar"
+
+#: src/makebench/core/exporter.py
+msgid "Check sources without running them"
+msgstr "Verificar fontes sem executá-las"
+
+#: src/makebench/editor/publish.py
+msgid "Check the project before building."
+msgstr "Verifique o projeto antes de construir."
+
+#: src/makebench/core/project.py
+msgid "Checkbox"
+msgstr "Caixa de seleção"
+
+#: src/makebench/editor/inspector.py
+msgid "Checked"
+msgstr "Marcado"
+
+#: src/makebench/editor/development.py
+msgid "Choose a block"
+msgstr "Escolha um bloco"
+
+#: src/makebench/editor/projects.py
+msgid "Choose a new or empty folder."
+msgstr "Escolha uma pasta nova ou vazia."
+
+#: src/makebench/editor/graph.py
+msgid "Choose a type from the list or refine the search."
+msgstr "Escolha um tipo da lista ou refine a pesquisa."
+
+#: src/makebench/core/assets.py
+msgid "Choose a valid PNG, JPEG, WebP or SVG file."
+msgstr "Escolha PNG, JPEG, WebP ou SVG válido."
+
+#: src/makebench/editor/assets.py
+msgid "Choose a valid PNG, JPEG, WebP or SVG image."
+msgstr "Escolha uma imagem PNG, JPEG, WebP ou SVG válida."
+
+#: src/makebench/core/graph.py
+msgid "Choose an available node type."
+msgstr "Escolha um tipo de nó disponível."
+
+#: src/makebench/core/bundle.py
+msgid "Choose an empty folder to extract the project."
+msgstr "Escolha uma pasta vazia para extrair o projeto."
+
+#: src/makebench/editor/logic.py
+msgid "Choose an event or connect a new one to start."
+msgstr "Escolha um evento ou conecte um novo para começar."
+
+#: src/makebench/editor/settings.py
+msgid "Choose an icon for this window…"
+msgstr "Escolher ícone desta janela…"
+
+#: src/makebench/editor/inspector.py src/makebench/editor/settings.py
+msgid "Choose icon…"
+msgstr "Escolher ícone…"
+
+#: src/makebench/editor/window.py
+msgid "Choose image"
+msgstr "Escolher imagem"
+
+#: src/makebench/editor/projects.py
+msgid "Choose later"
+msgstr "Escolher depois"
+
+#: src/makebench/editor/inspector.py
+msgid "Choose or replace image…"
+msgstr "Escolher ou substituir imagem…"
+
+#: src/makebench/editor/logic.py
+msgid "Choose several states…"
+msgstr "Escolher vários estados…"
+
+#: src/makebench/core/exporter.py
+msgid "Choose the application icon."
+msgstr "Escolha o ícone do aplicativo."
+
+#: src/makebench/editor/projects.py
+msgid "Choose…"
+msgstr "Escolher…"
+
+#: src/makebench/editor/development.py
+msgid "class"
+msgstr "classe"
+
+#: src/makebench/editor/execution.py
+msgid "Clear"
+msgstr "Limpar"
+
+#: src/makebench/editor/settings.py
+msgid "Clear output on start"
+msgstr "Limpar saída ao iniciar"
+
+#: src/makebench/editor/settings.py
+msgid "Clear recent projects"
+msgstr "Limpar projetos recentes"
+
+#: src/makebench/editor/map_connections.py
+msgid "Click on {name}"
+msgstr "Clique em {name}"
+
+#: src/makebench/core/build_environment.py
+msgid "Click Prepare tools before building this package."
+msgstr "Clique em Preparar ferramentas antes de construir este pacote."
+
+#: src/makebench/editor/publish.py
+msgid "Click Prepare tools before building."
+msgstr "Clique em Preparar ferramentas antes de construir."
+
+#: src/makebench/core/portable.py
+msgid "Click Prepare tools to get the portable runtime for this application."
+msgstr "Clique em Preparar ferramentas para obter o runtime portátil deste aplicativo."
+
+#: src/makebench/editor/map_items.py
+msgid "Click to expand or collapse this window's states."
+msgstr "Clique para expandir ou recolher os estados desta janela."
+
+#: src/makebench/editor/map_items.py
+msgid "Click to inspect; Delete removes the transition."
+msgstr "Clique para inspecionar; Delete remove a transição."
+
+#: src/makebench/core/logic.py
+msgid "Click: {text}"
+msgstr "Clique: {text}"
+
+#: src/makebench/editor/logic.py
+msgid "clicking {name}"
+msgstr "clicar em {name}"
+
+#: src/makebench/editor/publish.py src/makebench/editor/settings.py src/makebench/editor/startup.py src/makebench/ui/dialogs.py
+msgid "Close"
+msgstr "Fechar"
+
+#: src/makebench/editor/graph.py
+msgid "Close current window"
+msgstr "Fechar janela atual"
+
+#: src/makebench/editor/code.py
+msgid "Close search"
+msgstr "Fechar busca"
+
+#: src/makebench/editor/map_connections.py
+msgid "Close the source window when opening the destination"
+msgstr "Fechar a janela de origem ao abrir o destino"
+
+#: src/makebench/editor/startup.py
+msgid "Close the start window"
+msgstr "Fechar a janela inicial"
+
+#: src/makebench/editor/map_panel.py
+msgid "Close this window"
+msgstr "Fechar esta janela"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Close window"
+msgstr "Fechar janela"
+
+#: src/makebench/editor/window.py
+msgid "Closing previews…"
+msgstr "Encerrando prévias…"
+
+#: src/makebench/editor/studio.py src/makebench/editor/window.py
+msgid "Code"
+msgstr "Código"
+
+#: src/makebench/editor/settings.py
+msgid "Code font"
+msgstr "Fonte do código"
+
+#: src/makebench/editor/settings.py
+msgid "Code size"
+msgstr "Tamanho do código"
+
+#: src/makebench/editor/code_assist.py
+msgid "Code suggestions"
+msgstr "Sugestões de código"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Code {name}"
+msgstr "Código {name}"
+
+#: src/makebench/core/project.py
+msgid "Column"
+msgstr "Coluna"
+
+#: src/makebench/editor/inspector.py
+msgid "Columns"
+msgstr "Colunas"
+
+#: src/makebench/editor/commands.py src/makebench/editor/studio.py
+msgid "Command palette"
+msgstr "Paleta de comandos"
+
+#: src/makebench/editor/studio.py
+msgid "Command palette…"
+msgstr "Paleta de comandos…"
+
+#: src/makebench/editor/graph.py
+msgid "Comment"
+msgstr "Comentário"
+
+#: src/makebench/editor/graph.py
+msgid "Comment…"
+msgstr "Comentário…"
+
+#: src/makebench/editor/inspector.py
+msgid "Common properties"
+msgstr "Propriedades comuns"
+
+#: src/makebench/editor/development.py
+msgid "Compare or calculate"
+msgstr "Comparar ou calcular"
+
+#: src/makebench/core/codegen.py src/makebench/editor/studio.py
+msgid "Complete the blocks."
+msgstr "Complete os blocos."
+
+#: src/makebench/editor/development.py
+msgid "Complete the draft before duplicating the flow."
+msgstr "Complete o rascunho antes de duplicar o fluxo."
+
+#: src/makebench/core/behaviors.py
+msgid "Complete the loose blocks before inserting a template."
+msgstr "Complete os blocos soltos antes de inserir um modelo."
+
+#: src/makebench/core/logic.py
+msgid "Complete this component's blocks before duplicating it."
+msgstr "Complete os blocos deste componente antes de duplicá-lo."
+
+#: src/makebench/core/navigation.py
+msgid "Complete this event's draft before adding a transition."
+msgstr "Complete o rascunho desse evento antes de adicionar uma transição."
+
+#: src/makebench/editor/execution.py
+msgid "Completed"
+msgstr "Concluído"
+
+#: src/makebench/editor/graph.py
+msgid "Component"
+msgstr "Componente"
+
+#: src/makebench/editor/studio.py
+msgid "Component category"
+msgstr "Categoria de componentes"
+
+#: src/makebench/ui/renderer.py
+msgid "Component without a renderer: {kind}"
+msgstr "Componente sem renderizador: {kind}"
+
+#: src/makebench/core/project.py
+msgid "Component without a valid identifier, type or layout."
+msgstr "Componente sem identificador, tipo ou layout válido."
+
+#: src/makebench/editor/window.py
+msgid "Components"
+msgstr "Componentes"
+
+#: src/makebench/core/exporter.py
+msgid "Compress {path}"
+msgstr "Compactar {path}"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py
+msgid "Condition"
+msgstr "Condição"
+
+#: src/makebench/editor/graph.py
+msgid "Configure…"
+msgstr "Configurar…"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: src/makebench/editor/settings.py
+msgid "Confirm restart during a task"
+msgstr "Confirmar reinício durante uma tarefa"
+
+#: src/makebench/runtime/window.py
+msgid "Confirmation"
+msgstr "Confirmação"
+
+#: src/makebench/editor/map_connections.py
+msgid "Connect"
+msgstr "Conectar"
+
+#: src/makebench/editor/logic.py
+msgid "Connect a click or a window opening to the logic."
+msgstr "Conectar um clique ou a abertura de uma janela à lógica."
+
+#: src/makebench/editor/graph.py
+msgid "Connect an output to an input of the same type."
+msgstr "Conecte uma saída a uma entrada do mesmo tipo."
+
+#: src/makebench/editor/logic.py
+msgid "Connect event"
+msgstr "Conectar evento"
+
+#: src/makebench/editor/map_connections.py
+msgid "Connect interfaces"
+msgstr "Conectar interfaces"
+
+#: src/makebench/editor/graph.py
+msgid "Connected to node {node}"
+msgstr "Conectado ao nó {node}"
+
+#: src/makebench/editor/map_panel.py
+msgid "Connect…"
+msgstr "Conectar…"
+
+#: src/makebench/core/graph.py
+msgid "Constant"
+msgstr "Constante"
+
+#: src/makebench/core/graph.py
+msgid "Constant exceeds 12 levels."
+msgstr "Constante excede 12 níveis."
+
+#: src/makebench/core/project.py
+msgid "Container"
+msgstr "Contêiner"
+
+#: src/makebench/editor/window.py
+msgid "container"
+msgstr "contêiner"
+
+#: src/makebench/editor/catalog.py src/makebench/editor/inspector.py
+msgid "Content"
+msgstr "Conteúdo"
+
+#: src/makebench/core/templates.py src/makebench/editor/debug.py src/makebench/editor/window.py src/makebench/runtime/window.py
+msgid "Continue"
+msgstr "Continuar"
+
+#: src/makebench/editor/designer.py
+msgid "Converting Free to Grid is not supported yet. Use Column or Row first."
+msgstr "A conversão de Livre para Grade ainda não é suportada. Use Coluna ou Linha primeiro."
+
+#: src/makebench/editor/navigation.py
+msgid "Copies the differences of the chosen step. The structure still comes from Default."
+msgstr "Copia as diferenças da etapa escolhida. A estrutura continua vindo do Padrão."
+
+#: src/makebench/terminal/qt.py
+msgid "Copy"
+msgstr "Copiar"
+
+#: src/makebench/editor/map_panel.py
+msgid "copy"
+msgstr "cópia"
+
+#: src/makebench/core/exporter.py
+msgid "Copy asset {name}"
+msgstr "Copiar recurso {name}"
+
+#: src/makebench/editor/publish.py
+msgid "Copy path"
+msgstr "Copiar caminho"
+
+#: src/makebench/editor/settings.py
+msgid "Copy report"
+msgstr "Copiar relatório"
+
+#: src/makebench/runtime/window.py
+msgid "Could not complete the operation"
+msgstr "Não foi possível concluir a operação"
+
+#: src/makebench/editor/assets.py
+msgid "Could not copy the image {source}: {error}"
+msgstr "Não foi possível copiar a imagem {source}: {error}"
+
+#: src/makebench/editor/projects.py
+msgid "Could not create recovery: {error}"
+msgstr "Não foi possível criar recuperação: {error}"
+
+#: src/makebench/core/storage.py
+msgid "Could not keep the previous copy: {error}"
+msgstr "Não foi possível preservar a cópia anterior: {error}"
+
+#: src/makebench/editor/logic.py
+msgid "Could not load Blockly. Reopen Makebench; the interface and the saved files remain available."
+msgstr "Não foi possível carregar Blockly. Reabra o Makebench; a interface e os arquivos salvos continuam disponíveis."
+
+#: src/makebench/editor/projects.py
+msgid "Could not move to trash: {path}"
+msgstr "Não foi possível mover para a lixeira: {path}"
+
+#: src/makebench/gtk_runtime/application.py
+msgid "Could not open GTK4: no graphical display is available."
+msgstr "Não foi possível abrir GTK4: nenhum display gráfico está disponível."
+
+#: src/makebench/__main__.py
+msgid "Could not open the functions"
+msgstr "Não foi possível abrir as funções"
+
+#: src/makebench/__main__.py
+msgid "Could not open the project"
+msgstr "Não foi possível abrir o projeto"
+
+#: src/makebench/core/storage.py
+msgid "Could not open {name}: {error}"
+msgstr "Não foi possível abrir {name}: {error}"
+
+#: src/makebench/editor/assets.py
+msgid "Could not read the image: {error}"
+msgstr "Não foi possível ler a imagem: {error}"
+
+#: src/makebench/core/storage.py
+msgid "Could not save {name}: {error}"
+msgstr "Não foi possível salvar {name}: {error}"
+
+#: src/makebench/editor/graph.py
+msgid "Count"
+msgstr "Quantidade"
+
+#: src/makebench/editor/development.py
+msgid "counter"
+msgstr "contador"
+
+#: src/makebench/editor/map_view.py
+msgid "Create a screen to get started."
+msgstr "Crie uma tela para começar."
+
+#: src/makebench/core/behaviors.py
+msgid "Create a state in the Map before using this template."
+msgstr "Crie um estado no Mapa antes de usar este modelo."
+
+#: src/makebench/core/behaviors.py
+msgid "Create another interface in the Map before opening a window."
+msgstr "Crie outra interface no Mapa antes de abrir uma janela."
+
+#: src/makebench/editor/navigation.py
+msgid "Create interface"
+msgstr "Criar interface"
+
+#: src/makebench/editor/map_view.py
+msgid "Create interface here…"
+msgstr "Criar interface aqui…"
+
+#: src/makebench/editor/projects.py
+msgid "Create project"
+msgstr "Criar projeto"
+
+#: src/makebench/editor/navigation.py
+msgid "Create state"
+msgstr "Criar estado"
+
+#: src/makebench/editor/map_panel.py
+msgid "Create state…"
+msgstr "Criar estado…"
+
+#: src/makebench/core/exporter.py
+msgid "Create the first interface in the map before exporting."
+msgstr "Crie a primeira interface no mapa antes de exportar."
+
+#: src/makebench/editor/studio.py
+msgid "Create the first interface in the map to get started."
+msgstr "Crie a primeira interface no mapa para começar."
+
+#: src/makebench/editor/studio.py
+msgid "Creation context"
+msgstr "Contexto de criação"
+
+#: src/makebench/editor/studio.py
+msgid "Creation tools"
+msgstr "Ferramentas de criação"
+
+#: src/makebench/editor/code_assist.py
+msgid "Ctrl+Space: suggestions · Ctrl+Shift+Space: parameters · F12: local definition"
+msgstr "Ctrl+Espaço: sugestões · Ctrl+Shift+Espaço: parâmetros · F12: definição local"
+
+#: src/makebench/core/navigation.py
+msgid "Customize tools and preferences whenever you like."
+msgstr "Personalize as ferramentas e preferências quando quiser."
+
+#: src/makebench/core/graph.py
+msgid "Cycle between values. Use a variable to represent memory."
+msgstr "Ciclo entre valores. Use uma variável para representar memória."
+
+#: src/makebench/editor/studio.py
+msgid "Cycle focus region"
+msgstr "Alternar região de foco"
+
+#: src/makebench/editor/settings.py
+msgid "Dark"
+msgstr "Escuro"
+
+#: src/makebench/editor/development.py src/makebench/editor/settings.py src/makebench/editor/studio.py
+msgid "Data"
+msgstr "Dados"
+
+#: src/makebench/editor/publish.py
+msgid "DEB for Ubuntu 24.04 x86_64 with the runtime included."
+msgstr "DEB para Ubuntu 24.04 x86_64 com runtime incluído."
+
+#: src/makebench/core/build_environment.py
+msgid "DEB, RPM and AppImage tools ready."
+msgstr "Ferramentas DEB, RPM e AppImage prontas."
+
+#: src/makebench/editor/execution.py
+msgid "Debug"
+msgstr "Depurar"
+
+#: src/makebench/editor/window.py
+msgid "Debug application"
+msgstr "Depurar aplicativo"
+
+#: src/makebench/editor/debug.py
+msgid "Debugger stopped · F9 to start"
+msgstr "Depurador parado · F9 para iniciar"
+
+#: src/makebench/editor/debug.py
+msgid "Debugging running"
+msgstr "Depuração em execução"
+
+#: src/makebench/ui/dialogs.py
+msgid "Decline"
+msgstr "Recusar"
+
+#: src/makebench/editor/development.py src/makebench/editor/graph.py src/makebench/editor/inspector.py src/makebench/editor/logic.py src/makebench/editor/map_connections.py src/makebench/editor/map_panel.py src/makebench/editor/navigation.py src/makebench/editor/settings.py src/makebench/editor/window.py
+msgid "Default"
+msgstr "Padrão"
+
+#: src/makebench/editor/settings.py
+msgid "Default backend"
+msgstr "Backend padrão"
+
+#: src/makebench/editor/navigation.py
+msgid "Default composition name"
+msgstr "Nome da composição padrão"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Delete module"
+msgstr "Excluir módulo"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Delete module?"
+msgstr "Excluir módulo?"
+
+#: src/makebench/editor/graph.py
+msgid "Delete node"
+msgstr "Excluir nó"
+
+#: src/makebench/editor/settings.py
+msgid "Dependencies"
+msgstr "Dependências"
+
+#: src/makebench/core/navigation.py
+msgid "Dependencies must be a list of texts."
+msgstr "Dependências precisam ser uma lista de textos."
+
+#: src/makebench/core/portable.py
+msgid "Dependency changed in the cache; prepare again."
+msgstr "Dependência alterada no cache; prepare novamente."
+
+#: src/makebench/editor/development.py
+msgid "Describe the behavior, input and result of this function."
+msgstr "Descreva o comportamento, a entrada e o resultado desta função."
+
+#: src/makebench/editor/settings.py
+msgid "Description"
+msgstr "Descrição"
+
+#: src/makebench/editor/studio.py
+msgid "Design"
+msgstr "Design"
+
+#: src/makebench/editor/window.py
+msgid "Design Qt or GTK4 interfaces, connect blocks or nodes, write your own Python and export as Python source, DEB, RPM, AppImage or Flatpak."
+msgstr "Crie interfaces Qt ou GTK4, conecte blocos ou nós, escreva seu próprio Python e exporte em fonte Python, DEB, RPM, AppImage ou Flatpak."
+
+#: src/makebench/editor/map_connections.py
+msgid "Destination"
+msgstr "Destino"
+
+#: src/makebench/editor/development.py
+msgid "Destination event"
+msgstr "Evento de destino"
+
+#: src/makebench/editor/map_panel.py
+msgid "Destination: {name}"
+msgstr "Destino: {name}"
+
+#: src/makebench/core/diagnostics.py
+msgid "Detected"
+msgstr "Detectado"
+
+#: src/makebench/editor/settings.py
+msgid "Detected programs: {programs}."
+msgstr "Programas detectados: {programs}."
+
+#: src/makebench/core/diagnostics.py
+msgid "Detecting pkexec does not validate the Polkit agent or real authentication."
+msgstr "Detectar pkexec não valida o agente Polkit nem a autenticação real."
+
+#: src/makebench/ui/dialogs.py
+msgid "Discard"
+msgstr "Descartar"
+
+#: src/makebench/editor/projects.py
+msgid "Discard recovery"
+msgstr "Descartar recuperação"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Discard unsaved Python edits and reread the project files?"
+msgstr "Descartar as edições Python não salvas e reler os arquivos do projeto?"
+
+#: src/makebench/editor/graph.py
+msgid "Disconnect"
+msgstr "Desconectar"
+
+#: src/makebench/core/navigation.py
+msgid "Discover the system"
+msgstr "Conheça o sistema"
+
+#: src/makebench/core/navigation.py
+msgid "Discover the tools that come with your system."
+msgstr "Conheça as ferramentas que acompanham seu sistema."
+
+#: src/makebench/editor/inspector.py
+msgid "Distribute"
+msgstr "Distribuir"
+
+#: src/makebench/editor/inspector.py
+msgid "Distribute horizontally"
+msgstr "Distribuir horizontalmente"
+
+#: src/makebench/editor/inspector.py
+msgid "Distribute vertically"
+msgstr "Distribuir verticalmente"
+
+#: src/makebench/core/logic_defaults.py
+msgid "Do you want to continue?"
+msgstr "Deseja continuar?"
+
+#: src/makebench/editor/graph.py
+msgid "Double-click configures · drag connectors to create wires"
+msgstr "Duplo clique configura · arraste conectores para criar fios"
+
+#: src/makebench/editor/map_panel.py
+msgid "Double-click opens the Designer."
+msgstr "Duplo clique abre o Designer."
+
+#: src/makebench/editor/map_items.py
+msgid "Double-click opens the Designer. Drag the port to connect."
+msgstr "Duplo clique abre o Designer. Arraste a porta para conectar."
+
+#: src/makebench/core/build_environment.py
+msgid "Download cancelled."
+msgstr "Download cancelado."
+
+#: src/makebench/core/build_environment.py
+msgid "Download verified: {name}"
+msgstr "Download verificado: {name}"
+
+#: src/makebench/editor/drag.py
+msgid "Drag a component onto the interface or double-click to add it."
+msgstr "Arraste um componente para a interface ou dê duplo clique para adicionar."
+
+#: src/makebench/editor/window.py
+msgid "Drag components onto the screen. In free areas, move and resize through the selection."
+msgstr "Arraste componentes para a tela. Em áreas livres, mova e redimensione pela seleção."
+
+#: src/makebench/editor/graph.py
+msgid "Drag connectors · double-click configures · middle button moves the field"
+msgstr "Arraste conectores · duplo clique configura · botão central move o campo"
+
+#: src/makebench/editor/graph.py
+msgid "drag to connect; right-click disconnects"
+msgstr "arraste para conectar; botão direito desconecta"
+
+#: src/makebench/editor/canvas.py
+msgid "Drag to resize. Esc cancels the gesture."
+msgstr "Arraste para redimensionar. Esc cancela o gesto."
+
+#: src/makebench/editor/window.py
+msgid "Duplicate"
+msgstr "Duplicar"
+
+#: src/makebench/editor/development.py src/makebench/editor/logic.py
+msgid "Duplicate flow"
+msgstr "Duplicar fluxo"
+
+#: src/makebench/editor/logic.py
+msgid "Duplicate flow…"
+msgstr "Duplicar fluxo…"
+
+#: src/makebench/editor/map_panel.py
+msgid "Duplicate interface"
+msgstr "Duplicar interface"
+
+#: src/makebench/editor/map_panel.py
+msgid "Duplicate interface…"
+msgstr "Duplicar interface…"
+
+#: src/makebench/editor/navigation.py
+msgid "Duplicate {title}"
+msgstr "Duplicar {title}"
+
+#: src/makebench/editor/execution.py
+msgid "Duration"
+msgstr "Duração"
+
+#: src/makebench/editor/settings.py
+msgid "E.g. 0.1.0"
+msgstr "Ex.: 0.1.0"
+
+#: src/makebench/editor/settings.py
+msgid "E.g. com.example.myapp; identifies the application in packages."
+msgstr "Ex.: br.exemplo.meuapp; identifica o aplicativo nos pacotes."
+
+#: src/makebench/core/project.py
+msgid "Each additional interface must be a window."
+msgstr "Cada interface adicional precisa ser uma janela."
+
+#: src/makebench/core/project.py
+msgid "Each component must be an object."
+msgstr "Cada componente precisa ser um objeto."
+
+#: src/makebench/core/graph.py
+msgid "Each execution output accepts one connection. Use Sequence to branch."
+msgstr "Cada saída de execução aceita uma conexão. Use Sequência para ramificar."
+
+#: src/makebench/editor/development.py
+msgid "Edit"
+msgstr "Editar"
+
+#: src/makebench/editor/designer.py
+msgid "Edit component text"
+msgstr "Editar texto do componente"
+
+#: src/makebench/editor/designer.py src/makebench/editor/inspector.py
+msgid "Edit logic"
+msgstr "Editar lógica"
+
+#: src/makebench/editor/designer.py
+msgid "Edit logic…"
+msgstr "Editar lógica…"
+
+#: src/makebench/editor/map_panel.py
+msgid "Edit on start"
+msgstr "Editar ao iniciar"
+
+#: src/makebench/editor/window.py
+msgid "Edit structure and layout in the Default state."
+msgstr "Edite a estrutura e o layout no estado Padrão."
+
+#: src/makebench/editor/designer.py
+msgid "Edit text"
+msgstr "Editar texto"
+
+#: src/makebench/editor/logic.py
+msgid "Edit text or script…"
+msgstr "Editar texto ou script…"
+
+#: src/makebench/editor/designer.py src/makebench/editor/window.py
+msgid "Edit the structure in the Default state."
+msgstr "Edite a estrutura no estado Padrão."
+
+#: src/makebench/editor/map_connections.py
+msgid "Edit transition"
+msgstr "Editar transição"
+
+#: src/makebench/editor/map_panel.py
+msgid "Edit transition…"
+msgstr "Editar transição…"
+
+#: src/makebench/editor/window.py
+msgid "Edit your functions on the right. The Python on the left follows the blocks and never replaces your functions. Press F5 to test the application in a separate window."
+msgstr "Edite suas funções à direita. O Python à esquerda acompanha os blocos e não substitui suas funções. Use F5 para testar o aplicativo em uma janela separada."
+
+#: src/makebench/editor/designer.py
+msgid "Edit {name}"
+msgstr "Editar {name}"
+
+#: src/makebench/editor/window.py
+msgid "Editing a state: properties only. Project > Restore selection from Default removes differences."
+msgstr "Editando estado: somente propriedades. Projeto > Restaurar seleção do Padrão remove diferenças."
+
+#: src/makebench/editor/window.py
+msgid "Editing preview · Ctrl+drag moves free components to another container."
+msgstr "Prévia de edição · Ctrl+arraste transfere componentes livres para outro contêiner."
+
+#: src/makebench/editor/settings.py
+msgid "Editor"
+msgstr "Editor"
+
+#: src/makebench/editor/logic.py
+msgid "Editor for this behavior"
+msgstr "Editor deste comportamento"
+
+#: src/makebench/editor/publish.py
+msgid "Editor runtime ready."
+msgstr "Runtime do editor pronto."
+
+#: src/makebench/editor/settings.py src/makebench/editor/settings_fields.py
+msgid "Edit…"
+msgstr "Editar…"
+
+#: src/makebench/core/build_environment.py
+msgid "Empty dependency cache. Prepare again."
+msgstr "Cache de dependências vazio. Prepare novamente."
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Enable component"
+msgstr "Habilitar componente"
+
+#: src/makebench/core/templates.py
+msgid "Enable notifications"
+msgstr "Ativar notificações"
+
+#: src/makebench/editor/inspector.py
+msgid "Enabled"
+msgstr "Habilitado"
+
+#: src/makebench/editor/inspector.py
+msgid "End"
+msgstr "Fim"
+
+#: src/makebench/terminal/qt.py
+msgid "Ended"
+msgstr "Encerrado"
+
+#: src/makebench/editor/execution.py
+msgid "ended"
+msgstr "encerrada"
+
+#: src/makebench/terminal/qt.py
+msgid "Ended · code {code}"
+msgstr "Encerrado · código {code}"
+
+#: src/makebench/editor/projects.py
+msgid "Enter a file name, without folders."
+msgstr "Informe um nome de arquivo, sem pastas."
+
+#: src/makebench/editor/projects.py
+msgid "Enter a name for the project."
+msgstr "Informe um nome para o projeto."
+
+#: src/makebench/runtime/process.py
+msgid "Enter a valid program."
+msgstr "Informe um programa válido."
+
+#: src/makebench/core/exporter.py src/makebench/editor/settings.py
+msgid "Enter the application's public name."
+msgstr "Informe o nome público do aplicativo."
+
+#: src/makebench/core/exporter.py src/makebench/editor/projects.py
+msgid "Enter the version, for example 0.1.0."
+msgstr "Informe a versão, por exemplo 0.1.0."
+
+#: src/makebench/core/navigation.py
+msgid "Enter the window and the state name."
+msgstr "Informe janela e nome do estado."
+
+#: src/makebench/editor/debug.py
+msgid "entry"
+msgstr "entrada"
+
+#: src/makebench/editor/settings.py
+msgid "Environment"
+msgstr "Ambiente"
+
+#: src/makebench/editor/settings.py
+msgid "Environment diagnostics"
+msgstr "Diagnóstico do ambiente"
+
+#: src/makebench/editor/studio.py
+msgid "Environment diagnostics…"
+msgstr "Diagnóstico do ambiente…"
+
+#: src/makebench/editor/execution.py src/makebench/gtk_runtime/application.py
+msgid "Error"
+msgstr "Erro"
+
+#: src/makebench/editor/execution.py
+msgid "error"
+msgstr "erro"
+
+#: src/makebench/runtime/window.py
+msgid "Error details"
+msgstr "Detalhes do erro"
+
+#: src/makebench/runtime/window.py
+msgid "Error while running. Check the output."
+msgstr "Erro na execução. Consulte a saída."
+
+#: src/makebench/editor/execution.py
+msgid "Errors"
+msgstr "Erros"
+
+#: src/makebench/core/graph.py
+msgid "Event"
+msgstr "Evento"
+
+#: src/makebench/editor/studio.py
+msgid "Event:"
+msgstr "Evento:"
+
+#: src/makebench/core/codegen.py
+msgid "Event: {kind} on {component}"
+msgstr "Evento: {kind} em {component}"
+
+#: src/makebench/editor/execution.py
+msgid "Everything"
+msgstr "Tudo"
+
+#: src/makebench/editor/execution.py src/makebench/editor/graph.py
+msgid "Execution"
+msgstr "Execução"
+
+#: src/makebench/editor/map_panel.py
+msgid "Expand/collapse states"
+msgstr "Expandir/recolher estados"
+
+#: src/makebench/__main__.py
+msgid "Explicitly run the project in a test window"
+msgstr "Executar explicitamente o projeto em uma janela de teste"
+
+#: src/makebench/editor/publish.py
+msgid "Export"
+msgstr "Exportar"
+
+#: src/makebench/editor/publish.py
+msgid "Export application"
+msgstr "Exportar aplicativo"
+
+#: src/makebench/editor/studio.py
+msgid "Export application…"
+msgstr "Exportar aplicativo…"
+
+#: src/makebench/editor/publish.py
+msgid "Export only the recipe"
+msgstr "Exportar somente a receita"
+
+#: src/makebench/editor/publish.py
+msgid "Export recipe…"
+msgstr "Exportar receita…"
+
+#: src/makebench/editor/publish.py
+msgid "Export source…"
+msgstr "Exportar fonte…"
+
+#: src/makebench/editor/publish.py
+msgid "Export {format}"
+msgstr "Exportar {format}"
+
+#: src/makebench/editor/publish.py
+msgid "Exported"
+msgstr "Exportado"
+
+#: src/makebench/editor/window.py
+msgid "Extract into an empty folder"
+msgstr "Extrair em pasta vazia"
+
+#: src/makebench/editor/debug.py
+msgid "F9 starts debugging. Click the code margin or use a block's menu to set a breakpoint."
+msgstr "F9 inicia a depuração. Clique na margem do código ou use o menu de um bloco para marcar uma parada."
+
+#: src/makebench/editor/inspector.py
+msgid "Field hint"
+msgstr "Dica do campo"
+
+#: src/makebench/editor/debug.py src/makebench/editor/inspector.py
+msgid "File"
+msgstr "Arquivo"
+
+#: src/makebench/editor/development.py
+msgid "File functions and uses in blocks"
+msgstr "Funções do arquivo e usos nos blocos"
+
+#: src/makebench/editor/code_workspace.py
+msgid "File inside makebench_user"
+msgstr "Arquivo dentro de makebench_user"
+
+#: src/makebench/editor/projects.py
+msgid "File name"
+msgstr "Nome do arquivo"
+
+#: src/makebench/ui/dialogs.py
+msgid "File name:"
+msgstr "Nome do arquivo:"
+
+#: src/makebench/editor/development.py
+msgid "File symbols"
+msgstr "Símbolos do arquivo"
+
+#: src/makebench/ui/dialogs.py
+msgid "File type:"
+msgstr "Tipo de arquivo:"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Files"
+msgstr "Arquivos"
+
+#: src/makebench/editor/publish.py
+msgid "Files (*{suffix})"
+msgstr "Arquivos (*{suffix})"
+
+#: src/makebench/editor/inspector.py
+msgid "Fill"
+msgstr "Preencher"
+
+#: src/makebench/core/graph.py
+msgid "Fill in every value input of the node."
+msgstr "Preencha todas as entradas de valor do nó."
+
+#: src/makebench/core/behaviors.py
+msgid "Fill in the field before continuing."
+msgstr "Preencha o campo antes de continuar."
+
+#: src/makebench/editor/development.py
+msgid "Filter functions…"
+msgstr "Filtrar funções…"
+
+#: src/makebench/core/navigation.py src/makebench/core/templates.py src/makebench/editor/graph.py
+msgid "Finish"
+msgstr "Concluir"
+
+#: src/makebench/core/portable.py
+msgid "Finish package with the runtime included"
+msgstr "Finalizar pacote com runtime incluído"
+
+#: src/makebench/core/exporter.py
+msgid "Finish result"
+msgstr "Finalizar resultado"
+
+#: src/makebench/core/navigation.py
+msgid "Finish the wizard to open your dashboard."
+msgstr "Conclua o assistente para abrir seu painel."
+
+#: src/makebench/editor/catalog.py
+msgid "Fires a click event and its actions."
+msgstr "Dispara um evento de clique e suas ações."
+
+#: src/makebench/editor/graph.py
+msgid "Fit"
+msgstr "Enquadrar"
+
+#: src/makebench/editor/map_panel.py
+msgid "Fit all"
+msgstr "Enquadrar tudo"
+
+#: src/makebench/editor/designer.py
+msgid "Fit composition"
+msgstr "Ajustar composição"
+
+#: src/makebench/editor/designer.py
+msgid "Fit interface"
+msgstr "Enquadrar interface"
+
+#: src/makebench/editor/inspector.py
+msgid "Fit to content"
+msgstr "Ajustar ao conteúdo"
+
+#: src/makebench/editor/development.py
+msgid "Fix the syntax before inserting a function with the assistant."
+msgstr "Corrija a sintaxe antes de inserir uma função pelo assistente."
+
+#: src/makebench/editor/inspector.py
+msgid "Fixed"
+msgstr "Fixo"
+
+#: src/makebench/editor/settings.py
+msgid "Fixed 4-space indentation."
+msgstr "Recuo fixo de 4 espaços."
+
+#: src/makebench/core/build_environment.py
+msgid "Flatpak and flatpak-builder are required for this target."
+msgstr "Flatpak e flatpak-builder são necessários para este destino."
+
+#: src/makebench/core/build_environment.py
+msgid "Flatpak environment ready."
+msgstr "Ambiente Flatpak pronto."
+
+#: src/makebench/core/packages.py
+msgid "flatpak is missing to generate the final bundle."
+msgstr "Falta flatpak para gerar o bundle final."
+
+#: src/makebench/editor/studio.py
+msgid "Flow"
+msgstr "Fluxo"
+
+#: src/makebench/editor/execution.py
+msgid "Flow cancelled"
+msgstr "Fluxo cancelado"
+
+#: src/makebench/runtime/window.py
+msgid "Flow cancelled."
+msgstr "Fluxo cancelado."
+
+#: src/makebench/editor/execution.py
+msgid "Flow completed"
+msgstr "Fluxo concluído"
+
+#: src/makebench/runtime/window.py
+msgid "Flow completed."
+msgstr "Fluxo concluído."
+
+#: src/makebench/editor/logic.py
+msgid "Flow name"
+msgstr "Nome do fluxo"
+
+#: src/makebench/editor/logic.py
+msgid "Flow state filter"
+msgstr "Filtro de estado do fluxo"
+
+#: src/makebench/editor/projects.py
+msgid "Folder"
+msgstr "Pasta"
+
+#: src/makebench/editor/settings.py
+msgid "Folder for new projects"
+msgstr "Pasta dos novos projetos"
+
+#: src/makebench/editor/projects.py
+msgid "Folder for the new project"
+msgstr "Pasta do novo projeto"
+
+#: src/makebench/editor/publish.py
+msgid "Format"
+msgstr "Formato"
+
+#: src/makebench/core/project.py
+msgid "Free"
+msgstr "Livre"
+
+#: src/makebench/core/project.py
+msgid "Free graphs require format 7 or later."
+msgstr "Grafos livres requerem formato 7 ou posterior."
+
+#: src/makebench/editor/window.py
+msgid "Free software under the GNU GPL, version 3 or later."
+msgstr "Software livre sob a GNU GPL, versão 3 ou posterior."
+
+#: src/makebench/editor/settings.py
+msgid "From the system"
+msgstr "Do sistema"
+
+#: src/makebench/editor/development.py src/makebench/editor/graph.py
+msgid "Function"
+msgstr "Função"
+
+#: src/makebench/runtime/worker.py
+msgid "Function not found: {name}."
+msgstr "Função não encontrada: {name}."
+
+#: src/makebench/editor/projects.py
+msgid "Functions changed outside Makebench."
+msgstr "Funções alteradas fora do Makebench."
+
+#: src/makebench/editor/projects.py
+msgid "Functions changed outside Makebench. Choose Reload or Keep my version."
+msgstr "Funções alteradas fora do Makebench. Escolha Recarregar ou Manter minha versão."
+
+#: src/makebench/editor/window.py
+msgid "Functions receive ctx and value. Use the name in the “call function” block."
+msgstr "Funções recebem ctx e valor. Use o nome no bloco “chamar função”."
+
+#: src/makebench/core/codegen.py
+msgid "Generated by Makebench. Edit the logic to change this file."
+msgstr "# Gerado pelo Makebench. Edite a lógica para alterar este arquivo."
+
+#: src/makebench/editor/logic.py
+msgid "Generated Python"
+msgstr "Python gerado"
+
+#: src/makebench/editor/window.py
+msgid "Generated Python · read-only"
+msgstr "Python gerado · somente leitura"
+
+#: src/makebench/core/packages.py
+msgid "Generated, not built ({reason})"
+msgstr "Gerado, não construído ({reason})"
+
+#: src/makebench/editor/publish.py
+msgid "Generates a ZIP with the build files. Does not produce an installable package."
+msgstr "Gera um ZIP com os arquivos de construção. Não produz um pacote instalável."
+
+#: src/makebench/core/navigation.py
+msgid "Give the window a name."
+msgstr "Dê um nome à janela."
+
+#: src/makebench/editor/studio.py
+msgid "Go to component"
+msgstr "Ir para componente"
+
+#: src/makebench/runtime/window.py
+msgid "Go to error"
+msgstr "Ir ao erro"
+
+#: src/makebench/editor/studio.py
+msgid "Go to flow"
+msgstr "Ir para fluxo"
+
+#: src/makebench/editor/studio.py
+msgid "Go to function"
+msgstr "Ir para função"
+
+#: src/makebench/editor/code_tools.py
+msgid "Go to line"
+msgstr "Ir para linha"
+
+#: src/makebench/editor/code_tools.py
+msgid "Go to line… · Ctrl+G"
+msgstr "Ir para linha… · Ctrl+G"
+
+#: src/makebench/editor/execution.py
+msgid "Go to source"
+msgstr "Ir à origem"
+
+#: src/makebench/editor/code_tools.py
+msgid "Go to source block · F4"
+msgstr "Ir ao bloco de origem · F4"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Go to state"
+msgstr "Ir para estado"
+
+#: src/makebench/editor/logic.py
+msgid "Graph saved. F5 runs; F9 debugs the snapshot."
+msgstr "Grafo salvo. F5 executa; F9 depura o snapshot."
+
+#: src/makebench/runtime/worker.py
+msgid "Graph stopped after 100,000 steps in event {flow}."
+msgstr "Grafo interrompido após 100 mil passos no evento {flow}."
+
+#: src/makebench/core/project.py
+msgid "Grid"
+msgstr "Grade"
+
+#: src/makebench/editor/designer.py
+msgid "Group alignment requires siblings in a Free container in Default."
+msgstr "Alinhamento de grupo exige irmãos em um contêiner Livre no Padrão."
+
+#: src/makebench/editor/designer.py
+msgid "Group geometry requires a Free container."
+msgstr "Geometria de grupo exige contêiner Livre."
+
+#: src/makebench/editor/catalog.py
+msgid "Groups elements in a row, column, grid or free position."
+msgstr "Agrupa elementos em linha, coluna, grade ou posição livre."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "GTK application running"
+msgstr "Aplicativo GTK em execução"
+
+#: src/makebench/gtk_runtime/preview.py
+msgid "GTK did not open the private display."
+msgstr "GTK não abriu o display privado."
+
+#: src/makebench/editor/native_preview.py
+msgid "GTK did not produce the preview."
+msgstr "GTK não produziu a prévia."
+
+#: src/makebench/gtk_runtime/preview.py
+msgid "GTK did not write the preview image."
+msgstr "GTK não gravou a imagem da prévia."
+
+#: src/makebench/gtk_runtime/preview.py
+msgid "GTK has not produced the window image yet."
+msgstr "GTK ainda não produziu a imagem da janela."
+
+#: src/makebench/editor/native_preview.py
+msgid "GTK preview unavailable."
+msgstr "Prévia GTK indisponível."
+
+#: src/makebench/runtime/gtk_bridge.py
+msgid "GTK reply exceeded the limit."
+msgstr "Resposta GTK excedeu o limite."
+
+#: src/makebench/editor/projects.py
+msgid "GTK — Adwaita look"
+msgstr "GTK — aparência Adwaita"
+
+#: src/makebench/editor/settings.py
+msgid "GTK4 is missing in this Python. The GTK test lists the required packages, without installing them automatically."
+msgstr "GTK4 ausente neste Python. O teste GTK informa os pacotes necessários, sem instalar automaticamente."
+
+#: src/makebench/core/environment.py
+msgid "GTK4 is not available in this Python. Debian/Ubuntu: python3-gi, gir1.2-gtk-4.0 and, optionally, gir1.2-adw-1. Fedora: python3-gobject, gtk4 and, optionally, libadwaita. Install them with your distribution's package manager; Makebench does not install packages."
+msgstr "GTK4 não está disponível neste Python. Debian/Ubuntu: python3-gi, gir1.2-gtk-4.0 e, opcionalmente, gir1.2-adw-1. Fedora: python3-gobject, gtk4 e, opcionalmente, libadwaita. Instale pelo gerenciador da sua distribuição; o Makebench não instala pacotes."
+
+#: src/makebench/editor/projects.py
+msgid "GTK4 not available; Qt selected."
+msgstr "GTK4 não disponível; Qt selecionado."
+
+#: src/makebench/editor/inspector.py src/makebench/editor/settings.py
+msgid "Height"
+msgstr "Altura"
+
+#: src/makebench/editor/inspector.py
+msgid "Height (px)"
+msgstr "Altura (px)"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py
+msgid "Hello!"
+msgstr "Olá!"
+
+#: src/makebench/editor/studio.py src/makebench/ui/dialogs.py
+msgid "Help"
+msgstr "Ajuda"
+
+#: src/makebench/editor/window.py
+msgid "hidden in the application"
+msgstr "oculto no aplicativo"
+
+#: src/makebench/editor/inspector.py
+msgid "Horizontal center"
+msgstr "Centro horizontal"
+
+#: src/makebench/editor/inspector.py src/makebench/editor/projects.py src/makebench/editor/settings.py
+msgid "Icon"
+msgstr "Ícone"
+
+#: src/makebench/editor/projects.py src/makebench/editor/settings.py src/makebench/editor/window.py
+msgid "Icons (*.png *.svg)"
+msgstr "Ícones (*.png *.svg)"
+
+#: src/makebench/editor/projects.py src/makebench/editor/settings.py
+msgid "Identifier"
+msgstr "Identificador"
+
+#: src/makebench/editor/settings.py
+msgid "Identity"
+msgstr "Identidade"
+
+#: src/makebench/editor/development.py
+msgid "If/else condition"
+msgstr "Condição se/senão"
+
+#: src/makebench/core/project.py src/makebench/editor/window.py src/makebench/gtk_runtime/renderer.py src/makebench/runtime/navigation.py src/makebench/ui/renderer.py
+msgid "Image"
+msgstr "Imagem"
+
+#: src/makebench/editor/catalog.py
+msgid "Image imported and saved with the project."
+msgstr "Imagem importada e salva junto do projeto."
+
+#: src/makebench/editor/assets.py
+msgid "Image not found: {source}"
+msgstr "Imagem não encontrada: {source}"
+
+#: src/makebench/ui/renderer.py
+msgid "Image unavailable"
+msgstr "Imagem indisponível"
+
+#: src/makebench/gtk_runtime/renderer.py
+msgid "Image unavailable: {source}"
+msgstr "Imagem indisponível: {source}"
+
+#: src/makebench/editor/resources.py
+msgid "Image · {name}"
+msgstr "Imagem · {name}"
+
+#: src/makebench/editor/resources.py
+msgid "Images (*.png *.jpg *.jpeg *.webp *.svg)"
+msgstr "Imagens (*.png *.jpg *.jpeg *.webp *.svg)"
+
+#: src/makebench/editor/window.py
+msgid "Images (*.png *.jpg *.jpeg *.webp)"
+msgstr "Imagens (*.png *.jpg *.jpeg *.webp)"
+
+#: src/makebench/editor/development.py
+msgid "In any state"
+msgstr "Em qualquer estado"
+
+#: src/makebench/editor/logic.py
+msgid "in any state"
+msgstr "em qualquer estado"
+
+#: src/makebench/core/portable.py
+msgid "Include Python 3.12, the backend and verified dependencies"
+msgstr "Incluir Python 3.12, backend e dependências verificadas"
+
+#: src/makebench/core/exporter.py
+msgid "Include the application runtime"
+msgstr "Incluir runtime do aplicativo"
+
+#: src/makebench/editor/projects.py
+msgid "Include the whole project folder and its contents"
+msgstr "Incluir toda a pasta do projeto e seu conteúdo"
+
+#: src/makebench/editor/publish.py
+msgid "Includes Python and libraries. Targets: Ubuntu 24.04 and Fedora 44 x86_64; requires glibc 2.39+, X11/Wayland and the system drivers."
+msgstr "Inclui Python e bibliotecas. Destinos: Ubuntu 24.04 e Fedora 44 x86_64; requer glibc2.39+, X11/Wayland e drivers do sistema."
+
+#: src/makebench/editor/publish.py
+msgid "Includes the editor, QtWebEngine and the resources to create and test Qt and GTK applications."
+msgstr "Inclui o editor, QtWebEngine e os recursos para criar e testar aplicativos Qt e GTK."
+
+#: src/makebench/editor/projects.py
+msgid "Includes the functions file and the project's assets. Different sources at the destination are preserved."
+msgstr "Inclui o arquivo de funções e os recursos do projeto. Fontes diferentes no destino são preservadas."
+
+#: src/makebench/core/graph.py
+msgid "Incompatible execution ports."
+msgstr "Portas de execução incompatíveis."
+
+#: src/makebench/core/graph.py
+msgid "Incompatible types on input {port}: {expected} expected."
+msgstr "Tipos incompatíveis na entrada {port}: {expected} esperado."
+
+#: src/makebench/runtime/session.py
+msgid "Incomplete reply exceeded the limit."
+msgstr "Resposta incompleta excedeu o limite."
+
+#: src/makebench/editor/map_items.py
+msgid "Initial"
+msgstr "Inicial"
+
+#: src/makebench/editor/map_panel.py
+msgid "initial"
+msgstr "inicial"
+
+#: src/makebench/editor/inspector.py
+msgid "Initial height"
+msgstr "Altura inicial"
+
+#: src/makebench/editor/inspector.py
+msgid "Initial page"
+msgstr "Página inicial"
+
+#: src/makebench/editor/settings.py
+msgid "Initial size in logical pixels."
+msgstr "Tamanho inicial em pixels lógicos."
+
+#: src/makebench/editor/development.py
+msgid "Initial value (JSON)"
+msgstr "Valor inicial (JSON)"
+
+#: src/makebench/editor/inspector.py
+msgid "Initial width"
+msgstr "Largura inicial"
+
+#: src/makebench/editor/inspector.py
+msgid "Initially selected"
+msgstr "Selecionada inicialmente"
+
+#: src/makebench/editor/inspector.py
+msgid "Inner margins"
+msgstr "Margens internas"
+
+#: src/makebench/editor/graph.py
+msgid "Input"
+msgstr "Entrada"
+
+#: src/makebench/editor/catalog.py
+msgid "Input and actions"
+msgstr "Entrada e ações"
+
+#: src/makebench/core/behaviors.py
+msgid "Input filled in."
+msgstr "Entrada preenchida."
+
+#: src/makebench/editor/studio.py
+msgid "Insert"
+msgstr "Inserir"
+
+#: src/makebench/editor/development.py
+msgid "Insert a behavior template with real blocks"
+msgstr "Inserir um modelo de comportamento com blocos reais"
+
+#: src/makebench/core/logic_defaults.py
+msgid "Insert a compatible component before creating this action."
+msgstr "Insira um componente compatível antes de criar esta ação."
+
+#: src/makebench/core/graph.py
+msgid "Insert a compatible component in this window before creating this node."
+msgstr "Insira um componente compatível nesta janela antes de criar este nó."
+
+#: src/makebench/core/logic_defaults.py
+msgid "Insert a Terminal component in this window."
+msgstr "Insira um componente Terminal nesta janela."
+
+#: src/makebench/editor/designer.py
+msgid "Insert element"
+msgstr "Inserir elemento"
+
+#: src/makebench/editor/studio.py
+msgid "Insert the selected element"
+msgstr "Inserir o elemento selecionado"
+
+#: src/makebench/editor/inspector.py
+msgid "Inside: {name}"
+msgstr "Dentro de: {name}"
+
+#: src/makebench/editor/inspector.py
+msgid "Inspect this transition in the Map"
+msgstr "Inspecionar esta transição no Mapa"
+
+#: src/makebench/runtime/debugger.py
+msgid "inspection limit"
+msgstr "limite de inspeção"
+
+#: src/makebench/editor/studio.py
+msgid "Inspector"
+msgstr "Inspetor"
+
+#: src/makebench/core/build_environment.py
+msgid "Install Podman to prepare the tools in a separate environment, or choose the system tools."
+msgstr "Instale Podman para preparar as ferramentas em ambiente separado, ou escolha as ferramentas do sistema."
+
+#: src/makebench/editor/settings_fields.py
+msgid "installed: {version}"
+msgstr "instalado: {version}"
+
+#: src/makebench/editor/inspector.py
+msgid "Interactions"
+msgstr "Interações"
+
+#: src/makebench/editor/catalog.py
+msgid "Interactive Linux terminal, with colors and keyboard. The preview never starts processes."
+msgstr "Terminal Linux interativo, com cores e teclado. A prévia não inicia processos."
+
+#: src/makebench/editor/map_connections.py
+msgid "Interface"
+msgstr "Interface"
+
+#: src/makebench/editor/settings.py
+msgid "Interface language"
+msgstr "Idioma da interface"
+
+#: src/makebench/editor/settings.py
+msgid "Interface title"
+msgstr "Título da interface"
+
+#: src/makebench/editor/map_panel.py
+msgid "Interfaces, states and transitions"
+msgstr "Interfaces, estados e transições"
+
+#: src/makebench/editor/inspector.py
+msgid "Internal identifier"
+msgstr "Identificador interno"
+
+#: src/makebench/editor/execution.py
+msgid "Interrupted"
+msgstr "Interrompido"
+
+#: src/makebench/runtime/process.py
+msgid "Invalid administrative permission."
+msgstr "Permissão administrativa inválida."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid alignment."
+msgstr "Alinhamento inválido."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid application settings."
+msgstr "Configuração do aplicativo inválida."
+
+#: src/makebench/editor/logic.py
+msgid "Invalid block data: {error}"
+msgstr "Dados de blocos inválidos: {error}"
+
+#: src/makebench/core/logic.py
+msgid "Invalid block diagnostics."
+msgstr "Diagnósticos dos blocos inválidos."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid boolean property: {key}"
+msgstr "Propriedade booleana inválida: {key}"
+
+#: src/makebench/core/project.py
+msgid "Invalid breakpoint list."
+msgstr "Lista de pontos de parada inválida."
+
+#: src/makebench/core/graph.py src/makebench/core/logic.py
+msgid "Invalid close-window option."
+msgstr "Opção de fechar janela inválida."
+
+#: src/makebench/core/build_environment.py
+msgid "Invalid dependency cache. Prepare again."
+msgstr "Cache de dependências inválido. Prepare novamente."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid distribution."
+msgstr "Distribuição inválida."
+
+#: src/makebench/core/logic.py
+msgid "Invalid event."
+msgstr "Evento inválido."
+
+#: src/makebench/core/graph.py
+msgid "Invalid execution connection."
+msgstr "Conexão de execução inválida."
+
+#: src/makebench/runtime/session.py
+msgid "Invalid execution protocol: {error}"
+msgstr "Protocolo de execução inválido: {error}"
+
+#: src/makebench/core/logic.py
+msgid "Invalid field in block: {key}."
+msgstr "Campo inválido no bloco: {key}."
+
+#: src/makebench/core/graph.py
+msgid "Invalid free graph comments."
+msgstr "Comentários livres do grafo inválidos."
+
+#: src/makebench/core/project.py
+msgid "Invalid geometry in {id}."
+msgstr "Geometria inválida em {id}."
+
+#: src/makebench/core/project.py
+msgid "Invalid geometry in {id}: {key}."
+msgstr "Geometria inválida em {id}: {key}."
+
+#: src/makebench/core/graph.py
+msgid "Invalid graph execution state."
+msgstr "Estado de execução do grafo inválido."
+
+#: src/makebench/core/graph.py
+msgid "Invalid graph version."
+msgstr "Versão de grafo inválida."
+
+#: src/makebench/runtime/gtk_bridge.py
+msgid "Invalid GTK protocol: {error}"
+msgstr "Protocolo GTK inválido: {error}"
+
+#: src/makebench/core/exporter.py
+msgid "Invalid icon: {error}"
+msgstr "Ícone inválido: {error}"
+
+#: src/makebench/core/navigation.py
+msgid "Invalid initial size."
+msgstr "Tamanho inicial inválido."
+
+#: src/makebench/editor/graph.py
+msgid "Invalid JSON value: {error}"
+msgstr "Valor JSON inválido: {error}"
+
+#: src/makebench/core/logic.py
+msgid "Invalid literal value."
+msgstr "Valor literal inválido."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid map position."
+msgstr "Posição do mapa inválida."
+
+#: src/makebench/core/source.py
+msgid "Invalid module list (at most 256 files, no repeats)."
+msgstr "Lista de módulos inválida (máximo 256 arquivos, sem repetição)."
+
+#: src/makebench/core/source.py
+msgid "Invalid module path."
+msgstr "Caminho de módulo inválido."
+
+#: src/makebench/core/graph.py
+msgid "Invalid node question."
+msgstr "Pergunta de nó inválida."
+
+#: src/makebench/core/graph.py
+msgid "Invalid node variable."
+msgstr "Variável de nó inválida."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid or repeated code name."
+msgstr "Nome no código inválido ou repetido."
+
+#: src/makebench/core/graph.py
+msgid "Invalid own function in node."
+msgstr "Função própria de nó inválida."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "Invalid program/arguments."
+msgstr "Programa/argumentos inválidos."
+
+#: src/makebench/core/bundle.py
+msgid "Invalid project package: {error}"
+msgstr "Pacote de projeto inválido: {error}"
+
+#: src/makebench/core/project.py
+msgid "Invalid properties or children in {id}."
+msgstr "Propriedades ou filhos inválidos em {id}."
+
+#: src/makebench/core/exporter.py
+msgid "Invalid Python dependency: {name}"
+msgstr "Dependência Python inválida: {name}"
+
+#: src/makebench/core/source.py
+msgid "Invalid Python file or larger than 8 MiB."
+msgstr "Arquivo Python inválido ou maior que 8 MiB."
+
+#: src/makebench/core/graph.py
+msgid "Invalid read property."
+msgstr "Propriedade de leitura inválida."
+
+#: src/makebench/core/logic.py
+msgid "Invalid recoverable behavior versions."
+msgstr "Versões recuperáveis do comportamento inválidas."
+
+#: src/makebench/editor/settings_fields.py
+msgid "Invalid requirement. Use a name and version, for example requests>=2.32."
+msgstr "Requisito inválido. Use nome e versão, por exemplo requests>=2.32."
+
+#: src/makebench/core/logic.py
+msgid "Invalid scope in the question."
+msgstr "Escopo inválido na pergunta."
+
+#: src/makebench/core/logic.py
+msgid "Invalid scope."
+msgstr "Escopo inválido."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid size mode."
+msgstr "Modo de tamanho inválido."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid sizing."
+msgstr "Dimensionamento inválido."
+
+#: src/makebench/core/source.py
+msgid "Invalid sources manifest: {error}"
+msgstr "Manifesto de fontes inválido: {error}"
+
+#: src/makebench/core/logic.py
+msgid "Invalid state filter."
+msgstr "Filtro de estado inválido."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid state overrides."
+msgstr "Sobrescritas de estado inválidas."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid states, variables or map positions."
+msgstr "Estados, variáveis ou posições do mapa inválidos."
+
+#: src/makebench/core/graph.py
+msgid "Invalid task permission."
+msgstr "Permissão de tarefa inválida."
+
+#: src/makebench/core/project.py
+msgid "Invalid terminal autostart."
+msgstr "Início automático do terminal inválido."
+
+#: src/makebench/core/project.py src/makebench/terminal/session.py
+msgid "Invalid terminal program."
+msgstr "Programa de terminal inválido."
+
+#: src/makebench/core/graph.py
+msgid "Invalid value port identifier."
+msgstr "Identificador de porta de valor inválido."
+
+#: src/makebench/core/navigation.py
+msgid "Invalid variable scope."
+msgstr "Escopo da variável inválido."
+
+#: src/makebench/core/graph.py
+msgid "Invalid visual node position."
+msgstr "Posição visual de nó inválida."
+
+#: src/makebench/core/portable.py
+msgid "Invalid wheel cache."
+msgstr "Cache de rodas inválido."
+
+#: src/makebench/core/project.py
+msgid "Invalid window list (at most 128)."
+msgstr "Lista de janelas inválida (máximo 128)."
+
+#: src/makebench/core/graph.py src/makebench/editor/development.py
+msgid "Join texts"
+msgstr "Juntar textos"
+
+#: src/makebench/editor/graph.py
+msgid "JSON constant"
+msgstr "Constante JSON"
+
+#: src/makebench/core/graph.py
+msgid "Keep a single event node as the entry."
+msgstr "Mantenha um único nó de evento como entrada."
+
+#: src/makebench/core/project.py
+msgid "Keep at least one page in this set."
+msgstr "Mantenha pelo menos uma página neste conjunto."
+
+#: src/makebench/editor/navigation.py
+msgid "Keep at least one window in the application."
+msgstr "Mantenha pelo menos uma janela no aplicativo."
+
+#: src/makebench/editor/projects.py
+msgid "Keep my version"
+msgstr "Manter minha versão"
+
+#: src/makebench/editor/settings.py
+msgid "Language of the messages and dialogs that Makebench adds to your application."
+msgstr "Idioma das mensagens e diálogos que o Makebench acrescenta ao seu aplicativo."
+
+#: src/makebench/runtime/debugger.py
+msgid "large integer"
+msgstr "inteiro grande"
+
+#: src/makebench/editor/inspector.py
+msgid "Layout"
+msgstr "Layout"
+
+#: src/makebench/editor/inspector.py
+msgid "Left"
+msgstr "Esquerda"
+
+#: src/makebench/editor/inspector.py
+msgid "left"
+msgstr "à esquerda"
+
+#: src/makebench/editor/studio.py
+msgid "Left panel"
+msgstr "Painel esquerdo"
+
+#: src/makebench/editor/settings.py
+msgid "License"
+msgstr "Licença"
+
+#: src/makebench/editor/settings.py
+msgid "Light"
+msgstr "Claro"
+
+#: src/makebench/core/graph.py
+msgid "Limit of 1000 recoverable versions reached."
+msgstr "Limite de 1000 versões recuperáveis atingido."
+
+#: src/makebench/editor/code_tools.py src/makebench/editor/debug.py
+msgid "Line"
+msgstr "Linha"
+
+#: src/makebench/editor/development.py
+msgid "Line {line} · Column {column}"
+msgstr "Linha {line} · Coluna {column}"
+
+#: src/makebench/editor/startup.py
+msgid "Linux applications, built by you."
+msgstr "Aplicativos Linux, construídos por você."
+
+#: src/makebench/editor/settings.py
+msgid "List"
+msgstr "Lista"
+
+#: src/makebench/editor/development.py
+msgid "List of values"
+msgstr "Lista de valores"
+
+#: src/makebench/editor/graph.py
+msgid "Local"
+msgstr "Local"
+
+#: src/makebench/editor/code_assist.py
+msgid "Local definition not found."
+msgstr "Definição local não encontrada."
+
+#: src/makebench/core/code_index.py
+msgid "Local reference not found: {module}"
+msgstr "Referência local não encontrada: {module}"
+
+#: src/makebench/editor/projects.py
+msgid "Locate project"
+msgstr "Localizar projeto"
+
+#: src/makebench/editor/projects.py
+msgid "Locate…"
+msgstr "Localizar…"
+
+#: src/makebench/editor/studio.py src/makebench/editor/window.py
+msgid "Logic"
+msgstr "Lógica"
+
+#: src/makebench/core/logic.py
+msgid "Logic exceeds 48 levels or 5000 blocks per event."
+msgstr "Lógica excede 48 níveis ou 5000 blocos por evento."
+
+#: src/makebench/ui/dialogs.py
+msgid "Look in:"
+msgstr "Procurar em:"
+
+#: src/makebench/core/navigation.py
+msgid "Main dashboard"
+msgstr "Painel principal"
+
+#: src/makebench/editor/navigation.py
+msgid "Main screen"
+msgstr "Tela principal"
+
+#: src/makebench/editor/publish.py
+msgid "Makebench editor (AppImage)"
+msgstr "Editor Makebench (AppImage)"
+
+#: src/makebench/editor/settings.py
+msgid "Makebench preferences"
+msgstr "Preferências do Makebench"
+
+#: src/makebench/core/bundle.py
+msgid ""
+"Makebench project. Open project.makebench.json.\n"
+"Opening never runs code. Testing runs Python and scripts with your permissions.\n"
+msgstr ""
+"Projeto Makebench. Abra project.makebench.json.\n"
+"Abrir não executa código. Testar executa Python e scripts com suas permissões.\n"
+
+#: src/makebench/editor/window.py
+msgid "Makebench projects (*.makebench.json *.zip);;JSON (*.json)"
+msgstr "Projetos Makebench (*.makebench.json *.zip);;JSON (*.json)"
+
+#: src/makebench/editor/projects.py
+msgid "Makebench projects (*.makebench.json)"
+msgstr "Projetos Makebench (*.makebench.json)"
+
+#: src/makebench/runtime/window.py
+msgid "Makebench supervision · not part of your application"
+msgstr "Supervisão do Makebench · não faz parte do seu aplicativo"
+
+#: src/makebench/editor/publish.py
+msgid "Makebench tools ready."
+msgstr "Ferramentas Makebench prontas."
+
+#: src/makebench/__main__.py
+msgid "Makebench — visual editor for Linux applications"
+msgstr "Makebench — editor visual de aplicativos Linux"
+
+#: src/makebench/core/project.py
+msgid "Manual position and size require a free-layout container."
+msgstr "Posição e tamanho manuais exigem um contêiner de organização livre."
+
+#: src/makebench/editor/navigation.py src/makebench/editor/studio.py
+msgid "Map"
+msgstr "Mapa"
+
+#: src/makebench/editor/map_panel.py
+msgid "Map of the application's windows and states"
+msgstr "Mapa das janelas e estados do aplicativo"
+
+#: src/makebench/core/graph.py
+msgid "Message"
+msgstr "Mensagem"
+
+#: src/makebench/editor/inspector.py
+msgid "middle"
+msgstr "central"
+
+#: src/makebench/editor/settings.py
+msgid "Minimum Python 3.12; supported versions 3.12–3.14. GTK requires PyGObject/GTK4; Qt requires PySide6 6.11.2."
+msgstr "Python mínimo 3.12; versões suportadas 3.12–3.14. GTK exige PyGObject/GTK4; Qt exige PySide6 6.11.2."
+
+#: src/makebench/core/diagnostics.py
+msgid "Missing"
+msgstr "Ausente"
+
+#: src/makebench/editor/startup.py
+msgid "missing"
+msgstr "ausente"
+
+#: src/makebench/editor/resources.py
+msgid "Missing asset · {name}"
+msgstr "Recurso ausente · {name}"
+
+#: src/makebench/core/exporter.py
+msgid "Missing asset: {name}"
+msgstr "Recurso ausente: {name}"
+
+#: src/makebench/editor/studio.py
+msgid "Missing function: {name}"
+msgstr "Função ausente: {name}"
+
+#: src/makebench/editor/settings_fields.py
+msgid "missing in this Python"
+msgstr "ausente neste Python"
+
+#: src/makebench/core/source.py
+msgid "Missing module: {name}"
+msgstr "Módulo ausente: {name}"
+
+#: src/makebench/core/logic.py
+msgid "Missing or repeated flow identifier."
+msgstr "Identificador de fluxo ausente ou repetido."
+
+#: src/makebench/core/source.py
+msgid "Missing package initializer: {path}"
+msgstr "Falta o inicializador de pacote: {path}"
+
+#: src/makebench/core/packages.py
+msgid "missing {tool}"
+msgstr "falta {tool}"
+
+#: src/makebench/core/diagnostics.py
+msgid "Missing — native action editing available"
+msgstr "Ausente — edição nativa de ações disponível"
+
+#: src/makebench/core/source_runtime.py
+msgid "Module not declared in the project: {name}"
+msgstr "Módulo não declarado no projeto: {name}"
+
+#: src/makebench/core/source.py
+msgid "Modules and their folders cannot be symbolic links."
+msgstr "Módulos e suas pastas não podem ser links simbólicos."
+
+#: src/makebench/core/source.py
+msgid "Modules must be inside makebench_user and end in .py."
+msgstr "Módulos devem estar em makebench_user e terminar em .py."
+
+#: src/makebench/editor/window.py
+msgid "Move after"
+msgstr "Mover para depois"
+
+#: src/makebench/editor/window.py
+msgid "Move before"
+msgstr "Mover para antes"
+
+#: src/makebench/editor/projects.py
+msgid "Move project to trash"
+msgstr "Mover projeto para a lixeira"
+
+#: src/makebench/editor/projects.py
+msgid "Move these files to the trash?"
+msgstr "Mover estes arquivos para a lixeira?"
+
+#: src/makebench/editor/projects.py
+msgid "Move to trash"
+msgstr "Mover para a lixeira"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Move to trash…"
+msgstr "Mover para a lixeira…"
+
+#: src/makebench/editor/development.py
+msgid "Multi-line text"
+msgstr "Texto de várias linhas"
+
+#: src/makebench/core/templates.py
+msgid "Multi-window application"
+msgstr "Aplicativo com várias janelas"
+
+#: src/makebench/editor/inspector.py
+msgid "Multiple values"
+msgstr "Múltiplos valores"
+
+#: src/makebench/editor/logic.py
+msgid "multiple-state filter"
+msgstr "filtro de vários estados"
+
+#: src/makebench/core/project.py src/makebench/core/templates.py src/makebench/editor/projects.py
+msgid "My application"
+msgstr "Meu aplicativo"
+
+#: src/makebench/editor/designer.py src/makebench/editor/development.py src/makebench/editor/graph.py src/makebench/editor/map_panel.py src/makebench/editor/navigation.py src/makebench/editor/projects.py
+msgid "Name"
+msgstr "Nome"
+
+#: src/makebench/editor/inspector.py
+msgid "Name in code"
+msgstr "Nome no código"
+
+#: src/makebench/editor/navigation.py
+msgid "Name of the initial step"
+msgstr "Nome da etapa inicial"
+
+#: src/makebench/editor/settings.py
+msgid "Name, type, scope and initial value"
+msgstr "Nome, tipo, escopo e valor inicial"
+
+#: src/makebench/editor/inspector.py
+msgid "Navigation:"
+msgstr "Navegação:"
+
+#: src/makebench/editor/publish.py
+msgid "Needs no build tools."
+msgstr "Não precisa de ferramentas de construção."
+
+#: src/makebench/core/project.py
+msgid "New application"
+msgstr "Novo aplicativo"
+
+#: src/makebench/core/project.py
+msgid "New button"
+msgstr "Novo botão"
+
+#: src/makebench/editor/logic.py
+msgid "New event"
+msgstr "Novo evento"
+
+#: src/makebench/editor/startup.py
+msgid "New from template"
+msgstr "Novo a partir do modelo"
+
+#: src/makebench/editor/development.py
+msgid "New function"
+msgstr "Nova função"
+
+#: src/makebench/editor/navigation.py
+msgid "New interface"
+msgstr "Nova interface"
+
+#: src/makebench/editor/map_panel.py src/makebench/editor/map_view.py
+msgid "New interface…"
+msgstr "Nova interface…"
+
+#: src/makebench/editor/code_workspace.py
+msgid "New module"
+msgstr "Novo módulo"
+
+#: src/makebench/core/project.py
+msgid "New option"
+msgstr "Nova opção"
+
+#: src/makebench/core/project.py
+msgid "New page"
+msgstr "Nova página"
+
+#: src/makebench/editor/code_workspace.py
+msgid "New path (imports are not rewritten)"
+msgstr "Novo caminho (imports não são reescritos)"
+
+#: src/makebench/editor/projects.py src/makebench/editor/window.py
+msgid "New project"
+msgstr "Novo projeto"
+
+#: src/makebench/editor/startup.py
+msgid "New project…"
+msgstr "Novo projeto…"
+
+#: src/makebench/editor/navigation.py
+msgid "New state"
+msgstr "Novo estado"
+
+#: src/makebench/editor/navigation.py
+msgid "New state…"
+msgstr "Novo estado…"
+
+#: src/makebench/core/project.py
+msgid "New text"
+msgstr "Novo texto"
+
+#: src/makebench/core/behaviors.py
+msgid "New value"
+msgstr "Novo valor"
+
+#: src/makebench/editor/navigation.py
+msgid "New window…"
+msgstr "Nova janela…"
+
+#: src/makebench/editor/projects.py
+msgid "New…"
+msgstr "Novo…"
+
+#: src/makebench/core/navigation.py src/makebench/editor/graph.py
+msgid "Next"
+msgstr "Próximo"
+
+#: src/makebench/editor/code.py
+msgid "Next result"
+msgstr "Próximo resultado"
+
+#: src/makebench/editor/window.py
+msgid "Next step"
+msgstr "Próximo passo"
+
+#: src/makebench/editor/graph.py src/makebench/gtk_runtime/application.py
+msgid "No"
+msgstr "Não"
+
+#: src/makebench/editor/settings.py
+msgid "No administrative action declared in the blocks."
+msgstr "Nenhuma ação administrativa declarada nos blocos."
+
+#: src/makebench/editor/development.py
+msgid "No block matches the search."
+msgstr "Nenhum bloco corresponde à busca."
+
+#: src/makebench/editor/development.py
+msgid "No description."
+msgstr "Sem descrição."
+
+#: src/makebench/editor/inspector.py
+msgid "No image"
+msgstr "Nenhuma imagem"
+
+#: src/makebench/editor/map_panel.py
+msgid "No incoming transition from blocks."
+msgstr "Sem transição de entrada por blocos."
+
+#: src/makebench/editor/navigation.py
+msgid "No interface"
+msgstr "Nenhuma interface"
+
+#: src/makebench/editor/map_view.py
+msgid "No interface yet"
+msgstr "Nenhuma interface"
+
+#: src/makebench/editor/settings.py
+msgid "No interface yet. Create the first one in the map."
+msgstr "Nenhuma interface. Crie a primeira pelo mapa."
+
+#: src/makebench/editor/studio.py
+msgid "No problems found."
+msgstr "Nenhum problema encontrado."
+
+#: src/makebench/core/portable.py
+msgid "No Python wheel is available for the target."
+msgstr "Nenhuma roda Python disponível para o destino."
+
+#: src/makebench/core/build_environment.py
+msgid "No Python wheel is available for this SDK."
+msgstr "Nenhuma roda Python disponível para este SDK."
+
+#: src/makebench/editor/startup.py
+msgid "No recent projects"
+msgstr "Nenhum projeto recente"
+
+#: src/makebench/editor/projects.py
+msgid "No recent projects."
+msgstr "Nenhum projeto recente."
+
+#: src/makebench/editor/code.py
+msgid "No results"
+msgstr "Nenhum resultado"
+
+#: src/makebench/editor/settings.py
+msgid "No setting matches the search."
+msgstr "Nenhuma configuração corresponde à busca."
+
+#: src/makebench/editor/settings.py
+msgid "No shortcut"
+msgstr "Sem atalho"
+
+#: src/makebench/editor/code_assist.py
+msgid "No static suggestion in this context."
+msgstr "Nenhuma sugestão estática neste contexto."
+
+#: src/makebench/editor/execution.py
+msgid "No test started"
+msgstr "Nenhum teste iniciado"
+
+#: src/makebench/editor/publish.py
+msgid "No version"
+msgstr "Sem versão"
+
+#: src/makebench/core/graph.py
+msgid "Node state does not exist."
+msgstr "Estado de nó inexistente."
+
+#: src/makebench/core/graph.py
+msgid "Node without a unique ID or a recognized operation."
+msgstr "Nó sem ID único ou operação reconhecida."
+
+#: src/makebench/editor/development.py src/makebench/editor/logic.py
+msgid "Nodes"
+msgstr "Nós"
+
+#: src/makebench/core/graph.py
+msgid "Non-finite numeric constant."
+msgstr "Constante numérica não finita."
+
+#: src/makebench/editor/projects.py src/makebench/editor/settings.py
+msgid "none"
+msgstr "nenhum"
+
+#: src/makebench/editor/execution.py
+msgid "Not completed"
+msgstr "Não concluído"
+
+#: src/makebench/editor/projects.py
+msgid "Not found"
+msgstr "Não encontrado"
+
+#: src/makebench/core/diagnostics.py
+msgid "Not installed (optional for Qt applications)"
+msgstr "Não instalado (opcional para aplicativos Qt)"
+
+#: src/makebench/core/diagnostics.py
+msgid "Not set"
+msgstr "Não informado"
+
+#: src/makebench/editor/settings.py
+msgid "Null"
+msgstr "Nulo"
+
+#: src/makebench/editor/development.py src/makebench/editor/settings.py
+msgid "Number"
+msgstr "Número"
+
+#: src/makebench/editor/settings.py
+msgid "Object"
+msgstr "Objeto"
+
+#: src/makebench/editor/settings.py
+msgid "Off"
+msgstr "Desligada"
+
+#: src/makebench/gtk_runtime/application.py
+msgid "OK"
+msgstr "OK"
+
+#: src/makebench/editor/logic.py
+msgid "On click:"
+msgstr "Ao clicar:"
+
+#: src/makebench/core/logic.py
+msgid "On start"
+msgstr "Ao iniciar"
+
+#: src/makebench/editor/logic.py
+msgid "On start:"
+msgstr "Ao iniciar:"
+
+#: src/makebench/core/templates.py
+msgid "One window to start your own way."
+msgstr "Uma janela para começar do seu jeito."
+
+#: src/makebench/core/templates.py
+msgid "One window with text, a field and a button."
+msgstr "Uma janela com texto, campo e botão."
+
+#: src/makebench/editor/logic.py
+msgid "only in Default"
+msgstr "só no Padrão"
+
+#: src/makebench/editor/logic.py
+msgid "only in {state}"
+msgstr "só em {state}"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py src/makebench/ui/dialogs.py
+msgid "Open"
+msgstr "Abrir"
+
+#: src/makebench/editor/map_connections.py
+msgid "Open another real system window in its initial state."
+msgstr "Abrir outra janela real do sistema em seu estado inicial."
+
+#: src/makebench/editor/map_panel.py
+msgid "Open Designer"
+msgstr "Abrir Designer"
+
+#: src/makebench/editor/projects.py src/makebench/editor/publish.py
+msgid "Open folder"
+msgstr "Abrir pasta"
+
+#: src/makebench/editor/window.py
+msgid "Open Makebench project"
+msgstr "Abrir projeto Makebench"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Open project…"
+msgstr "Abrir projeto…"
+
+#: src/makebench/editor/settings.py
+msgid "Open the user guide"
+msgstr "Abrir o guia de uso"
+
+#: src/makebench/core/behaviors.py src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Open window"
+msgstr "Abrir janela"
+
+#: src/makebench/editor/window.py
+msgid "Open…"
+msgstr "Abrir…"
+
+#: src/makebench/core/graph.py
+msgid "Operation"
+msgstr "Operação"
+
+#: src/makebench/runtime/window.py
+msgid "Operation cancelled by the user."
+msgstr "Operação cancelada pelo usuário."
+
+#: src/makebench/core/build_environment.py src/makebench/runtime/worker.py
+msgid "Operation cancelled."
+msgstr "Operação cancelada."
+
+#: src/makebench/editor/publish.py
+msgid "Operation interrupted · see the diagnostics"
+msgstr "Operação interrompida · consulte o diagnóstico"
+
+#: src/makebench/editor/graph.py
+msgid "Operator"
+msgstr "Operador"
+
+#: src/makebench/editor/graph.py
+msgid "Options"
+msgstr "Opções"
+
+#: src/makebench/editor/execution.py
+msgid "Ordinary"
+msgstr "Comum"
+
+#: src/makebench/core/templates.py
+msgid "Organize your tools in this area."
+msgstr "Organize suas ferramentas nesta área."
+
+#: src/makebench/editor/execution.py
+msgid "Output"
+msgstr "Saída"
+
+#: src/makebench/editor/studio.py
+msgid "Output and problems"
+msgstr "Saída e problemas"
+
+#: src/makebench/editor/studio.py
+msgid "Output and problems · Ctrl+J"
+msgstr "Saída e problemas · Ctrl+J"
+
+#: src/makebench/editor/catalog.py
+msgid "Output and state"
+msgstr "Saída e estado"
+
+#: src/makebench/editor/studio.py
+msgid "Output appears here when you test the application."
+msgstr "A saída aparece aqui ao testar o aplicativo."
+
+#: src/makebench/core/project.py
+msgid "Output panel"
+msgstr "Painel de saída"
+
+#: src/makebench/editor/graph.py
+msgid "Outputs"
+msgstr "Saídas"
+
+#: src/makebench/core/graph.py
+msgid "Own function"
+msgstr "Função própria"
+
+#: src/makebench/core/project.py src/makebench/editor/canvas.py src/makebench/editor/inspector.py src/makebench/gtk_runtime/renderer.py src/makebench/runtime/view.py
+msgid "Page"
+msgstr "Página"
+
+#: src/makebench/core/project.py
+msgid "Page {number}"
+msgstr "Página {number}"
+
+#: src/makebench/core/project.py
+msgid "Pages must be inside a set of pages."
+msgstr "Páginas devem ficar dentro de um conjunto de páginas."
+
+#: src/makebench/editor/studio.py
+msgid "Pan the view"
+msgstr "Mover a visão"
+
+#: src/makebench/terminal/qt.py
+msgid "Paste"
+msgstr "Colar"
+
+#: src/makebench/editor/debug.py
+msgid "Pause"
+msgstr "Pausar"
+
+#: src/makebench/editor/debug.py
+msgid "pause"
+msgstr "pausa"
+
+#: src/makebench/editor/debug.py src/makebench/editor/execution.py
+msgid "Paused"
+msgstr "Pausado"
+
+#: src/makebench/editor/settings.py
+msgid "Permissions"
+msgstr "Permissões"
+
+#: src/makebench/gtk_runtime/application.py
+msgid "pkexec is not available on the target system."
+msgstr "pkexec não está disponível no sistema de destino."
+
+#: src/makebench/runtime/process.py
+msgid "pkexec is not available. Install Polkit support on the target distribution."
+msgstr "pkexec não está disponível. Instale o suporte Polkit na distribuição de destino."
+
+#: src/makebench/editor/settings.py
+msgid "Platform plugin"
+msgstr "Plugin de plataforma"
+
+#: src/makebench/editor/settings.py
+msgid "Plugins"
+msgstr "Plugins"
+
+#: src/makebench/editor/settings.py
+msgid "PNG of at least 256 pixels, or SVG."
+msgstr "PNG com pelo menos 256 pixels ou SVG."
+
+#: src/makebench/core/portable.py
+msgid "Podman is required for the isolated distribution environment."
+msgstr "Podman é necessário para o ambiente isolado de distribuição."
+
+#: src/makebench/core/portable.py
+msgid "Podman is required. No build package will be installed on the system."
+msgstr "Podman é necessário. Nenhum pacote de build será instalado no sistema."
+
+#: src/makebench/core/portable.py
+msgid "Portable runtime and dependencies ready."
+msgstr "Runtime e dependências portáteis prontos."
+
+#: src/makebench/editor/inspector.py
+msgid "Position set by the container ({layout})."
+msgstr "Posição definida pelo contêiner ({layout})."
+
+#: src/makebench/core/templates.py
+msgid "Preferences"
+msgstr "Preferências"
+
+#: src/makebench/editor/studio.py
+msgid "Preferences…"
+msgstr "Preferências…"
+
+#: src/makebench/core/exporter.py
+msgid "Prepare files"
+msgstr "Preparar arquivos"
+
+#: src/makebench/editor/publish.py
+msgid "Prepare installs the SDK from Flathub. The build uses the local SDK and produces a .flatpak bundle. The terminal and tasks stay in the sandbox, with no host access or administrative elevation."
+msgstr "Preparar instala o SDK pelo Flathub. A construção usa o SDK local e gera um bundle .flatpak. Terminal e tarefas ficam no sandbox, sem acesso ao host ou elevação administrativa."
+
+#: src/makebench/editor/publish.py
+msgid "Prepare resolves Python 3.12, the backend and dependencies in a separate Podman container. Building uses only the verified cache, with no network."
+msgstr "Preparar resolve Python 3.12, backend e dependências em Podman separado. Construir usa somente o cache verificado, sem rede."
+
+#: src/makebench/core/packages.py
+msgid "Prepare the build tools ({tool}) or export the recipe."
+msgstr "Prepare as ferramentas de construção ({tool}) ou exporte a receita."
+
+#: src/makebench/editor/publish.py
+msgid "Prepare the editor's complete runtime before building."
+msgstr "Prepare o runtime completo do editor antes de construir."
+
+#: src/makebench/core/build_environment.py
+msgid "Prepare the Flatpak tools to download this application's Python dependencies."
+msgstr "Prepare as ferramentas Flatpak para baixar as dependências Python deste aplicativo."
+
+#: src/makebench/core/portable.py
+msgid "Prepare the portable runtime and dependencies before building."
+msgstr "Prepare o runtime portátil e as dependências antes de construir."
+
+#: src/makebench/core/packages.py
+msgid "Prepare the portable runtime and dependencies in an isolated environment before building."
+msgstr "Prepare o runtime portátil e as dependências em ambiente isolado antes de construir."
+
+#: src/makebench/core/portable.py
+msgid "Prepare the portable Ubuntu 24.04 / Python 3.12 runtime"
+msgstr "Preparar runtime portátil Ubuntu 24.04 / Python 3.12"
+
+#: src/makebench/core/packages.py
+msgid "Prepare the tools or choose Generate recipe only."
+msgstr "Prepare as ferramentas ou escolha Somente gerar receita."
+
+#: src/makebench/editor/publish.py
+msgid "Prepare the tools to build."
+msgstr "Prepare as ferramentas para construir."
+
+#: src/makebench/editor/settings.py
+msgid "Prepare tools in the Export window"
+msgstr "Preparar ferramentas na janela Exportar"
+
+#: src/makebench/editor/publish.py
+msgid "Prepare tools…"
+msgstr "Preparar ferramentas…"
+
+#: src/makebench/core/build_environment.py
+msgid "Preparing distribution tools. The first time requires a download."
+msgstr "Preparando ferramentas de distribuição. A primeira vez exige download."
+
+#: src/makebench/editor/native_preview.py
+msgid "Preparing native GTK preview…"
+msgstr "Preparando prévia GTK nativa…"
+
+#: src/makebench/editor/map_items.py
+msgid "Preparing preview…"
+msgstr "Preparando prévia…"
+
+#: src/makebench/editor/publish.py
+msgid "Preparing the tools"
+msgstr "Preparação das ferramentas"
+
+#: src/makebench/editor/publish.py
+msgid "Preparing tools…"
+msgstr "Preparando ferramentas…"
+
+#: src/makebench/editor/map_items.py
+msgid "Preview unavailable"
+msgstr "Prévia indisponível"
+
+#: src/makebench/editor/code.py
+msgid "Previous result"
+msgstr "Resultado anterior"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Previous session available."
+msgstr "Sessão anterior disponível."
+
+#: src/makebench/editor/development.py
+msgid "Previous version"
+msgstr "Versão anterior"
+
+#: src/makebench/core/logic_defaults.py
+msgid "printf \"Hello, Linux\\n\""
+msgstr "printf \"Olá, Linux\\n\""
+
+#: src/makebench/core/graph.py
+msgid "printf \"Hello\\n\""
+msgstr "printf \"Olá\\n\""
+
+#: src/makebench/editor/studio.py
+msgid "Problems"
+msgstr "Problemas"
+
+#: src/makebench/editor/studio.py
+msgid "Problems ({count})"
+msgstr "Problemas ({count})"
+
+#: src/makebench/editor/graph.py
+msgid "Program"
+msgstr "Programa"
+
+#: src/makebench/editor/inspector.py
+msgid "Program (empty = shell)"
+msgstr "Programa (vazio = shell)"
+
+#: src/makebench/runtime/process.py
+msgid "Program not found: {program}."
+msgstr "Programa não encontrado: {program}."
+
+#: src/makebench/core/project.py src/makebench/editor/graph.py
+msgid "Progress"
+msgstr "Progresso"
+
+#: src/makebench/editor/inspector.py
+msgid "Progress (%)"
+msgstr "Progresso (%)"
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/window.py
+msgid "Progress must be between 0 and 100."
+msgstr "Progresso deve estar entre 0 e 100."
+
+#: src/makebench/editor/debug.py src/makebench/editor/development.py src/makebench/editor/settings.py src/makebench/editor/studio.py src/makebench/editor/window.py
+msgid "Project"
+msgstr "Projeto"
+
+#: src/makebench/editor/publish.py
+msgid "Project application"
+msgstr "Aplicativo do projeto"
+
+#: src/makebench/editor/resources.py
+msgid "Project asset"
+msgstr "Recurso do projeto"
+
+#: src/makebench/editor/studio.py
+msgid "Project assets and functions"
+msgstr "Recursos e funções do projeto"
+
+#: src/makebench/editor/execution.py
+msgid "Project changed"
+msgstr "Projeto alterado"
+
+#: src/makebench/editor/execution.py
+msgid "Project changed · F5 to restart"
+msgstr "Projeto alterado · F5 para reiniciar"
+
+#: src/makebench/core/packages.py
+msgid "Project check completed."
+msgstr "Verificação do projeto concluída."
+
+#: src/makebench/editor/projects.py
+msgid "Project folder"
+msgstr "Pasta do projeto"
+
+#: src/makebench/core/project.py
+msgid "Project metadata must be an object."
+msgstr "Os metadados do projeto precisam ser um objeto."
+
+#: src/makebench/editor/projects.py
+msgid "Project moved to the trash."
+msgstr "Projeto movido para a lixeira."
+
+#: src/makebench/editor/inspector.py
+msgid "Project name"
+msgstr "Nome do projeto"
+
+#: src/makebench/editor/projects.py
+msgid "Project not found. Use Locate or remove it from the list."
+msgstr "Projeto não encontrado. Use Localizar ou remova da lista."
+
+#: src/makebench/editor/projects.py
+msgid "Project not reviewed yet: {functions} and {scripts}. Nothing was run. Testing runs this code with your permissions."
+msgstr "Projeto ainda não revisado: {functions} e {scripts}. Nada foi executado. Testar executa esse código com suas permissões."
+
+#: src/makebench/editor/settings.py
+msgid "Project or window data. Values are JSON: text, number, boolean or list."
+msgstr "Dados do projeto ou de uma janela. Valores são JSON: texto, número, booleano ou lista."
+
+#: src/makebench/editor/code_workspace.py
+msgid "Project Python files"
+msgstr "Arquivos Python do projeto"
+
+#: src/makebench/core/exporter.py
+msgid "Project ready to export as Python source."
+msgstr "Projeto pronto para exportar em fonte Python."
+
+#: src/makebench/editor/projects.py
+msgid "Project shared at {path}"
+msgstr "Projeto compartilhado em {path}"
+
+#: src/makebench/editor/window.py
+msgid "Project upgraded to format {version}. The copy {backup} keeps the previous version; older editors cannot open the new features."
+msgstr "Projeto atualizado para formato {version}. A cópia {backup} preserva a versão anterior; editores antigos não abrem os recursos novos."
+
+#: src/makebench/editor/development.py
+msgid "Project-wide"
+msgstr "Do projeto"
+
+#: src/makebench/editor/settings.py
+msgid "Projects"
+msgstr "Projetos"
+
+#: src/makebench/editor/studio.py src/makebench/editor/window.py
+msgid "Properties"
+msgstr "Propriedades"
+
+#: src/makebench/editor/graph.py
+msgid "Property"
+msgstr "Propriedade"
+
+#: src/makebench/core/project.py
+msgid "Property {key} of {id} must be text."
+msgstr "A propriedade {key} de {id} precisa ser texto."
+
+#: src/makebench/runtime/window.py
+msgid "Provide a non-empty list of text options."
+msgstr "Forneça uma lista não vazia de opções de texto."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "Provide text options."
+msgstr "Informe opções de texto."
+
+#: src/makebench/editor/settings.py
+msgid "Public name"
+msgstr "Nome público"
+
+#: src/makebench/core/packages.py
+msgid "Publish complete result"
+msgstr "Publicar resultado completo"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Python changed outside Makebench: {path}"
+msgstr "Python alterado fora do Makebench: {path}"
+
+#: src/makebench/editor/publish.py
+msgid "Python code, assets and runtime. The dependencies are listed in requirements.txt."
+msgstr "Código Python, recursos e runtime. As dependências constam no arquivo requirements.txt."
+
+#: src/makebench/editor/settings_fields.py
+msgid "Python dependency"
+msgstr "Dependência Python"
+
+#: src/makebench/core/build_environment.py
+msgid "Python dependency changed in the cache. Prepare again."
+msgstr "Dependência Python alterada no cache. Prepare novamente."
+
+#: src/makebench/core/source.py
+msgid "Python files must be UTF-8."
+msgstr "Arquivos Python precisam estar em UTF-8."
+
+#: src/makebench/core/logic.py
+msgid "Python functions: {error}"
+msgstr "Funções Python: {error}"
+
+#: src/makebench/core/project.py
+msgid "Python modules require format 8 or later."
+msgstr "Módulos Python requerem formato 8 ou posterior."
+
+#: src/makebench/editor/development.py
+msgid "Python name"
+msgstr "Nome Python"
+
+#: src/makebench/core/packages.py src/makebench/editor/settings.py
+msgid "Python source"
+msgstr "Fonte Python"
+
+#: src/makebench/core/exporter.py
+msgid "Python source exported"
+msgstr "Fonte Python exportada"
+
+#: src/makebench/editor/settings.py
+msgid "Python source, DEB, RPM and AppImage run with the user's permissions. Testing is not a sandbox."
+msgstr "Fonte Python, DEB, RPM e AppImage executam com as permissões do usuário. O teste não é uma sandbox."
+
+#: src/makebench/editor/projects.py
+msgid "Qt — desktop controls"
+msgstr "Qt — controles do desktop"
+
+#: src/makebench/editor/graph.py
+msgid "Question"
+msgstr "Pergunta"
+
+#: src/makebench/runtime/window.py
+msgid "Question answered or cancelled."
+msgstr "Pergunta respondida ou cancelada."
+
+#: src/makebench/editor/window.py
+msgid "Quit"
+msgstr "Sair"
+
+#: src/makebench/editor/development.py
+msgid "Read checkbox selection"
+msgstr "Ler seleção da caixa"
+
+#: src/makebench/core/graph.py
+msgid "Read component"
+msgstr "Ler componente"
+
+#: src/makebench/editor/development.py
+msgid "Read component text"
+msgstr "Ler texto do componente"
+
+#: src/makebench/core/behaviors.py
+msgid "Read field"
+msgstr "Ler campo"
+
+#: src/makebench/editor/development.py
+msgid "Read progress"
+msgstr "Ler progresso"
+
+#: src/makebench/editor/code_workspace.py
+msgid "read-only"
+msgstr "somente leitura"
+
+#: src/makebench/editor/window.py
+msgid "Ready"
+msgstr "Pronto"
+
+#: src/makebench/core/templates.py
+msgid "Ready to create!"
+msgstr "Pronto para criar!"
+
+#: src/makebench/runtime/window.py
+msgid "Ready to start."
+msgstr "Pronto para iniciar."
+
+#: src/makebench/editor/catalog.py
+msgid "Receives text typed by the user."
+msgstr "Recebe texto digitado pelo usuário."
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Recent"
+msgstr "Recentes"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Recent projects"
+msgstr "Projetos recentes"
+
+#: src/makebench/editor/startup.py
+msgid "Recent templates"
+msgstr "Modelos recentes"
+
+#: src/makebench/core/packages.py
+msgid "Recipe generated"
+msgstr "Receita gerada"
+
+#: src/makebench/core/packages.py
+msgid "recipe requested"
+msgstr "receita solicitada"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Recover"
+msgstr "Recuperar"
+
+#: src/makebench/editor/development.py
+msgid "Recover behavior"
+msgstr "Recuperar comportamento"
+
+#: src/makebench/editor/logic.py
+msgid "Recover the behavior from before the editor switch"
+msgstr "Recuperar o comportamento anterior à troca de editor"
+
+#: src/makebench/editor/window.py
+msgid "Redo"
+msgstr "Refazer"
+
+#: src/makebench/editor/settings.py
+msgid "Reduce motion"
+msgstr "Reduzir movimento"
+
+#: src/makebench/editor/map_panel.py
+msgid "Refresh preview"
+msgstr "Atualizar prévia"
+
+#: src/makebench/editor/projects.py
+msgid "Reload file"
+msgstr "Recarregar arquivo"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Reload Python files?"
+msgstr "Recarregar arquivos Python?"
+
+#: src/makebench/editor/development.py src/makebench/editor/settings_fields.py
+msgid "Remove"
+msgstr "Remover"
+
+#: src/makebench/core/packages.py
+msgid "Remove % from the metadata before generating an RPM; macros are not accepted in free text."
+msgstr "Remova % dos metadados antes de gerar RPM; macros não são aceitos em texto livre."
+
+#: src/makebench/editor/window.py
+msgid "Remove component"
+msgstr "Remover componente"
+
+#: src/makebench/editor/logic.py
+msgid "Remove flow"
+msgstr "Remover fluxo"
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Remove from list"
+msgstr "Remover da lista"
+
+#: src/makebench/editor/projects.py
+msgid "Remove from recents"
+msgstr "Remover dos recentes"
+
+#: src/makebench/editor/inspector.py
+msgid "Remove icon"
+msgstr "Remover ícone"
+
+#: src/makebench/editor/inspector.py
+msgid "Remove image"
+msgstr "Remover imagem"
+
+#: src/makebench/editor/window.py
+msgid "Remove selected"
+msgstr "Remover selecionado"
+
+#: src/makebench/editor/navigation.py
+msgid "Remove state"
+msgstr "Remover estado"
+
+#: src/makebench/editor/map_panel.py
+msgid "Remove transition"
+msgstr "Remover transição"
+
+#: src/makebench/editor/resources.py
+msgid "Remove unused asset"
+msgstr "Remover recurso sem uso"
+
+#: src/makebench/editor/navigation.py
+msgid "Remove window"
+msgstr "Remover janela"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Rename module"
+msgstr "Renomear módulo"
+
+#: src/makebench/editor/designer.py
+msgid "Rename selection"
+msgstr "Renomear seleção"
+
+#: src/makebench/editor/navigation.py
+msgid "Rename state"
+msgstr "Renomear estado"
+
+#: src/makebench/editor/navigation.py
+msgid "Rename state…"
+msgstr "Renomear estado…"
+
+#: src/makebench/core/logic_defaults.py
+msgid "Repeat"
+msgstr "Repetir"
+
+#: src/makebench/core/navigation.py
+msgid "Repeated variable in the same scope."
+msgstr "Variável repetida no mesmo escopo."
+
+#: src/makebench/editor/code.py
+msgid "Replace"
+msgstr "Substituir"
+
+#: src/makebench/editor/resources.py
+msgid "Replace everywhere"
+msgstr "Substituir em todos os lugares"
+
+#: src/makebench/editor/resources.py
+msgid "Replace image"
+msgstr "Substituir imagem"
+
+#: src/makebench/editor/projects.py
+msgid "Replace project?"
+msgstr "Substituir projeto?"
+
+#: src/makebench/editor/code.py
+msgid "Replace with…"
+msgstr "Substituir por…"
+
+#: src/makebench/editor/code.py
+msgid "Replacement text"
+msgstr "Texto de substituição"
+
+#: src/makebench/editor/code_tools.py
+msgid "Replace… · Ctrl+H"
+msgstr "Substituir… · Ctrl+H"
+
+#: src/makebench/editor/settings_fields.py
+msgid "Requirement, for example requests>=2.32"
+msgstr "Requisito, por exemplo requests>=2.32"
+
+#: src/makebench/core/codegen.py
+msgid "Reserved flows from another version were kept without conversion."
+msgstr "Fluxos reservados de outra versão foram preservados sem conversão."
+
+#: src/makebench/core/project.py
+msgid "Reserved flows prevent duplication without migration."
+msgstr "Fluxos reservados impedem duplicação sem migração."
+
+#: src/makebench/core/logic.py
+msgid "Reserved flows require reference validation before deleting."
+msgstr "Fluxos reservados exigem validação de referências antes da exclusão."
+
+#: src/makebench/editor/studio.py
+msgid "Reserved flows were kept. Running them requires a compatible version."
+msgstr "Fluxos reservados foram preservados. A execução exige uma versão compatível."
+
+#: src/makebench/editor/inspector.py
+msgid "Resizable"
+msgstr "Redimensionável"
+
+#: src/makebench/editor/window.py
+msgid "Restart test"
+msgstr "Reiniciar teste"
+
+#: src/makebench/editor/window.py
+msgid "Restart test?"
+msgstr "Reiniciar teste?"
+
+#: src/makebench/ui/dialogs.py
+msgid "Restore"
+msgstr "Restaurar"
+
+#: src/makebench/ui/dialogs.py
+msgid "Restore defaults"
+msgstr "Restaurar padrões"
+
+#: src/makebench/editor/inspector.py
+msgid "Restore from Default"
+msgstr "Restaurar do Padrão"
+
+#: src/makebench/editor/navigation.py
+msgid "Restore selection from Default"
+msgstr "Restaurar seleção do Padrão"
+
+#: src/makebench/editor/settings.py
+msgid "Restore this page's defaults"
+msgstr "Restaurar padrões desta página"
+
+#: src/makebench/editor/publish.py
+msgid "Result"
+msgstr "Resultado"
+
+#: src/makebench/core/graph.py
+msgid "Return"
+msgstr "Retornar"
+
+#: src/makebench/core/build_environment.py
+msgid "Reusing tools already prepared."
+msgstr "Reutilizando ferramentas já preparadas."
+
+#: src/makebench/core/build_environment.py
+msgid "Reusing verified Python dependencies from the cache."
+msgstr "Reutilizando dependências Python verificadas no cache."
+
+#: src/makebench/editor/projects.py
+msgid "Review code"
+msgstr "Revisar código"
+
+#: src/makebench/core/logic.py
+msgid "Review or remove the flow ‘{name}’ in the Logic tab before deleting this component."
+msgstr "Revise ou remova o fluxo ‘{name}’ na aba Lógica antes de excluir este componente."
+
+#: src/makebench/core/project.py
+msgid "Review states and events before moving this component to another window."
+msgstr "Revise estados e eventos antes de mover este componente para outra janela."
+
+#: src/makebench/editor/navigation.py
+msgid "Review the flows that use this state before removing it."
+msgstr "Revise os fluxos que usam este estado antes de removê-lo."
+
+#: src/makebench/editor/navigation.py
+msgid "Review this window's flows and connections before removing it."
+msgstr "Revise os fluxos desta janela e suas conexões antes de removê-la."
+
+#: src/makebench/editor/inspector.py
+msgid "Right"
+msgstr "Direita"
+
+#: src/makebench/editor/inspector.py
+msgid "right"
+msgstr "à direita"
+
+#: src/makebench/core/project.py
+msgid "Row"
+msgstr "Linha"
+
+#: src/makebench/editor/publish.py
+msgid "RPM for Fedora 44 x86_64 with the runtime included."
+msgstr "RPM para Fedora 44 x86_64 com runtime incluído."
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Run Bash"
+msgstr "Executar Bash"
+
+#: src/makebench/editor/execution.py
+msgid "Run ended · {seconds} s"
+msgstr "Execução encerrada · {seconds} s"
+
+#: src/makebench/runtime/window.py
+msgid "Run ended."
+msgstr "Execução encerrada."
+
+#: src/makebench/editor/logic.py
+msgid "Run in these states"
+msgstr "Executar neste(s) estado(s)"
+
+#: src/makebench/editor/studio.py
+msgid "Run output"
+msgstr "Saída da execução"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Run program"
+msgstr "Executar programa"
+
+#: src/makebench/core/behaviors.py
+msgid "Run task"
+msgstr "Executar tarefa"
+
+#: src/makebench/runtime/worker.py
+msgid "Run the producer node before reading its result: {node}"
+msgstr "Execute o nó produtor antes de ler seu resultado: {node}"
+
+#: src/makebench/editor/execution.py
+msgid "Run {number} · ended · {seconds} s"
+msgstr "Execução {number} · encerrada · {seconds} s"
+
+#: src/makebench/editor/execution.py
+msgid "Run {number} · Python · PID {pid}"
+msgstr "Execução {number} · Python · PID {pid}"
+
+#: src/makebench/editor/execution.py
+msgid "Run {number} · {time}"
+msgstr "Execução {number} · {time}"
+
+#: src/makebench/core/packages.py
+msgid "Run {tool}"
+msgstr "Executar {tool}"
+
+#: src/makebench/editor/execution.py
+msgid "Running"
+msgstr "Executando"
+
+#: src/makebench/editor/execution.py
+msgid "Running flow"
+msgstr "Executando fluxo"
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/window.py
+msgid "Running flow…"
+msgstr "Executando fluxo…"
+
+#: src/makebench/core/codegen.py
+msgid "Runs in a separate process when you test the application."
+msgstr "# Executado em processo separado ao testar o aplicativo."
+
+#: src/makebench/core/packages.py
+msgid "Runtime not assembled yet. Build this recipe with Makebench."
+msgstr "Runtime ainda não montado. Construa esta receita com o Makebench."
+
+#: src/makebench/core/packages.py
+msgid "Runtime not assembled yet. Use build-recipe.py."
+msgstr "Runtime ainda não montado. Use build-recipe.py."
+
+#: src/makebench/editor/inspector.py
+msgid "Same height"
+msgstr "Mesma altura"
+
+#: src/makebench/editor/inspector.py
+msgid "Same width"
+msgstr "Mesma largura"
+
+#: src/makebench/editor/window.py src/makebench/ui/dialogs.py
+msgid "Save"
+msgstr "Salvar"
+
+#: src/makebench/editor/window.py
+msgid "Save as…"
+msgstr "Salvar como…"
+
+#: src/makebench/editor/window.py
+msgid "Save changes?"
+msgstr "Salvar alterações?"
+
+#: src/makebench/editor/projects.py
+msgid "Save project as"
+msgstr "Salvar projeto como"
+
+#: src/makebench/editor/assets.py
+msgid "Save the project or select the image again."
+msgstr "Salve o projeto ou selecione a imagem novamente."
+
+#: src/makebench/editor/development.py src/makebench/editor/graph.py
+msgid "Scope"
+msgstr "Escopo"
+
+#: src/makebench/editor/settings.py
+msgid "Screen scale"
+msgstr "Escala da tela"
+
+#: src/makebench/editor/graph.py
+msgid "Script"
+msgstr "Script"
+
+#: src/makebench/core/templates.py
+msgid "Scripts, progress and output."
+msgstr "Scripts, progresso e saída."
+
+#: src/makebench/editor/development.py
+msgid "Search block"
+msgstr "Buscar bloco"
+
+#: src/makebench/editor/development.py
+msgid "Search block…"
+msgstr "Buscar bloco…"
+
+#: src/makebench/editor/commands.py
+msgid "Search commands"
+msgstr "Buscar comando"
+
+#: src/makebench/editor/commands.py
+msgid "Search commands…"
+msgstr "Buscar comando…"
+
+#: src/makebench/editor/studio.py
+msgid "Search components"
+msgstr "Buscar componente"
+
+#: src/makebench/editor/studio.py
+msgid "Search components…"
+msgstr "Buscar componente…"
+
+#: src/makebench/editor/studio.py
+msgid "Search elements…"
+msgstr "Buscar elemento…"
+
+#: src/makebench/editor/code.py
+msgid "Search in code"
+msgstr "Buscar no código"
+
+#: src/makebench/editor/code.py
+msgid "Search in code…"
+msgstr "Buscar no código…"
+
+#: src/makebench/editor/map_panel.py
+msgid "Search interfaces…"
+msgstr "Buscar interface…"
+
+#: src/makebench/editor/projects.py
+msgid "Search projects…"
+msgstr "Buscar projeto…"
+
+#: src/makebench/editor/settings.py
+msgid "Search settings…"
+msgstr "Buscar configurações…"
+
+#: src/makebench/editor/graph.py
+msgid "Search type"
+msgstr "Pesquisar tipo"
+
+#: src/makebench/editor/settings.py
+msgid "See docs/user-guide.md in the Makebench folder."
+msgstr "Consulte docs/user-guide.pt-BR.md na pasta do Makebench."
+
+#: src/makebench/editor/studio.py src/makebench/gtk_runtime/application.py
+msgid "Select"
+msgstr "Selecionar"
+
+#: src/makebench/editor/studio.py
+msgid "Select a Bash block and choose Edit text or script."
+msgstr "Selecione um bloco Bash e escolha Editar texto ou script."
+
+#: src/makebench/editor/window.py
+msgid "Select a set of pages to add a page."
+msgstr "Selecione um conjunto de páginas para adicionar uma página."
+
+#: src/makebench/terminal/components.py
+msgid "Select a Terminal component of an open window."
+msgstr "Selecione um componente Terminal de uma janela aberta."
+
+#: src/makebench/editor/logic.py
+msgid "Select a text block or a Bash run block to edit several lines."
+msgstr "Selecione um bloco de texto ou de execução Bash para editar várias linhas."
+
+#: src/makebench/editor/logic.py
+msgid "Select a text block or a “run Bash” block with connected text."
+msgstr "Selecione um bloco de texto ou um bloco “executar Bash” com texto conectado."
+
+#: src/makebench/editor/studio.py
+msgid "Select a text or Bash block in Logic and use Edit text or script."
+msgstr "Selecione um bloco de texto ou Bash na Lógica e use Editar texto ou script."
+
+#: src/makebench/core/project.py
+msgid "Select a window or a container to insert the component."
+msgstr "Selecione uma janela ou um contêiner para inserir o componente."
+
+#: src/makebench/core/navigation.py
+msgid "Select a window to duplicate."
+msgstr "Selecione uma janela para duplicar."
+
+#: src/makebench/ui/renderer.py
+msgid "Select an image in the properties"
+msgstr "Selecione uma imagem nas propriedades"
+
+#: src/makebench/editor/map_panel.py
+msgid "Select an interface or connection to inspect it. Double-click opens the Designer."
+msgstr "Selecione uma interface ou conexão para inspecionar. Duplo clique abre o Designer."
+
+#: src/makebench/core/behaviors.py
+msgid "Select an interface."
+msgstr "Selecione uma interface."
+
+#: src/makebench/editor/inspector.py
+msgid "Select at least three components."
+msgstr "Selecione pelo menos três componentes."
+
+#: src/makebench/editor/inspector.py
+msgid "Select siblings in a Free container in the Default state."
+msgstr "Selecione irmãos em um contêiner Livre no estado Padrão."
+
+#: src/makebench/core/logic.py
+msgid "Select the window or a button to create an event."
+msgstr "Selecione a janela ou um botão para criar um evento."
+
+#: src/makebench/editor/logic.py
+msgid "Select this event's origin in the Designer"
+msgstr "Selecionar a origem deste evento no Designer"
+
+#: src/makebench/editor/graph.py
+msgid "Selection"
+msgstr "Seleção"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Send to terminal"
+msgstr "Enviar ao terminal"
+
+#: src/makebench/core/project.py
+msgid "Separator"
+msgstr "Separador"
+
+#: src/makebench/core/graph.py
+msgid "Sequence"
+msgstr "Sequência"
+
+#: src/makebench/editor/map_panel.py
+msgid "Set as initial"
+msgstr "Definir como inicial"
+
+#: src/makebench/editor/navigation.py
+msgid "Set state as initial"
+msgstr "Definir estado como inicial"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Set variable"
+msgstr "Definir variável"
+
+#: src/makebench/editor/navigation.py
+msgid "Set window as initial"
+msgstr "Definir janela como inicial"
+
+#: src/makebench/editor/window.py
+msgid "Shape your application."
+msgstr "Dê forma ao seu aplicativo."
+
+#: src/makebench/editor/projects.py
+msgid "Share project"
+msgstr "Compartilhar projeto"
+
+#: src/makebench/editor/projects.py
+msgid "Share project…"
+msgstr "Compartilhar projeto…"
+
+#: src/makebench/editor/projects.py
+msgid "Shared project (*.zip)"
+msgstr "Projeto compartilhado (*.zip)"
+
+#: src/makebench/editor/settings.py
+msgid "Shortcuts"
+msgstr "Atalhos"
+
+#: src/makebench/editor/settings.py
+msgid "Shortcuts are read-only in this version. The search also finds command names."
+msgstr "Atalhos somente leitura nesta versão. A busca também encontra os nomes dos comandos."
+
+#: src/makebench/editor/startup.py
+msgid "Show at startup"
+msgstr "Mostrar na inicialização"
+
+#: src/makebench/editor/publish.py
+msgid "Show details"
+msgstr "Mostrar detalhes"
+
+#: src/makebench/editor/map_panel.py
+msgid "Show generated Python"
+msgstr "Ver Python gerado"
+
+#: src/makebench/editor/logic.py
+msgid "Show in Design"
+msgstr "Ver no Design"
+
+#: src/makebench/editor/map_panel.py
+msgid "Show in Logic"
+msgstr "Ver na Lógica"
+
+#: src/makebench/core/behaviors.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Show message"
+msgstr "Mostrar mensagem"
+
+#: src/makebench/editor/development.py
+msgid "Show or hide the Python generated by the blocks"
+msgstr "Mostrar ou recolher Python gerado pelos blocos"
+
+#: src/makebench/editor/logic.py
+msgid "Show origin in the Designer"
+msgstr "Ver origem no Designer"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Show page"
+msgstr "Mostrar página"
+
+#: src/makebench/editor/settings.py
+msgid "Show run time"
+msgstr "Mostrar tempo de execução"
+
+#: src/makebench/editor/logic.py
+msgid "Show the complete file"
+msgstr "Ver arquivo completo"
+
+#: src/makebench/editor/settings.py
+msgid "Show the start window on launch"
+msgstr "Mostrar a janela inicial ao abrir"
+
+#: src/makebench/editor/catalog.py
+msgid "Shows a value between 0 and 100."
+msgstr "Exibe um valor entre 0 e 100."
+
+#: src/makebench/editor/catalog.py
+msgid "Shows messages and task output."
+msgstr "Mostra mensagens e saída das tarefas."
+
+#: src/makebench/core/templates.py
+msgid "Sidebar and a preferences window."
+msgstr "Barra lateral e janela de preferências."
+
+#: src/makebench/core/templates.py
+msgid "Simple application"
+msgstr "Aplicativo simples"
+
+#: src/makebench/editor/logic.py
+msgid "Snap blocks into “do”. Right-click adds comments. Select a block to find its Python line."
+msgstr "Encaixe os blocos em “fazer”. Botão direito adiciona comentários. Selecione um bloco para localizar sua linha Python."
+
+#: src/makebench/editor/window.py
+msgid "Snap dragging and resizing to 8-pixel steps."
+msgstr "Ajustar arraste e redimensionamento a intervalos de 8 pixels."
+
+#: src/makebench/editor/studio.py src/makebench/editor/window.py
+msgid "Snap to grid"
+msgstr "Encaixar na grade"
+
+#: src/makebench/editor/settings.py
+msgid "Snap to grid by default"
+msgstr "Encaixar na grade por padrão"
+
+#: src/makebench/editor/execution.py
+msgid "Snapshot paused · project changed; restart to apply the changes."
+msgstr "Snapshot pausado · projeto alterado; reinicie para aplicar as mudanças."
+
+#: src/makebench/editor/map_connections.py
+msgid "Source interface"
+msgstr "Interface de origem"
+
+#: src/makebench/core/source.py
+msgid "Sources exceed 8 MiB."
+msgstr "As fontes excedem 8 MiB."
+
+#: src/makebench/core/project.py
+msgid "Spacer"
+msgstr "Espaçador"
+
+#: src/makebench/editor/inspector.py
+msgid "Spacing"
+msgstr "Espaçamento"
+
+#: src/makebench/core/navigation.py
+msgid "Spacing and margins must be between 0 and 2000."
+msgstr "Espaçamento e margens devem estar entre 0 e 2000."
+
+#: src/makebench/editor/debug.py
+msgid "Stack"
+msgstr "Pilha"
+
+#: src/makebench/editor/execution.py
+msgid "Standard output"
+msgstr "Saída padrão"
+
+#: src/makebench/editor/inspector.py
+msgid "Start"
+msgstr "Início"
+
+#: src/makebench/editor/navigation.py
+msgid "Start from"
+msgstr "Começar de"
+
+#: src/makebench/editor/studio.py
+msgid "Start page"
+msgstr "Início"
+
+#: src/makebench/terminal/qt.py
+msgid "Start shell"
+msgstr "Iniciar shell"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Start terminal"
+msgstr "Iniciar terminal"
+
+#: src/makebench/terminal/qt.py
+msgid "Start the terminal to open a session"
+msgstr "Inicie o terminal para abrir uma sessão"
+
+#: src/makebench/editor/inspector.py
+msgid "Start when the application runs"
+msgstr "Iniciar ao executar o aplicativo"
+
+#: src/makebench/editor/settings.py
+msgid "Start window"
+msgstr "Janela inicial"
+
+#: src/makebench/editor/execution.py
+msgid "Starting"
+msgstr "Iniciando"
+
+#: src/makebench/editor/logic.py
+msgid "starting"
+msgstr "iniciar"
+
+#: src/makebench/runtime/window.py
+msgid "Starting application…"
+msgstr "Iniciando aplicativo…"
+
+#: src/makebench/gtk_runtime/application.py
+msgid "Starting GTK…"
+msgstr "Iniciando GTK…"
+
+#: src/makebench/editor/execution.py src/makebench/editor/graph.py src/makebench/editor/inspector.py
+msgid "State"
+msgstr "Estado"
+
+#: src/makebench/editor/navigation.py
+msgid "State being edited"
+msgstr "Estado em edição"
+
+#: src/makebench/editor/development.py
+msgid "State filter"
+msgstr "Filtro de estado"
+
+#: src/makebench/editor/settings.py
+msgid "State on open"
+msgstr "Estado ao abrir"
+
+#: src/makebench/core/navigation.py
+msgid "State without a name or unique identifier."
+msgstr "Estado sem nome ou identificador único."
+
+#: src/makebench/editor/window.py
+msgid "States"
+msgstr "Estados"
+
+#: src/makebench/core/navigation.py
+msgid "States must belong to an existing window (at most 128)."
+msgstr "Estados devem pertencer a uma janela existente (máximo 128)."
+
+#: src/makebench/editor/debug.py
+msgid "step"
+msgstr "passo"
+
+#: src/makebench/editor/debug.py
+msgid "Step into"
+msgstr "Entrar"
+
+#: src/makebench/editor/window.py
+msgid "Step into function"
+msgstr "Entrar na função"
+
+#: src/makebench/editor/debug.py
+msgid "Step out"
+msgstr "Sair"
+
+#: src/makebench/editor/window.py
+msgid "Step out of function"
+msgstr "Sair da função"
+
+#: src/makebench/editor/debug.py
+msgid "Step over"
+msgstr "Próximo"
+
+#: src/makebench/terminal/qt.py
+msgid "Stop"
+msgstr "Encerrar"
+
+#: src/makebench/runtime/window.py
+msgid "Stop run"
+msgstr "Parar execução"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Stop terminal"
+msgstr "Encerrar terminal"
+
+#: src/makebench/editor/studio.py
+msgid "Stop test"
+msgstr "Parar teste"
+
+#: src/makebench/editor/projects.py
+msgid "Stop the test before moving a project to the trash."
+msgstr "Encerre o teste antes de mover um projeto para a lixeira."
+
+#: src/makebench/editor/execution.py src/makebench/editor/studio.py src/makebench/terminal/qt.py
+msgid "Stopped"
+msgstr "Parado"
+
+#: src/makebench/editor/execution.py
+msgid "Stopping"
+msgstr "Encerrando"
+
+#: src/makebench/runtime/window.py
+msgid "Stopping run…"
+msgstr "Encerrando execução…"
+
+#: src/makebench/core/behaviors.py
+msgid "Store value in variable"
+msgstr "Guardar valor em variável"
+
+#: src/makebench/editor/catalog.py src/makebench/editor/studio.py
+msgid "Structure"
+msgstr "Estrutura"
+
+#: src/makebench/editor/settings.py
+msgid "Support planned for a future release."
+msgstr "Suporte planejado para uma próxima etapa."
+
+#: src/makebench/editor/development.py
+msgid "Switch this behavior's editor?"
+msgstr "Trocar editor deste comportamento?"
+
+#: src/makebench/editor/settings.py
+msgid "System"
+msgstr "Sistema"
+
+#: src/makebench/editor/settings.py
+msgid "System accent"
+msgstr "Destaque do sistema"
+
+#: src/makebench/editor/settings.py
+msgid "System access"
+msgstr "Acesso ao sistema"
+
+#: src/makebench/editor/execution.py
+msgid "System authorization"
+msgstr "Autorização do sistema"
+
+#: src/makebench/editor/publish.py
+msgid "System tool available."
+msgstr "Ferramenta do sistema disponível."
+
+#: src/makebench/editor/publish.py
+msgid "System tools"
+msgstr "Ferramentas do sistema"
+
+#: src/makebench/core/diagnostics.py
+msgid "System {system} {machine}"
+msgstr "Sistema {system} {machine}"
+
+#: src/makebench/core/project.py
+msgid "Tabbed pages"
+msgstr "Páginas com abas"
+
+#: src/makebench/editor/settings.py
+msgid "Takes effect the next time Makebench starts."
+msgstr "Vale a partir da próxima vez que o Makebench for aberto."
+
+#: src/makebench/editor/catalog.py
+msgid "Takes up free space in the layout."
+msgstr "Ocupa espaço livre no layout."
+
+#: src/makebench/editor/settings.py
+msgid "Targets"
+msgstr "Destinos"
+
+#: src/makebench/editor/execution.py
+msgid "Task"
+msgstr "Tarefa"
+
+#: src/makebench/core/templates.py
+msgid "Task center / utility"
+msgstr "Central de tarefas / utilitário"
+
+#: src/makebench/runtime/worker.py
+msgid "Task ended with code {code}."
+msgstr "Tarefa terminou com código {code}."
+
+#: src/makebench/core/project.py
+msgid "Task output will appear here."
+msgstr "A saída das tarefas aparecerá aqui."
+
+#: src/makebench/editor/execution.py
+msgid "Tasks"
+msgstr "Tarefas"
+
+#: src/makebench/core/packages.py
+msgid "Tasks and the terminal run only inside the Flatpak. Host programs are not available."
+msgstr "Tarefas e terminal executam somente dentro do Flatpak. Programas do host não ficam disponíveis."
+
+#: src/makebench/editor/execution.py
+msgid "Tasks started by the application appear here, with their result and duration."
+msgstr "As tarefas iniciadas pelo aplicativo aparecem aqui, com resultado e duração."
+
+#: src/makebench/editor/execution.py
+msgid "Technical details"
+msgstr "Detalhes técnicos"
+
+#: src/makebench/editor/projects.py
+msgid "Template"
+msgstr "Modelo"
+
+#: src/makebench/core/project.py
+msgid "Terminal"
+msgstr "Terminal"
+
+#: src/makebench/core/project.py
+msgid "Terminal arguments must be a list of texts."
+msgstr "Argumentos do terminal precisam ser uma lista de textos."
+
+#: src/makebench/terminal/session.py
+msgid "Terminal input exceeded the 1 MB limit."
+msgstr "A entrada do terminal excedeu o limite de 1 MB."
+
+#: src/makebench/terminal/gtk.py src/makebench/terminal/qt.py
+msgid "Terminal · inactive preview"
+msgstr "Terminal · prévia inativa"
+
+#: src/makebench/editor/window.py
+msgid "Test application"
+msgstr "Testar aplicativo"
+
+#: src/makebench/editor/window.py
+msgid "Test blocked: resolve the items in Problems."
+msgstr "Teste impedido: resolva os itens em Problemas."
+
+#: src/makebench/editor/execution.py
+msgid "Test running · {seconds} s"
+msgstr "Teste em execução · {seconds} s"
+
+#: src/makebench/editor/projects.py
+msgid "Test this project?"
+msgstr "Testar este projeto?"
+
+#: src/makebench/editor/settings.py
+msgid "Testing"
+msgstr "Teste"
+
+#: src/makebench/editor/projects.py
+msgid "Testing will run Python functions and scripts with your permissions. The separate process is not a sandbox. Open Code to review the project before continuing."
+msgstr "Testar executará funções Python e scripts com suas permissões. O processo separado não é uma sandbox. Abra Código para revisar o projeto antes de continuar."
+
+#: src/makebench/core/project.py src/makebench/editor/designer.py src/makebench/editor/development.py src/makebench/editor/graph.py src/makebench/editor/inspector.py src/makebench/editor/settings.py
+msgid "Text"
+msgstr "Texto"
+
+#: src/makebench/core/graph.py
+msgid "Text constant is too long."
+msgstr "Constante textual muito extensa."
+
+#: src/makebench/core/project.py
+msgid "Text field"
+msgstr "Campo de texto"
+
+#: src/makebench/editor/studio.py
+msgid "Text of the selected block"
+msgstr "Texto do bloco selecionado"
+
+#: src/makebench/editor/catalog.py
+msgid "Text shown in the interface."
+msgstr "Texto exibido na interface."
+
+#: src/makebench/editor/settings.py
+msgid "Text size"
+msgstr "Tamanho do texto"
+
+#: src/makebench/core/source.py
+msgid "That module already exists."
+msgstr "Já existe esse módulo."
+
+#: src/makebench/editor/map_connections.py
+msgid "The action shares the existing event's state filter."
+msgstr "A ação compartilha o filtro de estados do evento existente."
+
+#: src/makebench/core/portable.py
+msgid "The AppImage is not a valid ELF executable."
+msgstr "O AppImage não é um executável ELF válido."
+
+#: src/makebench/runtime/worker.py
+msgid "The application was closed."
+msgstr "O aplicativo foi encerrado."
+
+#: src/makebench/core/assets.py
+msgid "The asset must be inside the assets folder."
+msgstr "O recurso precisa ficar dentro de assets."
+
+#: src/makebench/editor/assets.py
+msgid "The asset must be inside the project's assets folder."
+msgstr "O recurso precisa estar dentro da pasta assets do projeto."
+
+#: src/makebench/core/assets.py
+msgid "The asset points outside the project."
+msgstr "O recurso aponta para fora do projeto."
+
+#: src/makebench/core/navigation.py
+msgid "The backend must be GTK or Qt."
+msgstr "Backend precisa ser GTK ou Qt."
+
+#: src/makebench/editor/logic.py
+msgid "The block editor loads when this tab opens."
+msgstr "O editor de blocos será carregado ao abrir esta aba."
+
+#: src/makebench/core/logic.py
+msgid "The block sequence must be a list."
+msgstr "A sequência de blocos precisa ser uma lista."
+
+#: src/makebench/editor/logic.py
+msgid "The Blockly process ended. Reopen Makebench to continue; the last saved file was kept."
+msgstr "O processo Blockly foi encerrado. Reabra o Makebench para continuar; o último arquivo salvo foi preservado."
+
+#: src/makebench/core/portable.py
+msgid "The build did not produce exactly one RPM."
+msgstr "A construção não gerou exatamente um RPM."
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/window.py
+msgid "The component does not exist."
+msgstr "O componente não existe."
+
+#: src/makebench/core/project.py
+msgid "The component identifier must be non-empty text."
+msgstr "O identificador do componente precisa ser um texto não vazio."
+
+#: src/makebench/core/navigation.py
+msgid "The component tooltip must be text."
+msgstr "Dica do componente precisa ser texto."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "The component's window is not open."
+msgstr "A janela do componente não está aberta."
+
+#: src/makebench/editor/development.py
+msgid "The current behavior will be kept in Versions. The new representation starts with an empty event. There is no automatic conversion between blocks and nodes."
+msgstr "O comportamento atual será guardado em Versões. A nova representação começa com um evento vazio. Não há conversão automática entre blocos e nós."
+
+#: src/makebench/core/packages.py
+msgid "The declared Python dependencies will be resolved in the isolated environment during Prepare tools."
+msgstr "As dependências Python declaradas serão resolvidas no ambiente isolado durante Preparar ferramentas."
+
+#: src/makebench/core/source.py
+msgid "The deleted module changed outside Makebench: {path}"
+msgstr "O módulo excluído mudou fora do Makebench: {path}"
+
+#: src/makebench/core/source.py
+msgid "The destination already contains a different Python file: {path}"
+msgstr "O destino já contém outro arquivo Python: {path}"
+
+#: src/makebench/editor/projects.py
+msgid "The destination already contains a project. Your functions and assets will still be checked before saving."
+msgstr "O destino já contém um projeto. Suas funções e recursos ainda serão verificados antes de salvar."
+
+#: src/makebench/core/exporter.py
+msgid "The destination already exists. Choose another name to keep that file."
+msgstr "O destino já existe. Escolha outro nome para preservar esse arquivo."
+
+#: src/makebench/core/packages.py
+msgid "The destination already exists. Choose another name."
+msgstr "O destino já existe. Escolha outro nome."
+
+#: src/makebench/core/portable.py
+msgid "The destination already exists; choose another name."
+msgstr "O destino já existe; escolha outro nome."
+
+#: src/makebench/core/assets.py
+msgid "The destination contains a different asset: {name}"
+msgstr "O destino contém outro recurso: {name}"
+
+#: src/makebench/core/source.py
+msgid "The destination folder does not exist."
+msgstr "A pasta de destino não existe."
+
+#: src/makebench/core/exporter.py
+msgid "The destination was created by another process; choose another name."
+msgstr "O destino foi criado por outro processo; escolha outro nome."
+
+#: src/makebench/editor/settings.py
+msgid "The editor is Qt. This choice sets the controls of the application you are building."
+msgstr "O editor é Qt. Esta escolha define os controles do aplicativo que você está criando."
+
+#: src/makebench/editor/window.py
+msgid "The error belongs to another project open in the run."
+msgstr "O erro pertence a outro projeto aberto na execução."
+
+#: src/makebench/core/logic.py
+msgid "The event must point to the window or an existing button."
+msgstr "O evento precisa apontar para a janela ou um botão existente."
+
+#: src/makebench/editor/map_connections.py
+msgid "The existing event runs in any state."
+msgstr "O evento existente é executado em qualquer estado."
+
+#: src/makebench/editor/native_preview.py
+msgid "The faithful GTK preview needs gtk4-broadwayd and PyGObject/GTK4."
+msgstr "A prévia fiel GTK precisa de gtk4-broadwayd e PyGObject/GTK4."
+
+#: src/makebench/core/source.py
+msgid "The file changed outside Makebench: {path}. Save to another folder or reopen to review."
+msgstr "O arquivo mudou fora do Makebench: {path}. Salve em outra pasta ou reabra para revisar."
+
+#: src/makebench/core/bundle.py
+msgid "The file contains a path or link that is not allowed."
+msgstr "O arquivo contém um caminho ou link não permitido."
+
+#: src/makebench/core/exporter.py
+msgid "The file is not an SVG."
+msgstr "O arquivo não é SVG."
+
+#: src/makebench/editor/projects.py
+msgid "The file was removed. Your edits remain here; use Keep my version or Save As."
+msgstr "O arquivo foi removido. Sua edição permanece aqui; use Manter minha versão ou Salvar como."
+
+#: src/makebench/runtime/window.py
+msgid "The flow ended with an error."
+msgstr "O fluxo terminou com erro."
+
+#: src/makebench/core/logic.py
+msgid "The flow name must be text."
+msgstr "O nome do fluxo precisa ser texto."
+
+#: src/makebench/core/graph.py
+msgid "The graph accepts up to 5000 nodes and 40000 connections."
+msgstr "O grafo aceita até 5000 nós e 40000 conexões."
+
+#: src/makebench/core/project.py
+msgid "The grid must have between 1 and 12 columns."
+msgstr "A grade precisa ter entre 1 e 12 colunas."
+
+#: src/makebench/core/build_environment.py
+msgid "The hash of the downloaded tool does not match. Preparation stopped."
+msgstr "O hash da ferramenta baixada não confere. Preparação interrompida."
+
+#: src/makebench/core/navigation.py
+msgid "The icon must be in assets."
+msgstr "O ícone precisa ficar em assets."
+
+#: src/makebench/core/project.py
+msgid "The image description and name must be text."
+msgstr "A descrição e o nome da imagem precisam ser texto."
+
+#: src/makebench/core/assets.py
+msgid "The image is larger than 50 MB."
+msgstr "A imagem excede 50 MB."
+
+#: src/makebench/core/project.py
+msgid "The image must be in the project's assets folder."
+msgstr "A imagem precisa estar na pasta assets do projeto."
+
+#: src/makebench/core/project.py
+msgid "The image path must be text."
+msgstr "O caminho da imagem precisa ser texto."
+
+#: src/makebench/editor/assets.py
+msgid "The image path points outside the project."
+msgstr "O caminho da imagem aponta para fora do projeto."
+
+#: src/makebench/core/project.py
+msgid "The initial page does not belong to this set of pages."
+msgstr "A página inicial não pertence a este conjunto de páginas."
+
+#: src/makebench/core/navigation.py
+msgid "The initial state does not exist."
+msgstr "Estado inicial inexistente."
+
+#: src/makebench/core/navigation.py
+msgid "The initial value must be text, a number, a boolean or null."
+msgstr "Valor inicial precisa ser texto, número, booleano ou nulo."
+
+#: src/makebench/core/project.py
+msgid "The interface exceeds the limit of 64 container levels."
+msgstr "A interface excede o limite de 64 níveis de contêineres."
+
+#: src/makebench/core/project.py
+msgid "The interface must start with a window."
+msgstr "A interface precisa começar com uma janela."
+
+#: src/makebench/core/packages.py
+msgid "The isolated build includes Python 3.12, the backend and the declared dependencies. Linux x86_64 with glibc 2.39+, X11/Wayland and the system drivers. FUSE or --appimage-extract-and-run. External programs used by the project remain explicit requirements.\n"
+msgstr "O build isolado inclui Python 3.12, backend e dependências declaradas. Linux x86_64 com glibc2.39+, X11/Wayland e drivers do sistema. FUSE ou --appimage-extract-and-run. Programas externos usados pelo projeto continuam requisitos explícitos.\n"
+
+#: src/makebench/editor/settings.py
+msgid "The isolated Flatpak blocks host programs and administration. Additional dependencies must exist inside the package."
+msgstr "Flatpak isolado bloqueia programas do host e administração. Dependências adicionais devem existir dentro do pacote."
+
+#: src/makebench/core/project.py
+msgid "The list of logic flows is invalid."
+msgstr "A lista de fluxos de lógica é inválida."
+
+#: src/makebench/core/project.py
+msgid "The main window cannot be deleted."
+msgstr "A janela principal não pode ser excluída."
+
+#: src/makebench/core/project.py
+msgid "The main window cannot be duplicated."
+msgstr "A janela principal não pode ser duplicada."
+
+#: src/makebench/core/project.py
+msgid "The main window cannot be moved."
+msgstr "A janela principal não pode ser movida."
+
+#: src/makebench/core/bundle.py src/makebench/core/exporter.py
+msgid "The manifest and the modules do not match."
+msgstr "O manifesto e os módulos não correspondem."
+
+#: src/makebench/core/exporter.py
+msgid "The manifest and the modules do not match. Reopen the project to review the files."
+msgstr "O manifesto e os módulos não correspondem. Reabra o projeto para revisar os arquivos."
+
+#: src/makebench/core/navigation.py
+msgid "The navigation source or destination does not belong to the chosen interface."
+msgstr "Origem ou destino da navegação não pertence à interface escolhida."
+
+#: src/makebench/editor/publish.py
+msgid "The operation did not finish."
+msgstr "A operação não terminou."
+
+#: src/makebench/core/bundle.py
+msgid "The package contains files outside the project and assets."
+msgstr "O pacote contém arquivos fora do projeto e de assets."
+
+#: src/makebench/core/bundle.py
+msgid "The package does not contain all declared modules."
+msgstr "O pacote não contém todos os módulos declarados."
+
+#: src/makebench/core/bundle.py
+msgid "The package does not contain project.makebench.json."
+msgstr "O pacote não contém project.makebench.json."
+
+#: src/makebench/core/source.py
+msgid "The package initializer cannot be deleted."
+msgstr "O inicializador do pacote não pode ser excluído."
+
+#: src/makebench/core/source.py
+msgid "The package initializer cannot be renamed."
+msgstr "O inicializador do pacote não pode ser renomeado."
+
+#: src/makebench/core/source.py
+msgid "The package needs makebench_user/__init__.py."
+msgstr "O pacote precisa de makebench_user/__init__.py."
+
+#: src/makebench/gtk_runtime/renderer.py src/makebench/runtime/view.py
+msgid "The page does not exist."
+msgstr "A página não existe."
+
+#: src/makebench/gtk_runtime/preview.py
+msgid "The private GTK display did not become available."
+msgstr "O display privado GTK não ficou disponível."
+
+#: src/makebench/runtime/session.py
+msgid "The process reply exceeded the limit."
+msgstr "Resposta do processo excedeu o limite."
+
+#: src/makebench/core/project.py
+msgid "The progress of {id} must be between 0 and 100."
+msgstr "O progresso de {id} precisa estar entre 0 e 100."
+
+#: src/makebench/core/storage.py
+msgid "The project contains data that cannot be saved: {error}"
+msgstr "O projeto contém dados que não podem ser salvos: {error}"
+
+#: src/makebench/core/project.py
+msgid "The project contains repeated component identifiers."
+msgstr "O projeto contém identificadores de componentes repetidos."
+
+#: src/makebench/core/bundle.py
+msgid "The project exceeds the limit of 100 MiB or 2000 files."
+msgstr "O projeto excede o limite de 100 MiB ou 2000 arquivos."
+
+#: src/makebench/editor/window.py
+msgid "The project has changes that have not been saved yet."
+msgstr "O projeto tem alterações que ainda não foram salvas."
+
+#: src/makebench/editor/window.py
+msgid "The project name cannot be empty."
+msgstr "O nome do projeto não pode ficar vazio."
+
+#: src/makebench/core/project.py
+msgid "The project needs a non-empty {key}."
+msgstr "O projeto precisa de {key} não vazio."
+
+#: src/makebench/core/source.py
+msgid "The Python file cannot be a symbolic link."
+msgstr "O arquivo Python não pode ser um link simbólico."
+
+#: src/makebench/runtime/session.py
+msgid "The Python process ended (code {code})."
+msgstr "O processo Python foi encerrado (código {code})."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "The Python process ended."
+msgstr "O processo Python foi encerrado."
+
+#: src/makebench/editor/map_preview.py
+msgid "The renderer did not produce a valid image."
+msgstr "O renderizador não produziu uma imagem válida."
+
+#: src/makebench/editor/studio.py
+msgid "The script is still in the drawer. Copy the text or go back to the block before continuing."
+msgstr "O script continua na gaveta. Copie o texto ou retorne ao bloco antes de continuar."
+
+#: src/makebench/runtime/worker.py
+msgid "The script must be text."
+msgstr "O script precisa ser texto."
+
+#: src/makebench/core/project.py
+msgid "The selection of {id} must be true or false."
+msgstr "A seleção de {id} precisa ser verdadeira ou falsa."
+
+#: src/makebench/runtime/worker.py
+msgid "The snapshot does not contain all declared modules."
+msgstr "O snapshot não contém todos os módulos declarados."
+
+#: src/makebench/core/navigation.py
+msgid "The start window does not belong to the project."
+msgstr "A janela inicial não pertence ao projeto."
+
+#: src/makebench/core/project.py
+msgid "The state does not belong to this window."
+msgstr "O estado não pertence a esta janela."
+
+#: src/makebench/core/exporter.py
+msgid "The target needs the program {program}."
+msgstr "O destino precisa do programa {program}."
+
+#: src/makebench/runtime/worker.py
+msgid "The task failed."
+msgstr "A tarefa falhou."
+
+#: src/makebench/core/project.py
+msgid "The Terminal component requires format 6 or later."
+msgstr "O componente Terminal requer formato 6 ou posterior."
+
+#: src/makebench/terminal/session.py
+msgid "The terminal is already running."
+msgstr "O terminal já está em execução."
+
+#: src/makebench/core/build_environment.py
+msgid "The tool did not complete the operation:"
+msgstr "A ferramenta não concluiu a operação:"
+
+#: src/makebench/core/navigation.py
+msgid "The transition no longer exists."
+msgstr "A transição não existe mais."
+
+#: src/makebench/core/logic.py
+msgid "The transition points to a state that does not exist."
+msgstr "A transição aponta para estado inexistente."
+
+#: src/makebench/core/navigation.py
+msgid "The transition state does not exist."
+msgstr "O estado da transição não existe."
+
+#: src/makebench/core/logic.py
+msgid "The visual state of the blocks must be an object."
+msgstr "O estado visual dos blocos precisa ser um objeto."
+
+#: src/makebench/editor/projects.py
+msgid "The whole folder is included only if you check this option. Images stay when only the files are moved."
+msgstr "A pasta inteira só é incluída se você marcar esta opção. Imagens permanecem quando apenas os arquivos são movidos."
+
+#: src/makebench/core/project.py src/makebench/gtk_runtime/application.py src/makebench/runtime/navigation.py
+msgid "The window does not exist."
+msgstr "A janela não existe."
+
+#: src/makebench/core/navigation.py
+msgid "The window icon must be in assets."
+msgstr "Ícone da janela precisa ficar em assets."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "The worker reply exceeded the limit."
+msgstr "Resposta do worker excedeu o limite."
+
+#: src/makebench/editor/settings.py
+msgid "Theme"
+msgstr "Tema"
+
+#: src/makebench/editor/settings.py
+msgid "There are declared administrative actions: Polkit/pkexec and a system agent are required. Makebench never asks for passwords."
+msgstr "Há ações administrativas declaradas: Polkit/pkexec e agente do sistema são necessários. O Makebench não pede senhas."
+
+#: src/makebench/editor/window.py
+msgid "There are logic changes not confirmed yet. Discarding may lose blocks or the script being edited. Discard and continue?"
+msgstr "Há alterações de lógica ainda não confirmadas. Descartar pode perder blocos ou o script em edição. Deseja descartar e continuar?"
+
+#: src/makebench/editor/map_panel.py
+msgid "There is an incomplete behavior in this interface."
+msgstr "Há um comportamento incompleto nesta interface."
+
+#: src/makebench/core/logic.py
+msgid "There is more than one flow for the same event."
+msgstr "Há mais de um fluxo para o mesmo evento."
+
+#: src/makebench/core/graph.py
+msgid "There is no previous behavior to restore."
+msgstr "Não há comportamento anterior para restaurar."
+
+#: src/makebench/editor/resources.py
+msgid "This asset is still used by the application."
+msgstr "Este recurso ainda é usado pelo aplicativo."
+
+#: src/makebench/gtk_runtime/renderer.py
+msgid "This component has no text."
+msgstr "Este componente não possui texto."
+
+#: src/makebench/core/project.py
+msgid "This destination does not accept that type of component."
+msgstr "Este destino não aceita esse tipo de componente."
+
+#: src/makebench/core/navigation.py
+msgid "This event uses Nodes. Add and connect the navigation in the Nodes editor to choose the execution path."
+msgstr "Esse evento usa Nós. Adicione e conecte a navegação no editor de Nós para escolher o caminho de execução."
+
+#: src/makebench/editor/code_workspace.py
+msgid "This file has unsaved changes."
+msgstr "Há alterações não salvas neste arquivo."
+
+#: src/makebench/core/project.py
+msgid "This file is not a Makebench project."
+msgstr "Este arquivo não é um projeto Makebench."
+
+#: src/makebench/editor/projects.py
+msgid "This folder cannot be moved as a whole project."
+msgstr "Esta pasta não pode ser movida como um projeto inteiro."
+
+#: src/makebench/editor/settings.py
+msgid "This information ships with the exported application."
+msgstr "Estas informações acompanham o aplicativo exportado."
+
+#: src/makebench/editor/development.py
+msgid "This line is generated infrastructure, with no source block."
+msgstr "Esta linha é infraestrutura gerada, sem bloco de origem."
+
+#: src/makebench/runtime/window.py
+msgid "This page's window is not open."
+msgstr "A janela desta página não está aberta."
+
+#: src/makebench/core/logic.py
+msgid "This project contains flows from another version. They were kept; editing requires migration."
+msgstr "Este projeto contém fluxos de outra versão. Eles foram preservados; a edição exige migração."
+
+#: src/makebench/core/portable.py
+msgid "This release validates x86_64 builds."
+msgstr "Esta entrega valida construção x86_64."
+
+#: src/makebench/editor/settings.py
+msgid "This space will be used to manage Makebench extensions. Installing and running plugins is not available yet."
+msgstr "Este espaço será usado para gerenciar extensões do Makebench. A instalação e a execução de plugins ainda não estão disponíveis."
+
+#: src/makebench/editor/development.py
+msgid "This window"
+msgstr "Desta janela"
+
+#: src/makebench/core/templates.py
+msgid "Three steps with Back, Next and Finish."
+msgstr "Três etapas com Voltar, Próximo e Concluir."
+
+#: src/makebench/editor/inspector.py
+msgid "Title"
+msgstr "Título"
+
+#: src/makebench/editor/publish.py
+msgid "Tools prepared by Makebench"
+msgstr "Ferramentas preparadas pelo Makebench"
+
+#: src/makebench/editor/inspector.py
+msgid "Tooltip"
+msgstr "Dica"
+
+#: src/makebench/editor/inspector.py
+msgid "Top"
+msgstr "Topo"
+
+#: src/makebench/editor/inspector.py
+msgid "top"
+msgstr "superior"
+
+#: src/makebench/editor/map_panel.py
+msgid "Transition"
+msgstr "Transição"
+
+#: src/makebench/editor/development.py
+msgid "True or false"
+msgstr "Verdadeiro ou falso"
+
+#: src/makebench/editor/projects.py
+msgid "Trust and continue"
+msgstr "Confiar e continuar"
+
+#: src/makebench/editor/projects.py
+msgid "Trust and test"
+msgstr "Confiar e testar"
+
+#: src/makebench/editor/execution.py
+msgid "Type"
+msgstr "Tipo"
+
+#: src/makebench/core/project.py
+msgid "Type here"
+msgstr "Digite aqui"
+
+#: src/makebench/editor/development.py
+msgid "Type to search"
+msgstr "Digite para buscar"
+
+#: src/makebench/core/templates.py
+msgid "Type your name"
+msgstr "Digite seu nome"
+
+#: src/makebench/editor/settings.py
+msgid "Unavailable"
+msgstr "Indisponível"
+
+#: src/makebench/editor/inspector.py
+msgid "Unbalanced quotes in the arguments."
+msgstr "Aspas incompletas nos argumentos."
+
+#: src/makebench/editor/window.py
+msgid "Unconfirmed blocks"
+msgstr "Blocos não confirmados"
+
+#: src/makebench/editor/window.py
+msgid "Undo"
+msgstr "Desfazer"
+
+#: src/makebench/runtime/worker.py
+msgid "Unexpected reply from the application."
+msgstr "Resposta inesperada do aplicativo."
+
+#: src/makebench/core/logic.py
+msgid "Unknown behavior editor."
+msgstr "Editor do comportamento desconhecido."
+
+#: src/makebench/core/behaviors.py
+msgid "Unknown behavior template."
+msgstr "Modelo de comportamento desconhecido."
+
+#: src/makebench/runtime/window.py
+msgid "Unknown context operation."
+msgstr "Operação de contexto desconhecida."
+
+#: src/makebench/runtime/window.py
+msgid "Unknown dialog type."
+msgstr "Tipo de diálogo desconhecido."
+
+#: src/makebench/core/logic.py
+msgid "Unknown expression: {op}."
+msgstr "Expressão desconhecida: {op}."
+
+#: src/makebench/core/graph.py
+msgid "Unknown input port."
+msgstr "Porta de entrada desconhecida."
+
+#: src/makebench/core/graph.py
+msgid "Unknown node operator."
+msgstr "Operador de nó desconhecido."
+
+#: src/makebench/gtk_runtime/application.py
+msgid "Unknown operation."
+msgstr "Operação desconhecida."
+
+#: src/makebench/core/logic.py
+msgid "Unknown operation: {op}."
+msgstr "Operação desconhecida: {op}."
+
+#: src/makebench/core/logic.py
+msgid "Unknown operator."
+msgstr "Operador desconhecido."
+
+#: src/makebench/gtk_runtime/renderer.py src/makebench/runtime/window.py
+msgid "Unknown property."
+msgstr "Propriedade desconhecida."
+
+#: src/makebench/core/logic.py src/makebench/gtk_runtime/application.py
+msgid "Unknown question type."
+msgstr "Tipo de pergunta desconhecido."
+
+#: src/makebench/core/logic.py
+msgid "Unknown read property."
+msgstr "Propriedade de leitura desconhecida."
+
+#: src/makebench/terminal/components.py
+msgid "Unknown terminal operation."
+msgstr "Operação de terminal desconhecida."
+
+#: src/makebench/ui/theme.py
+msgid "Unknown theme"
+msgstr "Tema desconhecido"
+
+#: src/makebench/gtk_runtime/renderer.py
+msgid "Unrecognized GTK component: {kind}"
+msgstr "Componente GTK não reconhecido: {kind}"
+
+#: src/makebench/editor/window.py
+msgid "Unsaved changes"
+msgstr "Alterações não salvas"
+
+#: src/makebench/core/logic.py
+msgid "Unsupported logic version; use a compatible Makebench."
+msgstr "Versão de lógica não suportada; use um Makebench compatível."
+
+#: src/makebench/core/project.py
+msgid "Unsupported project version: {version}. Open it with a compatible version of Makebench."
+msgstr "Versão de projeto não suportada: {version}. Abra-o com uma versão compatível do Makebench."
+
+#: src/makebench/core/exporter.py
+msgid "Use a PNG of at least 256 × 256 pixels."
+msgstr "Use PNG de pelo menos 256 × 256 pixels."
+
+#: src/makebench/core/exporter.py
+msgid "Use a PNG or SVG icon."
+msgstr "Use um ícone PNG ou SVG."
+
+#: src/makebench/editor/development.py
+msgid "Use a valid Python name, with no spaces and not starting with an underscore."
+msgstr "Use um nome Python válido, sem espaços e sem iniciar por sublinhado."
+
+#: src/makebench/core/graph.py
+msgid "Use a valid, bounded JSON constant."
+msgstr "Use uma constante JSON válida e limitada."
+
+#: src/makebench/editor/settings.py
+msgid "Use a version such as 0.1.0."
+msgstr "Use uma versão como 0.1.0."
+
+#: src/makebench/core/exporter.py src/makebench/editor/projects.py src/makebench/editor/settings.py
+msgid "Use an identifier such as com.example.myapp."
+msgstr "Use um identificador como br.exemplo.meuapp."
+
+#: src/makebench/editor/development.py
+msgid "Use quoted text, a number, true, false or null."
+msgstr "Use texto entre aspas, número, true, false ou null."
+
+#: src/makebench/core/source.py
+msgid "Use valid Python names for modules and folders."
+msgstr "Use nomes Python válidos para os módulos e pastas."
+
+#: src/makebench/editor/resources.py
+msgid "Used in {count} place"
+msgstr "Usada em {count} lugar"
+
+#: src/makebench/editor/resources.py
+msgid "Used in {count} places"
+msgstr "Usada em {count} lugares"
+
+#: src/makebench/editor/studio.py
+msgid "User guide"
+msgstr "Guia de uso"
+
+#: src/makebench/core/behaviors.py
+msgid "Validate input"
+msgstr "Validar entrada"
+
+#: src/makebench/editor/debug.py src/makebench/editor/graph.py
+msgid "Value"
+msgstr "Valor"
+
+#: src/makebench/core/graph.py
+msgid "Value dependencies exceed 100 levels."
+msgstr "Dependência de valores excede 100 níveis."
+
+#: src/makebench/core/graph.py
+msgid "Value producer does not exist."
+msgstr "Produtor de valor inexistente."
+
+#: src/makebench/editor/debug.py src/makebench/editor/development.py
+msgid "Variable"
+msgstr "Variável"
+
+#: src/makebench/core/graph.py src/makebench/editor/development.py
+msgid "Variable value"
+msgstr "Valor de variável"
+
+#: src/makebench/core/navigation.py
+msgid "Variable without a name."
+msgstr "Variável sem nome."
+
+#: src/makebench/editor/settings.py
+msgid "Variables and initial values"
+msgstr "Variáveis e valores iniciais"
+
+#: src/makebench/editor/publish.py
+msgid "Verify"
+msgstr "Verificação"
+
+#: src/makebench/editor/projects.py src/makebench/editor/settings.py
+msgid "Version"
+msgstr "Versão"
+
+#: src/makebench/editor/window.py
+msgid "Version {version}"
+msgstr "Versão {version}"
+
+#: src/makebench/editor/logic.py
+msgid "Versions…"
+msgstr "Versões…"
+
+#: src/makebench/editor/inspector.py
+msgid "Vertical center"
+msgstr "Centro vertical"
+
+#: src/makebench/core/navigation.py
+msgid "Visibility and enabled must be booleans."
+msgstr "Visibilidade e habilitação precisam ser booleanas."
+
+#: src/makebench/editor/inspector.py
+msgid "Visible"
+msgstr "Visível"
+
+#: src/makebench/editor/settings.py
+msgid ""
+"Visual editor for Linux applications. No account, server or AI at run time.\n"
+"\n"
+"PySide6/Qt: LGPL/GPL/commercial. Blockly 13.4.0: Apache-2.0. Optional GTK backend: GTK4 and PyGObject (LGPL), optional libadwaita (LGPL). Fallback symbols are our own vectors.\n"
+"\n"
+"Makebench is free software under the GNU GPL, version 3 or later."
+msgstr ""
+"Editor visual de aplicativos Linux. Sem conta, servidor ou IA em execução.\n"
+"\n"
+"PySide6/Qt: LGPL/GPL/comercial. Blockly 13.4.0: Apache-2.0. Backend GTK opcional: GTK4 e PyGObject (LGPL), libadwaita opcional (LGPL). Símbolos de reserva são vetores próprios.\n"
+"\n"
+"O Makebench é software livre sob a GNU GPL, versão 3 ou posterior."
+
+#: src/makebench/editor/catalog.py
+msgid "Visually separates groups of controls."
+msgstr "Separa visualmente grupos de controles."
+
+#: src/makebench/editor/window.py
+msgid "Wait for the administrative task to finish before closing the editor."
+msgstr "Aguarde a tarefa administrativa terminar antes de fechar o editor."
+
+#: src/makebench/editor/window.py
+msgid "Wait for the administrative task to finish before closing."
+msgstr "Aguarde a tarefa administrativa terminar antes de fechar."
+
+#: src/makebench/editor/window.py
+msgid "Wait for the administrative task to finish before restarting."
+msgstr "Aguarde a tarefa administrativa terminar antes de reiniciar."
+
+#: src/makebench/runtime/window.py
+msgid "Wait for the administrative task to finish before stopping."
+msgstr "Aguarde a tarefa administrativa terminar para parar."
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/navigation.py
+msgid "Wait for the administrative task to finish."
+msgstr "Aguarde a tarefa administrativa terminar."
+
+#: src/makebench/editor/execution.py
+msgid "Wait for the task authorized by the system to finish; there is no forced administrative interruption."
+msgstr "Aguarde o término da tarefa autorizada pelo sistema; não há interrupção forçada administrativa."
+
+#: src/makebench/editor/execution.py
+msgid "Waiting for an answer"
+msgstr "Aguardando resposta"
+
+#: src/makebench/runtime/window.py
+msgid "Waiting for an answer…"
+msgstr "Aguardando resposta…"
+
+#: src/makebench/editor/settings.py
+msgid "Warn about untrusted projects"
+msgstr "Avisar sobre projeto não confiável"
+
+#: src/makebench/editor/studio.py
+msgid "Warning · {window}: no incoming transition from blocks. Python functions can open it."
+msgstr "Aviso · {window}: sem transição de entrada por blocos. Funções Python podem abri-la."
+
+#: src/makebench/editor/execution.py
+msgid "Warnings / stderr"
+msgstr "Avisos / stderr"
+
+#: src/makebench/core/navigation.py
+msgid "Welcome"
+msgstr "Boas-vindas"
+
+#: src/makebench/core/navigation.py
+msgid "Welcome to your Linux"
+msgstr "Bem-vindo ao seu Linux"
+
+#: src/makebench/core/navigation.py
+msgid "Welcome! Your dashboard is ready."
+msgstr "Bem-vindo! Seu painel está pronto."
+
+#: src/makebench/core/logic_defaults.py
+msgid "What is your name?"
+msgstr "Qual é seu nome?"
+
+#: src/makebench/editor/logic.py
+msgid "When"
+msgstr "Quando"
+
+#: src/makebench/editor/logic.py src/makebench/editor/map_connections.py
+msgid "When this happens"
+msgstr "Quando acontecer"
+
+#: src/makebench/editor/logic.py
+msgid "When {event} · {window}"
+msgstr "Quando {event} · {window}"
+
+#: src/makebench/editor/inspector.py src/makebench/editor/settings.py
+msgid "Width"
+msgstr "Largura"
+
+#: src/makebench/editor/inspector.py
+msgid "Width (px)"
+msgstr "Largura (px)"
+
+#: src/makebench/core/project.py src/makebench/editor/debug.py src/makebench/editor/development.py src/makebench/editor/graph.py src/makebench/editor/logic.py src/makebench/editor/map_items.py src/makebench/editor/navigation.py src/makebench/editor/settings.py src/makebench/editor/studio.py
+msgid "Window"
+msgstr "Janela"
+
+#: src/makebench/editor/navigation.py
+msgid "Window being edited"
+msgstr "Janela em edição"
+
+#: src/makebench/editor/settings.py
+msgid "Window icon"
+msgstr "Ícone da janela"
+
+#: src/makebench/editor/window_chrome.py
+msgid "Window title bar"
+msgstr "Barra de título da janela"
+
+#: src/makebench/editor/map_connections.py
+msgid "Window {title} opens"
+msgstr "A janela {title} abrir"
+
+#: src/makebench/editor/map_panel.py
+msgid "Window · {state}"
+msgstr "Janela · {state}"
+
+#: src/makebench/editor/settings.py
+msgid "Windows"
+msgstr "Janelas"
+
+#: src/makebench/core/templates.py
+msgid "Wizard"
+msgstr "Assistente"
+
+#: src/makebench/editor/studio.py
+msgid "Workbench"
+msgstr "Bancada"
+
+#: src/makebench/core/templates.py
+msgid "Workspace"
+msgstr "Área de trabalho"
+
+#: src/makebench/editor/settings.py
+msgid "Wrap code lines"
+msgstr "Quebrar linhas do código"
+
+#: src/makebench/editor/logic.py
+msgid "Wrap lines"
+msgstr "Quebrar linhas"
+
+#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Write to output"
+msgstr "Registrar na saída"
+
+#: src/makebench/editor/code.py
+msgid "Write your Python functions here."
+msgstr "Escreva suas funções Python aqui."
+
+#: src/makebench/editor/graph.py src/makebench/gtk_runtime/application.py
+msgid "Yes"
+msgstr "Sim"
+
+#: src/makebench/core/templates.py
+msgid "Your application starts here"
+msgstr "Seu aplicativo começa aqui"
+
+#: src/makebench/editor/development.py src/makebench/editor/window.py
+msgid "Your functions"
+msgstr "Funções próprias"
+
+#: src/makebench/editor/window.py
+msgid "Your functions · saved in the .actions.py file"
+msgstr "Funções próprias · salvas em arquivo .actions.py"
+
+#: src/makebench/editor/window.py
+msgid "Your functions · {file}"
+msgstr "Funções próprias · {file}"
+
+#: src/makebench/core/codegen.py
+msgid "Your own functions live in the project's .actions.py file."
+msgstr "# Funções próprias ficam no arquivo .actions.py do projeto."
+
+#: src/makebench/editor/settings.py
+msgid "Your own functions may require other programs."
+msgstr "Funções próprias podem exigir outros programas."
+
+#: src/makebench/core/navigation.py
+msgid "Your system, your way"
+msgstr "Seu sistema, do seu jeito"
+
+#: src/makebench/editor/designer.py src/makebench/editor/graph.py
+msgid "Zoom in"
+msgstr "Ampliar zoom"
+
+#: src/makebench/editor/designer.py src/makebench/editor/graph.py
+msgid "Zoom out"
+msgstr "Reduzir zoom"
+
+#: src/makebench/editor/development.py
+msgid "{count} block"
+msgstr "{count} bloco"
+
+#: src/makebench/editor/development.py
+msgid "{count} blocks"
+msgstr "{count} blocos"
+
+#: src/makebench/editor/inspector.py
+msgid "{count} component"
+msgstr "{count} componente"
+
+#: src/makebench/editor/inspector.py
+msgid "{count} components"
+msgstr "{count} componentes"
+
+#: src/makebench/editor/map_items.py
+msgid "{count} element"
+msgstr "{count} elemento"
+
+#: src/makebench/editor/map_items.py
+msgid "{count} elements"
+msgstr "{count} elementos"
+
+#: src/makebench/editor/window.py
+msgid "{count} event"
+msgstr "{count} evento"
+
+#: src/makebench/editor/window.py
+msgid "{count} events"
+msgstr "{count} eventos"
+
+#: src/makebench/editor/inspector.py
+msgid "{count} flow"
+msgstr "{count} fluxo"
+
+#: src/makebench/editor/inspector.py
+msgid "{count} flows"
+msgstr "{count} fluxos"
+
+#: src/makebench/editor/studio.py
+msgid "{count} problem"
+msgstr "{count} problema"
+
+#: src/makebench/editor/studio.py
+msgid "{count} problems"
+msgstr "{count} problemas"
+
+#: src/makebench/editor/projects.py
+msgid "{count} Python function"
+msgstr "{count} função Python"
+
+#: src/makebench/editor/projects.py
+msgid "{count} Python functions"
+msgstr "{count} funções Python"
+
+#: src/makebench/editor/code_tools.py
+msgid "{count} replacement"
+msgstr "{count} substituição"
+
+#: src/makebench/editor/code_tools.py
+msgid "{count} replacements"
+msgstr "{count} substituições"
+
+#: src/makebench/editor/projects.py
+msgid "{count} script"
+msgstr "{count} script"
+
+#: src/makebench/editor/projects.py
+msgid "{count} scripts"
+msgstr "{count} scripts"
+
+#: src/makebench/editor/map_panel.py
+msgid "{count} state"
+msgstr "{count} estado"
+
+#: src/makebench/editor/map_panel.py
+msgid "{count} states"
+msgstr "{count} estados"
+
+#: src/makebench/editor/publish.py
+msgid "{desktop} SDK · per-user preparation"
+msgstr "SDK do {desktop} · preparação por usuário"
+
+#: src/makebench/core/storage.py
+msgid "{error} Python files and assets were already written, but the project file ({name}) was not. The project still has unsaved changes: free up space or check permissions and save again."
+msgstr "{error} Os arquivos Python e recursos já foram gravados, mas o arquivo do projeto ({name}) não. O projeto continua com alterações pendentes: libere espaço ou verifique permissões e salve novamente."
+
+#: src/makebench/core/codegen.py
+msgid "{flow}: function ‘{function}’ not found in .actions.py."
+msgstr "{flow}: função ‘{function}’ não encontrada em .actions.py."
+
+#: src/makebench/core/packages.py
+msgid ""
+"{format} recipe generated by Makebench. Generating does not mean building or validating installation.\n"
+"Native runtime included: Python 3.12, the backend and the declared Python dependencies. Targets: Ubuntu 24.04/Fedora 44 x86_64, glibc 2.39+.\n"
+"No project source was run. Prepare tools resolves dependencies in an isolated environment; building uses a verified cache.\n"
+"The Polkit policy grants no automatic access; pkexec keeps the system's default authentication.\n"
+msgstr ""
+"Receita {format} gerada pelo Makebench. Gerar não significa construir ou validar instalação.\n"
+"Runtime nativo incluído: Python 3.12, backend e dependências Python declaradas. Destinos: Ubuntu24.04/Fedora44 x86_64, glibc2.39+.\n"
+"Nenhuma fonte do projeto foi executada. Preparar ferramentas resolve dependências em ambiente isolado; construir usa cache verificado.\n"
+"Política Polkit não concede acesso automático; pkexec mantém autenticação padrão do sistema.\n"
+
+#: src/makebench/core/project.py
+msgid "{kind} cannot contain other components."
+msgstr "{kind} não pode conter outros componentes."
+
+#: src/makebench/editor/studio.py
+msgid "{mode} mode"
+msgstr "Modo {mode}"
+
+#: src/makebench/editor/code_workspace.py
+msgid "{name} will be removed when the project is saved."
+msgstr "{name} será removido ao salvar o projeto."
+
+#: src/makebench/core/compatibility.py
+msgid "{name}: your Python is incompatible with the target Python 3.{minor}: {error}"
+msgstr "{name}: Python próprio incompatível com Python 3.{minor} do destino: {error}"

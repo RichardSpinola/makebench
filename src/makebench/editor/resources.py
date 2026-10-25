@@ -1,17 +1,18 @@
-"""Biblioteca local de imagens com uso, substituição e preservação para desfazer."""
+"""Local image library with usage, replacement and preservation for undo."""
 
 from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QFileDialog, QInputDialog, QListWidgetItem, QMessageBox
 from makebench.core.project import ProjectError
+from makebench.i18n import ntr, tr
 
 
 class ResourceMixin:
-    """Opera somente recursos locais do documento; nunca importa código de projeto."""
+    """Operate only on the document's local assets; never imports project code."""
 
     def resource_usage(self, path):
-        """Conta referências da composição, estados e ícone do aplicativo."""
+        """Count references from the composition, states and the application icon."""
         count = sum(1 for node in self.project.walk() if node.properties.get("source") == path)
         count += sum(
             1
@@ -24,7 +25,7 @@ class ResourceMixin:
         return count
 
     def list_resources(self):
-        """Lista referenciados e recursos órfãos, com miniaturas e quantidade de usos."""
+        """List referenced and orphaned assets, with thumbnails and usage counts."""
         paths = self.project.asset_paths() | set(self.assets._cache)
         if self.assets.root:
             folder = self.assets.root / "assets"
@@ -49,7 +50,11 @@ class ResourceMixin:
                 )
                 or Path(path).name
             )
-            item = QListWidgetItem(f"Imagem · {name}\nUsada em {uses} lugar(es)")
+            item = QListWidgetItem(
+                tr("Image · {name}").format(name=name)
+                + "\n"
+                + ntr("Used in {count} place", "Used in {count} places", uses).format(count=uses)
+            )
             item.setToolTip(path)
             item.setData(Qt.ItemDataRole.UserRole, {"kind": "resource", "path": path})
             try:
@@ -58,24 +63,25 @@ class ResourceMixin:
                 if not image.isNull():
                     item.setIcon(QIcon(image))
             except (OSError, ProjectError):
-                item.setText("Recurso ausente · " + name)
+                item.setText(tr("Missing asset · {name}").format(name=name))
             self.data_list.addItem(item)
 
     def edit_resource(self, path):
-        """Escolhe substituir ou remover apenas quando não há uso atual."""
-        actions = ["Substituir em todos os lugares"]
+        """Offer replacing, or removing only when there is no current use."""
+        replace_label, remove_label = tr("Replace everywhere"), tr("Remove unused asset")
+        actions = [replace_label]
         if self.resource_usage(path) == 0:
-            actions.append("Remover recurso sem uso")
+            actions.append(remove_label)
         choice, ok = QInputDialog.getItem(
-            self, "Recurso do projeto", Path(path).name, actions, 0, False
+            self, tr("Project asset"), Path(path).name, actions, 0, False
         )
         if not ok:
             return
-        if choice.startswith("Remover"):
+        if choice == remove_label:
             self.remove_resource(path)
             return
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Substituir imagem", "", "Imagens (*.png *.jpg *.jpeg *.webp *.svg)"
+            self, tr("Replace image"), "", tr("Images (*.png *.jpg *.jpeg *.webp *.svg)")
         )
         if not filename:
             return
@@ -86,7 +92,7 @@ class ResourceMixin:
             return
 
         def replace():
-            """Atualiza referências ao recurso sem apagar o arquivo original."""
+            """Update references to the asset without deleting the original file."""
             for node in self.project.walk():
                 if node.properties.get("source") == path:
                     node.properties.update(source=new_path, image_name=Path(filename).name)
@@ -102,9 +108,9 @@ class ResourceMixin:
         self._edit(replace)
 
     def remove_resource(self, path):
-        """Remove um órfão; o cache mantém bytes necessários ao histórico da sessão."""
+        """Remove an orphan; the cache keeps bytes needed by the session history."""
         if self.resource_usage(path):
-            self.statusBar().showMessage("Este recurso ainda é usado pelo aplicativo.", 6000)
+            self.statusBar().showMessage(tr("This asset is still used by the application."), 6000)
             return
         try:
             self.assets.read(path)

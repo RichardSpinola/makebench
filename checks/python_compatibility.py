@@ -1,4 +1,4 @@
-"""Regressões em Python3.12/3.13 isolados, usando somente rodas já preparadas."""
+"""Regressions on isolated Python 3.12/3.13, using only already prepared wheels."""
 
 import argparse
 from pathlib import Path
@@ -8,18 +8,18 @@ from makebench.core.portable import command, editor_project, ready, wheel_root
 
 
 def main():
-    """Não instala no host: SDK privado, venv no staging e suíte integral copiada."""
+    """Installs nothing on the host: private SDK, venv in staging and the full suite copied."""
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument("--minor", choices=(12, 13), type=int, required=True)
     args = parser.parse_args()
     project = editor_project()
     if not ready(project, True):
-        raise RuntimeError("Prepare o runtime do editor em Exportar antes deste teste.")
+        raise RuntimeError("Prepare the editor runtime in Export before this test.")
     root = args.output.resolve()
     repo = Path(__file__).resolve().parents[1]
     if root.is_relative_to(repo):
-        raise RuntimeError("Use uma pasta de QA fora da árvore do repositório.")
+        raise RuntimeError("Use a QA folder outside the repository tree.")
     root.mkdir(parents=True, exist_ok=True)
     wheels = root / "wheels"
     wheels.mkdir(exist_ok=True)
@@ -33,7 +33,7 @@ def main():
     )
     prefix = "/work" if args.minor == 12 else str(root)
     python = "python3.12" if args.minor == 12 else "python3"
-    # shlex preserva espaços em caminhos do staging; nenhum argumento vem da fonte do projeto.
+    # shlex keeps spaces in staging paths; no argument comes from the project source.
     import shlex
 
     q = shlex.quote
@@ -75,7 +75,7 @@ def main():
     )
     with (root / "tests.log").open("w") as log:
         subprocess.run(arguments, stdout=log, stderr=subprocess.STDOUT, check=True)
-    print("Regressões concluídas em Python3." + str(args.minor), flush=True)
+    print("Regressions finished on Python 3." + str(args.minor), flush=True)
 
 
 if __name__ == "__main__":

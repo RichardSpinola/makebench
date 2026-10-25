@@ -1,10 +1,11 @@
-"""Tradução do modelo neutro para controles GTK4 reais."""
+"""Translation of the neutral model into real GTK4 controls."""
 
 from makebench.core.project import ComponentKind, LayoutKind
+from makebench.i18n import tr
 
 
 def layout_spec(node):
-    """Extrai geometria testável sem inicializar GTK ou executar o projeto."""
+    """Extract testable geometry without initializing GTK or running the project."""
     p = node.properties
     return {
         "kind": node.kind.value,
@@ -21,10 +22,10 @@ def layout_spec(node):
 
 
 class GtkView:
-    """Uma janela renderizada, com controles acessíveis pela API ctx."""
+    """One rendered window, with controls reachable through the ctx API."""
 
     def __init__(self, root, read_asset, clicked):
-        """Constrói widgets; não importa funções nem inicia eventos do documento."""
+        """Build widgets; never imports functions or starts document events."""
         import gi
 
         gi.require_version("Gtk", "4.0")
@@ -41,7 +42,7 @@ class GtkView:
         self.widget = self.render(root)
 
     def render(self, node):
-        """Mapeia todos os tipos básicos, layouts e valores iniciais para GTK."""
+        """Map every basic type, layout and initial value to GTK."""
         Gtk = self.Gtk
         p = node.properties
         k = node.kind
@@ -51,7 +52,7 @@ class GtkView:
             self.tabs[node.id] = widget
             for child in node.children:
                 widget.append_page(
-                    self.render(child), Gtk.Label(label=child.properties.get("title", "Página"))
+                    self.render(child), Gtk.Label(label=child.properties.get("title", tr("Page")))
                 )
             widget.set_current_page(
                 next(i for i, c in enumerate(node.children) if c.id == p["initial_page"])
@@ -164,10 +165,12 @@ class GtkView:
                         )
                     )
                 except (OSError, ValueError, self.GLib.Error):
-                    widget.set_tooltip_text("Imagem indisponível: " + p["source"])
-            widget.update_property([Gtk.AccessibleProperty.LABEL], [p.get("alt_text", "Imagem")])
+                    widget.set_tooltip_text(
+                        tr("Image unavailable: {source}").format(source=p["source"])
+                    )
+            widget.update_property([Gtk.AccessibleProperty.LABEL], [p.get("alt_text", tr("Image"))])
         else:
-            raise ValueError("Componente GTK não reconhecido: " + str(k))
+            raise ValueError(tr("Unrecognized GTK component: {kind}").format(kind=k))
         self.frames[node.id] = widget
         self.widgets.setdefault(node.id, widget)
         self.enabled[node.id] = p.get("enabled", True)
@@ -185,14 +188,14 @@ class GtkView:
         return widget
 
     def spacer(self, node):
-        """Expande somente o eixo principal para distribuição de espaço livre."""
+        """Expand only the main axis to distribute free space."""
         w = self.Gtk.Box()
         w.set_hexpand(node.layout == LayoutKind.HORIZONTAL)
         w.set_vexpand(node.layout != LayoutKind.HORIZONTAL)
         return w
 
     def set_text(self, identifier, value):
-        """Atualiza texto usando a API específica de cada controle GTK."""
+        """Update text using each GTK control's specific API."""
         w = self.widgets[identifier]
         Gtk = self.Gtk
         if hasattr(w, "_makebench_label"):
@@ -204,10 +207,10 @@ class GtkView:
         elif isinstance(w, Gtk.Entry):
             w.set_text(str(value))
         else:
-            raise ValueError("Este componente não possui texto.")
+            raise ValueError(tr("This component has no text."))
 
     def read(self, identifier, attribute):
-        """Lê controles atuais, incluindo mudanças feitas pelo usuário."""
+        """Read the current controls, including changes made by the user."""
         w = self.widgets[identifier]
         Gtk = self.Gtk
         if attribute == "text":
@@ -221,13 +224,13 @@ class GtkView:
             return w.get_active()
         if attribute == "value":
             return round(w.get_fraction() * 100)
-        raise ValueError("Propriedade desconhecida.")
+            raise ValueError(tr("Unknown property."))
 
     def show_page(self, project, identifier):
-        """Revela a página e os conjuntos de abas ancestrais."""
+        """Reveal the page and its ancestor tab sets."""
         node = project.find(identifier)
         if node is None or node.kind != ComponentKind.PAGE:
-            raise ValueError("A página não existe.")
+            raise ValueError(tr("The page does not exist."))
         parent = project.parent_of(identifier)
         while parent:
             if parent.kind == ComponentKind.PAGES:
@@ -235,6 +238,6 @@ class GtkView:
             node, parent = parent, project.parent_of(parent.id)
 
     def busy(self, value, event_buttons):
-        """Bloqueia eventos concorrentes preservando habilitação definida pelo app."""
+        """Block concurrent events, keeping the enabled state set by the application."""
         for identifier in event_buttons & self.widgets.keys():
             self.widgets[identifier].set_sensitive(self.enabled[identifier] and not value)

@@ -1,4 +1,4 @@
-"""Distribuição com preparação explícita das ferramentas e artefatos verificáveis."""
+"""Distribution with explicit tool preparation and verifiable artifacts."""
 
 from pathlib import Path
 import threading
@@ -33,10 +33,11 @@ from makebench.core.portable import (
     editor_project,
     build_editor_appimage,
 )
+from makebench.i18n import tr
 
 
 class BuildJob(QThread):
-    """Constrói o snapshot em staging fora da UI, sem executar o projeto."""
+    """Build the snapshot in staging outside the UI, without running the project."""
 
     progress = Signal(int, str)
     completed = Signal(dict)
@@ -54,7 +55,7 @@ class BuildJob(QThread):
         environment="auto",
         editor=False,
     ):
-        """Recebe dados imutáveis da construção e cancelamento cooperativo."""
+        """Receive immutable build data and cooperative cancellation."""
         super().__init__(parent)
         self.project = project
         self.source = source
@@ -67,7 +68,7 @@ class BuildJob(QThread):
         self.cancel = threading.Event()
 
     def run(self):
-        """Publica apenas resultado completo; falhas mantêm o destino intacto."""
+        """Publish only a complete result; failures keep the destination intact."""
         try:
             self.completed.emit(
                 build_editor_appimage(self.destination, self.progress.emit, self.cancel.is_set)
@@ -89,14 +90,14 @@ class BuildJob(QThread):
 
 
 class PrepareJob(QThread):
-    """Baixa ferramentas confiáveis sem instalar RPMs no sistema do usuário."""
+    """Download trusted tools without installing RPMs on the user's system."""
 
     progress = Signal(int, str)
     completed = Signal(dict)
     failed = Signal(str)
 
     def __init__(self, project, format, parent, editor=False):
-        """Flatpak prepara SDK no usuário; os demais formatos usam Podman rootless."""
+        """Flatpak prepares the SDK per user; the other formats use rootless Podman."""
         super().__init__(parent)
         self.project = project
         self.format = format
@@ -104,7 +105,7 @@ class PrepareJob(QThread):
         self.cancel = threading.Event()
 
     def run(self):
-        """A preparação é uma ação explícita com saída e cancelamento visíveis."""
+        """Preparation is an explicit action with visible output and cancellation."""
         try:
             self.completed.emit(
                 prepare_flatpak(self.project, self.progress.emit, self.cancel.is_set)
@@ -117,23 +118,32 @@ class PrepareJob(QThread):
             self.failed.emit(str(exc))
 
 
+def stage_text(active=None):
+    """Export steps, with the active one in brackets (Format → Check → Build → Result)."""
+    names = [tr("Format"), tr("Verify"), tr("Build"), tr("Result")]
+    return "  →  ".join(
+        f"[{number} {name}]" if number == active else f"{number} {name}"
+        for number, name in enumerate(names, 1)
+    )
+
+
 class PublishPanel(QWidget):
-    """Separa configuração do app, ferramentas e resultado real de distribuição."""
+    """Separate app settings, tools and the real distribution result."""
 
     def __init__(self, window):
-        """Controles nativos compactos e detalhes expansíveis para logs e diagnóstico."""
+        """Compact native controls and expandable details for logs and diagnostics."""
         super().__init__()
         self.window = window
         self.job = None
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 10, 12, 10)
         layout.setSpacing(8)
-        self.stages = QLabel("1 Formato  →  2 Verificação  →  3 Construção  →  4 Resultado")
+        self.stages = QLabel(stage_text())
         layout.addWidget(self.stages)
         header = QHBoxLayout()
         self.summary = QLabel()
         header.addWidget(self.summary, 1)
-        edit = QPushButton("Aplicativo…")
+        edit = QPushButton(tr("Application…"))
         self.edit_application_button = edit
         edit.clicked.connect(window.application_settings)
         header.addWidget(edit)
@@ -141,30 +151,30 @@ class PublishPanel(QWidget):
         form = QFormLayout()
         self.destination_form = form
         self.product = QComboBox()
-        self.product.addItem("Aplicativo do projeto", False)
-        self.product.addItem("Editor Makebench (AppImage)", True)
-        form.addRow("Exportar", self.product)
+        self.product.addItem(tr("Project application"), False)
+        self.product.addItem(tr("Makebench editor (AppImage)"), True)
+        form.addRow(tr("Export"), self.product)
         self._product_editor_last = False
         self._product_syncing = False
         self.format = QComboBox()
         for key, (name, _, _) in FORMATS.items():
             self.format.addItem(name, key)
         self.format.setMaximumWidth(360)
-        form.addRow("Formato", self.format)
+        form.addRow(tr("Format"), self.format)
         self.environment = QComboBox()
         for label, key in [
-            ("Automático", "auto"),
-            ("Ferramentas preparadas pelo Makebench", "managed"),
-            ("Ferramentas do sistema", "system"),
+            (tr("Automatic"), "auto"),
+            (tr("Tools prepared by Makebench"), "managed"),
+            (tr("System tools"), "system"),
         ]:
             self.environment.addItem(label, key)
         self.environment.setMaximumWidth(360)
-        form.addRow("Construir com", self.environment)
+        form.addRow(tr("Build with"), self.environment)
         layout.addLayout(form)
         tools = QHBoxLayout()
         self.tool_status = QLabel()
         tools.addWidget(self.tool_status, 1)
-        self.prepare = QPushButton("Preparar ferramentas…")
+        self.prepare = QPushButton(tr("Prepare tools…"))
         self.prepare.clicked.connect(self.prepare_environment)
         tools.addWidget(self.prepare)
         layout.addLayout(tools)
@@ -172,12 +182,12 @@ class PublishPanel(QWidget):
         self.description.setWordWrap(True)
         self.description.setMaximumWidth(880)
         layout.addWidget(self.description)
-        self.recipe_only = QCheckBox("Exportar somente a receita")
+        self.recipe_only = QCheckBox(tr("Export only the recipe"))
         self.recipe_only.setToolTip(
-            "Gera um ZIP com os arquivos de construção. Não produz um pacote instalável."
+            tr("Generates a ZIP with the build files. Does not produce an installable package.")
         )
         layout.addWidget(self.recipe_only)
-        self.check_hint = QLabel("Verifique o projeto antes de construir.")
+        self.check_hint = QLabel(tr("Check the project before building."))
         layout.addWidget(self.check_hint)
         self.checks = QListWidget()
         self.checks.setFrameShape(QFrame.Shape.NoFrame)
@@ -187,13 +197,13 @@ class PublishPanel(QWidget):
         self.checks.itemActivated.connect(self.fix_issue)
         layout.addWidget(self.checks)
         row = QHBoxLayout()
-        self.check_button = QPushButton("Verificar")
+        self.check_button = QPushButton(tr("Check"))
         self.check_button.clicked.connect(self.check)
         row.addWidget(self.check_button)
-        self.build = QPushButton("Construir…")
+        self.build = QPushButton(tr("Build…"))
         self.build.clicked.connect(self.build_source)
         row.addWidget(self.build)
-        self.cancel_button = QPushButton("Cancelar")
+        self.cancel_button = QPushButton(tr("Cancel"))
         self.cancel_button.setEnabled(False)
         self.cancel_button.clicked.connect(self.cancel_build)
         self.cancel_button.hide()
@@ -204,7 +214,7 @@ class PublishPanel(QWidget):
         self.progress_bar.setValue(0)
         layout.addWidget(self.progress_bar)
         self.progress_bar.hide()
-        self.log_toggle = QCheckBox("Mostrar detalhes")
+        self.log_toggle = QCheckBox(tr("Show details"))
         layout.addWidget(self.log_toggle)
         self.build_log = QPlainTextEdit()
         self.build_log.setReadOnly(True)
@@ -219,11 +229,11 @@ class PublishPanel(QWidget):
         self.result.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.result)
         result_row = QHBoxLayout()
-        self.open_folder = QPushButton("Abrir pasta")
+        self.open_folder = QPushButton(tr("Open folder"))
         self.open_folder.hide()
         self.open_folder.clicked.connect(self.show_result_folder)
         result_row.addWidget(self.open_folder)
-        self.copy_path = QPushButton("Copiar caminho")
+        self.copy_path = QPushButton(tr("Copy path"))
         self.copy_path.hide()
         self.copy_path.clicked.connect(
             lambda: QApplication.clipboard().setText(str(self.output_path))
@@ -239,11 +249,11 @@ class PublishPanel(QWidget):
         self.sync()
 
     def change(self, key, value):
-        """Metadados continuam sendo um comando reversível da central do aplicativo."""
+        """Metadata stays a reversible command of the application settings."""
         self.window.change_application(key, value)
 
     def sync(self):
-        """A falta de ferramentas nunca troca silenciosamente um pacote por uma receita."""
+        """Missing tools never silently swap a package for a recipe."""
         if self._product_syncing:
             return
         is_editor = bool(self.product.currentData())
@@ -268,7 +278,7 @@ class PublishPanel(QWidget):
         self.summary.setText(
             (app.get("name") or self.window.project.name)
             + " · "
-            + (app.get("version") or "Sem versão")
+            + (app.get("version") or tr("No version"))
             + " · "
             + app.get("backend", "qt").upper()
         )
@@ -289,7 +299,7 @@ class PublishPanel(QWidget):
             self.checks.clear()
             self.checks.hide()
             self.check_hint.show()
-            self.stages.setText("1 Formato  →  2 Verificação  →  3 Construção  →  4 Resultado")
+            self.stages.setText(stage_text())
             self.result.clear()
             self.open_folder.hide()
             self.copy_path.hide()
@@ -304,47 +314,55 @@ class PublishPanel(QWidget):
         self.recipe_only.setEnabled(key != "source" and not busy)
         self.prepare.setEnabled(key != "source" and not busy)
         if key == "source":
-            status = "Não precisa de ferramentas de construção."
-            text = "Código Python, recursos e runtime. As dependências constam no arquivo requirements.txt."
-        elif key == "flatpak":
-            status = (
-                "SDK do "
-                + ("GNOME" if app.get("backend") == "gtk" else "KDE")
-                + " · preparação por usuário"
+            status = tr("Needs no build tools.")
+            text = tr(
+                "Python code, assets and runtime. The dependencies are listed in requirements.txt."
             )
-            text = "Preparar instala o SDK pelo Flathub. A construção usa o SDK local e gera um bundle .flatpak. Terminal e tarefas ficam no sandbox, sem acesso ao host ou elevação administrativa."
+        elif key == "flatpak":
+            status = tr("{desktop} SDK · per-user preparation").format(
+                desktop="GNOME" if app.get("backend") == "gtk" else "KDE"
+            )
+            text = tr(
+                "Prepare installs the SDK from Flathub. The build uses the local SDK and produces a .flatpak bundle. The terminal and tasks stay in the sandbox, with no host access or administrative elevation."
+            )
         else:
             status = (
-                "Ferramentas Makebench prontas."
+                tr("Makebench tools ready.")
                 if managed
-                else "Ferramenta do sistema disponível."
+                else tr("System tool available.")
                 if available
-                else "Prepare as ferramentas para construir."
+                else tr("Prepare the tools to build.")
             )
-            text = "Preparar resolve Python 3.12, backend e dependências em Podman separado. Construir usa somente o cache verificado, sem rede."
+            text = tr(
+                "Prepare resolves Python 3.12, the backend and dependencies in a separate Podman container. Building uses only the verified cache, with no network."
+            )
         if key == "appimage":
-            text += " Inclui Python e bibliotecas. Destinos: Ubuntu 24.04 e Fedora 44 x86_64; requer glibc2.39+, X11/Wayland e drivers do sistema."
+            text += " " + tr(
+                "Includes Python and libraries. Targets: Ubuntu 24.04 and Fedora 44 x86_64; requires glibc 2.39+, X11/Wayland and the system drivers."
+            )
         if key == "deb":
-            text += " DEB para Ubuntu 24.04 x86_64 com runtime incluído."
+            text += " " + tr("DEB for Ubuntu 24.04 x86_64 with the runtime included.")
         if key == "rpm":
-            text += " RPM para Fedora 44 x86_64 com runtime incluído."
+            text += " " + tr("RPM for Fedora 44 x86_64 with the runtime included.")
         if is_editor:
-            text += " Inclui o editor, QtWebEngine e os recursos para criar e testar aplicativos Qt e GTK."
+            text += " " + tr(
+                "Includes the editor, QtWebEngine and the resources to create and test Qt and GTK applications."
+            )
         self.tool_status.setText(status)
         self.description.setText(text)
         self.build.setText(
-            "Exportar fonte…"
+            tr("Export source…")
             if key == "source"
-            else "Exportar receita…"
+            else tr("Export recipe…")
             if self.recipe_only.isChecked() and not is_editor
-            else "Construir " + name + "…"
+            else tr("Build {name}…").format(name=name)
         )
 
     def check(self):
-        """Verifica o projeto sem executar código e permite abrir a origem de cada problema."""
+        """Check the project without running code and allow opening each problem's origin."""
         if not self.product.currentData() and not self.window._finish_field_edit():
             return False
-        self.stages.setText("1 Formato  →  [2 Verificação]  →  3 Construção  →  4 Resultado")
+        self.stages.setText(stage_text(2))
         self.checks.clear()
         self.checks.show()
         self.check_hint.hide()
@@ -352,9 +370,9 @@ class PublishPanel(QWidget):
             [
                 {
                     "level": "success" if ready(editor_project(), True) else "warning",
-                    "message": "Runtime do editor pronto."
+                    "message": tr("Editor runtime ready.")
                     if ready(editor_project(), True)
-                    else "Prepare o runtime completo do editor antes de construir.",
+                    else tr("Prepare the editor's complete runtime before building."),
                     "field": "destinations",
                 }
             ]
@@ -376,27 +394,23 @@ class PublishPanel(QWidget):
         return not any(issue["level"] == "error" for issue in issues)
 
     def fix_issue(self, item):
-        """Conduz à configuração ou interface que precisa de correção."""
+        """Lead to the setting or interface that needs fixing."""
         field = item.data(Qt.ItemDataRole.UserRole)
         if field == "windows" and self.window.project.metadata.get("empty_map"):
-            self.window.set_mode("Mapa")
+            self.window.set_mode("map")
         elif field == "python":
-            self.window.set_mode("Código")
+            self.window.set_mode("code")
             self.window.code_files.setCurrentIndex(1)
         elif field == "logic":
-            self.window.set_mode("Lógica")
+            self.window.set_mode("logic")
             self.window.drawer.show()
             self.window.drawer.setCurrentIndex(1)
         elif field:
             self.window.application_settings(field)
 
     def start_job(self, job, prepare=False):
-        """Uma operação de cada vez, com controles e cancelamento coerentes."""
-        self.stages.setText(
-            "Preparação das ferramentas"
-            if prepare
-            else "1 Formato  →  2 Verificação  →  [3 Construção]  →  4 Resultado"
-        )
+        """One operation at a time, with consistent controls and cancellation."""
+        self.stages.setText(tr("Preparing the tools") if prepare else stage_text(3))
         self.job = job
         self.build.setEnabled(False)
         self.prepare.setEnabled(False)
@@ -413,7 +427,7 @@ class PublishPanel(QWidget):
         self.build_log.clear()
         self.progress_bar.setValue(0)
         self.progress_bar.show()
-        self.result.setText("Preparando ferramentas…" if prepare else "Construindo…")
+        self.result.setText(tr("Preparing tools…") if prepare else tr("Building…"))
         job.progress.connect(
             lambda number, text: (
                 self.progress_bar.setValue(number),
@@ -426,7 +440,7 @@ class PublishPanel(QWidget):
         job.start()
 
     def prepare_environment(self):
-        """Preparação explícita pode baixar ferramentas e SDK, sem tocar no projeto."""
+        """Explicit preparation may download tools and an SDK, never touching the project."""
         if self.job and self.job.isRunning():
             return
         from makebench.core.project import Project
@@ -444,7 +458,7 @@ class PublishPanel(QWidget):
         )
 
     def build_source(self):
-        """Constrói exatamente o formato escolhido a partir de um snapshot do documento."""
+        """Build exactly the chosen format from a snapshot of the document."""
         if self.job and self.job.isRunning():
             return
         if not self.check():
@@ -458,15 +472,15 @@ class PublishPanel(QWidget):
                 editor_project() if self.product.currentData() else self.window.project,
                 bool(self.product.currentData()),
             ):
-                self.failed("Clique em Preparar ferramentas antes de construir.")
+                self.failed(tr("Click Prepare tools before building."))
                 return
-        suffix = "-receita.zip" if recipe else suffix
+        suffix = "-recipe.zip" if recipe else suffix
         filename, _ = QFileDialog.getSaveFileName(
             self,
-            "Exportar " + FORMATS[key][0],
+            tr("Export {format}").format(format=FORMATS[key][0]),
             ("Makebench-editor" if self.product.currentData() else self.window.project.name)
             + suffix,
-            "Arquivos (*" + suffix + ")",
+            tr("Files (*{suffix})").format(suffix=suffix),
         )
         if not filename:
             return
@@ -497,25 +511,25 @@ class PublishPanel(QWidget):
         )
 
     def cancel_build(self):
-        """Aguarda interrupção e limpeza, sem publicar resultado parcial."""
+        """Wait for interruption and cleanup, without publishing a partial result."""
         if self.job:
             self.job.cancel.set()
             self.cancel_button.setEnabled(False)
-            self.result.setText("Cancelando…")
+            self.result.setText(tr("Cancelling…"))
 
     def prepared(self, result):
-        """Confirma apenas o ambiente; nenhum pacote foi construído nesta etapa."""
+        """Confirm only the environment; no package was built in this step."""
         self.result.setText(result["status"])
         self.progress_bar.setValue(100)
 
     def completed(self, result):
-        """Resultado identifica formato, tamanho e pasta; hash permanece nos detalhes."""
-        self.stages.setText("1 Formato  →  2 Verificação  →  3 Construção  →  [4 Resultado]")
+        """The result shows format, size and folder; the hash stays in the details."""
+        self.stages.setText(stage_text(4))
         self.output_path = Path(result["path"])
         self.result.setText(
-            f"{result.get('status', 'Exportado')}\n{self.output_path.name} · {result['size'] / 1048576:.1f} MB"
+            f"{result.get('status', tr('Exported'))}\n{self.output_path.name} · {result['size'] / 1048576:.1f} MB"
             if result["size"] >= 1048576
-            else f"{result.get('status', 'Exportado')}\n{self.output_path.name} · {result['size'] / 1024:.0f} KB"
+            else f"{result.get('status', tr('Exported'))}\n{self.output_path.name} · {result['size'] / 1024:.0f} KB"
         )
         self.result.setToolTip(str(self.output_path))
         self.build_log.appendPlainText(str(self.output_path) + "\nSHA-256: " + result["sha256"])
@@ -524,14 +538,16 @@ class PublishPanel(QWidget):
         self.copy_path.show()
 
     def failed(self, message):
-        """Mantém a causa acessível junto da saída da ferramenta."""
-        self.stages.setText("Operação interrompida · consulte o diagnóstico")
-        self.result.setText(message.splitlines()[0] if message else "A operação não terminou.")
+        """Keep the cause available next to the tool's output."""
+        self.stages.setText(tr("Operation interrupted · see the diagnostics"))
+        self.result.setText(
+            message.splitlines()[0] if message else tr("The operation did not finish.")
+        )
         self.build_log.appendPlainText(message)
         self.log_toggle.setChecked(True)
 
     def build_finished(self):
-        """Libera controles só depois da saída e limpeza da thread."""
+        """Release the controls only after the thread's output and cleanup."""
         self.build.setEnabled(True)
         self.check_button.setEnabled(True)
         self.format.setEnabled(True)
@@ -541,18 +557,18 @@ class PublishPanel(QWidget):
         self.sync()
 
     def show_result_folder(self):
-        """Abre a pasta, sem executar o pacote exportado."""
+        """Open the folder, without running the exported package."""
         if hasattr(self, "output_path"):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.output_path.parent)))
 
 
 class ExportDialog(QDialog):
-    """Exportação em janela compacta; fechar preserva uma construção em andamento."""
+    """Export in a compact window; closing keeps a build in progress."""
 
     def __init__(self, window):
-        """A janela cresce com verificações e detalhes, sem ocupar a bancada principal."""
+        """The window grows with checks and details, without taking over the main workbench."""
         super().__init__(window)
-        self.setWindowTitle("Exportar aplicativo")
+        self.setWindowTitle(tr("Export application"))
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(6, 6, 6, 6)
@@ -564,7 +580,7 @@ class ExportDialog(QDialog):
         layout.addWidget(self.panel)
         row = QHBoxLayout()
         row.addStretch()
-        close = QPushButton("Fechar")
+        close = QPushButton(tr("Close"))
         close.clicked.connect(self.hide)
         row.addWidget(close)
         layout.addLayout(row)

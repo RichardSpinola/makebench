@@ -1,4 +1,4 @@
-"""Superfície Qt do terminal: células nativas, entrada e seleção sem WebEngine."""
+"""Qt terminal surface: native cells, input and selection without WebEngine."""
 
 from __future__ import annotations
 from PySide6.QtCore import QEvent, Qt, QTimer, Signal, QSize
@@ -14,22 +14,23 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from .session import TerminalSession, color, key_input
+from makebench.i18n import tr
 
 
 class TerminalWidget(QAbstractScrollArea):
-    """Exibe uma sessão VT; construir ou mostrar a prévia não inicia processos."""
+    """Show a VT session; building or showing the preview never starts processes."""
 
     status_changed = Signal(str)
 
     def __init__(self, parent=None, root=None, editing=False):
-        """Prepara fonte fixa, seleção e relógio de leitura não bloqueante."""
+        """Prepare a fixed font, selection and a non-blocking read timer."""
         super().__init__(parent)
         self.terminal = TerminalSession(root=root)
         self.editing = editing
         self.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus if not editing else Qt.FocusPolicy.NoFocus)
         self.setMinimumSize(160, 100)
-        self.setAccessibleName("Terminal")
+        self.setAccessibleName(tr("Terminal"))
         self.anchor = self.selection_end = None
         self._revision = -1
         self._was_running = False
@@ -41,18 +42,18 @@ class TerminalWidget(QAbstractScrollArea):
         self.metrics()
 
     def sizeHint(self):
-        """Sugere área útil sem impor tamanho fixo ao layout do aplicativo."""
+        """Suggest a useful area without forcing a fixed size on the application layout."""
         return QSize(560, 260)
 
     def metrics(self):
-        """Mede células em pixels lógicos respeitando escala e fonte do desktop."""
+        """Measure cells in logical pixels, respecting the desktop scale and font."""
         metrics = QFontMetrics(self.font())
         self.cell_width = max(1, metrics.horizontalAdvance("M"))
         self.cell_height = metrics.height()
         self.baseline = metrics.ascent()
 
     def start_terminal(self, program=None, arguments=None):
-        """Inicia somente por execução explícita; prévia permanece inerte."""
+        """Start only by explicit run; the preview stays inert."""
         if self.editing:
             return None
         pid = self.terminal.start(program, arguments)
@@ -64,18 +65,18 @@ class TerminalWidget(QAbstractScrollArea):
         return pid
 
     def stop_terminal(self):
-        """Encerra processos da sessão, preservando a tela para consulta."""
+        """Stop the session's processes, keeping the screen for reference."""
         self.terminal.stop()
         self.timer.stop()
-        self.status_changed.emit("Encerrado")
+        self.status_changed.emit(tr("Ended"))
         self.viewport().update()
 
     def send_terminal(self, text):
-        """Fornece a mesma entrada usada pelo teclado à API ctx."""
+        """Provide the ctx API with the same input used by the keyboard."""
         return self.terminal.send(text)
 
     def resize_terminal(self):
-        """Comunica a quantidade visível de células ao processo e à emulação."""
+        """Report the number of visible cells to the process and the emulation."""
         self.metrics()
         self.terminal.resize(
             max(2, self.viewport().width() // self.cell_width),
@@ -83,13 +84,13 @@ class TerminalWidget(QAbstractScrollArea):
         )
 
     def resizeEvent(self, event):
-        """Mantém o processo informado de alterações de tamanho da área."""
+        """Keep the process informed about changes to the area's size."""
         super().resizeEvent(event)
         self.resize_terminal()
         self.refresh()
 
     def refresh(self):
-        """Atualiza apenas após saída, mantendo a posição ao consultar histórico."""
+        """Refresh only after output, keeping the position while browsing history."""
         bar = self.verticalScrollBar()
         follow = bar.value() >= bar.maximum()
         revision = self.terminal.poll()
@@ -103,10 +104,10 @@ class TerminalWidget(QAbstractScrollArea):
         if self._was_running and not self.terminal.running:
             self._was_running = False
             self.timer.stop()
-            self.status_changed.emit(f"Encerrado · código {self.terminal.exit_code}")
+            self.status_changed.emit(tr("Ended · code {code}").format(code=self.terminal.exit_code))
 
     def paintEvent(self, event):
-        """Desenha células ANSI com as cores padrão herdadas da paleta nativa."""
+        """Draw ANSI cells with the default colors inherited from the native palette."""
         painter = QPainter(self.viewport())
         painter.setFont(self.font())
         foreground, background = (
@@ -138,7 +139,7 @@ class TerminalWidget(QAbstractScrollArea):
                     )
                 painter.fillRect(x, y, self.cell_width, self.cell_height, QColor(bg))
                 glyphs.append((x, y, cell, fg))
-        # Fundos antes dos glifos: a segunda célula não apaga um caractere CJK largo.
+        # Backgrounds before glyphs: the second cell does not erase a wide CJK character.
         for x, y, cell, fg in glyphs:
             font = self.font()
             font.setBold(cell.bold)
@@ -165,13 +166,13 @@ class TerminalWidget(QAbstractScrollArea):
             painter.drawText(
                 self.viewport().rect(),
                 Qt.AlignmentFlag.AlignCenter,
-                "Terminal · prévia inativa"
+                tr("Terminal · inactive preview")
                 if self.editing
-                else "Inicie o terminal para abrir uma sessão",
+                else tr("Start the terminal to open a session"),
             )
 
     def selected_text(self):
-        """Extrai seleção por células, sem códigos ANSI nem conteúdo oculto."""
+        """Extract the selection by cells, without ANSI codes or hidden content."""
         if self.anchor is None or self.selection_end is None:
             return ""
         start, end = sorted((self.anchor, self.selection_end))
@@ -184,7 +185,7 @@ class TerminalWidget(QAbstractScrollArea):
         return "\n".join(text)
 
     def position(self, point):
-        """Converte coordenadas do ponteiro em índices limitados de células."""
+        """Turn pointer coordinates into bounded cell indexes."""
         return (
             max(
                 0,
@@ -197,7 +198,7 @@ class TerminalWidget(QAbstractScrollArea):
         )
 
     def mousePressEvent(self, event):
-        """Inicia seleção por arraste; botão direito oferece copiar/colar."""
+        """Start a drag selection; the right button offers copy/paste."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.anchor = self.selection_end = self.position(event.position())
             self.viewport().update()
@@ -206,44 +207,44 @@ class TerminalWidget(QAbstractScrollArea):
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        """Estende a seleção sem reenviar cliques como comandos do shell."""
+        """Extend the selection without forwarding clicks as shell commands."""
         if event.buttons() & Qt.MouseButton.LeftButton:
             self.selection_end = self.position(event.position())
             self.viewport().update()
 
     def contextMenuEvent(self, event):
-        """Disponibiliza ações usuais sem introduzir avaliação de comandos."""
+        """Offer the usual actions without introducing command evaluation."""
         menu = QMenu(self)
         menu.addAction(
-            "Copiar", lambda: QApplication.clipboard().setText(self.selected_text())
+            tr("Copy"), lambda: QApplication.clipboard().setText(self.selected_text())
         ).setEnabled(bool(self.selected_text()))
-        menu.addAction("Colar", lambda: self.paste()).setEnabled(
+        menu.addAction(tr("Paste"), lambda: self.paste()).setEnabled(
             self.terminal.running and not self.editing
         )
         menu.exec(event.globalPos())
 
     def paste(self):
-        """Envia a área de transferência, usando bracketed paste quando solicitado."""
+        """Send the clipboard, using bracketed paste when requested."""
         value = QApplication.clipboard().text()
         if 2004 << 5 in self.terminal.screen.mode:
             value = "\x1b[200~" + value + "\x1b[201~"
         self.send_terminal(value)
 
     def focusNextPrevChild(self, next):
-        """Tab completa no terminal ativo; Ctrl+Tab permite sair da superfície."""
+        """Tab completes in the active terminal; Ctrl+Tab leaves the surface."""
         if self.terminal.running and not self.editing:
             return False
         return super().focusNextPrevChild(next)
 
     def event(self, event):
-        """Mantém teclas de programas de terminal fora dos atalhos globais da IDE."""
+        """Keep terminal program keys out of the IDE's global shortcuts."""
         if event.type() == QEvent.Type.ShortcutOverride and not self.editing:
             event.accept()
             return True
         return super().event(event)
 
     def keyPressEvent(self, event):
-        """Encaminha teclas ao PTY, reservando Ctrl+Shift+C/V para transferência."""
+        """Forward keys to the PTY, reserving Ctrl+Shift+C/V for the clipboard."""
         modifiers = event.modifiers()
         control = bool(modifiers & Qt.KeyboardModifier.ControlModifier)
         shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
@@ -282,25 +283,25 @@ class TerminalWidget(QAbstractScrollArea):
         event.accept()
 
     def closeEvent(self, event):
-        """Não deixa processos quando a superfície é fechada."""
+        """Leave no processes behind when the surface closes."""
         self.stop_terminal()
         super().closeEvent(event)
 
 
 class TerminalPanel(QWidget):
-    """Aba da IDE com início explícito, interrupção e estado da sessão."""
+    """IDE tab with explicit start, interruption and session state."""
 
     def __init__(self, parent=None, root=None):
-        """Monta controles compactos sem abrir um shell na inicialização da IDE."""
+        """Build compact controls without opening a shell when the IDE starts."""
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
         row = QHBoxLayout()
-        self.start_button = QPushButton("Iniciar shell")
+        self.start_button = QPushButton(tr("Start shell"))
         row.addWidget(self.start_button)
-        stop = QPushButton("Encerrar")
+        stop = QPushButton(tr("Stop"))
         row.addWidget(stop)
-        self.status = QLabel("Parado")
+        self.status = QLabel(tr("Stopped"))
         row.addWidget(self.status, 1)
         layout.addLayout(row)
         self.surface = TerminalWidget(root=root)
@@ -313,7 +314,7 @@ class TerminalPanel(QWidget):
         )
 
     def start(self):
-        """Inicia o shell por clique e apresenta falhas sem encerrar o editor."""
+        """Start the shell on click and show failures without closing the editor."""
         try:
             if hasattr(self, "directory_provider"):
                 self.surface.terminal.root = self.directory_provider()
@@ -322,6 +323,6 @@ class TerminalPanel(QWidget):
             self.status.setText(str(exc))
 
     def closeEvent(self, event):
-        """Fecha também o terminal ao encerrar a aba proprietária."""
+        """Also close the terminal when the owning tab closes."""
         self.surface.stop_terminal()
         super().closeEvent(event)

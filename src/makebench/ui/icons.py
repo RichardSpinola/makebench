@@ -1,4 +1,4 @@
-"""Símbolos vetoriais próprios, sem dependência de biblioteca de ícones externa."""
+"""Our own vector symbols, with no external icon library dependency."""
 
 from PySide6.QtCore import QByteArray, Qt
 from PySide6.QtGui import QIcon, QPainter, QPalette, QPixmap
@@ -55,7 +55,7 @@ PATHS = {
 
 
 def vector_icon(name):
-    """Renderiza SVG em tamanhos nítidos para telas comuns e HiDPI."""
+    """Render the SVG at sharp sizes for common and HiDPI screens."""
     theme = getattr(QApplication.instance(), "makebench_theme", None)
     color = (
         theme.tokens["text"]

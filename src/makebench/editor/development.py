@@ -1,4 +1,4 @@
-"""Ferramentas de código e dados: inspeção estática, sem importar funções do usuário."""
+"""Code and data tools: static inspection, never importing the user's functions."""
 
 import ast
 from copy import deepcopy
@@ -24,13 +24,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from makebench.core.project import ProjectError
+from makebench.i18n import ntr, tr
+from makebench.core.source import default_names
 
 
 class DevelopmentMixin:
-    """Liga Lógica e Código a dados estáticos e ao contexto da seleção."""
+    """Bind Logic and Code to static data and the selection's context."""
 
     def install_development(self):
-        """Reorganiza arquivos existentes em abas e acrescenta outline navegável."""
+        """Rearrange existing files into tabs and add a navigable outline."""
         self.logic.design_requested.connect(self.design_event_origin)
         self.generated_editor.origin_requested.connect(self.generated_origin)
         self.logic.duplicate_requested.connect(self.duplicate_flow_dialog)
@@ -44,8 +46,8 @@ class DevelopmentMixin:
         generated = old.widget(0)
         own = old.widget(1)
         self.code_files = QTabWidget()
-        self.code_files.addTab(generated, "gerado.py · somente leitura")
-        self.code_files.addTab(own, "Funções próprias")
+        self.code_files.addTab(generated, "generated.py · " + tr("read-only"))
+        self.code_files.addTab(own, tr("Your functions"))
         self.code_files.setDocumentMode(True)
         self.code_files.setTabPosition(QTabWidget.TabPosition.South)
         for page in (code_page, generated, own):
@@ -54,20 +56,20 @@ class DevelopmentMixin:
         self.code_files.setCurrentIndex(1)
         self.code_files.currentChanged.connect(lambda _: self._update_actions())
         self.function_outline = QListWidget()
-        self.function_outline.setAccessibleName("Funções do arquivo e usos nos blocos")
+        self.function_outline.setAccessibleName(tr("File functions and uses in blocks"))
         self.function_outline.itemActivated.connect(self.open_function)
         self.function_outline.itemClicked.connect(self.open_function)
         pane = QWidget()
         pl = QVBoxLayout(pane)
         pl.setContentsMargins(4, 4, 4, 4)
-        pl.addWidget(QLabel("Símbolos do arquivo"))
+        pl.addWidget(QLabel(tr("File symbols")))
         self.function_search = QLineEdit()
-        self.function_search.setPlaceholderText("Filtrar funções…")
+        self.function_search.setPlaceholderText(tr("Filter functions…"))
         self.function_search.setClearButtonEnabled(True)
         self.function_search.textChanged.connect(self.filter_outline)
         pl.addWidget(self.function_search)
         pl.addWidget(self.function_outline)
-        add = QPushButton("+ Nova função")
+        add = QPushButton(tr("+ New function"))
         add.clicked.connect(self.new_function)
         pl.addWidget(add)
         splitter = QSplitter()
@@ -112,29 +114,29 @@ class DevelopmentMixin:
         dl.addWidget(self.data_list)
         actions = QHBoxLayout()
         for label, callback in [
-            ("+ Variável", self.variable_dialog),
-            ("Editar", self.edit_data_item),
-            ("Remover", self.remove_variable),
+            (tr("+ Variable"), self.variable_dialog),
+            (tr("Edit"), self.edit_data_item),
+            (tr("Remove"), self.remove_variable),
         ]:
             button = QPushButton(label)
             button.clicked.connect(callback)
             actions.addWidget(button)
         dl.addLayout(actions)
         self.left_tabs.removeTab(2)
-        self.left_tabs.addTab(data_page, "Dados")
+        self.left_tabs.addTab(data_page, tr("Data"))
         self.data_list.itemActivated.connect(lambda _: self.edit_data_item())
         self.sync_outline()
         from PySide6.QtWidgets import QToolBar
         from PySide6.QtCore import QSize
         from .theme import icon
 
-        commands = QToolBar("Blocos")
+        commands = QToolBar(tr("Blocks"))
         commands.setIconSize(QSize(16, 16))
         commands.setMovable(False)
-        commands.addAction(icon("search"), "Buscar bloco…", self.search_block)
+        commands.addAction(icon("search"), tr("Search block…"), self.search_block)
         templates = QToolButton()
-        templates.setText("Comportamento")
-        templates.setToolTip("Inserir um modelo de comportamento com blocos reais")
+        templates.setText(tr("Behavior"))
+        templates.setToolTip(tr("Insert a behavior template with real blocks"))
         templates.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         templates.setIcon(icon("add"))
         templates.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -148,7 +150,7 @@ class DevelopmentMixin:
         commands.addWidget(templates)
         self.python_action = commands.addAction(icon("code"), "Python")
         self.python_action.setCheckable(True)
-        self.python_action.setToolTip("Mostrar ou recolher Python gerado pelos blocos")
+        self.python_action.setToolTip(tr("Show or hide the Python generated by the blocks"))
         self.python_action.toggled.connect(self.toggle_logic_python)
         self.python_action.setChecked(
             str(self.settings.value("workspace/logic_python", False)).lower() == "true"
@@ -160,16 +162,16 @@ class DevelopmentMixin:
         commands.addSeparator()
         commands.addWidget(self.logic.context_widget)
         self.logic.layout().insertWidget(1, commands)
-        # Realce Bash no editor da gaveta; sua aplicação continua explícita.
+        # Bash highlighting in the drawer editor; applying it stays explicit.
         self.script_editor.highlighter.language = "bash"
         self.script_editor.highlighter.rehighlight()
         self.install_code_workspace()
 
     def change_flow_filter(self, flow_id, states):
-        """Altera somente o filtro, com validação de sobreposição e histórico."""
+        """Change only the filter, with overlap validation and history."""
 
         def change():
-            """Atualiza o campo solicitado dentro da transação de edição."""
+            """Update the requested field inside the edit transaction."""
             flow = next(f for f in self.project.workflows if f["id"] == flow_id)
             if states:
                 flow["states"] = states
@@ -179,13 +181,13 @@ class DevelopmentMixin:
         self._edit(change)
 
     def show_generated_line(self, line):
-        """Abre o arquivo completo mantendo a linha do handler em foco."""
-        self.set_mode("Código")
+        """Open the complete file keeping the handler's line in focus."""
+        self.set_mode("code")
         self.code_files.setCurrentIndex(0)
         self.generated_editor.show_line(line)
 
     def sync_outline(self):
-        """Lê assinaturas e docstrings com AST; arquivos inválidos continuam editáveis."""
+        """Read signatures and docstrings with AST; invalid files stay editable."""
         if not hasattr(self, "function_outline"):
             return
         editor = (
@@ -206,7 +208,7 @@ class DevelopmentMixin:
             return
 
         def uses(value, name):
-            """Conta referências estáticas sem importar funções Python."""
+            """Count static references without importing Python functions."""
             if isinstance(value, dict):
                 return int(
                     value.get("op") == "call"
@@ -223,20 +225,25 @@ class DevelopmentMixin:
                     for f in self.project.workflows
                 )
                 signature = (
-                    "classe " + node.name
+                    tr("class") + " " + node.name
                     if isinstance(node, ast.ClassDef)
                     else node.name + "(" + ", ".join(a.arg for a in node.args.args) + ")"
                 )
                 item = QListWidgetItem(
-                    signature + (f" · {count} bloco(s)" if editor is self.source_editor else "")
+                    signature
+                    + (
+                        " · " + ntr("{count} block", "{count} blocks", count).format(count=count)
+                        if editor is self.source_editor
+                        else ""
+                    )
                 )
                 item.setData(Qt.ItemDataRole.UserRole, node.lineno)
-                item.setToolTip(ast.get_docstring(node) or "Sem descrição.")
+                item.setToolTip(ast.get_docstring(node) or tr("No description."))
                 self.function_outline.addItem(item)
         self.filter_outline()
 
     def update_code_position(self, _index=None):
-        """Informa linha e coluna no arquivo ativo sem roubar foco nem alterar o texto."""
+        """Show the line and column in the active file without stealing focus or changing text."""
         editor = (
             self.active_code_editor()
             if hasattr(self, "module_editors")
@@ -246,11 +253,13 @@ class DevelopmentMixin:
         )
         cursor = editor.textCursor()
         self.code_position.setText(
-            f"Linha {cursor.blockNumber() + 1} · Coluna {cursor.positionInBlock() + 1}"
+            tr("Line {line} · Column {column}").format(
+                line=cursor.blockNumber() + 1, column=cursor.positionInBlock() + 1
+            )
         )
 
     def filter_outline(self, _text=None):
-        """Filtra funções localmente, mantendo o arquivo e a seleção de texto intactos."""
+        """Filter functions locally, keeping the file and the text selection intact."""
         if not hasattr(self, "function_search"):
             return
         text = self.function_search.text().casefold()
@@ -259,18 +268,20 @@ class DevelopmentMixin:
             item.setHidden(text not in item.text().casefold())
 
     def open_function(self, item):
-        """Localiza a definição sem executar o arquivo."""
+        """Find the definition without running the file."""
         self.active_code_editor().show_line(item.data(Qt.ItemDataRole.UserRole))
 
     def new_function(self):
-        """Insere uma definição independente, preservando todo o texto próprio."""
-        name, ok = QInputDialog.getText(self, "Nova função", "Nome Python")
+        """Insert an independent definition, keeping all of your own text."""
+        name, ok = QInputDialog.getText(self, tr("New function"), tr("Python name"))
         if not ok:
             return
         import keyword
 
         if not name.isidentifier() or keyword.iskeyword(name) or name.startswith("_"):
-            self._show_error("Use um nome Python válido, sem espaços e sem iniciar por sublinhado.")
+            self._show_error(
+                tr("Use a valid Python name, with no spaces and not starting with an underscore.")
+            )
             return
         editor = self.active_code_editor()
         if editor.isReadOnly():
@@ -283,53 +294,57 @@ class DevelopmentMixin:
                 if isinstance(n, ast.FunctionDef)
             ]
         except SyntaxError:
-            self._show_error("Corrija a sintaxe antes de inserir uma função pelo assistente.")
+            self._show_error(tr("Fix the syntax before inserting a function with the assistant."))
             return
         if name in names:
-            self._show_error("Já existe uma função com esse nome.")
+            self._show_error(tr("A function with that name already exists."))
             return
         editor.appendPlainText(
             "\n\ndef "
             + name
-            + '(ctx, valor):\n    """Descreva o comportamento, a entrada e o resultado desta função."""\n    pass\n'
+            + "(ctx, "
+            + default_names()["variable"]
+            + '):\n    """'
+            + tr("Describe the behavior, input and result of this function.")
+            + '"""\n    pass\n'
         )
         editor.show_line(editor.blockCount() - 2)
 
     def sync_variables(self):
-        """Acrescenta dados por escopo sem converter nomes em código Python."""
+        """Add data by scope without turning names into Python code."""
         if not hasattr(self, "data_list"):
             return
         for index, variable in enumerate(self.project.variables):
             scope = (
-                "Projeto"
+                tr("Project")
                 if variable.get("scope", "project") == "project"
-                else self.project.find(variable["window"]).properties.get("title", "Janela")
+                else self.project.find(variable["window"]).properties.get("title", tr("Window"))
             )
             item = QListWidgetItem(
-                f"Variável · {variable['name']} = {variable.get('initial')!r}\n{scope}"
+                tr("Variable") + f" · {variable['name']} = {variable.get('initial')!r}\n{scope}"
             )
             item.setData(Qt.ItemDataRole.UserRole, index)
             self.data_list.insertItem(0, item)
 
     def variable_dialog(self, _checked=False, index=None):
-        """Declara ou renomeia uma variável, atualizando referências e workspaces."""
+        """Declare or rename a variable, updating references and workspaces."""
         original = self.project.variables[index] if index is not None else None
         dialog = QDialog(self)
-        dialog.setWindowTitle("Variável do aplicativo")
+        dialog.setWindowTitle(tr("Application variable"))
         form = QFormLayout(dialog)
-        name = QLineEdit(original["name"] if original else "contador")
+        name = QLineEdit(original["name"] if original else tr("counter"))
         scope = QComboBox()
-        scope.addItem("Do projeto", "project")
-        scope.addItem("Desta janela", "window")
+        scope.addItem(tr("Project-wide"), "project")
+        scope.addItem(tr("This window"), "window")
         scope.setCurrentIndex(
             scope.findData(original.get("scope", "project") if original else "project")
         )
         initial = QLineEdit(
             json.dumps(original.get("initial") if original else 0, ensure_ascii=False)
         )
-        form.addRow("Nome", name)
-        form.addRow("Escopo", scope)
-        form.addRow("Valor inicial (JSON)", initial)
+        form.addRow(tr("Name"), name)
+        form.addRow(tr("Scope"), scope)
+        form.addRow(tr("Initial value (JSON)"), initial)
         error = QLabel()
         form.addRow(error)
         buttons = QDialogButtonBox(
@@ -339,18 +354,18 @@ class DevelopmentMixin:
         buttons.rejected.connect(dialog.reject)
 
         def save():
-            """Valida os campos e só confirma depois de salvar com sucesso."""
+            """Validate the fields and confirm only after saving successfully."""
             try:
                 value = json.loads(initial.text())
             except ValueError:
-                error.setText("Use texto entre aspas, número, true, false ou null.")
+                error.setText(tr("Use quoted text, a number, true, false or null."))
                 return
             variable = {"name": name.text().strip(), "scope": scope.currentData(), "initial": value}
             if scope.currentData() == "window":
                 variable["window"] = self.active_window
 
             def edit():
-                """Atualiza a declaração e referências sem executar código."""
+                """Update the declaration and references without running code."""
                 if original:
                     self.rename_variable_references(original, variable)
                     self.project.variables[index] = variable
@@ -371,10 +386,10 @@ class DevelopmentMixin:
         dialog.exec()
 
     def rename_variable_references(self, old, new):
-        """Atualiza o modelo neutro e a vista Blockly, sem perder rascunhos/comentários."""
+        """Update the neutral model and the Blockly view, without losing drafts/comments."""
 
         def visit(value, workspace=False):
-            """Percorre dados estruturados sem executar conteúdo do projeto."""
+            """Walk structured data without running project content."""
             if isinstance(value, dict):
                 if (
                     value.get("op") in {"variable", "assign", "ask"}
@@ -413,7 +428,7 @@ class DevelopmentMixin:
                         parameters.update(name=new["name"], scope=new["scope"])
 
     def edit_data_item(self):
-        """Edita variável selecionada; funções abrem o modo Código."""
+        """Edit the selected variable; functions open the Code mode."""
         item = self.data_list.currentItem()
         if not item:
             return
@@ -422,11 +437,11 @@ class DevelopmentMixin:
             self.variable_dialog(index=value)
         elif isinstance(value, dict) and value.get("kind") == "resource":
             self.edit_resource(value["path"])
-        elif item.text().startswith("Função"):
+        elif item.text().startswith(tr("Function") + " ·"):
             self.find_function_name(item.text().split("·", 1)[-1].strip().split("(")[0])
 
     def remove_variable(self):
-        """Remove declaração sem apagar valores ou blocos; referências continuam visíveis."""
+        """Remove the declaration without deleting values or blocks; references stay visible."""
         item = self.data_list.currentItem()
         if item and isinstance(item.data(Qt.ItemDataRole.UserRole), dict):
             self.remove_resource(item.data(Qt.ItemDataRole.UserRole)["path"])
@@ -436,7 +451,7 @@ class DevelopmentMixin:
             self._edit(lambda: self.project.variables.pop(index))
 
     def change_behavior_editor(self, identifier, editor):
-        """Substitui representação por escolha explícita, preservando cópia recuperável."""
+        """Replace the representation by explicit choice, keeping a recoverable copy."""
         flow = next((f for f in self.project.editable_flows if f["id"] == identifier), None)
         if not flow or flow.get("editor", "blocks") == editor:
             return
@@ -447,8 +462,10 @@ class DevelopmentMixin:
 
         result = QMessageBox.question(
             self,
-            "Trocar editor deste comportamento?",
-            "O comportamento atual será guardado em Versões. A nova representação começa com um evento vazio. Não há conversão automática entre blocos e nós.",
+            tr("Switch this behavior's editor?"),
+            tr(
+                "The current behavior will be kept in Versions. The new representation starts with an empty event. There is no automatic conversion between blocks and nodes."
+            ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
             QMessageBox.StandardButton.Cancel,
         )
@@ -460,7 +477,7 @@ class DevelopmentMixin:
         self._edit(lambda: replace_editor(flow, editor))
 
     def restore_behavior_dialog(self, identifier):
-        """Recupera uma representação anterior por escolha do usuário, com histórico."""
+        """Recover a previous representation by the user's choice, with history."""
         flow = next((f for f in self.project.editable_flows if f["id"] == identifier), None)
         backups = flow.get("behavior_backups", []) if flow else []
         if not backups:
@@ -468,13 +485,13 @@ class DevelopmentMixin:
         labels = [
             str(index + 1)
             + " · "
-            + ("Nós" if item.get("editor") == "nodes" else "Blocos")
+            + (tr("Nodes") if item.get("editor") == "nodes" else tr("Blocks"))
             + " · "
             + item["name"]
             for index, item in enumerate(backups)
         ]
         choice, ok = QInputDialog.getItem(
-            self, "Recuperar comportamento", "Versão anterior", labels, len(labels) - 1, False
+            self, tr("Recover behavior"), tr("Previous version"), labels, len(labels) - 1, False
         )
         if ok:
             from makebench.core.graph import restore_behavior
@@ -482,7 +499,7 @@ class DevelopmentMixin:
             self._edit(lambda: restore_behavior(flow, labels.index(choice)))
 
     def receive_graph(self, data):
-        """Confirma grafo/posições como uma transação do documento, sem tocar no Python próprio."""
+        """Confirm graph/positions as a document transaction, never touching your own Python."""
         flow = next(
             (
                 f
@@ -505,64 +522,64 @@ class DevelopmentMixin:
         )
 
     def search_block(self):
-        """Pesquisa tipos disponíveis e insere um rascunho real no Blockly."""
+        """Search the available types and insert a real draft into Blockly."""
         if self.logic.editor_kind.currentData() == "nodes":
             self.logic.graph_panel.add_dialog()
             return
         if not self.logic.ready:
             return
         entries = {
-            "Iniciar terminal": "mb_terminal_start",
-            "Enviar ao terminal": "mb_terminal_send",
-            "Encerrar terminal": "mb_terminal_stop",
-            "Mostrar mensagem": "mb_message",
-            "Registrar na saída": "mb_log",
-            "Condição se/senão": "mb_if",
-            "Repetir": "mb_repeat",
-            "Executar programa": "mb_run",
-            "Executar Bash": "mb_script",
-            "Perguntar": "mb_ask",
-            "Confirmar": "mb_confirm",
-            "Chamar função": "mb_call",
-            "Ir para estado": "mb_go_state",
-            "Abrir janela": "mb_open_window",
-            "Fechar janela": "mb_close_window",
-            "Definir variável": "mb_assign",
-            "Valor de variável": "mb_variable",
+            tr("Start terminal"): "mb_terminal_start",
+            tr("Send to terminal"): "mb_terminal_send",
+            tr("Stop terminal"): "mb_terminal_stop",
+            tr("Show message"): "mb_message",
+            tr("Write to output"): "mb_log",
+            tr("If/else condition"): "mb_if",
+            tr("Repeat"): "mb_repeat",
+            tr("Run program"): "mb_run",
+            tr("Run Bash"): "mb_script",
+            tr("Ask"): "mb_ask",
+            tr("Confirm"): "mb_confirm",
+            tr("Call function"): "mb_call",
+            tr("Go to state"): "mb_go_state",
+            tr("Open window"): "mb_open_window",
+            tr("Close window"): "mb_close_window",
+            tr("Set variable"): "mb_assign",
+            tr("Variable value"): "mb_variable",
         }
         entries.update(
             {
-                "Texto": "text",
-                "Número": "math_number",
-                "Verdadeiro ou falso": "logic_boolean",
-                "Lista de valores": "lists_create_with",
-                "Texto de várias linhas": "mb_multiline",
-                "Alterar texto de componente": "mb_set_text",
-                "Habilitar componente": "mb_set_enabled",
-                "Alterar progresso": "mb_set_value",
-                "Mostrar página": "mb_show_page",
-                "Ler texto do componente": "mb_read_text",
-                "Ler seleção da caixa": "mb_read_checked",
-                "Ler progresso": "mb_read_value",
-                "Juntar textos": "mb_join",
-                "Comparar ou calcular": "mb_binary",
+                tr("Text"): "text",
+                tr("Number"): "math_number",
+                tr("True or false"): "logic_boolean",
+                tr("List of values"): "lists_create_with",
+                tr("Multi-line text"): "mb_multiline",
+                tr("Change component text"): "mb_set_text",
+                tr("Enable component"): "mb_set_enabled",
+                tr("Change progress"): "mb_set_value",
+                tr("Show page"): "mb_show_page",
+                tr("Read component text"): "mb_read_text",
+                tr("Read checkbox selection"): "mb_read_checked",
+                tr("Read progress"): "mb_read_value",
+                tr("Join texts"): "mb_join",
+                tr("Compare or calculate"): "mb_binary",
             }
         )
         choice, ok = QInputDialog.getItem(
-            self, "Buscar bloco", "Digite para buscar", list(entries), 0, True
+            self, tr("Search block"), tr("Type to search"), list(entries), 0, True
         )
         if not ok:
             return
         if choice not in entries:
             matches = [name for name in entries if choice.casefold() in name.casefold()]
             if not matches:
-                self.statusBar().showMessage("Nenhum bloco corresponde à busca.", 5000)
+                self.statusBar().showMessage(tr("No block matches the search."), 5000)
                 return
             if len(matches) == 1:
                 choice = matches[0]
             else:
                 choice, ok = QInputDialog.getItem(
-                    self, "Blocos encontrados", "Escolha um bloco", matches, 0, False
+                    self, tr("Blocks found"), tr("Choose a block"), matches, 0, False
                 )
                 if not ok:
                     return
@@ -571,7 +588,7 @@ class DevelopmentMixin:
         )
 
     def find_function_name(self, name):
-        """Abre uma função solicitada pelo bloco, após análise sintática estática."""
+        """Open a function requested by a block, after static syntax analysis."""
         try:
             node = next(
                 (
@@ -584,18 +601,18 @@ class DevelopmentMixin:
         except (SyntaxError, ValueError):
             return
         if node:
-            self.set_mode("Código")
+            self.set_mode("code")
             self.code_files.setCurrentIndex(1)
             self.source_editor.show_line(node.lineno)
 
     def duplicate_flow_dialog(self, identifier):
-        """Copia comportamento para outro evento/estado com IDs novos e comentários."""
+        """Copy a behavior to another event/state with new IDs and comments."""
         from makebench.core.logic import create_flow
         from makebench.core.project import ComponentKind, new_id
 
         flow = next(f for f in self.project.workflows if f["id"] == identifier)
         if flow.get("body") is None:
-            self._show_error("Complete o rascunho antes de duplicar o fluxo.")
+            self._show_error(tr("Complete the draft before duplicating the flow."))
             return
         targets = [
             node
@@ -605,25 +622,25 @@ class DevelopmentMixin:
         labels = [
             node.display_name
             + " · "
-            + self.project.window_of(node.id).properties.get("title", "Janela")
+            + self.project.window_of(node.id).properties.get("title", tr("Window"))
             for node in targets
         ]
         choice, ok = QInputDialog.getItem(
-            self, "Duplicar fluxo", "Evento de destino", labels, 0, False
+            self, tr("Duplicate flow"), tr("Destination event"), labels, 0, False
         )
         if not ok:
             return
         target = targets[labels.index(choice)]
         owner = self.project.window_of(target.id)
         states = [
-            {"id": None, "name": "Em qualquer estado"},
-            {"id": "@default", "name": "Padrão"},
+            {"id": None, "name": tr("In any state")},
+            {"id": "@default", "name": tr("Default")},
             *self.project.states.get(owner.id, []),
         ]
         chosen, ok = QInputDialog.getItem(
             self,
-            "Duplicar fluxo",
-            "Filtro de estado",
+            tr("Duplicate flow"),
+            tr("State filter"),
             [state["name"] for state in states],
             0,
             False,
@@ -636,11 +653,13 @@ class DevelopmentMixin:
             f["event"]["component"] == target.id and f.get("states", []) == filters
             for f in self.project.workflows
         ):
-            self._show_error("Já existe um fluxo nesse evento e filtro. Escolha outro destino.")
+            self._show_error(
+                tr("A flow already exists for that event and filter. Choose another destination.")
+            )
             return
 
         def copy():
-            """Duplica dados e referências, preservando o original."""
+            """Duplicate data and references, keeping the original."""
             clone = create_flow(self.project, target.id, states=filters)
             if flow.get("editor") == "nodes":
                 from makebench.core.graph import duplicate_graph
@@ -663,7 +682,7 @@ class DevelopmentMixin:
             }
 
             def reidentify(value):
-                """Cria identificadores independentes para os blocos copiados."""
+                """Create independent identifiers for the copied blocks."""
                 if isinstance(value, dict):
                     if "op" in value:
                         value["id"] = new_id("block")
@@ -680,18 +699,18 @@ class DevelopmentMixin:
         self._edit(copy)
 
     def toggle_logic_python(self, enabled):
-        """Persiste a visibilidade sem destruir o editor nem o workspace Blockly."""
+        """Persist the visibility without destroying the editor or the Blockly workspace."""
         self.logic.splitter.widget(1).setVisible(enabled)
         self.settings.setValue("workspace/logic_python", enabled)
 
     def design_event_origin(self, identifier):
-        """Mantém o estado selecionado ao retornar à origem do evento."""
+        """Keep the selected state when returning to the event's origin."""
         if not self.logic.flush():
             return
         self.navigate_to_item("component", identifier)
 
     def insert_behavior(self, kind):
-        """Insere ações neutras no evento atual com histórico e IDs próprios."""
+        """Insert neutral actions in the current event with history and their own IDs."""
         if not self.logic.flush():
             return
         flow = next((f for f in self.project.editable_flows if f["id"] == self.logic.flow_id), None)
@@ -717,7 +736,7 @@ class DevelopmentMixin:
         self._edit(lambda: append_behavior(flow, blocks))
 
     def generated_origin(self, line):
-        """Localiza a instrução gerada no mesmo mapa de origem usado pelos diagnósticos."""
+        """Find the generated statement in the same origin map used by the diagnostics."""
         generated = self.logic.generated
         functions = [
             node
@@ -736,5 +755,5 @@ class DevelopmentMixin:
             self.logic.focus_block(flow, block)
         else:
             self.statusBar().showMessage(
-                "Esta linha é infraestrutura gerada, sem bloco de origem.", 5000
+                tr("This line is generated infrastructure, with no source block."), 5000
             )

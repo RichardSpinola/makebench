@@ -1,4 +1,4 @@
-"""Matriz real em compositor Wayland privado; não muda a escala do proprietário."""
+"""Real matrix in a private Wayland compositor; never changes the owner's scale."""
 
 import argparse
 import json
@@ -12,7 +12,7 @@ import time
 
 
 def main():
-    """Testa os dois toolkits em 100/125/150%, isolando compositor e configurações."""
+    """Test both toolkits at 100/125/150%, isolating the compositor and settings."""
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument(
@@ -76,7 +76,7 @@ def main():
                     deadline = time.monotonic() + 12
                     while not (runtime / "makebench-test").exists():
                         if compositor.poll() is not None:
-                            raise RuntimeError("Compositor privado não iniciou")
+                            raise RuntimeError("The private compositor did not start")
                         if time.monotonic() > deadline:
                             raise RuntimeError("Prazo do compositor privado excedido")
                         time.sleep(0.1)
@@ -143,7 +143,7 @@ def main():
                                 )
                             if result.returncode:
                                 raise RuntimeError(
-                                    f"Falha em {target.name}: código {result.returncode}; consulte run.log"
+                                    f"Failure in {target.name}: code {result.returncode}; see run.log"
                                 )
                             data = json.loads((target / "results.json").read_text())
                             data["output_scale"] = configured

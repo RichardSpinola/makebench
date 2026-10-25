@@ -1,4 +1,4 @@
-"""Projeto de QA cuja fonte denuncia qualquer execução indevida ao abrir o editor."""
+"""QA project whose source exposes any improper execution when the editor opens."""
 
 from pathlib import Path
 import argparse
@@ -20,7 +20,7 @@ source = SourceBuffer(
 )
 source.add_module(
     "makebench_user/helper.py",
-    "from pathlib import Path\nPath('/home/qa/should-not-execute').write_text('ERRO módulo')\n\ndef calculate(value):\n    return value+1\n",
+    "from pathlib import Path\nPath('/home/qa/should-not-execute').write_text('ERROR module')\n\ndef calculate(value):\n    return value+1\n",
 )
 p.python_files = sorted(source.modules)
 path = args.output / "project.makebench.json"

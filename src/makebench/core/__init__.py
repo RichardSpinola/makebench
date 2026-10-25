@@ -1,1 +1,1 @@
-"""Modelo de projeto e persistência, independentes de Qt e do editor."""
+"""Project model and persistence, independent of Qt and the editor."""

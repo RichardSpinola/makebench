@@ -9,7 +9,7 @@ os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu")
 
 
 def main():
-    """Exercita a entrada pública sem abrir projetos nem tocar nas preferências do autor."""
+    """Exercise the public entry point without opening projects or touching the author's preferences."""
     with tempfile.TemporaryDirectory(prefix="makebench-startup-") as root:
         os.environ["XDG_CONFIG_HOME"] = root + "/config"
         os.environ["XDG_STATE_HOME"] = root + "/state"
@@ -21,11 +21,11 @@ def main():
         verified = []
 
         def show(dialog):
-            """Fecha pela mesma ação usada pelo usuário após a primeira apresentação."""
+            """Close with the same action the user uses after the first presentation."""
             original(dialog)
 
             def close():
-                """Confere a janela real e deixa Qt encerrar pelo último diálogo fechado."""
+                """Check the real window and let Qt quit when the last dialog closes."""
                 verified.append(
                     dialog.isVisible()
                     and not dialog.window.isVisible()
@@ -39,7 +39,7 @@ def main():
         with patch("sys.argv", ["makebench"]), patch.object(StartupDialog, "show", show):
             assert launch() == 0
         assert verified == [True], verified
-    print("OK: inicializador real fixo, sem moldura, bancada oculta e saída pelo X interno.")
+    print("OK: real fixed launcher, frameless, hidden workbench and exit through the inner X.")
 
 
 if __name__ == "__main__":

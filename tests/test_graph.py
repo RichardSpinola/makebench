@@ -1,4 +1,4 @@
-"""Semântica do grafo livre, compatibilidade e transações reais do editor nativo."""
+"""Free-graph semantics, compatibility and real transactions of the native editor."""
 
 from copy import deepcopy
 import json
@@ -15,7 +15,7 @@ from makebench.runtime.worker import Context
 
 
 class GraphFixture:
-    """Constrói documentos por portas explícitas, sem depender do editor gráfico."""
+    """Build documents through explicit ports, without depending on the graphical editor."""
 
     def __init__(self):
         self.project = Project.empty()
@@ -26,7 +26,7 @@ class GraphFixture:
         self.output = []
 
     def node(self, op, parameters=None, **inputs):
-        """Aplica configuração neutra, mantendo valores e conexões identificados."""
+        """Apply a neutral configuration, keeping values and connections identified."""
         node = default_node(op, self.project, self.flow)
         node["parameters"].update(parameters or {})
         node["inputs"].update(
@@ -41,15 +41,15 @@ class GraphFixture:
         return node["id"]
 
     def edge(self, first, last, port="next"):
-        """Acrescenta aresta de controle por porta, sem ordenar nós visualmente."""
+        """Add a control edge by port, without ordering nodes visually."""
         self.graph["edges"].append({"from": first, "out": port, "to": last})
 
     def ref(self, identifier):
-        """Fio de valor independe de qualquer ligação de execução."""
+        """A value wire is independent of any execution link."""
         return {"node": identifier, "port": "value"}
 
     def run(self):
-        """Executa explicitamente somente Python gerado do fixture em contexto neutro."""
+        """Explicitly run only the fixture's generated Python in a neutral context."""
         Project.from_dict(self.project.to_dict())
         code = generate(self.project)
         namespace = {}
@@ -60,10 +60,10 @@ class GraphFixture:
 
 
 class GraphModelTests(unittest.TestCase):
-    """Fios livres preservam significado, limites, comentários e origem do programa."""
+    """Free wires keep their meaning, limits, comments and program origin."""
 
     def test_backward_execution_edges_and_layout_do_not_change_program(self):
-        """Uma condição volta a atribuir uma variável até três iterações, sem árvore."""
+        """A condition loops back to assign a variable up to three iterations, with no tree."""
         f = GraphFixture()
         initial = f.node("assign", {"name": "counter"}, value=0)
         read = f.node("variable", {"name": "counter"})
@@ -88,7 +88,7 @@ class GraphModelTests(unittest.TestCase):
         self.assertIn("while _pc is not None", code.text)
 
     def test_repeat_sequence_and_explicit_return_preserve_order(self):
-        """Repeat retorna automaticamente; Sequence executa saídas na ordem das portas."""
+        """Repeat returns automatically; Sequence runs outputs in port order."""
         f = GraphFixture()
         repeat = f.node("repeat", count=3)
         sequence = f.node("sequence")
@@ -106,7 +106,7 @@ class GraphModelTests(unittest.TestCase):
         )
 
     def test_repeat_explicit_back_edge_does_not_duplicate_continuations(self):
-        """Retornar ao próprio Repeat não duplica a pilha de repetições."""
+        """Returning to the same Repeat does not duplicate the repeat stack."""
         f = GraphFixture()
         repeat = f.node("repeat", count=3)
         log = f.node("log", value="A")
@@ -117,25 +117,25 @@ class GraphModelTests(unittest.TestCase):
         self.assertEqual(len(f.output), 3)
 
     def test_value_cycle_is_rejected_but_execution_cycle_is_legal(self):
-        """Memória usa variáveis; laços de valores são diagnosticados antes de salvar."""
+        """Memory uses variables; value loops are diagnosed before saving."""
         f = GraphFixture()
         a = f.node("join", left="a", right="")
         b = f.node("join", left=f.ref(a), right="b")
         next(n for n in f.graph["nodes"] if n["id"] == a)["inputs"]["left"] = f.ref(b)
-        with self.assertRaisesRegex(ProjectError, "Ciclo entre valores"):
+        with self.assertRaisesRegex(ProjectError, "Cycle between values"):
             Project.from_dict(f.project.to_dict())
 
     def test_step_budget_diagnoses_infinite_control_loop(self):
-        """Um ciclo de controle é aceito e interrompido com diagnóstico após 100 mil passos."""
+        """A control cycle is accepted and stopped with a diagnostic after 100,000 steps."""
         f = GraphFixture()
         node = f.node("if", condition=True)
         f.edge(f.entry, node)
         f.edge(node, node, "true")
-        with self.assertRaisesRegex(RuntimeError, "100 mil passos"):
+        with self.assertRaisesRegex(RuntimeError, "100,000 steps"):
             f.run()
 
     def test_shared_value_dag_is_not_expanded_exponentially(self):
-        """Compartilhar produtores mantém geração linear e memoização por passo."""
+        """Sharing producers keeps generation linear and memoization per step."""
         f = GraphFixture()
         previous = f.node("constant", {"value": 1})
         for _ in range(30):
@@ -149,19 +149,19 @@ class GraphModelTests(unittest.TestCase):
         self.assertLess(len(code.text), 20000)
 
     def test_result_requires_execution_before_read(self):
-        """Ligar saída de uma ação não executa essa ação por inferência."""
+        """Wiring an action's output does not run that action by inference."""
         f = GraphFixture()
         call = f.node("call", {"function": "saudacao"})
         log = f.node("log", value=f.ref(call))
         f.edge(f.entry, log)
-        with self.assertRaisesRegex(RuntimeError, "nó produtor"):
+        with self.assertRaisesRegex(RuntimeError, "producer node"):
             f.run()
 
     def test_type_mismatch_and_invalid_files_have_project_errors(self):
-        """Portas, IDs malformados e tipos incompatíveis não vazam exceções internas."""
+        """Ports, malformed IDs and incompatible types never leak internal exceptions."""
         f = GraphFixture()
         node = f.node("if", condition="texto")
-        with self.assertRaisesRegex(ProjectError, "Tipos incompatíveis"):
+        with self.assertRaisesRegex(ProjectError, "Incompatible types"):
             Project.from_dict(f.project.to_dict())
         mutations = [
             lambda g: g.update(entry=[]),
@@ -177,7 +177,7 @@ class GraphModelTests(unittest.TestCase):
                 Project.from_dict(document)
 
     def test_explicit_replacement_and_recovery_preserve_blockly_comments(self):
-        """Trocar editor conserva os dados completos anteriores, sem conversão implícita."""
+        """Switching editors keeps the complete previous data, with no implicit conversion."""
         project = Project.empty()
         flow = create_flow(project, project.root.id)
         flow.update(
@@ -202,7 +202,7 @@ class GraphModelTests(unittest.TestCase):
         Project.from_dict(project.to_dict())
 
     def test_format7_backup_and_no_conversion_on_open(self):
-        """Projetos v6 só recebem v7 ao salvar com grafo, com cópia da versão anterior."""
+        """v6 projects only become v7 when saved with a graph, with a copy of the previous version."""
         with tempfile.TemporaryDirectory() as directory:
             project = Project.empty()
             project.add(project.root.id, ComponentKind.TERMINAL)
@@ -243,7 +243,7 @@ class GraphModelTests(unittest.TestCase):
                 worker.close()
 
     def test_map_edits_graph_navigation_in_place_and_ignores_unreachable_nodes(self):
-        """O mapa não anuncia ações soltas; editar ligação conserva ID, fios e comentários."""
+        """The map does not announce loose actions; editing a link keeps the ID, wires and comments."""
         from makebench.core.navigation import connect_navigation, remove_navigation_block
 
         f = GraphFixture()
@@ -269,7 +269,7 @@ class GraphModelTests(unittest.TestCase):
         Project.from_dict(f.project.to_dict())
 
     def test_graph_navigation_and_window_duplication_keep_internal_references(self):
-        """O mapa lê navegação dos nós e uma janela duplicada ganha IDs próprios."""
+        """The map reads navigation from nodes and a duplicated window gets its own IDs."""
         f = GraphFixture()
         terminal = f.project.add(f.project.root.id, ComponentKind.TERMINAL)
         target = add_window(f.project, "Outra janela")
@@ -293,7 +293,7 @@ class GraphModelTests(unittest.TestCase):
 
 
 class GraphEditorTests(unittest.TestCase):
-    """Portas e transações gráficas devem sobreviver a salvar, desfazer e exclusão."""
+    """Ports and graphical transactions must survive save, undo and deletion."""
 
     @classmethod
     def setUpClass(cls):
@@ -312,13 +312,13 @@ class GraphEditorTests(unittest.TestCase):
         self.addCleanup(self.close)
 
     def close(self):
-        """Encerra widgets sem diálogo e sem mexer em arquivos do usuário."""
+        """Close widgets without dialogs and without touching the user's files."""
         self.window.history.mark_saved()
         self.window.source.mark_saved()
         self.window.close()
 
     def test_pending_connection_immediate_save_and_undo(self):
-        """Salvar imediatamente inclui um fio recém-solto, com uma etapa de desfazer."""
+        """Saving immediately includes a just-dropped wire, with one undo step."""
         from PySide6.QtCore import QPointF
         from PySide6.QtTest import QTest
 
@@ -339,7 +339,7 @@ class GraphEditorTests(unittest.TestCase):
         self.assertFalse(self.window.project.workflows[0]["graph"]["edges"])
 
     def test_delete_preserves_other_nodes_and_restores_value_default(self):
-        """Excluir produtor remove seus fios e desfazer recupera referências e IDs."""
+        """Deleting a producer removes its wires and undo restores references and IDs."""
         f = self.fixture
         a = f.node("constant", {"value": "texto"})
         b = f.node("log", value=f.ref(a))
@@ -361,7 +361,7 @@ class GraphEditorTests(unittest.TestCase):
         )
 
     def test_group_move_is_single_undo_and_source_is_preserved(self):
-        """Mover nós conserva fonte própria e registra posições, não a ordem de execução."""
+        """Moving nodes keeps the user's own source and records positions, not execution order."""
         from PySide6.QtCore import QPointF
 
         f = self.fixture

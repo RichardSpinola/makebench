@@ -1,4 +1,4 @@
-"""Constrói exemplos com módulos em ambiente isolado e registra os hashes reais."""
+"""Build examples with modules in an isolated environment and record the real hashes."""
 
 import argparse
 import json
@@ -9,7 +9,7 @@ from makebench.core.packages import build_package, FORMATS
 
 
 def main():
-    """Reutiliza SDKs e rodas preparados; nunca importa as funções do exemplo."""
+    """Reuse prepared SDKs and wheels; never imports the example's functions."""
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument("--backend", choices=("qt", "gtk"), required=True)

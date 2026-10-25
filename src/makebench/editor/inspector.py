@@ -1,4 +1,4 @@
-"""Inspetor contextual por escopo, com seções recolhíveis e campos acessíveis."""
+"""Contextual inspector by scope, with collapsible sections and accessible fields."""
 
 from PySide6.QtCore import Qt, Signal, QEvent, QTimer
 from PySide6.QtWidgets import (
@@ -17,10 +17,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from makebench.core.project import KIND_LABELS, LAYOUT_LABELS, ComponentKind, LayoutKind
+from makebench.i18n import ntr, tr
 
 
 class Inspector(QWidget):
-    """Mostra conteúdo, organização, tamanho e eventos pertinentes à seleção."""
+    """Show the content, arrangement, size and events relevant to the selection."""
 
     property_changed = Signal(str, str, object)
     batch_changed = Signal(str, object)
@@ -34,7 +35,7 @@ class Inspector(QWidget):
     restore_requested = Signal(str, str)
 
     def __init__(self, parent=None):
-        """Guarda apenas estado de apresentação; o documento continua no projeto."""
+        """Keep only presentation state; the document stays in the project."""
         super().__init__(parent)
         self.form = QFormLayout(self)
         self.form.setContentsMargins(8, 8, 8, 8)
@@ -52,7 +53,7 @@ class Inspector(QWidget):
         self._preview = None
 
     def clear(self):
-        """Remove as vistas anteriores, incluindo conexões e campos de outro escopo."""
+        """Remove the previous views, including connections and fields from another scope."""
         self._binding_signature = None
         self.preview_timer.stop()
         self._preview = None
@@ -67,7 +68,7 @@ class Inspector(QWidget):
         self.fields = self.form
 
     def section(self, title, expanded=True):
-        """Cria uma seção cuja abertura é lembrada por tipo de componente."""
+        """Create a section whose open state is remembered per component type."""
         wrapper = QWidget()
         layout = QVBoxLayout(wrapper)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -91,7 +92,7 @@ class Inspector(QWidget):
         body.setVisible(opened)
 
         def toggle(value):
-            """Lembra abertura da seção sem alterar o documento."""
+            """Remember the section's open state without changing the document."""
             self._expanded[key] = value
             body.setVisible(value)
             header.setArrowType(Qt.ArrowType.DownArrow if value else Qt.ArrowType.RightArrow)
@@ -103,7 +104,7 @@ class Inspector(QWidget):
         self.fields = form
 
     def set_component(self, project, node, overrides=None, state_mode=False):
-        """Renderiza propriedades efetivas; ● identifica diferenças do estado ativo."""
+        """Render effective properties; ● marks differences in the active state."""
         import json
 
         parent = project.parent_of(node.id)
@@ -140,55 +141,60 @@ class Inspector(QWidget):
         parent = project.parent_of(node.id)
         if parent:
             caption = QLabel(
-                "Dentro de: " + (parent.properties.get("code_name") or parent.display_name)
+                tr("Inside: {name}").format(
+                    name=parent.properties.get("code_name") or parent.display_name
+                )
             )
             caption.setWordWrap(True)
             caption.setProperty("muted", True)
             self.form.addRow(caption)
-        self.section("Conteúdo")
+        self.section(tr("Content"))
         for key, label in [
-            ("title", "Título"),
-            ("text", "Texto"),
-            ("placeholder", "Dica do campo"),
+            ("title", tr("Title")),
+            ("text", tr("Text")),
+            ("placeholder", tr("Field hint")),
         ]:
             if key in node.properties:
                 self._text_field(label, node.id, key, node.properties[key])
         if node.kind == ComponentKind.BUTTON:
-            self._text_field("Dica", node.id, "tooltip", node.properties.get("tooltip", ""))
+            self._text_field(tr("Tooltip"), node.id, "tooltip", node.properties.get("tooltip", ""))
             choose_icon = QPushButton(
-                "Escolher ícone…" if not node.properties.get("icon") else "Trocar ícone…"
+                tr("Choose icon…") if not node.properties.get("icon") else tr("Change icon…")
             )
             choose_icon.setEnabled(not self.state_mode)
             choose_icon.clicked.connect(lambda: self.icon_requested.emit(node.id))
-            self.fields.addRow("Ícone", choose_icon)
+            self.fields.addRow(tr("Icon"), choose_icon)
             if node.properties.get("icon"):
-                clear_icon = QPushButton("Remover ícone")
+                clear_icon = QPushButton(tr("Remove icon"))
                 clear_icon.setEnabled(not self.state_mode)
                 clear_icon.clicked.connect(lambda: self.property_changed.emit(node.id, "icon", ""))
                 self.fields.addRow(clear_icon)
         if node.kind == ComponentKind.IMAGE:
-            filename = QLabel(node.properties.get("image_name") or "Nenhuma imagem")
+            filename = QLabel(node.properties.get("image_name") or tr("No image"))
             filename.setWordWrap(True)
-            self.fields.addRow("Arquivo", filename)
-            button = QPushButton("Escolher ou substituir imagem…")
+            self.fields.addRow(tr("File"), filename)
+            button = QPushButton(tr("Choose or replace image…"))
             button.clicked.connect(lambda: self.image_requested.emit(node.id))
             self.fields.addRow(button)
-            clear = QPushButton("Remover imagem")
+            clear = QPushButton(tr("Remove image"))
             clear.setEnabled(bool(node.properties.get("source")))
             clear.clicked.connect(lambda: self.image_cleared.emit(node.id))
             self.fields.addRow(clear)
             self._text_field(
-                "Descrição acessível", node.id, "alt_text", node.properties.get("alt_text", "")
+                tr("Accessible description"),
+                node.id,
+                "alt_text",
+                node.properties.get("alt_text", ""),
             )
         if node.kind == ComponentKind.TERMINAL:
             self._text_field(
-                "Programa (vazio = shell)",
+                tr("Program (empty = shell)"),
                 node.id,
                 "terminal_program",
                 node.properties.get("terminal_program", ""),
             )
             self._boolean_field(
-                "Iniciar ao executar o aplicativo",
+                tr("Start when the application runs"),
                 node.id,
                 "terminal_autostart",
                 node.properties.get("terminal_autostart", False),
@@ -198,31 +204,31 @@ class Inspector(QWidget):
             arguments = QLineEdit(shlex.join(node.properties.get("terminal_arguments", [])))
 
             def change_arguments():
-                """Interpreta somente argv; nunca executa o texto das propriedades."""
+                """Interpret only argv; never runs the properties' text."""
                 try:
                     values = shlex.split(arguments.text())
                 except ValueError:
-                    arguments.setToolTip("Aspas incompletas nos argumentos.")
+                    arguments.setToolTip(tr("Unbalanced quotes in the arguments."))
                     return
                 self.property_changed.emit(node.id, "terminal_arguments", values)
 
             arguments.editingFinished.connect(change_arguments)
             arguments.setEnabled(not self.state_mode)
-            self.fields.addRow("Argumentos", arguments)
+            self.fields.addRow(tr("Arguments"), arguments)
         if node.kind == ComponentKind.PROGRESS:
             self._number_field(
-                "Progresso (%)", node.id, "value", node.properties.get("value", 0), 0, 100
+                tr("Progress (%)"), node.id, "value", node.properties.get("value", 0), 0, 100
             )
         if node.kind == ComponentKind.PAGES:
             pages = QComboBox()
             for child in node.children:
-                pages.addItem(child.properties.get("title", "Página"), child.id)
+                pages.addItem(child.properties.get("title", tr("Page")), child.id)
             pages.setCurrentIndex(pages.findData(node.properties["initial_page"]))
             pages.currentIndexChanged.connect(
                 lambda _: self.property_changed.emit(node.id, "initial_page", pages.currentData())
             )
-            self.fields.addRow("Página inicial", pages)
-        self.section("Layout")
+            self.fields.addRow(tr("Initial page"), pages)
+        self.section(tr("Layout"))
         if node.can_have_children and node.kind != ComponentKind.PAGES:
             segments = QWidget()
             row = QGridLayout(segments)
@@ -233,7 +239,7 @@ class Inspector(QWidget):
                 button.setCheckable(True)
                 button.setChecked(node.layout == mode)
                 button.setEnabled(not self.state_mode)
-                button.setAccessibleName("Organizar em " + label)
+                button.setAccessibleName(tr("Arrange as {layout}").format(layout=label))
                 button.setProperty("layoutNode", node.id)
                 button.setProperty("layoutMode", mode.value)
                 button.installEventFilter(self)
@@ -244,10 +250,10 @@ class Inspector(QWidget):
             self.fields.addRow(segments)
             if node.layout != LayoutKind.FREE:
                 self._number_field(
-                    "Espaçamento", node.id, "spacing", node.properties.get("spacing", 6), 0, 2000
+                    tr("Spacing"), node.id, "spacing", node.properties.get("spacing", 6), 0, 2000
                 )
                 self._number_field(
-                    "Margens internas",
+                    tr("Inner margins"),
                     node.id,
                     "padding",
                     node.properties.get("padding", 8),
@@ -269,10 +275,18 @@ class Inspector(QWidget):
                         button.setChecked(node.properties.get("alignment_preset") == value)
                         button.setEnabled(not self.state_mode)
                         button.setAccessibleName(
-                            "Alinhamento "
-                            + {"top": "superior", "center": "central", "bottom": "inferior"}[y]
-                            + " "
-                            + {"left": "à esquerda", "center": "ao centro", "right": "à direita"}[x]
+                            tr("Alignment {vertical} {horizontal}").format(
+                                vertical={
+                                    "top": tr("top"),
+                                    "center": tr("middle"),
+                                    "bottom": tr("bottom"),
+                                }[y],
+                                horizontal={
+                                    "left": tr("left"),
+                                    "center": tr("center"),
+                                    "right": tr("right"),
+                                }[x],
+                            )
                         )
                         button.setToolTip(button.accessibleName())
                         button.clicked.connect(
@@ -281,56 +295,61 @@ class Inspector(QWidget):
                             )
                         )
                         grid.addWidget(button, row, column)
-                self.fields.addRow("Alinhamento", pad)
+                self.fields.addRow(tr("Alignment"), pad)
                 self._choice_field(
-                    "Alinhar",
+                    tr("Align"),
                     node.id,
                     "align",
                     node.properties.get("align", "start"),
                     [
-                        ("Início", "start"),
-                        ("Centro", "center"),
-                        ("Fim", "end"),
-                        ("Preencher", "stretch"),
+                        (tr("Start"), "start"),
+                        (tr("Center"), "center"),
+                        (tr("End"), "end"),
+                        (tr("Fill"), "stretch"),
                     ],
                 )
                 self._choice_field(
-                    "Distribuir",
+                    tr("Distribute"),
                     node.id,
                     "distribute",
                     node.properties.get("distribute", "start"),
                     [
-                        ("Início", "start"),
-                        ("Centro", "center"),
-                        ("Fim", "end"),
-                        ("Entre elementos", "space-between"),
+                        (tr("Start"), "start"),
+                        (tr("Center"), "center"),
+                        (tr("End"), "end"),
+                        (tr("Between elements"), "space-between"),
                     ],
                 )
             if node.layout == LayoutKind.GRID:
                 self._number_field(
-                    "Colunas", node.id, "columns", node.properties.get("columns", 2), 1, 12
+                    tr("Columns"), node.id, "columns", node.properties.get("columns", 2), 1, 12
                 )
         if node.kind == ComponentKind.WINDOW:
             self._number_field(
-                "Largura inicial", node.id, "width", node.properties.get("width", 640), 200, 4000
+                tr("Initial width"), node.id, "width", node.properties.get("width", 640), 200, 4000
             )
             self._number_field(
-                "Altura inicial", node.id, "height", node.properties.get("height", 480), 160, 4000
+                tr("Initial height"),
+                node.id,
+                "height",
+                node.properties.get("height", 480),
+                160,
+                4000,
             )
             self._boolean_field(
-                "Redimensionável", node.id, "resizable", node.properties.get("resizable", True)
+                tr("Resizable"), node.id, "resizable", node.properties.get("resizable", True)
             )
         elif parent:
             for axis, label in (
                 []
                 if parent.layout == LayoutKind.FREE
-                else [("width", "Largura"), ("height", "Altura")]
+                else [("width", tr("Width")), ("height", tr("Height"))]
             ):
                 field = QComboBox()
                 for text, value in [
-                    ("Ajustar ao conteúdo", "content"),
-                    ("Preencher", "fill"),
-                    ("Fixo", "fixed"),
+                    (tr("Fit to content"), "content"),
+                    (tr("Fill"), "fill"),
+                    (tr("Fixed"), "fixed"),
                 ]:
                     field.addItem(text, value)
                 field.setCurrentIndex(
@@ -338,7 +357,7 @@ class Inspector(QWidget):
                 )
 
                 def change_mode(_, axis=axis, field=field):
-                    """Atualiza o dimensionamento do eixo escolhido."""
+                    """Update the sizing of the chosen axis."""
                     modes = dict(node.properties.get("size_mode", {}))
                     modes[axis] = field.currentData()
                     self.property_changed.emit(node.id, "size_mode", modes)
@@ -355,8 +374,8 @@ class Inspector(QWidget):
                 for key, label in [
                     ("x", "X"),
                     ("y", "Y"),
-                    ("width", "Largura (px)"),
-                    ("height", "Altura (px)"),
+                    ("width", tr("Width (px)")),
+                    ("height", tr("Height (px)")),
                 ]:
                     self._number_field(
                         label,
@@ -368,36 +387,45 @@ class Inspector(QWidget):
                     )
             else:
                 hint = QLabel(
-                    "Posição definida pelo contêiner (" + LAYOUT_LABELS[parent.layout] + ")."
+                    tr("Position set by the container ({layout}).").format(
+                        layout=LAYOUT_LABELS[parent.layout]
+                    )
                 )
                 hint.setWordWrap(True)
                 hint.setProperty("muted", True)
                 self.fields.addRow(hint)
-        self.section("Estado")
-        for key, label in [("visible", "Visível"), ("enabled", "Habilitado")]:
+        self.section(tr("State"))
+        for key, label in [("visible", tr("Visible")), ("enabled", tr("Enabled"))]:
             self._boolean_field(label, node.id, key, node.properties.get(key, True))
         if node.kind == ComponentKind.CHECKBOX:
             self._boolean_field(
-                "Selecionada inicialmente",
+                tr("Initially selected"),
                 node.id,
                 "checked",
                 node.properties.get("checked", False),
             )
         if node.kind in {ComponentKind.WINDOW, ComponentKind.BUTTON}:
-            self.section("Interações")
+            self.section(tr("Interactions"))
             count = sum(
                 1
                 for flow in project.editable_flows
                 if flow.get("event", {}).get("component") == node.id
             )
             label = (
-                "Editar lógica"
+                tr("Edit logic")
                 if count
-                else "+ Ao iniciar"
+                else tr("+ On start")
                 if node.kind == ComponentKind.WINDOW
-                else "+ Ao clicar"
+                else tr("+ On click")
             )
-            logic = QPushButton(label + (f" · {count} fluxo(s)" if count else ""))
+            logic = QPushButton(
+                label
+                + (
+                    " · " + ntr("{count} flow", "{count} flows", count).format(count=count)
+                    if count
+                    else ""
+                )
+            )
             logic.clicked.connect(lambda: self.logic_requested.emit(node.id))
             self.fields.addRow(logic)
             from makebench.core.navigation import navigation_edges
@@ -411,33 +439,37 @@ class Inspector(QWidget):
                 )
             ]:
                 destination = project.find(edge["target"]) if edge["target"] else None
-                text = "Navegação: " + (
-                    destination.display_name
-                    if destination
-                    else next(
-                        (
-                            s["name"]
-                            for s in project.states.get(project.window_of(node.id).id, [])
-                            if s["id"] == edge["target"]
-                        ),
-                        "Padrão",
+                text = (
+                    tr("Navigation:")
+                    + " "
+                    + (
+                        destination.display_name
+                        if destination
+                        else next(
+                            (
+                                s["name"]
+                                for s in project.states.get(project.window_of(node.id).id, [])
+                                if s["id"] == edge["target"]
+                            ),
+                            tr("Default"),
+                        )
                     )
                 )
                 link = QToolButton()
                 link.setText(text)
-                link.setToolTip("Inspecionar esta transição no Mapa")
+                link.setToolTip(tr("Inspect this transition in the Map"))
                 link.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
                 link.setAutoRaise(True)
                 link.clicked.connect(lambda _, edge=edge: self.navigation_requested.emit(edge))
                 self.fields.addRow(link)
-        self.section("Avançado", False)
+        self.section(tr("Advanced"), False)
         if node.kind == ComponentKind.WINDOW and node.id == project.root.id:
-            self._text_field("Nome do projeto", "@project", "name", project.name)
+            self._text_field(tr("Project name"), "@project", "name", project.name)
         identifier = QLineEdit(node.id)
         identifier.setReadOnly(True)
-        self.fields.addRow("Identificador interno", identifier)
+        self.fields.addRow(tr("Internal identifier"), identifier)
         self._text_field(
-            "Nome no código", node.id, "code_name", node.properties.get("code_name", "")
+            tr("Name in code"), node.id, "code_name", node.properties.get("code_name", "")
         )
         self.error_label = QLabel()
         self.error_label.setWordWrap(True)
@@ -445,26 +477,26 @@ class Inspector(QWidget):
         self.form.addRow(self.error_label)
 
     def _restore_menu(self, field, node_id, key):
-        """Expõe restauração por propriedade somente quando há sobrescrita."""
+        """Offer per-property restore only when there is an override."""
         if key not in self._overrides:
             return
         field.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         def menu(point):
-            """Oferece restauração explícita da propriedade selecionada."""
+            """Offer an explicit restore of the selected property."""
             popup = QMenu(field)
-            action = popup.addAction("Restaurar do Padrão")
+            action = popup.addAction(tr("Restore from Default"))
             action.triggered.connect(lambda: self.restore_requested.emit(node_id, key))
             popup.exec(field.mapToGlobal(point))
 
         field.customContextMenuRequested.connect(menu)
 
     def _label(self, label, key):
-        """Relaciona indicação de alteração ao rótulo, sem depender só da cor."""
+        """Tie the change marker to the label, never relying on color alone."""
         return ("● " if key in self._overrides else "") + label
 
     def _text_field(self, label, node_id, key, value):
-        """Confirma a digitação ao sair do campo como uma única alteração."""
+        """Confirm typing when leaving the field, as a single change."""
         field = QLineEdit(value)
         if self.state_mode and key in {"code_name", "tooltip"}:
             field.setReadOnly(True)
@@ -477,7 +509,7 @@ class Inspector(QWidget):
         self.fields.addRow(self._label(label, key), field)
 
     def _number_field(self, label, node_id, key, value, minimum, maximum):
-        """Restringe valores antes de enviar uma edição ao documento."""
+        """Constrain values before sending an edit to the document."""
         field = QSpinBox()
         field.setObjectName("property_" + key)
         field.setRange(minimum, maximum)
@@ -491,7 +523,7 @@ class Inspector(QWidget):
         self.fields.addRow(self._label(label, key), field)
 
     def _boolean_field(self, label, node_id, key, value):
-        """Mostra condição inicial ou sobrescrita sem disparar evento de execução."""
+        """Show the initial condition or override without firing a run event."""
         field = QCheckBox(self._label(label, key))
         field.setChecked(value)
         field.setAccessibleName(label)
@@ -502,7 +534,7 @@ class Inspector(QWidget):
         self.fields.addRow(field)
 
     def _choice_field(self, label, node_id, key, value, options):
-        """Usa valores internos estáveis, independentes dos rótulos traduzidos."""
+        """Use stable internal values, independent of translated labels."""
         field = QComboBox()
         for text, data in options:
             field.addItem(text, data)
@@ -515,7 +547,7 @@ class Inspector(QWidget):
         self.fields.addRow(label, field)
 
     def set_multiple(self, nodes, project=None, state_mode=False):
-        """Expõe valores comuns/mistos e bloqueia operações incompatíveis com o layout."""
+        """Show common/mixed values and block operations incompatible with the layout."""
         from makebench.core.navigation import OVERRIDES
 
         ids = tuple(sorted(node.id for node in nodes))
@@ -538,15 +570,19 @@ class Inspector(QWidget):
         self._binding_signature = signature
         self.state_mode = state_mode
         self._kind = "multiple"
-        self.form.addRow(QLabel(f"{len(nodes)} componentes"))
-        self.section("Propriedades comuns")
+        self.form.addRow(
+            QLabel(
+                ntr("{count} component", "{count} components", len(nodes)).format(count=len(nodes))
+            )
+        )
+        self.section(tr("Common properties"))
         labels = {
-            "text": "Texto",
-            "tooltip": "Dica",
-            "visible": "Visível",
-            "enabled": "Habilitado",
-            "checked": "Marcado",
-            "placeholder": "Dica do campo",
+            "text": tr("Text"),
+            "tooltip": tr("Tooltip"),
+            "visible": tr("Visible"),
+            "enabled": tr("Enabled"),
+            "checked": tr("Checked"),
+            "placeholder": tr("Field hint"),
         }
         common = set.intersection(*(set(n.properties) for n in nodes)) | {
             "visible",
@@ -579,10 +615,10 @@ class Inspector(QWidget):
                 )
             elif all(isinstance(v, str) for v in values):
                 field = QLineEdit("" if mixed else values[0])
-                field.setPlaceholderText("Múltiplos valores" if mixed else "")
+                field.setPlaceholderText(tr("Multiple values") if mixed else "")
 
                 def finish(field=field, key=key):
-                    """Não confirma campo misto que só recebeu foco."""
+                    """Never confirm a mixed field that only received focus."""
                     if field.isModified():
                         field.setModified(False)
                         self.batch_changed.emit(key, field.text())
@@ -594,12 +630,17 @@ class Inspector(QWidget):
             field.setAccessibleName(label)
             self.fields.addRow(label, field)
         if free and not state_mode:
-            for key, label in [("x", "X"), ("y", "Y"), ("width", "Largura"), ("height", "Altura")]:
+            for key, label in [
+                ("x", "X"),
+                ("y", "Y"),
+                ("width", tr("Width")),
+                ("height", tr("Height")),
+            ]:
                 values = [n.geometry[key] for n in nodes]
                 mixed = len(set(values)) > 1
                 field = QSpinBox()
                 field.setRange(-1, 20000)
-                field.setSpecialValueText("Múltiplos valores")
+                field.setSpecialValueText(tr("Multiple values"))
                 field.setKeyboardTracking(False)
                 field.setValue(-1 if mixed else values[0])
                 field.setObjectName("batch_geometry." + key)
@@ -610,21 +651,21 @@ class Inspector(QWidget):
                     )
                 )
                 self.fields.addRow(label, field)
-        self.section("Alinhar e distribuir")
+        self.section(tr("Align and distribute"))
         wrapper = QWidget()
         grid = QGridLayout(wrapper)
         grid.setContentsMargins(0, 0, 0, 0)
         commands = [
-            ("Esquerda", "left", "align-left"),
-            ("Centro horizontal", "center_x", "align-center"),
-            ("Direita", "right", "align-right"),
-            ("Topo", "top", "align-top"),
-            ("Centro vertical", "center_y", "align-center"),
-            ("Base", "bottom", "align-bottom"),
-            ("Mesma largura", "same_width", "width"),
-            ("Mesma altura", "same_height", "height"),
-            ("Distribuir horizontalmente", "distribute_x", "distribute"),
-            ("Distribuir verticalmente", "distribute_y", "distribute"),
+            (tr("Left"), "left", "align-left"),
+            (tr("Horizontal center"), "center_x", "align-center"),
+            (tr("Right"), "right", "align-right"),
+            (tr("Top"), "top", "align-top"),
+            (tr("Vertical center"), "center_y", "align-center"),
+            (tr("Bottom"), "bottom", "align-bottom"),
+            (tr("Same width"), "same_width", "width"),
+            (tr("Same height"), "same_height", "height"),
+            (tr("Distribute horizontally"), "distribute_x", "distribute"),
+            (tr("Distribute vertically"), "distribute_y", "distribute"),
         ]
         from .theme import icon
 
@@ -637,9 +678,9 @@ class Inspector(QWidget):
                 free and not state_mode and (not mode.startswith("distribute") or len(nodes) >= 3)
             )
             reason = (
-                "Selecione irmãos em um contêiner Livre no estado Padrão."
+                tr("Select siblings in a Free container in the Default state.")
                 if not free or state_mode
-                else "Selecione pelo menos três componentes."
+                else tr("Select at least three components.")
             )
             button.setEnabled(enabled)
             button.setToolTip(label if enabled else label + " · " + reason)
@@ -648,12 +689,12 @@ class Inspector(QWidget):
         self.fields.addRow(wrapper)
 
     def emit_preview(self):
-        """Entrega a simulação após 400 ms de hover deliberado."""
+        """Deliver the simulation after 400 ms of deliberate hover."""
         if self._preview:
             self.layout_preview_requested.emit(*self._preview)
 
     def eventFilter(self, obj, event):
-        """Cancela a simulação ao sair do controle sem tocar no projeto."""
+        """Cancel the simulation when leaving the control, without touching the project."""
         if not getattr(self, "state_mode", False) and obj.property("layoutNode"):
             if event.type() == QEvent.Type.Enter:
                 self._preview = (obj.property("layoutNode"), obj.property("layoutMode"))
@@ -665,7 +706,7 @@ class Inspector(QWidget):
         return super().eventFilter(obj, event)
 
     def patch_value(self, key, value):
-        """Atualiza uma entrada existente se a alteração veio de outro comando, sem perder foco."""
+        """Update an existing input if the change came from another command, without losing focus."""
         field = self.findChild(QWidget, "property_" + key)
         if field is None:
             return

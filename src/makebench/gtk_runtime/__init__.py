@@ -1,1 +1,1 @@
-"""Runtime GTK4 opcional; não depende do editor nem de PySide6."""
+"""Optional GTK4 runtime; depends on neither the editor nor PySide6."""

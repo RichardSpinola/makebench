@@ -1,119 +1,137 @@
-"""Diálogos controlados pelo editor, com ações explícitas em português."""
+"""Editor-controlled dialogs, with explicit actions in the active language."""
 
 from PySide6.QtCore import QLibraryInfo, QTranslator
-from PySide6.QtWidgets import QApplication, QDialogButtonBox, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QDialogButtonBox, QFileDialog, QMessageBox
 
-BUTTONS = {
-    "Save": "Salvar",
-    "Discard": "Descartar",
-    "Cancel": "Cancelar",
-    "Open": "Abrir",
-    "Close": "Fechar",
-    "Ok": "Continuar",
-    "Yes": "Confirmar",
-    "No": "Recusar",
-    "Apply": "Aplicar",
-    "Reset": "Restaurar",
-    "RestoreDefaults": "Restaurar padrões",
-    "Help": "Ajuda",
-}
+from makebench.i18n import language, tr
+
+
+def button_labels():
+    """Standard button labels in the active language, keyed by QDialogButtonBox name."""
+    return {
+        "Save": tr("Save"),
+        "Discard": tr("Discard"),
+        "Cancel": tr("Cancel"),
+        "Open": tr("Open"),
+        "Close": tr("Close"),
+        "Ok": tr("Continue"),
+        "Yes": tr("Confirm"),
+        "No": tr("Decline"),
+        "Apply": tr("Apply"),
+        "Reset": tr("Restore"),
+        "RestoreDefaults": tr("Restore defaults"),
+        "Help": tr("Help"),
+    }
 
 
 def translate_buttons(dialog):
-    """Traduz botões padrão preservando seus papéis e códigos de retorno."""
+    """Label standard buttons in the active language, keeping their roles and return codes."""
     for box in [dialog, *dialog.findChildren(QDialogButtonBox)]:
         if not isinstance(box, (QMessageBox, QDialogButtonBox)):
             continue
-        for name, text in BUTTONS.items():
+        for name, text in button_labels().items():
             enum = getattr(type(box).StandardButton, name, None)
             if enum is not None and box.button(enum):
                 box.button(enum).setText(text)
     if isinstance(dialog, QFileDialog):
         for role, text in [
-            ("LookIn", "Procurar em:"),
-            ("FileName", "Nome do arquivo:"),
-            ("FileType", "Tipo de arquivo:"),
+            ("LookIn", tr("Look in:")),
+            ("FileName", tr("File name:")),
+            ("FileType", tr("File type:")),
             (
                 "Accept",
-                "Salvar" if dialog.acceptMode() == QFileDialog.AcceptMode.AcceptSave else "Abrir",
+                tr("Save")
+                if dialog.acceptMode() == QFileDialog.AcceptMode.AcceptSave
+                else tr("Open"),
             ),
-            ("Reject", "Cancelar"),
+            ("Reject", tr("Cancel")),
         ]:
             dialog.setLabelText(getattr(QFileDialog.DialogLabel, role), text)
 
 
-def install_translation(app):
-    """Instala catálogos e uma reserva textual, sem filtro global de eventos Qt.
+# Qt's own strings (file dialogs, text menus) that the Brazilian Portuguese
+# fallback covers when the system has no qtbase_pt_BR catalog installed.
+PORTUGUESE_QT_LABELS = {
+    "Save": "Salvar",
+    "&Save": "&Salvar",
+    "Discard": "Descartar",
+    "Cancel": "Cancelar",
+    "&Cancel": "&Cancelar",
+    "Open": "Abrir",
+    "&Open": "&Abrir",
+    "Close": "Fechar",
+    "&Close": "&Fechar",
+    "Yes": "Confirmar",
+    "&Yes": "&Confirmar",
+    "No": "Recusar",
+    "&No": "&Recusar",
+    "OK": "Continuar",
+    "Apply": "Aplicar",
+    "Look in:": "Procurar em:",
+    "File name:": "Nome do arquivo:",
+    "Files of type:": "Tipo de arquivo:",
+    "Name": "Nome",
+    "Size": "Tamanho",
+    "Type": "Tipo",
+    "Date Modified": "Modificado em",
+    "Cut": "Recortar",
+    "Copy": "Copiar",
+    "Paste": "Colar",
+    "Select All": "Selecionar tudo",
+    "Undo": "Desfazer",
+    "Redo": "Refazer",
+    "Delete": "Remover",
+    "New Folder": "Nova pasta",
+    "Folder": "Pasta",
+    "Show hidden files": "Mostrar arquivos ocultos",
+    "Detailed View": "Detalhes",
+    "List View": "Lista",
+    "Back": "Voltar",
+    "Forward": "Avançar",
+    "Parent Directory": "Pasta acima",
+    "Create New Folder": "Criar pasta",
+    "Rename": "Renomear",
+    "Show Details...": "Mostrar detalhes…",
+    "Hide Details...": "Ocultar detalhes…",
+}
+QT_CONTEXTS = {
+    "QPlatformTheme",
+    "QFileDialog",
+    "QDialogButtonBox",
+    "QMessageBox",
+    "QFileSystemModel",
+    "QLineEdit",
+    "QWidgetTextControl",
+}
 
-    Um filtro Python global pode receber objetos privados de WebEngine ainda
-    em construção. Tradução por catálogo evita envolver esses objetos.
+
+def install_translation(app):
+    """Install Qt's catalog for the active language, with no global Qt event filter.
+
+    English needs nothing: Qt's built-in strings are already English. For
+    Brazilian Portuguese, Qt's own catalog is loaded plus a small fallback for
+    systems without it. A global Python filter could receive private WebEngine
+    objects still under construction; catalog-based translation avoids that.
     """
+    app._makebench_dialog_filter = True
+    if language() != "pt_BR":
+        return
     catalog = QTranslator(app)
     catalog.load("qtbase_pt_BR", QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath))
     app.installTranslator(catalog)
 
     class PortugueseFallback(QTranslator):
-        """Traduz ações padrão mesmo quando o catálogo não está instalado."""
+        """Translate standard actions even when the Qt catalog is not installed."""
 
         def translate(self, context, source, disambiguation=None, n=-1):
-            """Mantém textos desconhecidos com o catálogo anterior do Qt."""
-            labels = {
-                "Save": "Salvar",
-                "&Save": "&Salvar",
-                "Discard": "Descartar",
-                "Cancel": "Cancelar",
-                "&Cancel": "&Cancelar",
-                "Open": "Abrir",
-                "&Open": "&Abrir",
-                "Close": "Fechar",
-                "&Close": "&Fechar",
-                "Yes": "Confirmar",
-                "&Yes": "&Confirmar",
-                "No": "Recusar",
-                "&No": "&Recusar",
-                "OK": "Continuar",
-                "Apply": "Aplicar",
-                "Look in:": "Procurar em:",
-                "File name:": "Nome do arquivo:",
-                "Files of type:": "Tipo de arquivo:",
-                "Name": "Nome",
-                "Size": "Tamanho",
-                "Type": "Tipo",
-                "Date Modified": "Modificado em",
-                "Cut": "Recortar",
-                "Copy": "Copiar",
-                "Paste": "Colar",
-                "Select All": "Selecionar tudo",
-                "Undo": "Desfazer",
-                "Redo": "Refazer",
-                "Delete": "Remover",
-                "New Folder": "Nova pasta",
-                "Folder": "Pasta",
-                "Show hidden files": "Mostrar arquivos ocultos",
-                "Detailed View": "Detalhes",
-                "List View": "Lista",
-                "Back": "Voltar",
-                "Forward": "Avançar",
-                "Parent Directory": "Pasta acima",
-                "Create New Folder": "Criar pasta",
-                "Rename": "Renomear",
-                "Show Details...": "Mostrar detalhes…",
-                "Hide Details...": "Ocultar detalhes…",
-            }
-            if context in {
-                "QPlatformTheme",
-                "QFileDialog",
-                "QDialogButtonBox",
-                "QMessageBox",
-                "QFileSystemModel",
-                "QLineEdit",
-                "QWidgetTextControl",
-            }:
-                return labels.get(source) or labels.get(source.replace("&", ""))
+            """Leave unknown texts to the previous Qt catalog."""
+            if context in QT_CONTEXTS:
+                return PORTUGUESE_QT_LABELS.get(source) or PORTUGUESE_QT_LABELS.get(
+                    source.replace("&", "")
+                )
             return None
 
     fallback = PortugueseFallback(app)
     app.installTranslator(fallback)
     app._makebench_translator = catalog
     app._makebench_translation_fallback = fallback
-    app._makebench_dialog_filter = True

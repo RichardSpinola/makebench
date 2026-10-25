@@ -1,18 +1,19 @@
-"""Interface Qt executável, usando os mesmos controles/layouts do designer."""
+"""Runnable Qt interface, using the same controls/layouts as the designer."""
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame, QPlainTextEdit, QPushButton, QTabWidget, QVBoxLayout
 from makebench.core.project import ComponentKind
 from makebench.ui.renderer import create_control, place_children
+from makebench.i18n import tr
 
 
 class RuntimeView(QFrame):
-    """Instância de interface independente do documento editável e de suas alças."""
+    """Interface instance independent of the editable document and its handles."""
 
     clicked = Signal(str)
 
     def __init__(self, project, read_asset, parent=None, window_root=None):
-        """Renderiza snapshot e mantém controles para leitura/alterações do contexto."""
+        """Render the snapshot and keep controls for context reads/changes."""
         super().__init__(parent)
         self.project = project
         self.read_asset = read_asset
@@ -30,7 +31,7 @@ class RuntimeView(QFrame):
         layout.addWidget(self._render(window_root or project.root))
 
     def reset(self):
-        """Recria controles de uma janela fechada quando ela é aberta novamente."""
+        """Re-create the controls of a closed window when it opens again."""
         layout = self.layout()
         while layout.count():
             item = layout.takeAt(0)
@@ -45,7 +46,7 @@ class RuntimeView(QFrame):
         layout.addWidget(self._render(self.window_root))
 
     def _render(self, node):
-        """Monta contêineres/páginas e liga cliques somente na instância em execução."""
+        """Build containers/pages and connect clicks only in the running instance."""
         frame = QFrame()
         self.frames[node.id] = frame
         self.widgets[node.id] = frame
@@ -56,7 +57,7 @@ class RuntimeView(QFrame):
             tabs = QTabWidget()
             self.tabs[node.id] = tabs
             for page in node.children:
-                tabs.addTab(self._render(page), page.properties.get("title", "Página"))
+                tabs.addTab(self._render(page), page.properties.get("title", tr("Page")))
             tabs.setCurrentIndex(
                 next(
                     i
@@ -80,23 +81,23 @@ class RuntimeView(QFrame):
         return frame
 
     def set_busy(self, busy):
-        """Bloqueia cliques concorrentes sem desfazer set_enabled feito pelo aplicativo."""
+        """Block concurrent clicks without undoing set_enabled done by the application."""
         self.busy = busy
         for identifier in self.event_buttons & self.widgets.keys():
             self.widgets[identifier].setEnabled(self.enabled[identifier] and not busy)
 
     def set_enabled(self, identifier, enabled):
-        """Guarda intenção do aplicativo separada do bloqueio temporário de execução."""
+        """Keep the application's intent separate from the temporary run lock."""
         self.enabled[identifier] = enabled
         self.widgets[identifier].setEnabled(
             enabled and not (self.busy and identifier in self.event_buttons)
         )
 
     def show_page(self, identifier):
-        """Revela inclusive páginas dentro de conjuntos aninhados."""
+        """Reveal pages even inside nested sets of pages."""
         node = self.project.find(identifier)
         if node is None or node.kind != ComponentKind.PAGE:
-            raise ValueError("A página não existe.")
+            raise ValueError(tr("The page does not exist."))
         parent = self.project.parent_of(identifier)
         while parent:
             if parent.kind == ComponentKind.PAGES:

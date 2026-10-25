@@ -1,4 +1,4 @@
-"""Execução real de fixtures locais, sem autenticação nem alterações no sistema."""
+"""Real execution of local fixtures, with no authentication or system changes."""
 
 import os
 from pathlib import Path
@@ -113,7 +113,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(w.view.widgets[self.label.id].text(), "Meu nome")
         self.assertIn("Olá Linux", w.output.toPlainText())
         self.assertFalse(w.view.widgets[self.button.id].isEnabled())
-        self.assertEqual(self.label.properties["text"], "Novo texto")
+        self.assertEqual(self.label.properties["text"], "New text")
         self.assertEqual(pages.properties["initial_page"], pages.children[0].id)
 
     def test_argument_boundaries_and_stderr_zero_exit(self):
@@ -144,7 +144,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn(value, text)
         self.assertIn("aviso", text)
         self.assertIn("CONTINUOU", text)
-        self.assertEqual(w.state.text(), "Fluxo concluído.")
+        self.assertEqual(w.state.text(), "Flow completed.")
         self.assertFalse((self.root / "SHOULD_NOT_EXIST").exists())
 
     def test_nonzero_and_missing_executable_stop_sequence_with_origin(self):
@@ -161,7 +161,7 @@ class RuntimeTests(unittest.TestCase):
         w = self.window()
         self.click(w)
         self.assertEqual(w.last_error["block"], "script")
-        self.assertIn("código 7", w.last_error["message"])
+        self.assertIn("code 7", w.last_error["message"])
         self.assertNotIn("NAO_CONTINUAR", w.output.toPlainText())
         self.assertTrue(w.locate.isEnabled())
         self.flow["body"][0] = {
@@ -174,7 +174,7 @@ class RuntimeTests(unittest.TestCase):
         other = self.window()
         self.click(other)
         self.assertEqual(other.last_error["block"], "missing")
-        self.assertIn("não encontrado", other.last_error["message"])
+        self.assertIn("not found", other.last_error["message"])
 
     def test_own_function_traceback_and_worker_remains_available(self):
         self.flow["body"] = [
@@ -228,7 +228,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(dialog.comboBoxItems(), ["A", "B"])
         dialog.reject()
         self.wait(lambda: not w.session.busy)
-        self.assertEqual(w.state.text(), "Fluxo cancelado.")
+        self.assertEqual(w.state.text(), "Flow cancelled.")
         self.assertNotIn("NAO_APOS_CANCELAR", w.output.toPlainText())
 
     def test_confirmation_no_cancels_flow(self):
@@ -242,7 +242,7 @@ class RuntimeTests(unittest.TestCase):
         dialog = next(iter(w.dialogs))
         dialog.button(QMessageBox.StandardButton.No).click()
         self.wait(lambda: not w.session.busy)
-        self.assertEqual(w.state.text(), "Fluxo cancelado.")
+        self.assertEqual(w.state.text(), "Flow cancelled.")
         self.assertNotIn("NAO", w.output.toPlainText())
 
     def test_infinite_python_is_cancellable_and_gui_ticks(self):
@@ -299,7 +299,7 @@ time.sleep(60)
         self.wait(gone)
 
     def test_admin_protocol_with_disposable_fake_agent(self):
-        # Executável descartável simula o resultado do agente; nunca chama pkexec real.
+        # A disposable executable simulates the agent's result; never calls the real pkexec.
         original = shutil.which
         fake = self.root / "pkexec-test"
         fake.write_text("#!/bin/sh\nsleep 0.15\nexit 126\n")
@@ -325,7 +325,7 @@ time.sleep(60)
             self.assertFalse(w.stop_button.isEnabled())
             self.wait(lambda: not w.session.busy)
         self.assertFalse(w.session.admin_active)
-        self.assertEqual(w.state.text(), "Fluxo cancelado.")
+        self.assertEqual(w.state.text(), "Flow cancelled.")
         self.assertNotIn("NAO_CONTINUAR", w.output.toPlainText())
 
     def test_top_level_function_source_error_keeps_original_traceback(self):
@@ -427,7 +427,7 @@ time.sleep(60)
         self.assertEqual(w.view.widgets["progress_task"].value(), 100)
         self.assertIn("Aviso de exemplo", w.output.toPlainText())
         self.assertIn("Nenhum aplicativo foi instalado", w.output.toPlainText())
-        self.assertEqual(w.state.text(), "Fluxo concluído.")
+        self.assertEqual(w.state.text(), "Flow completed.")
 
     def test_editor_does_not_abandon_admin_task_when_closing(self):
         from makebench.editor.window import MainWindow

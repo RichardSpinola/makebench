@@ -1,4 +1,4 @@
-"""Construção real pela janela Exportar, usando apenas um projeto descartável conhecido."""
+"""Real build through the Export window, using only a known disposable project."""
 
 import argparse
 import faulthandler
@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 
 def main():
-    """Preparação que baixa ferramentas só acontece com a opção explícita --prepare."""
+    """Preparation that downloads tools only happens with the explicit --prepare option."""
     faulthandler.dump_traceback_later(180, repeat=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
@@ -41,13 +41,13 @@ def main():
         QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
         app = QApplication([])
         app.setQuitOnLastWindowClosed(False)
-        project = Project.empty("Teste distribuição")
+        project = Project.empty("Distribution test")
         project.application.update(
             backend=args.backend,
-            name="Teste distribuição",
+            name="Distribution test",
             id="br.exemplo.makebenchqa",
             version="0.1.0",
-            description="Aplicativo descartável de teste",
+            description="Disposable test application",
         )
         window = MainWindow(project)
         window.recovery_timer.stop()
@@ -68,7 +68,7 @@ def main():
             args.formats = ["appimage"]
 
         def finish():
-            """Drena também os sinais de conclusão, sem aceitar arquivos de uma execução anterior."""
+            """Also drain the completion signals, never accepting files from a previous run."""
             deadline = time.monotonic() + 600
             while panel.job and panel.job.isRunning() and time.monotonic() < deadline:
                 app.processEvents()
@@ -77,7 +77,7 @@ def main():
             assert panel.job and not panel.job.isRunning()
             assert panel.build.isEnabled()
             assert not panel.cancel_button.isEnabled()
-            print("Thread de construção concluída: " + panel.result.text(), flush=True)
+            print("Build thread finished: " + panel.result.text(), flush=True)
 
         try:
             for format in args.formats:
@@ -90,7 +90,7 @@ def main():
                     ("Makebench-editor" if args.editor else "teste-ui-" + args.backend)
                     + FORMATS[format][2]
                 )
-                assert not target.exists(), str(target) + " já existe"
+                assert not target.exists(), str(target) + " already exists"
                 with patch(
                     "makebench.editor.publish.QFileDialog.getSaveFileName",
                     return_value=(str(target), ""),
@@ -100,7 +100,7 @@ def main():
                 (args.output / (format + "-construcao.log")).write_text(
                     panel.build_log.toPlainText()
                 )
-                assert target.is_file() and "Construído" in panel.result.text(), panel.result.text()
+                assert target.is_file() and "Built" in panel.result.text(), panel.result.text()
                 records.append(
                     {
                         "format": format,
@@ -123,7 +123,7 @@ def main():
                 app.processEvents()
                 time.sleep(0.02)
             assert not window.isVisible()
-        print("OK: janela Exportar e pacotes reais, sem executar o código do projeto.", flush=True)
+        print("OK: Export window and real packages, without running the project code.", flush=True)
 
 
 if __name__ == "__main__":

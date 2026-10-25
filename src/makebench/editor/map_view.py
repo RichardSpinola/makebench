@@ -1,19 +1,20 @@
-"""Gestos do Mapa: seleção, panorama, portas, zoom e teclado."""
+"""Map gestures: selection, panning, ports, zoom and keyboard."""
 
 from PySide6.QtCore import Qt, QPointF, Signal, QTimer
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsView, QLabel, QPushButton, QMenu
 from .map_items import MapNode, MapEdge, CARD_WIDTH
 from .theme import manager, icon
+from makebench.i18n import tr
 
 
 class NavigationView(QGraphicsView):
-    """Canvas de mapa com zoom, pan e conexão por arraste entre portas."""
+    """Map canvas with zoom, pan and drag connections between ports."""
 
     zoom_changed = Signal(float)
 
     def __init__(self, panel):
-        """Configura interação sem substituir o modelo por itens gráficos."""
+        """Set up interaction without replacing the model with graphics items."""
         super().__init__(panel)
         self.graph_scene = QGraphicsScene(self)
         self.setScene(self.graph_scene)
@@ -22,8 +23,10 @@ class NavigationView(QGraphicsView):
         self.connection_item = None
         self._press_positions = {}
         self.dragging_card = None
-        self.empty_hint = QLabel("Nenhuma interface\nCrie uma tela para começar.", self.viewport())
-        self.empty_action = QPushButton(icon("add"), "Nova interface…", self.viewport())
+        self.empty_hint = QLabel(
+            tr("No interface yet") + "\n" + tr("Create a screen to get started."), self.viewport()
+        )
+        self.empty_action = QPushButton(icon("add"), tr("New interface…"), self.viewport())
         self.empty_action.setFixedSize(164, 32)
         self.empty_action.clicked.connect(panel.window.new_window_dialog)
         self.empty_action.hide()
@@ -36,14 +39,14 @@ class NavigationView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
 
     def node_at(self, point):
-        """Resolve o nó mesmo quando texto ou porta recebe o clique."""
+        """Resolve the node even when the text or port receives the click."""
         item = self.itemAt(point)
         while item and not isinstance(item, MapNode):
             item = item.parentItem()
         return item
 
     def mousePressEvent(self, event):
-        """Inicia ligação apenas na porta, preservando o arraste do corpo do nó."""
+        """Start a link only on the port, keeping the node body draggable."""
         self._press_positions = {
             key: [node.pos().x(), node.pos().y()] for key, node in self.panel.nodes.items()
         }
@@ -60,7 +63,7 @@ class NavigationView(QGraphicsView):
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """Confirma ligação ou posição; uma edição corresponde a um Desfazer."""
+        """Confirm a link or position; one edit corresponds to one Undo."""
         if self.connection:
             source = self.connection
             self.connection = None
@@ -88,7 +91,7 @@ class NavigationView(QGraphicsView):
             project = self.panel.window.project
 
             def commit():
-                """A cena só pode ser reconstruída depois que Qt termina o evento dos itens."""
+                """The scene can only be rebuilt after Qt finishes the items' event."""
                 if self.panel.window.project is project:
                     self.panel.window._edit(lambda: project.map_layout.update(moved), refresh=False)
                     self.panel.sync()
@@ -98,7 +101,7 @@ class NavigationView(QGraphicsView):
             QTimer.singleShot(0, self.panel.selection_changed)
 
     def mouseMoveEvent(self, event):
-        """A ligação acompanha o cursor antes da confirmação, sem criar blocos ainda."""
+        """The link follows the cursor before confirmation, without creating blocks yet."""
         if self.connection:
             source = self.panel.nodes.get(self.connection)
             if source:
@@ -119,12 +122,12 @@ class NavigationView(QGraphicsView):
             self.panel.refresh_edges()
 
     def resizeEvent(self, event):
-        """A orientação pertence ao viewport, sem aumentar nem sumir com o zoom."""
+        """Orientation belongs to the viewport and neither grows nor disappears with zoom."""
         super().resizeEvent(event)
         self.position_hint()
 
     def position_hint(self):
-        """Centraliza o estado vazio sem criar objetos editáveis no mapa."""
+        """Center the empty state without creating editable objects on the map."""
         width = min(360, max(0, self.viewport().width() - 32))
         height = 110
         self.empty_hint.setGeometry(
@@ -139,13 +142,13 @@ class NavigationView(QGraphicsView):
         )
 
     def contextMenuEvent(self, event):
-        """O espaço de interfaces cria janelas pelo botão direito, inclusive vazio."""
+        """The interface area creates windows with the right button, even when empty."""
         node = self.node_at(event.pos())
         menu = QMenu(self)
         point = self.mapToScene(event.pos())
 
         def create():
-            """Após o diálogo, posiciona a nova interface no ponto escolhido."""
+            """After the dialog, place the new interface at the chosen point."""
             empty = bool(self.panel.window.project.metadata.get("empty_map"))
             before = set() if empty else {r.id for r in self.panel.window.project.roots}
             self.panel.window.new_window_dialog()
@@ -158,13 +161,13 @@ class NavigationView(QGraphicsView):
                 )
                 self.panel.sync()
 
-        menu.addAction("Criar interface aqui…", create)
+        menu.addAction(tr("Create interface here…"), create)
         if node:
             self.panel.populate_context(menu, node.key)
         menu.exec(event.globalPos())
 
     def keyPressEvent(self, event):
-        """Permite remover uma conexão selecionada sem exigir gestos precisos."""
+        """Allow removing a selected connection without requiring precise gestures."""
         if event.key() == Qt.Key.Key_Escape and self.connection:
             self.connection = None
             if self.connection_item:
@@ -185,7 +188,7 @@ class NavigationView(QGraphicsView):
         super().keyPressEvent(event)
 
     def wheelEvent(self, event):
-        """Ctrl+roda amplia o mapa; a roda normal continua rolando a área."""
+        """Ctrl+wheel zooms the map; the plain wheel keeps scrolling the area."""
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
             scale = self.transform().m11() * factor

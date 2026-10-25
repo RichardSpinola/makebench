@@ -1,4 +1,4 @@
-"""Entrada do aplicativo e suporte à abertura de um projeto pelo terminal."""
+"""Application entry point and support for opening a project from the terminal."""
 
 from __future__ import annotations
 
@@ -7,21 +7,44 @@ import sys
 from pathlib import Path
 
 from makebench import __version__
+from makebench.i18n import tr
+
+
+def configure_language() -> str:
+    """Activate the interface language before any module builds translated labels.
+
+    `MAKEBENCH_LANGUAGE` overrides the saved preference (useful for screenshots
+    and tests); otherwise the editor preference is read, defaulting to English.
+    """
+    import os
+
+    from makebench.i18n import set_language
+
+    code = os.environ.get("MAKEBENCH_LANGUAGE")
+    if not code:
+        from PySide6.QtCore import QSettings
+
+        code = QSettings("Makebench", "Makebench").value("v1/appearance/language", "en")
+    return set_language(str(code))
 
 
 def main() -> int:
-    """Inicia Qt, valida o projeto opcional e entra no ciclo da interface."""
-    parser = argparse.ArgumentParser(description="Makebench — editor visual de aplicativos Linux")
-    parser.add_argument("project", nargs="?", type=Path, help="Projeto .makebench.json para abrir")
+    """Start Qt, validate the optional project and enter the interface loop."""
+    configure_language()
+
+    parser = argparse.ArgumentParser(
+        description=tr("Makebench — visual editor for Linux applications")
+    )
+    parser.add_argument("project", nargs="?", type=Path, help=tr(".makebench.json project to open"))
     parser.add_argument("--version", action="version", version=f"Makebench {__version__}")
     parser.add_argument(
         "--run",
         action="store_true",
-        help="Executar explicitamente o projeto em uma janela de teste",
+        help=tr("Explicitly run the project in a test window"),
     )
     args = parser.parse_args()
     if args.run and not args.project:
-        parser.error("--run exige um arquivo de projeto")
+        parser.error(tr("--run requires a project file"))
 
     from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -45,7 +68,7 @@ def main() -> int:
         try:
             project = load_project(args.project)
         except ProjectError as exc:
-            QMessageBox.critical(None, "Não foi possível abrir o projeto", str(exc))
+            QMessageBox.critical(None, tr("Could not open the project"), str(exc))
             return 1
     try:
         if args.run:
@@ -67,11 +90,11 @@ def main() -> int:
                 project = Project.empty()
                 project.metadata["empty_map"] = True
             window = MainWindow(project, args.project)
-            # WebEngine entra na árvore antes da primeira apresentação da janela.
-            # Evita recriação nativa ao abrir Lógica pela primeira vez.
+            # WebEngine joins the widget tree before the window is first shown.
+            # This avoids native re-creation when Logic opens for the first time.
             window.logic.ensure_loaded()
     except (ProjectError, OSError) as exc:
-        QMessageBox.critical(None, "Não foi possível abrir as funções", str(exc))
+        QMessageBox.critical(None, tr("Could not open the functions"), str(exc))
         return 1
     if not args.run and not args.project:
         from makebench.editor.settings import preference
@@ -82,9 +105,9 @@ def main() -> int:
             window.startup_dialog = StartupDialog(window)
             window.startup_dialog.show()
             return app.exec()
-        window.set_mode("Mapa")
+        window.set_mode("map")
     if not args.run and args.project:
-        window.set_mode("Mapa")
+        window.set_mode("map")
     window.show()
     if args.run:
         from PySide6.QtCore import QTimer

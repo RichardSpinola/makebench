@@ -1,4 +1,4 @@
-"""Iniciador independente e fixo; a bancada aparece ao abrir um projeto."""
+"""Independent, fixed-size launcher; the workbench appears when a project opens."""
 
 from pathlib import Path
 
@@ -24,13 +24,14 @@ from makebench import __version__
 from makebench.core.templates import MODELS
 from .settings import preference
 from .theme import icon
+from makebench.i18n import tr
 
 
 class StartupBanner(QWidget):
-    """Ilustração vetorial própria com cores do desktop e área de arraste."""
+    """Our own vector illustration with desktop colors and a drag area."""
 
     def __init__(self, parent):
-        """Reserva a faixa superior sem título de janela ou alças de tamanho."""
+        """Reserve the top strip without a window title or resize handles."""
         super().__init__(parent)
         self.setFixedHeight(180)
         self.setAccessibleName("Makebench")
@@ -38,25 +39,25 @@ class StartupBanner(QWidget):
         self.close_button.setIcon(
             self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarCloseButton)
         )
-        self.close_button.setToolTip("Fechar")
-        self.close_button.setAccessibleName("Fechar a janela inicial")
+        self.close_button.setToolTip(tr("Close"))
+        self.close_button.setAccessibleName(tr("Close the start window"))
         self.close_button.setAutoRaise(True)
         self.close_button.setFixedSize(30, 30)
         self.close_button.clicked.connect(parent.reject)
 
     def resizeEvent(self, event):
-        """Mantém o X dentro da ilustração, no mesmo canto em qualquer escala DPI."""
+        """Keep the X inside the illustration, in the same corner at any DPI scale."""
         self.close_button.move(self.width() - 38, 8)
         super().resizeEvent(event)
 
     def mousePressEvent(self, event):
-        """O compositor pode mover a janela ao arrastar o cabeçalho, sem redimensionar."""
+        """The compositor can move the window by dragging the header, without resizing."""
         if event.button() == Qt.MouseButton.LeftButton and self.window().windowHandle():
             self.window().windowHandle().startSystemMove()
         super().mousePressEvent(event)
 
     def paintEvent(self, event):
-        """Desenha janelas conectadas; não copia a imagem ou a marca do Kdenlive."""
+        """Draw connected windows; does not copy Kdenlive's image or brand."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         palette = self.palette()
@@ -86,15 +87,15 @@ class StartupBanner(QWidget):
         font.setPointSize(10)
         font.setBold(False)
         painter.setFont(font)
-        painter.drawText(26, 124, "Aplicativos Linux, construídos por você.")
+        painter.drawText(26, 124, tr("Linux applications, built by you."))
         painter.end()
 
 
 class StartupDialog(QDialog):
-    """Janela sem decoração do sistema, tamanho fixo e um único X interno."""
+    """Window without system decoration, fixed size and a single inner X."""
 
     def __init__(self, window):
-        """Compartilha recentes e modelos com a bancada ainda oculta."""
+        """Share recents and templates with the still-hidden workbench."""
         super().__init__(None, Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.window = window
         self.settings = window.settings
@@ -113,14 +114,14 @@ class StartupDialog(QDialog):
         layout.setSpacing(18)
         commands = QHBoxLayout()
         commands.setSpacing(18)
-        self.open_button = QPushButton(icon("open"), "Abrir projeto…")
+        self.open_button = QPushButton(icon("open"), tr("Open project…"))
         self.open_button.setFixedSize(155, 32)
         self.open_button.clicked.connect(self.open_project)
         open_column = QHBoxLayout()
         open_column.addWidget(self.open_button)
         open_column.addStretch()
         commands.addLayout(open_column, 1)
-        self.new_button = QPushButton(icon("new"), "Novo projeto…")
+        self.new_button = QPushButton(icon("new"), tr("New project…"))
         self.new_button.setFixedSize(155, 32)
         self.new_button.clicked.connect(lambda: self.new_project("blank"))
         new_column = QHBoxLayout()
@@ -130,8 +131,8 @@ class StartupDialog(QDialog):
         layout.addLayout(commands)
         if getattr(window, "recoveries", []):
             recovery = QHBoxLayout()
-            recovery.addWidget(QLabel("Sessão anterior disponível."))
-            recover = QPushButton("Recuperar")
+            recovery.addWidget(QLabel(tr("Previous session available.")))
+            recover = QPushButton(tr("Recover"))
             recover.setFixedHeight(30)
             recover.clicked.connect(lambda: self.choose_project(window.recover_latest))
             recovery.addStretch()
@@ -141,21 +142,21 @@ class StartupDialog(QDialog):
         columns.setSpacing(18)
         left = QVBoxLayout()
         left.setSpacing(6)
-        left.addWidget(QLabel("Recentes"))
+        left.addWidget(QLabel(tr("Recent")))
         self.recents = QListWidget()
         self.recents.setFrameShape(QFrame.Shape.NoFrame)
         self.recents.viewport().setBackgroundRole(QPalette.ColorRole.Window)
-        self.recents.setAccessibleName("Projetos recentes")
+        self.recents.setAccessibleName(tr("Recent projects"))
         self.recents.itemActivated.connect(self.open_recent)
         left.addWidget(self.recents, 1)
         columns.addLayout(left, 1)
         right = QVBoxLayout()
         right.setSpacing(6)
-        right.addWidget(QLabel("Novo a partir do modelo"))
+        right.addWidget(QLabel(tr("New from template")))
         self.models = QListWidget()
         self.models.setFrameShape(QFrame.Shape.NoFrame)
         self.models.viewport().setBackgroundRole(QPalette.ColorRole.Window)
-        self.models.setAccessibleName("Modelos recentes")
+        self.models.setAccessibleName(tr("Recent templates"))
         self.models.itemActivated.connect(
             lambda item: self.new_project(item.data(Qt.ItemDataRole.UserRole))
         )
@@ -165,7 +166,7 @@ class StartupDialog(QDialog):
         self.recents.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.recents.customContextMenuRequested.connect(self.recent_menu)
         footer = QHBoxLayout()
-        self.show_at_startup = QCheckBox("Mostrar na inicialização")
+        self.show_at_startup = QCheckBox(tr("Show at startup"))
         self.show_at_startup.setChecked(preference("projects/startup", self.settings))
         self.show_at_startup.toggled.connect(
             lambda enabled: self.settings.setValue("v1/projects/startup", enabled)
@@ -178,7 +179,7 @@ class StartupDialog(QDialog):
         self.refresh()
 
     def paintEvent(self, event):
-        """O contorno nativo substitui a moldura externa; não cria tema global."""
+        """The native outline replaces the external frame; creates no global theme."""
         super().paintEvent(event)
         painter = QPainter(self)
         painter.setPen(self.palette().color(QPalette.ColorRole.Mid))
@@ -186,19 +187,20 @@ class StartupDialog(QDialog):
         painter.end()
 
     def refresh(self):
-        """Nomes curtos no conteúdo; caminhos completos nos tooltips e no contexto."""
+        """Short names in the content; full paths in tooltips and the context menu."""
         self.recents.clear()
         for value in self.settings.value("projects/recent", [], type=list)[:12]:
             path = Path(value)
             item = QListWidgetItem(
-                icon("document"), path.parent.name + (" · ausente" if not path.is_file() else "")
+                icon("document"),
+                path.parent.name + (" · " + tr("missing") if not path.is_file() else ""),
             )
             item.setData(Qt.ItemDataRole.UserRole, str(path))
             item.setToolTip(str(path))
             item.setSizeHint(QSize(220, 30))
             self.recents.addItem(item)
         if not self.recents.count():
-            item = QListWidgetItem("Nenhum projeto recente")
+            item = QListWidgetItem(tr("No recent projects"))
             item.setFlags(Qt.ItemFlag.NoItemFlags)
             self.recents.addItem(item)
         self.models.clear()
@@ -214,7 +216,7 @@ class StartupDialog(QDialog):
             self.models.setCurrentRow(0)
 
     def choose_project(self, operation):
-        """Cancelar mantém o iniciador; só apresenta a bancada depois de uma troca válida."""
+        """Cancel keeps the launcher; the workbench appears only after a valid switch."""
         if self._choosing:
             return
         self._choosing = True
@@ -222,9 +224,9 @@ class StartupDialog(QDialog):
         try:
             operation()
             if (self.window.project.id, self.window.path) != before:
-                # A bancada fica visível antes de fechar o último diálogo: não há
-                # intervalo sem janelas que encerre QApplication prematuramente.
-                self.window.set_mode("Mapa")
+                # The workbench becomes visible before the last dialog closes: there is
+                # no window-less gap that would quit QApplication prematurely.
+                self.window.set_mode("map")
                 self.window.resize(1280, 800)
                 self.window.show()
                 self.accept()
@@ -234,20 +236,20 @@ class StartupDialog(QDialog):
             self._choosing = False
 
     def new_project(self, key):
-        """Todos os modelos ficam no seletor do pequeno diálogo de criação."""
+        """Every template lives in the small creation dialog's selector."""
         self.choose_project(lambda: self.window.new_project_dialog(key))
 
     def open_project(self):
-        """O seletor lê dados e nunca executa scripts ou funções do documento."""
+        """The selector reads data and never runs the document's scripts or functions."""
         self.choose_project(self.window.open_project)
 
     def open_recent(self, item):
-        """Usa o mesmo carregamento validado e inerte da bancada."""
+        """Use the workbench's same validated, inert loading."""
         if item and item.data(Qt.ItemDataRole.UserRole):
             self.choose_project(lambda: self.window.open_recent(item))
 
     def recent_menu(self, point):
-        """Remover referência e mover à lixeira permanecem ações distintas."""
+        """Removing the reference and moving to the trash stay distinct actions."""
         item = self.recents.itemAt(point)
         if not item or not item.data(Qt.ItemDataRole.UserRole):
             return
@@ -263,9 +265,9 @@ class StartupDialog(QDialog):
         )
         self.window.recent_list.setCurrentItem(target)
         menu = QMenu(self)
-        menu.addAction("Abrir", lambda: self.open_recent(item))
-        menu.addAction("Remover da lista", lambda: (self.window.remove_recent(), self.refresh()))
+        menu.addAction(tr("Open"), lambda: self.open_recent(item))
         menu.addAction(
-            "Mover para a lixeira…", lambda: (self.window.trash_recent(), self.refresh())
+            tr("Remove from list"), lambda: (self.window.remove_recent(), self.refresh())
         )
+        menu.addAction(tr("Move to trash…"), lambda: (self.window.trash_recent(), self.refresh()))
         menu.exec(self.recents.viewport().mapToGlobal(point))

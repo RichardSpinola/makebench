@@ -1,4 +1,4 @@
-"""Gestos pelo viewport real do Designer; projetos descartáveis e nenhum script executado."""
+"""Gestures through the Designer's real viewport; disposable projects and no script run."""
 
 import argparse
 import json
@@ -9,7 +9,7 @@ import time
 
 
 def main():
-    """Mede ações reais e registra falhas sem usar os arquivos do proprietário."""
+    """Measure real actions and record failures without using the owner's files."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=("qt", "gtk"), default="qt")
     parser.add_argument("--output", type=Path)
@@ -43,14 +43,14 @@ def main():
             for index in range(8):
                 extra = add_window(project, "Tela " + str(index + 2))
                 for count in range(30):
-                    project.add(extra.id, ComponentKind.BUTTON).properties["text"] = "Botão " + str(
-                        count + 1
+                    project.add(extra.id, ComponentKind.BUTTON).properties["text"] = (
+                        "Button " + str(count + 1)
                     )
         window = MainWindow(project)
         window.recovery_timer.stop()
         window.resize(1280, 850)
         window.show()
-        window.set_mode("Design")
+        window.set_mode("design")
         window.activateWindow()
         QTest.qWait(250)
         native = window.winId()
@@ -59,16 +59,16 @@ def main():
         surface = getattr(window.canvas, "gtk_surface", None)
 
         def wait(predicate, seconds=15):
-            """Processa eventos normais enquanto a imagem GTK é produzida."""
+            """Process normal events while the GTK image is produced."""
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 QTest.qWait(20)
                 if predicate():
                     return
-            raise AssertionError(surface.error if surface else "Ação não terminou no prazo")
+            raise AssertionError(surface.error if surface else "Action did not finish in time")
 
         def settle():
-            """Evita medir uma imagem antiga após uma edição assíncrona."""
+            """Avoid measuring an old image after an asynchronous edit."""
             if args.backend == "gtk":
                 wait(
                     lambda: (
@@ -80,7 +80,7 @@ def main():
             QTest.qWait(50)
 
         def point(identifier, edge=None):
-            """Converte alocações em coordenadas do viewport, como o clique do usuário."""
+            """Turn allocations into viewport coordinates, like the user's click."""
             if args.backend == "gtk":
                 rect = surface.rectangles[identifier]
                 local = rect.bottomRight() - QPoint(2, 2) if edge else rect.center()
@@ -94,7 +94,7 @@ def main():
             return window.zoom_view.mapFromScene(window.zoom_view.proxy.mapToScene(QPointF(local)))
 
         def check(label, operation):
-            """Guarda latência e resultado de cada cenário independente."""
+            """Keep the latency and result of each independent scenario."""
             started = time.monotonic()
             try:
                 operation()
@@ -150,7 +150,7 @@ def main():
             ), (before, after)
 
         def property_edit():
-            """Digita no inspetor real e exige que campo e janela continuem vivos."""
+            """Type into the real inspector and require the field and window to stay alive."""
             select()
             field = window.inspector.findChild(QLineEdit, "property_text")
             field.setFocus()
@@ -165,7 +165,7 @@ def main():
             assert window.winId() == native and window.isVisible()
 
         def history():
-            """Desfazer/refazer restauram o texto sem trocar a janela nativa."""
+            """Undo/redo restore the text without replacing the native window."""
             window.undo()
             settle()
             assert window.project.find(first.id).properties["text"] == "Selecionar e mover"
@@ -177,14 +177,14 @@ def main():
             assert window.winId() == native
 
         def application_settings():
-            """Configuração muda só metadados; GTK mantém a versão da imagem."""
+            """Settings change only metadata; GTK keeps the image version."""
             from makebench.editor.settings import ApplicationSettings
 
             version = surface.version if surface and args.backend == "gtk" else None
             dialog = ApplicationSettings(window)
             dialog.show()
             QTest.qWait(30)
-            dialog.fields["description"].setText("Configuração QA")
+            dialog.fields["description"].setText("QA settings")
             dialog.fields["description"].editingFinished.emit()
             dialog.close()
             settle()
@@ -193,7 +193,7 @@ def main():
             assert window.winId() == native
 
         def insertion():
-            """Inserção estrutural mantém o documento e a janela disponíveis."""
+            """Structural insertion keeps the document and the window available."""
             window._select(window.project.root.id)
             window.palette.setCurrentRow(window.palette.findData("label"))
             window.add_component()
@@ -211,20 +211,20 @@ def main():
             assert reopened.find(first.id).properties["text"] == "Texto alterado pelo inspetor"
             assert len(reopened.roots) == len(window.project.roots)
             window._replace_project(reopened, destination)
-            window.set_mode("Design")
+            window.set_mode("design")
             settle()
             assert window.winId() == native
 
         try:
             settle()
-            check("seleção pelo viewport", select)
+            check("selection through the viewport", select)
             check("mover com zoom ajustado", move)
             check("redimensionar com zoom ajustado", resize)
             window.zoom_view.set_zoom(1)
             check("mover em 100%", move)
             check("editar propriedade pelo inspetor", property_edit)
             check("desfazer e refazer", history)
-            check("configurar aplicativo sem refazer prévia", application_settings)
+            check("configure application without redoing the preview", application_settings)
             check("inserir elemento", insertion)
             check("salvar e reabrir", save_reopen)
             if args.output:

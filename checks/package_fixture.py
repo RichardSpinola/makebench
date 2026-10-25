@@ -1,4 +1,4 @@
-"""Aplicativo descartável para validar instalação e execução real dos pacotes."""
+"""Disposable application to validate real installation and execution of the packages."""
 
 from copy import deepcopy
 from pathlib import Path
@@ -8,7 +8,7 @@ from makebench.core.project import new_id
 
 
 def fixture(backend):
-    """Grafo com terminal, dependência declarada, tarefas, duas janelas e fechamento próprio."""
+    """Graph with a terminal, a declared dependency, tasks, two windows and its own closing."""
     root = Path(__file__).resolve().parents[1] / "examples/free-graph"
     project = load_project(root / (backend + ".makebench.json"))
     project.application.update(
@@ -35,7 +35,7 @@ def fixture(backend):
     graph["edges"].append({"from": identifier, "out": "next", "to": "repeat"})
     next(n for n in graph["nodes"] if n["id"] == "open")["parameters"]["close_current"] = True
     create_flow(project, project.windows[0].id)["body"] = [{"id": "close-qa", "op": "close_window"}]
-    source = '''"""Rotina exclusiva de QA: só executa após iniciar o aplicativo construído."""
+    source = '''"""QA-only routine: runs only after the built application starts."""
 import json
 import os
 from pathlib import Path
@@ -44,7 +44,7 @@ import packaging
 
 
 def confirmar(ctx, valor):
-    """Confere runtime, pacote adicional, terminal e execução de tarefas separadas."""
+    """Check the runtime, the extra package, the terminal and separate task runs."""
     assert packaging.__version__ == '25.0'
     ctx.run('/usr/bin/python3', ['-c', "import os,sys; assert not os.environ.get('PYTHONHOME'); print('PROCESS_PYTHON='+sys.version.split()[0])"])
     ctx.run('python3', ['-c', "import packaging; assert packaging.__version__=='25.0'; print('DEPENDENCIA_OK')"])

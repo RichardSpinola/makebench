@@ -1,1 +1,1 @@
-"""Execução explícita de projetos em processo separado do editor."""
+"""Explicit project execution in a process separate from the editor."""

@@ -1,4 +1,4 @@
-"""Ferramentas de composição, conversão reversível e enquadramento do canvas."""
+"""Composition tools, reversible conversion and canvas framing."""
 
 from PySide6.QtCore import Qt, QRectF, Signal
 from PySide6.QtGui import QAction, QKeySequence
@@ -15,15 +15,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from makebench.core.project import ComponentKind, LayoutKind, ProjectError
+from makebench.i18n import tr
 
 
 class ZoomView(QGraphicsView):
-    """Hospeda widgets reais em proxy Qt; gestos continuam usando o mesmo canvas."""
+    """Host real widgets in a Qt proxy; gestures keep using the same canvas."""
 
     zoom_changed = Signal(float)
 
     def __init__(self, canvas, parent=None):
-        """Mantém a árvore editável e transforma somente sua apresentação."""
+        """Keep the editable tree and transform only its presentation."""
         super().__init__(parent)
         self.canvas = canvas
         self.graph_scene = QGraphicsScene(self)
@@ -36,7 +37,7 @@ class ZoomView(QGraphicsView):
         self._pan = False
 
     def update_bounds(self):
-        """Inclui controles distantes no alcance da rolagem do designer."""
+        """Include distant controls within the designer's scroll range."""
         project = self.canvas._project
         if project is None:
             return
@@ -51,7 +52,7 @@ class ZoomView(QGraphicsView):
         self.graph_scene.setSceneRect(QRectF(-48, -48, width + 96, height + 96))
 
     def set_zoom(self, value):
-        """Aplica zoom limitado e informa a escala aos gestos de geometria."""
+        """Apply bounded zoom and report the scale to geometry gestures."""
         self.zoom = max(0.25, min(4, value))
         self.resetTransform()
         self.scale(self.zoom, self.zoom)
@@ -59,7 +60,7 @@ class ZoomView(QGraphicsView):
         self.zoom_changed.emit(self.zoom)
 
     def fit(self):
-        """Enquadra a composição, preservando suas coordenadas no documento."""
+        """Frame the composition, keeping its coordinates in the document."""
         self.update_bounds()
         self.fitInView(
             self.proxy.sceneBoundingRect().adjusted(-20, -20, 20, 20),
@@ -70,7 +71,7 @@ class ZoomView(QGraphicsView):
         self.zoom_changed.emit(self.zoom)
 
     def wheelEvent(self, event):
-        """Usa Ctrl+roda para zoom; rolagem normal não modifica a composição."""
+        """Use Ctrl+wheel for zoom; normal scrolling never changes the composition."""
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             self.set_zoom(self.zoom * (1.15 if event.angleDelta().y() > 0 else 1 / 1.15))
             event.accept()
@@ -78,7 +79,7 @@ class ZoomView(QGraphicsView):
             super().wheelEvent(event)
 
     def keyPressEvent(self, event):
-        """Espaço ativa pan enquanto estiver pressionado."""
+        """Space enables panning while held."""
         if event.key() == Qt.Key.Key_Space and not event.isAutoRepeat():
             self._pan = True
             self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
@@ -87,7 +88,7 @@ class ZoomView(QGraphicsView):
             super().keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
-        """Restaura seleção depois do gesto de pan."""
+        """Restore the selection after the pan gesture."""
         if event.key() == Qt.Key.Key_Space:
             self._pan = False
             self.setDragMode(QGraphicsView.DragMode.NoDrag)
@@ -97,10 +98,10 @@ class ZoomView(QGraphicsView):
 
 
 class DesignerMixin:
-    """Coordena inserção, organização, seleção e propriedades com um só histórico."""
+    """Coordinate insertion, arrangement, selection and properties with a single history."""
 
     def install_designer(self):
-        """Acrescenta zoom e navegação de teclado sobre o canvas existente."""
+        """Add zoom and keyboard navigation on top of the existing canvas."""
         scroll = self.design_splitter.widget(1).findChild(QScrollArea)
         if scroll:
             scroll.takeWidget()
@@ -113,7 +114,7 @@ class DesignerMixin:
             layout.insertWidget(position, self.zoom_view, 1)
 
             def native_ready():
-                """A primeira imagem GTK enquadra a janela; próximas edições preservam o zoom."""
+                """The first GTK image frames the window; later edits keep the zoom."""
                 self.zoom_view.update_bounds()
                 key = (self.project.id, self.active_window)
                 if getattr(self, "_gtk_fitted", None) != key:
@@ -123,46 +124,40 @@ class DesignerMixin:
             self.canvas.native_preview_ready.connect(native_ready)
             self.context_bar.addSeparator()
             self.zoom_actions = []
-            for label, callback in [
-                ("−", lambda: self.zoom_current(1 / 1.15)),
-                ("100%", lambda: self.zoom_current(absolute=1)),
-                ("+", lambda: self.zoom_current(1.15)),
-                ("Ajustar", self.fit_current_canvas),
+            for key, callback in [
+                ("out", lambda: self.zoom_current(1 / 1.15)),
+                ("actual", lambda: self.zoom_current(absolute=1)),
+                ("in", lambda: self.zoom_current(1.15)),
+                ("fit", self.fit_current_canvas),
             ]:
-                button = QPushButton(label if label == "100%" else "")
-                button.setToolTip(
-                    {
-                        "−": "Reduzir zoom",
-                        "+": "Ampliar zoom",
-                        "Ajustar": "Enquadrar interface",
-                    }.get(label, "Tamanho real")
-                )
-                button.setAccessibleName("Zoom " + label)
-                button.setIcon(
-                    __import__("makebench.editor.theme", fromlist=["icon"]).icon(
-                        {"−": "zoom-out", "+": "zoom-in", "Ajustar": "fit"}.get(label, "actual")
-                    )
-                )
-                button.setProperty(
-                    "makebenchIcon",
-                    {"−": "zoom-out", "+": "zoom-in", "Ajustar": "fit"}.get(label, "actual"),
-                )
+                button = QPushButton("100%" if key == "actual" else "")
+                label = {
+                    "out": tr("Zoom out"),
+                    "in": tr("Zoom in"),
+                    "fit": tr("Fit interface"),
+                    "actual": tr("Actual size"),
+                }[key]
+                button.setToolTip(label)
+                button.setAccessibleName(label)
+                symbol = {"out": "zoom-out", "in": "zoom-in", "fit": "fit"}.get(key, "actual")
+                button.setIcon(__import__("makebench.editor.theme", fromlist=["icon"]).icon(symbol))
+                button.setProperty("makebenchIcon", symbol)
                 button.clicked.connect(callback)
                 self.zoom_actions.append(self.context_bar.addWidget(button))
-                if label == "100%":
+                if key == "actual":
                     self.zoom_reset_button = button
                     button.setMinimumWidth(76)
             self.zoom_view.zoom_changed.connect(self.update_zoom_label)
             self.map_panel.view.zoom_changed.connect(self.update_zoom_label)
-            action = QAction("Ajustar composição", self)
+            action = QAction(tr("Fit composition"), self)
             action.setShortcut(QKeySequence("Ctrl+0"))
             action.triggered.connect(self.fit_current_canvas)
             self.addAction(action)
-            actual = QAction("Tamanho real", self)
+            actual = QAction(tr("Actual size"), self)
             actual.setShortcut(QKeySequence("Ctrl+Alt+0"))
             actual.triggered.connect(lambda: self.zoom_current(absolute=1))
             self.addAction(actual)
-        rename = QAction("Renomear seleção", self)
+        rename = QAction(tr("Rename selection"), self)
         rename.setShortcut(QKeySequence("F2"))
         rename.triggered.connect(self.rename_selected)
         self.addAction(rename)
@@ -183,7 +178,7 @@ class DesignerMixin:
         self.inspector.restore_requested.connect(self.restore_state_property)
 
     def rename_selected(self):
-        """Edita texto da seleção mantendo a mesma validação e histórico do inspetor."""
+        """Edit the selection's text with the same validation and history as the inspector."""
         node = self.project.find(self.selected_id)
         if not node:
             return
@@ -200,7 +195,7 @@ class DesignerMixin:
                 if "\n" in shown.properties.get("text", "") or node.kind == ComponentKind.OUTPUT
                 else InlineText
             )(shown.properties.get("text", ""), parent)
-            editor.setAccessibleName("Editar texto do componente")
+            editor.setAccessibleName(tr("Edit component text"))
             editor.setGeometry(
                 (surface.rectangles[node.id] if parent is surface else parent.rect()).adjusted(
                     4, 4, -4, -4
@@ -208,7 +203,7 @@ class DesignerMixin:
             )
 
             def finish(text, accept):
-                """Finaliza a edição antes de atualizar a vista, preservando cancelamento."""
+                """Finish editing before refreshing the view, keeping cancellation."""
                 editor.hide()
                 editor.setParent(None)
                 editor.deleteLater()
@@ -230,15 +225,15 @@ class DesignerMixin:
         )
         value, ok = QInputDialog.getText(
             self,
-            "Editar " + node.display_name,
-            "Texto" if key == "text" else "Nome",
+            tr("Edit {name}").format(name=node.display_name),
+            tr("Text") if key == "text" else tr("Name"),
             text=node.properties.get(key, ""),
         )
         if ok:
             self._change_property(node.id, key, value)
 
     def tree_menu(self, point):
-        """Expõe comandos reais no contexto da seleção, com os mesmos estados."""
+        """Expose real commands in the selection's context, with the same states."""
         menu = QMenu(self)
         self.insertion_menu(menu)
         menu.addSeparator()
@@ -250,16 +245,16 @@ class DesignerMixin:
             self.page_action,
         ]:
             menu.addAction(action)
-        action = menu.addAction("Editar lógica…")
+        action = menu.addAction(tr("Edit logic…"))
         action.triggered.connect(lambda: self.edit_logic(self.selected_id))
         menu.exec(self.tree.viewport().mapToGlobal(point))
 
     def insertion_menu(self, menu):
-        """Elementos completos ficam numa área de inserir, separada de seleção/pan."""
+        """Complete elements live in an insert area, separate from selection/pan."""
         from makebench.core.project import KIND_LABELS
         from .theme import icon
 
-        insert = menu.addMenu("Inserir elemento")
+        insert = menu.addMenu(tr("Insert element"))
         for kind, label in KIND_LABELS.items():
             if kind == ComponentKind.WINDOW:
                 continue
@@ -269,26 +264,26 @@ class DesignerMixin:
         return insert
 
     def canvas_menu(self, identifier, position):
-        """Menu contextual do canvas usa os mesmos comandos e histórico do editor."""
+        """The canvas context menu uses the editor's same commands and history."""
         self._select(identifier)
         menu = QMenu(self)
         self.insertion_menu(menu)
         menu.addSeparator()
         menu.addAction(self.duplicate_action)
         menu.addAction(self.remove_action)
-        menu.addAction("Editar texto", self.rename_selected)
+        menu.addAction(tr("Edit text"), self.rename_selected)
         if self.project.find(identifier).kind in {ComponentKind.BUTTON, ComponentKind.WINDOW}:
-            menu.addAction("Editar lógica", lambda: self.edit_logic(identifier))
+            menu.addAction(tr("Edit logic"), lambda: self.edit_logic(identifier))
         menu.exec(position)
 
     def convert_layout(self, node, mode):
-        """Captura/restaura geometria livre sem descartar filhos, IDs ou comentários."""
+        """Capture/restore free geometry without discarding children, IDs or comments."""
         mode = LayoutKind(mode)
         if node.layout == mode:
             return False
         if node.layout == LayoutKind.FREE and mode == LayoutKind.GRID:
             raise ProjectError(
-                "A conversão de Livre para Grade ainda não é suportada. Use Coluna ou Linha primeiro."
+                tr("Converting Free to Grid is not supported yet. Use Column or Row first.")
             )
         if mode == LayoutKind.FREE:
             for child in node.children:
@@ -320,7 +315,7 @@ class DesignerMixin:
         return True
 
     def tree_multi_selected(self):
-        """Sincroniza seleção múltipla nativa sem confundir itens de estado com controles."""
+        """Sync native multi-selection without confusing state items with controls."""
         if self._refreshing or self._multi_syncing:
             return
         ids = [item.data(0, Qt.ItemDataRole.UserRole) for item in self.tree.selectedItems()]
@@ -329,7 +324,7 @@ class DesignerMixin:
             self.select_multiple(ids)
 
     def select_multiple(self, identifiers):
-        """Mantém uma única seleção compartilhada entre árvore, canvas e inspetor."""
+        """Keep a single selection shared by the tree, the canvas and the inspector."""
         ids = {
             identifier
             for identifier in identifiers
@@ -373,7 +368,7 @@ class DesignerMixin:
                 )
 
     def change_multiple_properties(self, key, value):
-        """Valida o lote completo antes de atualizar vistas, com uma entrada de histórico."""
+        """Validate the whole batch before refreshing views, with one history entry."""
         from copy import deepcopy
         from makebench.core.project import Project
         from makebench.core.navigation import OVERRIDES
@@ -387,7 +382,7 @@ class DesignerMixin:
                 node = self.project.find(identifier)
                 if self.active_state != "@default":
                     if key not in OVERRIDES:
-                        raise ProjectError("Edite a estrutura no estado Padrão.")
+                        raise ProjectError(tr("Edit the structure in the Default state."))
                     state = next(
                         s
                         for s in self.project.states[self.active_window]
@@ -397,7 +392,7 @@ class DesignerMixin:
                 elif key.startswith("geometry."):
                     parent = self.project.parent_of(identifier)
                     if not parent or parent.layout != LayoutKind.FREE:
-                        raise ProjectError("Geometria de grupo exige contêiner Livre.")
+                        raise ProjectError(tr("Group geometry requires a Free container."))
                     node.geometry[key.split(".", 1)[1]] = int(value)
                 else:
                     node.properties[key] = deepcopy(value)
@@ -417,11 +412,11 @@ class DesignerMixin:
         self._presentation_signature = self.presentation_signature()
         self._update_actions()
         self.zoom_view.update_bounds()
-        # Campos mistos conservam o widget em edição; próxima seleção recompõe os valores.
+        # Mixed fields keep the widget being edited; the next selection recomputes the values.
         self.inspector._binding_signature = None
 
     def selection_command(self, mode):
-        """Alinha, distribui ou iguala dimensões em uma única entrada do histórico."""
+        """Align, distribute or match sizes in a single history entry."""
         nodes = [self.project.find(identifier) for identifier in self.selected_ids]
         parents = {
             self.project.parent_of(n.id).id if self.project.parent_of(n.id) else None for n in nodes
@@ -431,12 +426,12 @@ class DesignerMixin:
         parent = self.project.find(next(iter(parents)))
         if parent.layout != LayoutKind.FREE or self.active_state != "@default":
             self.statusBar().showMessage(
-                "Alinhamento de grupo exige irmãos em um contêiner Livre no Padrão.", 6000
+                tr("Group alignment requires siblings in a Free container in Default."), 6000
             )
             return
 
         def apply():
-            """Aplica a operação completa à seleção em uma entrada do histórico."""
+            """Apply the complete operation to the selection in one history entry."""
             boxes = [n.geometry for n in nodes]
             left = min(g["x"] for g in boxes)
             right = max(g["x"] + g["width"] for g in boxes)
@@ -475,7 +470,7 @@ class DesignerMixin:
         self.patch_geometries([node.id for node in nodes])
 
     def patch_geometries(self, identifiers):
-        """Reutiliza controles e renderizador GTK ao confirmar movimento/alinhamento."""
+        """Reuse the controls and GTK renderer when confirming a move/alignment."""
         from .updates import hold_updates
 
         with hold_updates(self.canvas):
@@ -499,7 +494,7 @@ class DesignerMixin:
         self._update_actions()
 
     def preview_layout(self, node_id, mode):
-        """Mostra uma simulação em cópia; somente clicar confirma e gera histórico."""
+        """Show a simulation on a copy; only a click confirms and records history."""
         from dataclasses import replace
 
         root = self.project.effective_root(self.active_window, self.active_state)
@@ -514,12 +509,12 @@ class DesignerMixin:
         self.zoom_view.update_bounds()
 
     def restore_state_property(self, node_id, key):
-        """Retira uma diferença individual, preservando as outras variações."""
+        """Remove a single difference, keeping the other variations."""
         if self.active_state == "@default":
             return
 
         def restore():
-            """Remove as diferenças escolhidas, preservando os demais dados."""
+            """Remove the chosen differences, keeping the remaining data."""
             state = next(
                 s for s in self.project.states[self.active_window] if s["id"] == self.active_state
             )
@@ -528,11 +523,11 @@ class DesignerMixin:
         self._edit(restore)
 
     def import_image_drop(self, filename, parent_id, index, geometry):
-        """Importa a imagem escolhida por arraste como uma edição reversível."""
+        """Import the image chosen by dragging as a reversible edit."""
         from pathlib import Path
 
         def insert():
-            """Importa e insere um recurso validado no destino escolhido."""
+            """Import and insert a validated asset at the chosen destination."""
             source = self.assets.import_image(Path(filename))
             node = self.project.add(parent_id, ComponentKind.IMAGE)
             node.properties.update(source=source, image_name=Path(filename).name)
@@ -550,38 +545,38 @@ class DesignerMixin:
         self._edit(insert)
 
     def fit_current_canvas(self):
-        """Enquadra a área de criação ativa em vez de mover um painel oculto."""
-        if self._mode == "Mapa":
+        """Frame the active creation area instead of moving a hidden panel."""
+        if self._mode == "map":
             self.map_panel.fit()
-        elif self._mode == "Design":
+        elif self._mode == "design":
             self.zoom_view.fit()
-        elif self._mode == "Lógica" and self.logic.ready:
+        elif self._mode == "logic" and self.logic.ready:
             self.logic.page.runJavaScript("window.makebench.workspace.zoomToFit()")
 
     def zoom_current(self, factor=1, absolute=None):
-        """Mantém zoom do mapa independente do zoom de composição."""
-        if self._mode == "Mapa":
+        """Keep the map zoom independent of the composition zoom."""
+        if self._mode == "map":
             view = self.map_panel.view
             scale = absolute if absolute is not None else view.transform().m11() * factor
             view.resetTransform()
             view.scale(max(0.25, min(4, scale)), max(0.25, min(4, scale)))
             self.update_zoom_label()
-        elif self._mode == "Design":
+        elif self._mode == "design":
             self.zoom_view.set_zoom(
                 absolute if absolute is not None else self.zoom_view.zoom * factor
             )
 
     def update_zoom_label(self, _value=None):
-        """Mostra a escala real da área ativa, inclusive depois de Ajustar ou Ctrl+roda."""
+        """Show the active area's real scale, even after Fit or Ctrl+wheel."""
         if not hasattr(self, "zoom_reset_button"):
             return
         scale = (
-            self.map_panel.view.transform().m11() if self._mode == "Mapa" else self.zoom_view.zoom
+            self.map_panel.view.transform().m11() if self._mode == "map" else self.zoom_view.zoom
         )
         self.zoom_reset_button.setText(str(round(scale * 100)) + "%")
 
     def top_level_selection(self):
-        """Evita duplicar ou remover descendentes duas vezes na mesma operação de grupo."""
+        """Avoid duplicating or removing descendants twice in the same group operation."""
         selected = getattr(self, "selected_ids", {self.selected_id})
         result = []
         for node in self.project.walk():

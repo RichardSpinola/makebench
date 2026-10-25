@@ -1,4 +1,4 @@
-"""Reorganização segura de subárvores, páginas e compatibilidade do formato."""
+"""Safe reorganization of subtrees, pages and format compatibility."""
 
 import unittest
 from pathlib import Path

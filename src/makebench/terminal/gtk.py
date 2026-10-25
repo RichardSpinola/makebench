@@ -1,10 +1,11 @@
-"""Terminal GTK4 com a mesma PTY e emulação utilizadas no editor Qt."""
+"""GTK4 terminal with the same PTY and emulation used in the Qt editor."""
 
 from .session import TerminalSession, color, key_input
+from makebench.i18n import tr
 
 
 def create_terminal(root=None):
-    """Cria uma superfície GTK inerte; o runtime decide quando iniciar o processo."""
+    """Create an inert GTK surface; the runtime decides when to start the process."""
     import gi
 
     gi.require_version("Gtk", "4.0")
@@ -33,10 +34,10 @@ def create_terminal(root=None):
         "cache": {},
         "screen_ids": set(),
     }
-    buffer.set_text("Terminal · prévia inativa")
+    buffer.set_text(tr("Terminal · inactive preview"))
 
     def refresh():
-        """Aplica saída ANSI somente quando muda, preservando seleção e rolagem."""
+        """Apply ANSI output only when it changes, keeping selection and scrolling."""
         context = view.get_pango_context()
         metrics = context.get_metrics(None, None)
         cw = max(1, metrics.get_approximate_char_width() / Pango.SCALE)
@@ -177,7 +178,7 @@ def create_terminal(root=None):
         return True
 
     def start(program=None, arguments=None):
-        """Abre processo após execução explícita; erro é retornado ao supervisor."""
+        """Open the process after an explicit run; errors go back to the supervisor."""
         pid = session.start(program, arguments)
         if state["timer"] is None:
             state["timer"] = GLib.timeout_add(20, refresh)
@@ -185,14 +186,14 @@ def create_terminal(root=None):
         return pid
 
     def stop():
-        """Fecha PTY e jobs, removendo a fonte GLib proprietária."""
+        """Close the PTY and jobs, removing the GLib source it owns."""
         session.stop()
         if state["timer"] is not None:
             GLib.source_remove(state["timer"])
             state["timer"] = None
 
     def paste(_clipboard, result):
-        """Envia texto da área de transferência sem executar fora do terminal."""
+        """Send clipboard text without running anything outside the terminal."""
         try:
             text = _clipboard.read_text_finish(result) or ""
             if 2004 << 5 in session.screen.mode:
@@ -202,7 +203,7 @@ def create_terminal(root=None):
             pass
 
     def key(_controller, keyval, _keycode, modifiers):
-        """Compartilha mapeamento VT e reserva copiar/colar com Ctrl+Shift."""
+        """Share the VT mapping and reserve copy/paste for Ctrl+Shift."""
         name = Gdk.keyval_name(keyval)
         control = bool(modifiers & Gdk.ModifierType.CONTROL_MASK)
         if control and modifiers & Gdk.ModifierType.SHIFT_MASK:

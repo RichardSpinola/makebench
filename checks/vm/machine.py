@@ -1,4 +1,4 @@
-"""VM KVM descartável com disco overlay e SSH restrito ao loopback do host."""
+"""Disposable KVM VM with an overlay disk and SSH restricted to the host loopback."""
 
 from __future__ import annotations
 import argparse
@@ -13,10 +13,10 @@ import time
 
 
 class Machine:
-    """Controla somente a VM registrada nesta pasta, sem discos ou redes do proprietário."""
+    """Control only the VM registered in this folder, never the owner's disks or networks."""
 
     def __init__(self, root):
-        """Lê recibo local; nenhuma máquina é iniciada ao construir o controlador."""
+        """Read the local receipt; building the controller starts no machine."""
         self.root = Path(root).resolve()
         self.receipt = (
             json.loads((self.root / "machine.json").read_text())
@@ -28,7 +28,9 @@ class Machine:
         """Cria overlay, chave exclusiva e seed cloud-init; inicia QEMU sem compartilhar home."""
         self.root.mkdir(parents=True, exist_ok=True)
         if self.receipt:
-            raise RuntimeError("Esta pasta já contém uma VM. Encerre-a ou use outra pasta.")
+            raise RuntimeError(
+                "This folder already contains a VM. Shut it down or use another folder."
+            )
         key = self.root / "qa-key"
         subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(key)], check=True)
         public = key.with_suffix(".pub").read_text().strip()
@@ -115,15 +117,15 @@ class Machine:
         self.wait_ready(process)
 
     def resume(self):
-        """Retoma o overlay de QA já preparado, sem recriar discos ou compartilhar pastas."""
+        """Resume the already prepared QA overlay, without re-creating disks or sharing folders."""
         if not self.receipt:
-            raise RuntimeError("Não há VM registrada nesta pasta.")
+            raise RuntimeError("There is no VM registered in this folder.")
         try:
             if (
                 str(self.root / "disk.qcow2").encode()
                 in Path(f"/proc/{self.receipt['pid']}/cmdline").read_bytes()
             ):
-                raise RuntimeError("Esta VM já está em execução.")
+                raise RuntimeError("This VM is already running.")
         except FileNotFoundError:
             pass
         with (self.root / "qemu.log").open("a") as log:
@@ -139,7 +141,7 @@ class Machine:
         self.wait_ready(process)
 
     def wait_ready(self, process):
-        """Aguarda somente o SSH da VM iniciada, com prazo e diagnóstico de boot."""
+        """Wait only for the started VM's SSH, with a deadline and boot diagnostics."""
         deadline = time.monotonic() + 180
         while time.monotonic() < deadline:
             if process.poll() is not None:
@@ -148,10 +150,10 @@ class Machine:
                 print("VM pronta:", self.receipt["target"], flush=True)
                 return
             time.sleep(2)
-        raise RuntimeError("SSH não ficou disponível; consulte serial.log da VM.")
+        raise RuntimeError("SSH did not become available; see the VM's serial.log.")
 
     def ssh(self, command, check=True, timeout=600, **kwargs):
-        """Executa no convidado com chave temporária, sem encaminhar agente ou ambiente do host."""
+        """Run in the guest with a temporary key, never forwarding the host agent or environment."""
         return subprocess.run(
             [
                 "ssh",
@@ -199,7 +201,7 @@ class Machine:
         )
 
     def prepare_display(self):
-        """Instala infraestrutura de teste gráfico, não o Python/backend dos aplicativos."""
+        """Install the graphical test infrastructure, not the applications' Python/backend."""
         if self.receipt["target"] == "ubuntu24.04":
             command = "sudo apt-get update && sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y xvfb xauth dbus-x11 x11-utils xdotool imagemagick flatpak"
         else:
@@ -213,7 +215,7 @@ class Machine:
         try:
             command = Path(f"/proc/{pid}/cmdline").read_bytes()
             if str(self.root / "disk.qcow2").encode() not in command:
-                raise RuntimeError("PID não pertence mais a esta VM; não sinalizar.")
+                raise RuntimeError("The PID no longer belongs to this VM; not signaling.")
             self.ssh("sudo poweroff", check=False, timeout=10)
             deadline = time.monotonic() + 20
             while time.monotonic() < deadline and Path(f"/proc/{pid}").exists():
@@ -225,7 +227,7 @@ class Machine:
 
 
 def main():
-    """CLI reproduzível de preparação e encerramento das VMs de validação."""
+    """Reproducible CLI to prepare and shut down the validation VMs."""
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=("start", "resume", "display", "ssh", "stop"))
     parser.add_argument("root", type=Path)

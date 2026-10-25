@@ -1,20 +1,21 @@
-"""Modelos de estrutura: dados puros, sem carregar ou executar funções próprias."""
+"""Structure templates: pure data, never loading or running user functions."""
 
 from .project import Project, ComponentKind, LayoutKind, new_id
 from .navigation import welcome_template, add_window
 from .logic import create_flow
+from makebench.i18n import tr
 
 MODELS = [
-    ("simple", "Aplicativo simples", "Uma janela com texto, campo e botão."),
-    ("welcome", "Assistente", "Três etapas com Voltar, Próximo e Concluir."),
-    ("tasks", "Central de tarefas / utilitário", "Scripts, progresso e saída."),
-    ("multi", "Aplicativo com várias janelas", "Barra lateral e janela de preferências."),
-    ("blank", "Em branco", "Uma janela para começar do seu jeito."),
+    ("simple", tr("Simple application"), tr("One window with text, a field and a button.")),
+    ("welcome", tr("Wizard"), tr("Three steps with Back, Next and Finish.")),
+    ("tasks", tr("Task center / utility"), tr("Scripts, progress and output.")),
+    ("multi", tr("Multi-window application"), tr("Sidebar and a preferences window.")),
+    ("blank", tr("Blank"), tr("One window to start your own way.")),
 ]
 
 
 def make_template(key, name):
-    """Cria modelos independentes; tarefas usa o exemplo distribuído pelo editor."""
+    """Create independent templates; tasks uses the example shipped with the editor."""
     if key == "welcome":
         p = welcome_template(name)
         p.root.properties.update(width=520, height=430, padding=24, spacing=18)
@@ -25,16 +26,16 @@ def make_template(key, name):
         return p
     if key == "simple":
         text = p.add(p.root.id, ComponentKind.LABEL)
-        text.properties["text"] = "Seu aplicativo começa aqui"
+        text.properties["text"] = tr("Your application starts here")
         entry = p.add(p.root.id, ComponentKind.TEXT_INPUT)
-        entry.properties["placeholder"] = "Digite seu nome"
+        entry.properties["placeholder"] = tr("Type your name")
         button = p.add(p.root.id, ComponentKind.BUTTON)
-        button.properties["text"] = "Continuar"
+        button.properties["text"] = tr("Continue")
         create_flow(p, button.id)["body"] = [
             {
                 "id": new_id("block"),
                 "op": "message",
-                "value": {"id": new_id("value"), "op": "literal", "value": "Pronto para criar!"},
+                "value": {"id": new_id("value"), "op": "literal", "value": tr("Ready to create!")},
             }
         ]
     elif key == "multi":
@@ -45,23 +46,23 @@ def make_template(key, name):
         )
         sidebar.geometry["width"] = 190
         title = p.add(sidebar.id, ComponentKind.LABEL)
-        title.properties["text"] = "Meu aplicativo"
+        title.properties["text"] = tr("My application")
         preferences = p.add(sidebar.id, ComponentKind.BUTTON)
-        preferences.properties["text"] = "Preferências"
+        preferences.properties["text"] = tr("Preferences")
         content = p.add(p.root.id, ComponentKind.CONTAINER)
         content.properties.update(
             padding=24, spacing=18, size_mode={"width": "fill", "height": "fill"}
         )
         heading = p.add(content.id, ComponentKind.LABEL)
-        heading.properties["text"] = "Área de trabalho"
+        heading.properties["text"] = tr("Workspace")
         output = p.add(content.id, ComponentKind.OUTPUT)
-        output.properties["text"] = "Organize suas ferramentas nesta área."
-        window = add_window(p, "Preferências")
+        output.properties["text"] = tr("Organize your tools in this area.")
+        window = add_window(p, tr("Preferences"))
         window.properties.update(width=480, height=360, padding=24, spacing=18)
         option = p.add(window.id, ComponentKind.CHECKBOX)
-        option.properties["text"] = "Ativar notificações"
+        option.properties["text"] = tr("Enable notifications")
         close = p.add(window.id, ComponentKind.BUTTON)
-        close.properties["text"] = "Concluir"
+        close.properties["text"] = tr("Finish")
         create_flow(p, preferences.id)["body"] = [
             {
                 "id": new_id("block"),

@@ -1,4 +1,4 @@
-"""Instala, abre, executa, captura e remove um artefato dentro da VM descartável."""
+"""Install, open, run, capture and remove an artifact inside the disposable VM."""
 
 from __future__ import annotations
 import argparse
@@ -14,13 +14,13 @@ import tempfile
 
 
 def run(arguments, **kwargs):
-    """Falhas de instalação/teste são registradas, nunca convertidas em sucesso."""
+    """Install/test failures are recorded, never turned into success."""
     print("+", *arguments, flush=True)
     return subprocess.run(arguments, check=True, **kwargs)
 
 
 def main():
-    """Esta rotina pertence ao convidado; não deve ser chamada no desktop do usuário."""
+    """This routine belongs to the guest; it must not be called on the user's desktop."""
     parser = argparse.ArgumentParser()
     parser.add_argument("artifact", type=Path)
     parser.add_argument(
@@ -32,7 +32,7 @@ def main():
     parser.add_argument("--quick-close", action="store_true")
     args = parser.parse_args()
     if not Path("/etc/hostname").read_text().strip().startswith("makebench-"):
-        raise RuntimeError("Executar apenas na VM descartável registrada.")
+        raise RuntimeError("Run only in the registered disposable VM.")
     if not os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
         return run(["dbus-run-session", "--", sys.executable, __file__, *sys.argv[1:]]).returncode
     artifact = args.artifact.resolve()
@@ -42,7 +42,7 @@ def main():
         or output.parent != artifact.parent
         or not output.parent.name.startswith("case-")
     ):
-        raise RuntimeError("Pasta de evidências fora do caso isolado.")
+        raise RuntimeError("Evidence folder outside the isolated case.")
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
@@ -57,11 +57,11 @@ def main():
         GSK_RENDERER="cairo",
         LIBGL_ALWAYS_SOFTWARE="1",
     )
-    # O sandbox normal do Chromium é obrigatório no teste do editor.
+    # The normal Chromium sandbox is required in the editor test.
     environment.pop("QTWEBENGINE_DISABLE_SANDBOX", None)
     environment.pop("QTWEBENGINE_CHROMIUM_FLAGS", None)
     sentinel = home / "makebench-host-sentinel"
-    sentinel.write_text("Arquivo do host convidado, não compartilhado com o Flatpak.")
+    sentinel.write_text("Guest host file, not shared with the Flatpak.")
     marker = (
         home / ".var/app" / identifier / "data/qa-result.json"
         if format == "flatpak"
@@ -91,7 +91,7 @@ def main():
             if Path("/tmp/.X11-unix/X91").exists():
                 break
             if server.poll() is not None:
-                raise RuntimeError("Xvfb não iniciou.")
+                raise RuntimeError("Xvfb did not start.")
             time.sleep(0.05)
         os.environ.update(environment)
         if format == "deb":
@@ -110,13 +110,13 @@ def main():
             installed = True
             command = ["/usr/bin/" + identifier]
             run(["dpkg-query", "-W", identifier])
-            records["steps"].append("Instalação DEB real")
+            records["steps"].append("Real DEB installation")
         elif format == "rpm":
             run(["sudo", "dnf", "-y", "install", str(artifact)], timeout=600)
             installed = True
             command = ["/usr/bin/" + identifier]
             run(["rpm", "-q", identifier])
-            records["steps"].append("Instalação RPM real")
+            records["steps"].append("Real RPM installation")
         elif format == "flatpak":
             run(
                 [
@@ -134,7 +134,7 @@ def main():
             )
             installed = True
             command = ["flatpak", "run", "--env=MAKEBENCH_QA_OUTPUT=" + str(marker), identifier]
-            records["steps"].append("Instalação Flatpak e resolução automática do runtime")
+            records["steps"].append("Flatpak installation and automatic runtime resolution")
         else:
             artifact.chmod(0o755)
             command = [str(artifact)]
@@ -149,8 +149,8 @@ def main():
                         timeout=120,
                     )
                     appdir = Path(extracted) / "squashfs-root"
-                    # Só a cópia descartável troca a entrada por uma sonda confiável;
-                    # o AppImage original é aberto sem alteração no teste gráfico abaixo.
+                    # Only the disposable copy swaps the entry point for a trusted probe;
+                    # the original AppImage is opened unchanged in the graphical test below.
                     (appdir / "app/makebench/__main__.py").write_text(
                         "import runpy\ndef main():return runpy.run_path('/home/qa/editor-tools.py')['probe']()\n"
                     )
@@ -159,12 +159,12 @@ def main():
                     )
                     records["runtime_tools"] = json.loads(tools)
                     records["steps"].append(
-                        "Ferramentas do host sem bibliotecas privadas e certificados TLS do destino"
+                        "Host tools without private libraries and the target TLS certificates"
                     )
                 if args.project:
                     command.append(str(args.project.resolve()))
             records["steps"].append(
-                "AppImage executável, sem instalação de Python/backend no convidado"
+                "Runnable AppImage, with no Python/backend installed in the guest"
             )
         with (output / "application.log").open("w") as log:
             process = subprocess.Popen(
@@ -180,7 +180,7 @@ def main():
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 raise RuntimeError(
-                    "Aplicativo saiu antes da verificação: "
+                    "Application exited before the check: "
                     + (output / "application.log").read_text()
                 )
             windows = subprocess.run(
@@ -206,14 +206,14 @@ def main():
                     pass
             time.sleep(0.05)
         if not visible:
-            raise RuntimeError("Nenhuma janela do aplicativo ficou visível.")
+            raise RuntimeError("No application window became visible.")
         run(["import", "-window", "root", str(output / "window.png")])
         records["steps"].append("Janela real aberta e captura PNG")
         if format == "editor":
-            assert not (home / "should-not-execute").exists(), (
-                "Abrir editor executou código do projeto"
+            assert not (home / "should-not-execute").exists(), "Opening the editor ran project code"
+            records["steps"].append(
+                "Qt/WebEngine editor opens a project without running own Python"
             )
-            records["steps"].append("Editor Qt/WebEngine abre projeto sem executar Python próprio")
             windows = subprocess.check_output(
                 ["xdotool", "search", "--onlyvisible", "--name", "Makebench"], text=True
             ).split()
@@ -225,12 +225,12 @@ def main():
         else:
             if result is None:
                 raise RuntimeError(
-                    "Fluxo não gerou resultado: " + (output / "application.log").read_text()
+                    "Flow produced no result: " + (output / "application.log").read_text()
                 )
             assert result["steps"] == 3 and result["dependency"] == "25.0", result
             if format == "flatpak":
                 assert result["host_visible"] is False, (
-                    "Sandbox acessou arquivo privado do host convidado"
+                    "The sandbox accessed a private file of the guest host"
                 )
             else:
                 assert result["host_visible"] is True, result
@@ -246,12 +246,12 @@ def main():
                 while Path(f"/proc/{pid}/stat").exists() and time.monotonic() < deadline:
                     time.sleep(0.05)
                 assert not Path(f"/proc/{pid}/stat").exists(), (
-                    "Terminal deixou processo após fechar a janela"
+                    "The terminal left a process after closing the window"
                 )
             records["application"] = result
             records["steps"].extend(
                 [
-                    "Grafo, repetição/condição, dependência Python adicional e duas janelas",
+                    "Graph, repeat/condition, additional Python dependency and two windows",
                     "Terminal e tarefas executados",
                     "Aplicativo encerra e recolhe processos",
                 ]
@@ -283,11 +283,11 @@ def main():
                     != 0
                 )
             installed = False
-            records["steps"].append("Remoção real; programa e instalação não permanecem")
+            records["steps"].append("Real removal; neither program nor installation remains")
         else:
             artifact.unlink()
             assert not artifact.exists()
-            records["steps"].append("AppImage removido após encerramento")
+            records["steps"].append("AppImage removed after shutdown")
         records["ok"] = True
         (output / "results.json").write_text(json.dumps(records, ensure_ascii=False, indent=2))
         print(json.dumps(records, ensure_ascii=False), flush=True)

@@ -1,4 +1,4 @@
-"""Leitura validada e gravação atômica de documentos Makebench."""
+"""Validated reading and atomic writing of Makebench documents."""
 
 from __future__ import annotations
 
@@ -9,28 +9,31 @@ from copy import deepcopy
 from pathlib import Path
 
 from makebench.core.project import Project, ProjectError
+from makebench.i18n import tr
 
 
 class StorageError(ProjectError):
-    """Falha de acesso ou formato que pode ser apresentada ao usuário."""
+    """Access or format failure that can be shown to the user."""
 
 
 def load_project(path: str | Path) -> Project:
-    """Carrega e valida um documento UTF-8 sem executar código do projeto."""
+    """Load and validate a UTF-8 document without running project code."""
     source = Path(path)
     try:
         data = json.loads(source.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError, RecursionError) as exc:
-        raise StorageError(f"Não foi possível abrir {source.name}: {exc}") from exc
+        raise StorageError(
+            tr("Could not open {name}: {error}").format(name=source.name, error=exc)
+        ) from exc
     return Project.from_dict(data)
 
 
 def save_project(project: Project, path: str | Path) -> Path | None:
-    """Valida antes de escrever e substitui o arquivo somente após a gravação.
+    """Validate before writing and replace the file only after the write succeeds.
 
-    Se a escrita ou a substituição falhar, o documento anterior permanece
-    intacto. O arquivo temporário é criado no mesmo diretório do destino.
-    Retorna a cópia `.bak-vN` criada nesta atualização de formato, ou None.
+    If writing or replacing fails, the previous document stays intact. The
+    temporary file is created in the destination folder. Returns the `.bak-vN`
+    copy created by this format upgrade, or None.
     """
     destination = Path(path)
     created: Path | None = None
@@ -39,7 +42,9 @@ def save_project(project: Project, path: str | Path) -> Path | None:
     try:
         text = json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
     except (TypeError, ValueError) as exc:
-        raise StorageError(f"O projeto contém dados que não podem ser salvos: {exc}") from exc
+        raise StorageError(
+            tr("The project contains data that cannot be saved: {error}").format(error=exc)
+        ) from exc
     if data["format_version"] >= 5 and destination.is_file():
         try:
             previous = json.loads(destination.read_text(encoding="utf-8"))
@@ -57,7 +62,9 @@ def save_project(project: Project, path: str | Path) -> Path | None:
                     os.fsync(handle.fileno())
                 created = backup
         except (OSError, ValueError) as exc:
-            raise StorageError(f"Não foi possível preservar a cópia anterior: {exc}") from exc
+            raise StorageError(
+                tr("Could not keep the previous copy: {error}").format(error=exc)
+            ) from exc
     if destination.is_file() and destination.read_text(encoding="utf-8") == text:
         return created
     temporary: Path | None = None
@@ -78,7 +85,9 @@ def save_project(project: Project, path: str | Path) -> Path | None:
             temporary.chmod(destination.stat().st_mode & 0o777)
         os.replace(temporary, destination)
     except OSError as exc:
-        raise StorageError(f"Não foi possível salvar {destination.name}: {exc}") from exc
+        raise StorageError(
+            tr("Could not save {name}: {error}").format(name=destination.name, error=exc)
+        ) from exc
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
@@ -88,15 +97,16 @@ def save_project(project: Project, path: str | Path) -> Path | None:
 def save_workspace(
     project: Project, source, assets, path: str | Path, saved: dict | None = None
 ) -> tuple[dict, Path | None]:
-    """Caminho único de salvamento do editor e de `Document`: recursos, fontes e JSON.
+    """Single save path for the editor and `Document`: assets, sources and JSON.
 
-    Valida o documento antes de tocar no disco. Recursos e arquivos Python são
-    gravados antes do JSON, que confirma o salvamento; só então módulos excluídos
-    são removidos. `saved` é o dicionário do último salvamento no mesmo caminho:
-    se for igual ao atual, o JSON não é regravado e formatos antigos mantêm seus
-    bytes. Não é uma transação única: falha no JSON deixa as fontes já gravadas e
-    o documento continua não salvo, com StorageError explicando esse estado. Retorna o dicionário salvo e a cópia
-    `.bak-vN` criada, ou None.
+    Validate the document before touching the disk. Assets and Python files are
+    written before the JSON, which confirms the save; only then are deleted
+    modules removed. `saved` is the dict of the last save to the same path: when
+    it equals the current one, the JSON is not rewritten and older formats keep
+    their bytes. This is not a single transaction: a JSON failure leaves the
+    sources already written and the document still unsaved, with a StorageError
+    explaining that state. Returns the saved dict and the `.bak-vN` copy created,
+    or None.
     """
     target = Path(path).resolve()
     project.python_files = sorted(source.modules)
@@ -110,9 +120,9 @@ def save_workspace(
             backup = save_project(project, target)
         except (OSError, ProjectError) as exc:
             raise StorageError(
-                f"{exc} Os arquivos Python e recursos já foram gravados, mas o arquivo do "
-                f"projeto ({target.name}) não. O projeto continua com alterações pendentes: "
-                "libere espaço ou verifique permissões e salve novamente."
+                tr(
+                    "{error} Python files and assets were already written, but the project file ({name}) was not. The project still has unsaved changes: free up space or check permissions and save again."
+                ).format(error=exc, name=target.name)
             ) from exc
     source.mark_saved()
     assets.root = target.parent

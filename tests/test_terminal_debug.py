@@ -1,4 +1,4 @@
-"""Contratos observáveis de PTY, migração e depuração sem avaliação arbitrária."""
+"""Observable contracts for PTY, migration and debugging without arbitrary evaluation."""
 
 import json
 import os
@@ -24,7 +24,7 @@ class TerminalTests(unittest.TestCase):
     """Um processo real precisa perceber TTY, tamanho, entrada e sinais."""
 
     def wait(self, terminal, predicate, timeout=5):
-        """Drena a PTY até observar resultado, com limite de tempo por cenário."""
+        """Drain the PTY until the result is observed, with a time limit per scenario."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             terminal.poll()
@@ -34,7 +34,7 @@ class TerminalTests(unittest.TestCase):
         self.fail("Terminal não atingiu o resultado esperado: " + repr(terminal.screen.display))
 
     def test_tty_unicode_ansi_input_resize_and_exit(self):
-        """ANSI mantém células, UTF-8 e o filho enxerga uma PTY redimensionada."""
+        """ANSI keeps cells and UTF-8, and the child sees a resized PTY."""
         terminal = TerminalSession(80, 24)
         self.addCleanup(terminal.stop)
         self.assertFalse(terminal.running)
@@ -56,7 +56,7 @@ class TerminalTests(unittest.TestCase):
         self.assertEqual(terminal.exit_code, 0)
 
     def test_ctrl_c_interrupts_foreground_and_close_kills_background(self):
-        """Ctrl+C chega ao processo e encerrar não deixa shell ou job em execução."""
+        """Ctrl+C reaches the process and stopping leaves no shell or job running."""
         with tempfile.TemporaryDirectory() as directory:
             file = Path(directory) / "job.pid"
             terminal = TerminalSession(root=directory)
@@ -70,7 +70,7 @@ class TerminalTests(unittest.TestCase):
             terminal.poll()
             self.assertTrue(terminal.running)
             terminal.stop()
-            # Um filho recém-adotado pode existir brevemente como zumbi, mas não executar.
+            # A freshly adopted child may briefly exist as a zombie, but never runs.
             status = Path(f"/proc/{child}/stat")
             for _ in range(100):
                 try:
@@ -85,7 +85,7 @@ class TerminalTests(unittest.TestCase):
                 pass
 
     def test_history_bounded_and_cursor_addressing(self):
-        """Saída extensa fica limitada e programas podem mover/apagar o cursor."""
+        """Long output stays bounded and programs can move/erase the cursor."""
         terminal = TerminalSession(20, 4)
         terminal.stream.feed(b"abc\x1b[1;1HZ\x1b[K")
         self.assertEqual(terminal.screen.display[0].strip(), "Z")
@@ -94,14 +94,14 @@ class TerminalTests(unittest.TestCase):
         self.assertEqual(key_input("c", "c", control=True), "\x03")
 
     def test_alternate_screen_restores_main_buffer(self):
-        """Aplicativos de tela cheia restauram o conteúdo anterior ao sair."""
+        """Full-screen applications restore the previous content on exit."""
         terminal = TerminalSession(20, 4)
         terminal.stream.feed(b"main\x1b[?1049hfull\x1b[?1049l")
         self.assertTrue(terminal.screen.display[0].startswith("main"))
         self.assertNotIn("full", "\n".join(terminal.screen.display))
 
     def test_format_upgrade_backup_and_old_file_untouched_on_open(self):
-        """Terminal exige formato 6; abrir v4 é inerte e salvar preserva o original."""
+        """Terminal requires format 6; opening v4 is inert and saving keeps the original."""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "project.makebench.json"
             project = Project.empty()
@@ -120,7 +120,7 @@ class TerminalTests(unittest.TestCase):
 
 
 class WorkerHarness:
-    """Transporte do teste sem Qt; nunca roda no processo de teste o Python do projeto."""
+    """Test transport without Qt; the project's Python never runs in the test process."""
 
     def __init__(self, project, source, directory):
         self.process = subprocess.Popen(
@@ -153,12 +153,12 @@ class WorkerHarness:
         self.until(lambda m: m["type"] == "ready")
 
     def send(self, value):
-        """Envia uma mensagem imediatamente, sem esperar uma resposta de UI."""
+        """Send a message immediately, without waiting for a UI reply."""
         self.process.stdin.write(json.dumps(value) + "\n")
         self.process.stdin.flush()
 
     def until(self, predicate):
-        """Aguarda mensagem específica com prazo para detectar travamento do protocolo."""
+        """Wait for a specific message with a deadline to detect a stuck protocol."""
         deadline = time.monotonic() + 5
         while time.monotonic() < deadline:
             message = self.messages.get(timeout=max(0.01, deadline - time.monotonic()))
@@ -189,7 +189,7 @@ class DebugTests(unittest.TestCase):
     """Pontos, pilha, passos e pausa durante resposta precisam funcionar no processo real."""
 
     def make_worker(self, body, source):
-        """Cria snapshot com um evento; pontos sempre são do arquivo próprio ou do bloco."""
+        """Create a snapshot with one event; breakpoints always belong to the own file or the block."""
         project = Project.empty()
         flow = create_flow(project, project.root.id)
         flow["body"] = body
@@ -201,7 +201,7 @@ class DebugTests(unittest.TestCase):
         return worker, flow
 
     def test_step_in_out_and_readonly_values(self):
-        """Um evento chama função própria, entra nela, inspeciona dados e retorna ao bloco."""
+        """An event calls an own function, steps into it, inspects data and returns to the block."""
         worker, flow = self.make_worker(
             [
                 {"id": "call", "op": "call", "function": "action", "value": literal(4)},
@@ -226,7 +226,7 @@ class DebugTests(unittest.TestCase):
         self.assertEqual(worker.until(lambda m: m["type"] == "done")["outcome"], "success")
 
     def test_pause_while_waiting_ui_retains_response(self):
-        """Pausar e continuar funcionam durante um diálogo e não consomem sua resposta."""
+        """Pause and continue work during a dialog and do not consume its reply."""
         worker, flow = self.make_worker(
             [
                 {"id": "dialog", "op": "message", "value": literal("oi")},
@@ -245,7 +245,7 @@ class DebugTests(unittest.TestCase):
         self.assertEqual(worker.until(lambda m: m["type"] == "done")["outcome"], "success")
 
     def test_breakpoints_in_own_source(self):
-        """Uma parada de linha independe dos passos e resolve a função do snapshot."""
+        """A line breakpoint is independent of steps and resolves the snapshot's function."""
         worker, flow = self.make_worker(
             [{"id": "call", "op": "call", "function": "action", "value": literal(4)}],
             "def action(ctx, value):\n    result=value+2\n    ctx.log(result)\n",
@@ -259,7 +259,7 @@ class DebugTests(unittest.TestCase):
         worker.until(lambda m: m["type"] == "done")
 
     def test_stop_while_paused_does_not_execute_next_block(self):
-        """Parar uma sessão pausada encerra o worker antes de executar o código próprio."""
+        """Stopping a paused session ends the worker before running the own code."""
         worker, _ = self.make_worker(
             [{"id": "call", "op": "call", "function": "action", "value": literal(4)}],
             'def action(ctx,value):\n    raise AssertionError("Não deve executar")\n',
@@ -269,7 +269,7 @@ class DebugTests(unittest.TestCase):
         self.assertEqual(worker.process.wait(timeout=3), 0)
 
     def test_inspection_does_not_invoke_project_methods(self):
-        """Objetos desconhecidos nunca recebem repr, iteração ou acesso a propriedades."""
+        """Unknown objects never get repr, iteration or property access."""
 
         class Dangerous:
             def __repr__(self):

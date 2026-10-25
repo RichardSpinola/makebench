@@ -1,4 +1,4 @@
-"""Janela principal: interface visual, blocos e funções Python."""
+"""Main window: visual interface, blocks and Python functions."""
 
 from __future__ import annotations
 
@@ -46,17 +46,18 @@ from makebench import __version__
 
 
 from .studio import StudioMixin
+from makebench.i18n import ntr, tr
 
 
 class MainWindow(StudioMixin, QMainWindow):
-    """Coordena documento, histórico, seleção e comandos de arquivo.
+    """Coordinate the document, history, selection and file commands.
 
-    O documento é a fonte de verdade; árvore, prévia e propriedades são vistas.
-    Interface e blocos geram dados/Python; executar exige uma ação explícita.
+    The document is the source of truth; tree, preview and properties are views.
+    The interface and blocks produce data/Python; running needs an explicit action.
     """
 
     def __init__(self, project: Project | None = None, path: Path | None = None) -> None:
-        """Abre um projeto fornecido ou inicia uma nova interface vazia."""
+        """Open a given project or start a new empty interface."""
         super().__init__()
         from .theme import manager
         from .dialogs import install_translation
@@ -88,12 +89,12 @@ class MainWindow(StudioMixin, QMainWindow):
         self.remember_project()
 
     def showEvent(self, event):
-        """Aguarda o estilo polir as barras antes de conferir a paleta nativa."""
+        """Wait for the style to polish the bars before checking the native palette."""
         super().showEvent(event)
         QTimer.singleShot(0, self, self._sync_native_bars)
 
     def changeEvent(self, event):
-        """Tema e ativação podem mudar as cores especiais dos cabeçalhos KDE."""
+        """Theme and activation can change the special colors of KDE headers."""
         super().changeEvent(event)
         if event.type() in {
             QEvent.Type.ActivationChange,
@@ -103,97 +104,97 @@ class MainWindow(StudioMixin, QMainWindow):
             QTimer.singleShot(0, self, self._sync_native_bars)
 
     def _sync_native_bars(self):
-        """Corrige apenas texto ilegível em barras já construídas, fora dos eventos de estilo."""
+        """Fix only illegible text in already built bars, outside style events."""
         from .theme import manager
 
         for bar in (self.menuBar(), self.workspace_toolbar):
             manager().repair_bar_palette(bar)
 
     def _create_actions(self) -> None:
-        """Registra menus e atalhos que têm comportamento implementado."""
-        file_menu = self.menuBar().addMenu("&Arquivo")
-        edit_menu = self.menuBar().addMenu("&Editar")
-        run_menu = self.menuBar().addMenu("E&xecutar")
-        self.run_action = QAction("Testar aplicativo", self)
+        """Register the menus and shortcuts that have implemented behavior."""
+        file_menu = self.menuBar().addMenu(tr("&File"))
+        edit_menu = self.menuBar().addMenu(tr("&Edit"))
+        run_menu = self.menuBar().addMenu(tr("&Run"))
+        self.run_action = QAction(tr("Test application"), self)
         self.run_action.setShortcut(QKeySequence("F5"))
         self.run_action.triggered.connect(self.run_project)
         run_menu.addAction(self.run_action)
-        self.debug_action = QAction("Depurar aplicativo", self)
-        self.debug_action.setShortcut(QKeySequence("F6"))
+        self.debug_action = QAction(tr("Debug application"), self)
+        self.debug_action.setShortcut(QKeySequence("F9"))
         self.debug_action.triggered.connect(self.debug_project)
         run_menu.addAction(self.debug_action)
         for title, shortcut, action in [
-            ("Continuar", "F8", "continue"),
-            ("Próximo passo", "F10", "step_over"),
-            ("Entrar na função", "F11", "step_in"),
-            ("Sair da função", "Shift+F11", "step_out"),
+            (tr("Continue"), "F8", "continue"),
+            (tr("Next step"), "F10", "step_over"),
+            (tr("Step into function"), "F11", "step_in"),
+            (tr("Step out of function"), "Shift+F11", "step_out"),
         ]:
             command = QAction(title, self)
             command.setShortcut(QKeySequence(shortcut))
             command.triggered.connect(lambda _, action=action: self.debug_command(action))
             run_menu.addAction(command)
 
-        help_menu = self.menuBar().addMenu("Aj&uda")
-        self.new_action = QAction("Novo projeto", self)
+        help_menu = self.menuBar().addMenu(tr("&Help"))
+        self.new_action = QAction(tr("New project"), self)
         self.new_action.setShortcut(QKeySequence.StandardKey.New)
         self.new_action.triggered.connect(self.new_project)
-        self.open_action = QAction("Abrir…", self)
+        self.open_action = QAction(tr("Open…"), self)
         self.open_action.setShortcut(QKeySequence.StandardKey.Open)
         self.open_action.triggered.connect(self.open_project)
-        self.save_action = QAction("Salvar", self)
+        self.save_action = QAction(tr("Save"), self)
         self.save_action.setShortcut(QKeySequence.StandardKey.Save)
         self.save_action.triggered.connect(self.save)
-        save_as_action = QAction("Salvar como…", self)
+        save_as_action = QAction(tr("Save as…"), self)
         save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
         save_as_action.triggered.connect(self.save_as)
-        quit_action = QAction("Sair", self)
+        quit_action = QAction(tr("Quit"), self)
         quit_action.setShortcut(QKeySequence.StandardKey.Quit)
         quit_action.triggered.connect(self.close)
         file_menu.addActions([self.new_action, self.open_action, self.save_action, save_as_action])
         file_menu.addSeparator()
         file_menu.addAction(quit_action)
-        self.undo_action = QAction("Desfazer", self)
+        self.undo_action = QAction(tr("Undo"), self)
         self.undo_action.setShortcut(QKeySequence.StandardKey.Undo)
         self.undo_action.triggered.connect(self.undo)
-        self.redo_action = QAction("Refazer", self)
+        self.redo_action = QAction(tr("Redo"), self)
         self.redo_action.setShortcuts([QKeySequence("Ctrl+Shift+Z"), QKeySequence("Ctrl+Y")])
         self.redo_action.triggered.connect(self.redo)
-        self.remove_action = QAction("Remover componente", self)
+        self.remove_action = QAction(tr("Remove component"), self)
         self.remove_action.triggered.connect(self.remove_component)
         edit_menu.addActions([self.undo_action, self.redo_action, self.remove_action])
-        self.duplicate_action = QAction("Duplicar", self)
+        self.duplicate_action = QAction(tr("Duplicate"), self)
         self.duplicate_action.setShortcut(QKeySequence("Ctrl+D"))
         self.duplicate_action.triggered.connect(self.duplicate_component)
-        self.up_action = QAction("Mover para antes", self)
+        self.up_action = QAction(tr("Move before"), self)
         self.up_action.setShortcut(QKeySequence("Alt+Up"))
         self.up_action.triggered.connect(lambda: self.reorder_component(-1))
-        self.down_action = QAction("Mover para depois", self)
+        self.down_action = QAction(tr("Move after"), self)
         self.down_action.setShortcut(QKeySequence("Alt+Down"))
         self.down_action.triggered.connect(lambda: self.reorder_component(1))
-        self.page_action = QAction("Adicionar página", self)
+        self.page_action = QAction(tr("Add page"), self)
         self.page_action.setShortcut(QKeySequence("Ctrl+Shift+P"))
         self.page_action.triggered.connect(self.add_page)
         edit_menu.addActions(
             [self.duplicate_action, self.up_action, self.down_action, self.page_action]
         )
-        align_menu = edit_menu.addMenu("Alinhar na área livre")
+        align_menu = edit_menu.addMenu(tr("Align in the free area"))
         self.align_actions = []
         for mode, label in (
-            ("left", "À esquerda"),
-            ("center_x", "Centralizar horizontalmente"),
-            ("right", "À direita"),
-            ("top", "No topo"),
-            ("center_y", "Centralizar verticalmente"),
-            ("bottom", "Na base"),
+            ("left", tr("Left")),
+            ("center_x", tr("Center horizontally")),
+            ("right", tr("Right")),
+            ("top", tr("Top")),
+            ("center_y", tr("Center vertically")),
+            ("bottom", tr("Bottom")),
         ):
             action = QAction(label, self)
             action.triggered.connect(lambda _, mode=mode: self.align_component(mode))
             align_menu.addAction(action)
             self.align_actions.append(action)
-        about_action = QAction("Sobre o Makebench", self)
+        about_action = QAction(tr("About Makebench"), self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
-        toolbar = QToolBar("Projeto", self)
+        toolbar = QToolBar(tr("Project"), self)
         toolbar.setMovable(False)
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         toolbar.addActions([self.new_action, self.open_action, self.save_action])
@@ -204,9 +205,9 @@ class MainWindow(StudioMixin, QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction(self.run_action)
         toolbar.addSeparator()
-        self.snap_check = QCheckBox("Encaixar na grade")
+        self.snap_check = QCheckBox(tr("Snap to grid"))
         self.snap_check.setChecked(True)
-        self.snap_check.setToolTip("Ajustar arraste e redimensionamento a intervalos de 8 pixels.")
+        self.snap_check.setToolTip(tr("Snap dragging and resizing to 8-pixel steps."))
         self.snap_check.toggled.connect(
             lambda enabled: setattr(self.canvas, "snap", 8 if enabled else 1)
         )
@@ -214,7 +215,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.addToolBar(toolbar)
 
     def _create_workspace(self) -> None:
-        """Monta os três painéis: componentes, prévia e propriedades."""
+        """Build the three panels: components, preview and properties."""
         splitter = QSplitter()
         splitter.setChildrenCollapsible(False)
         left = QWidget()
@@ -225,19 +226,19 @@ class MainWindow(StudioMixin, QMainWindow):
         font.setBold(True)
         brand.setFont(font)
         left_layout.addWidget(brand)
-        subtitle = QLabel("Dê forma ao seu aplicativo.")
+        subtitle = QLabel(tr("Shape your application."))
         subtitle.setWordWrap(True)
         left_layout.addWidget(subtitle)
         left_layout.addSpacing(16)
-        left_layout.addWidget(QLabel("Adicionar componente"))
+        left_layout.addWidget(QLabel(tr("Add component")))
         self.palette = ComponentPalette()
         self.palette.add_requested.connect(self.add_component)
         left_layout.addWidget(self.palette)
-        add_button = QPushButton("Adicionar à interface")
+        add_button = QPushButton(tr("Add to interface"))
         add_button.clicked.connect(self.add_component)
         left_layout.addWidget(add_button)
         left_layout.addSpacing(16)
-        left_layout.addWidget(QLabel("Componentes"))
+        left_layout.addWidget(QLabel(tr("Components")))
         self.tree = ComponentTree(lambda: self.project, self._can_drop)
         self.tree.drop_requested.connect(self._on_drop)
         self.tree.remove_requested.connect(self.remove_component)
@@ -245,7 +246,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.tree.setMinimumWidth(210)
         self.tree.currentItemChanged.connect(self._tree_selection_changed)
         left_layout.addWidget(self.tree, 1)
-        remove_button = QPushButton("Remover selecionado")
+        remove_button = QPushButton(tr("Remove selected"))
         remove_button.clicked.connect(self.remove_component)
         self.remove_action.changed.connect(
             lambda: remove_button.setEnabled(self.remove_action.isEnabled())
@@ -255,11 +256,13 @@ class MainWindow(StudioMixin, QMainWindow):
 
         middle = QWidget()
         middle_layout = QVBoxLayout(middle)
-        heading = QLabel("Interface")
+        heading = QLabel(tr("Interface"))
         heading.setStyleSheet("font-size: 18px; font-weight: bold;")
         middle_layout.addWidget(heading)
         hint = QLabel(
-            "Arraste componentes para a tela. Em áreas livres, mova e redimensione pela seleção."
+            tr(
+                "Drag components onto the screen. In free areas, move and resize through the selection."
+            )
         )
         hint.setWordWrap(True)
         middle_layout.addWidget(hint)
@@ -275,7 +278,7 @@ class MainWindow(StudioMixin, QMainWindow):
         scroll.setWidget(self.canvas)
         middle_layout.addWidget(scroll, 1)
         preview_note = QLabel(
-            "Prévia de edição · Ctrl+arraste transfere componentes livres para outro contêiner."
+            tr("Editing preview · Ctrl+drag moves free components to another container.")
         )
         preview_note.setWordWrap(True)
         middle_layout.addWidget(preview_note)
@@ -283,7 +286,7 @@ class MainWindow(StudioMixin, QMainWindow):
 
         right = QWidget()
         right_layout = QVBoxLayout(right)
-        properties_heading = QLabel("Propriedades")
+        properties_heading = QLabel(tr("Properties"))
         properties_heading.setStyleSheet("font-size: 16px; font-weight: bold;")
         right_layout.addWidget(properties_heading)
         inspector_scroll = QScrollArea()
@@ -301,7 +304,7 @@ class MainWindow(StudioMixin, QMainWindow):
         splitter.setSizes([250, 700, 300])
         splitter.setStretchFactor(1, 1)
         self.tabs = QTabWidget()
-        self.tabs.addTab(splitter, "Interface")
+        self.tabs.addTab(splitter, tr("Interface"))
         self.logic = LogicPanel(lambda: self.project, lambda: self.source.text)
         self.logic.add_requested.connect(self.edit_logic)
         self.logic.remove_requested.connect(self.remove_flow)
@@ -312,24 +315,26 @@ class MainWindow(StudioMixin, QMainWindow):
         self.logic.undo_requested.connect(self.undo)
         self.logic.redo_requested.connect(self.redo)
         self.logic.pending_changed.connect(self._update_actions)
-        self.tabs.addTab(self.logic, "Lógica")
+        self.tabs.addTab(self.logic, tr("Logic"))
         code_page = QWidget()
         code_layout = QVBoxLayout(code_page)
         hint = QLabel(
-            "Edite suas funções à direita. O Python à esquerda acompanha os blocos e não substitui suas funções. Use F5 para testar o aplicativo em uma janela separada."
+            tr(
+                "Edit your functions on the right. The Python on the left follows the blocks and never replaces your functions. Press F5 to test the application in a separate window."
+            )
         )
         hint.setWordWrap(True)
         code_layout.addWidget(hint)
         code_splitter = QSplitter()
         generated_box = QWidget()
         generated_layout = QVBoxLayout(generated_box)
-        generated_layout.addWidget(QLabel("Python gerado · somente leitura"))
+        generated_layout.addWidget(QLabel(tr("Generated Python · read-only")))
         self.generated_editor = CodeEditor(True)
         generated_layout.addWidget(self.generated_editor)
         code_splitter.addWidget(generated_box)
         own_box = QWidget()
         own_layout = QVBoxLayout(own_box)
-        self.source_label = QLabel("Funções próprias · salvas em arquivo .actions.py")
+        self.source_label = QLabel(tr("Your functions · saved in the .actions.py file"))
         self.source_label.setTextFormat(Qt.TextFormat.PlainText)
         own_layout.addWidget(self.source_label)
         self.source_editor = CodeEditor()
@@ -341,7 +346,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.code_diagnostics.setWordWrap(True)
         self.code_diagnostics.setTextFormat(Qt.TextFormat.PlainText)
         code_layout.addWidget(self.code_diagnostics)
-        self.tabs.addTab(code_page, "Código")
+        self.tabs.addTab(code_page, tr("Code"))
         self.source_timer = QTimer(self)
         self.source_timer.setSingleShot(True)
         self.source_timer.setInterval(250)
@@ -353,7 +358,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.setCentralWidget(self.tabs)
 
     def presentation_signature(self):
-        """Identifica somente composição/contexto, sem reconstruir widgets por mudanças de lógica."""
+        """Identify only composition/context, without rebuilding widgets on logic changes."""
         import json
 
         return json.dumps(
@@ -372,7 +377,7 @@ class MainWindow(StudioMixin, QMainWindow):
         )
 
     def _refresh(self) -> None:
-        """Reutiliza a composição se só lógica/metadados mudaram; estrutura repinta atomicamente."""
+        """Reuse the composition if only logic/metadata changed; structure repaints atomically."""
         from .updates import hold_updates
 
         signature = self.presentation_signature()
@@ -386,7 +391,11 @@ class MainWindow(StudioMixin, QMainWindow):
                     0,
                     ("◌ " if not node.properties.get("visible", True) else "")
                     + (node.properties.get("code_name") or node.display_name)
-                    + (f" · {count} evento(s)" if count else ""),
+                    + (
+                        " · " + ntr("{count} event", "{count} events", count).format(count=count)
+                        if count
+                        else ""
+                    ),
                 )
             self.sync_navigation()
             self._select(self.selected_id)
@@ -394,13 +403,13 @@ class MainWindow(StudioMixin, QMainWindow):
             self._update_code()
             self._update_actions()
             return
-        # O proxy gráfico não é filho QWidget da janela principal.
+        # The graphics proxy is not a QWidget child of the main window.
         with hold_updates(self), hold_updates(self.canvas):
             self._rebuild_views()
         self._presentation_signature = self.presentation_signature()
 
     def _rebuild_views(self) -> None:
-        """Atualiza as vistas a partir do documento e preserva a seleção válida."""
+        """Update the views from the document and keep a valid selection."""
         self._refreshing = True
         expanded = {
             key: item.isExpanded() for key, item in getattr(self, "_tree_items", {}).items()
@@ -411,7 +420,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.tree._hint = None
 
         def append(node: Component, parent: QTreeWidgetItem | None = None) -> None:
-            """Projeta um nó e seus filhos na árvore de navegação."""
+            """Project a node and its children into the navigation tree."""
             count = sum(
                 1
                 for flow in self.project.editable_flows
@@ -421,7 +430,7 @@ class MainWindow(StudioMixin, QMainWindow):
             if not node.properties.get("visible", True):
                 label = "◌ " + label
             if count:
-                label += f" · {count} evento(s)"
+                label += " · " + ntr("{count} event", "{count} events", count).format(count=count)
             item = QTreeWidgetItem([label])
             from .theme import icon
 
@@ -429,8 +438,12 @@ class MainWindow(StudioMixin, QMainWindow):
             item.setToolTip(
                 0,
                 node.display_name
-                + (" · oculto no aplicativo" if not node.properties.get("visible", True) else "")
-                + (" · contêiner" if node.can_have_children else ""),
+                + (
+                    " · " + tr("hidden in the application")
+                    if not node.properties.get("visible", True)
+                    else ""
+                )
+                + (" · " + tr("container") if node.can_have_children else ""),
             )
             item.setData(0, Qt.ItemDataRole.UserRole, node.id)
             if parent:
@@ -439,10 +452,13 @@ class MainWindow(StudioMixin, QMainWindow):
                 self.tree.addTopLevelItem(item)
             self._tree_items[node.id] = item
             if node.kind == ComponentKind.WINDOW and self.project.states.get(node.id):
-                group = QTreeWidgetItem(["Estados"])
+                group = QTreeWidgetItem([tr("States")])
                 item.addChild(group)
                 for state in [
-                    {"id": "@default", "name": node.properties.get("default_state_name", "Padrão")},
+                    {
+                        "id": "@default",
+                        "name": node.properties.get("default_state_name", tr("Default")),
+                    },
                     *self.project.states[node.id],
                 ]:
                     state_item = QTreeWidgetItem([state["name"]])
@@ -470,8 +486,8 @@ class MainWindow(StudioMixin, QMainWindow):
         if self.project.find(self.selected_id) is None:
             self.selected_id = self.project.root.id
         self._refreshing = False
-        # Uma reconstrução também restaura entradas rejeitadas pela validação.
-        # O cache só evita refazer campos em cliques de seleção sem alteração.
+        # A rebuild also restores entries rejected by validation.
+        # The cache only avoids redoing fields on selection clicks with no change.
         self.inspector._binding_signature = None
         if self.selected_id not in getattr(self, "selected_ids", set()):
             self.selected_ids = {self.selected_id}
@@ -491,14 +507,14 @@ class MainWindow(StudioMixin, QMainWindow):
             self.zoom_view.update_bounds()
 
     def _select(self, component_id: str) -> None:
-        """Agrupa a seleção e a troca de campos em uma única repintura."""
+        """Group the selection and field swap into a single repaint."""
         from .updates import hold_updates
 
         with hold_updates(self.inspector):
             self._select_component(component_id)
 
     def _select_component(self, component_id: str) -> None:
-        """Sincroniza seleção da árvore, prévia e formulário de propriedades."""
+        """Sync the tree selection, preview and properties form."""
         if self._refreshing:
             return
         node = self.project.find(component_id)
@@ -539,14 +555,16 @@ class MainWindow(StudioMixin, QMainWindow):
             self.canvas.select_many(self.selected_ids)
         if self.active_state != "@default":
             self.statusBar().showMessage(
-                "Editando estado: somente propriedades. Projeto > Restaurar seleção do Padrão remove diferenças."
+                tr(
+                    "Editing a state: properties only. Project > Restore selection from Default removes differences."
+                )
             )
         if len(getattr(self, "selected_ids", [])) > 1:
             self.select_multiple(self.selected_ids)
         self._update_actions()
 
     def _tree_selection_changed(self, current: QTreeWidgetItem | None, _previous=None) -> None:
-        """Recebe seleção por mouse ou teclado na árvore."""
+        """Receive a mouse or keyboard selection in the tree."""
         if current and not self._refreshing:
             identifier = current.data(0, Qt.ItemDataRole.UserRole)
             if isinstance(identifier, str) and identifier.startswith("@state|"):
@@ -558,7 +576,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 self._from_tree = False
 
     def _update_actions(self) -> None:
-        """Atualiza comandos, título e indicador de alterações não salvas."""
+        """Update commands, title and the unsaved-changes indicator."""
         source_active = self.tabs.currentIndex() == 2 and (
             not hasattr(self, "code_files") or self.code_files.currentIndex() > 0
         )
@@ -570,7 +588,7 @@ class MainWindow(StudioMixin, QMainWindow):
         if hasattr(self, "behavior_templates"):
             self.behavior_templates.setVisible(self.logic.editor_kind.currentData() != "nodes")
         self.run_action.setEnabled(not home and not self.project.metadata.get("empty_map"))
-        self.run_action.setText("Reiniciar teste" if active else "Testar aplicativo")
+        self.run_action.setText(tr("Restart test") if active else tr("Test application"))
         self.run_action.setToolTip(self.run_action.text() + " · F5")
         if hasattr(self, "stop_action"):
             self.stop_action.setEnabled(active and not self.runtime_window.session.admin_active)
@@ -607,21 +625,27 @@ class MainWindow(StudioMixin, QMainWindow):
             action.setEnabled(interface_active and bool(free))
         self.setWindowTitle(f"{self.project.name}[*] — Makebench")
         if hasattr(self, "code_files"):
-            self.code_files.setTabText(1, "Funções próprias" + (" •" if self.source.dirty else ""))
+            self.code_files.setTabText(
+                1, tr("Your functions") + (" •" if self.source.dirty else "")
+            )
         self.setWindowModified(
             self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
         )
         count = len(list(self.project.root.walk())) - 1
         state = (
-            "Alterações não salvas"
+            tr("Unsaved changes")
             if self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
-            else "Pronto"
+            else tr("Ready")
         )
-        self.statusBar().showMessage(f"{state} · {count} componente(s)")
+        self.statusBar().showMessage(
+            state
+            + " · "
+            + ntr("{count} component", "{count} components", count).format(count=count)
+        )
         self.sync_studio()
 
     def _change_property(self, component_id: str, key: str, value: object) -> None:
-        """Aplica uma propriedade válida e registra uma única alteração no histórico."""
+        """Apply a valid property and record a single history change."""
         if self._refreshing:
             return
         before = self.project.to_dict()
@@ -629,7 +653,9 @@ class MainWindow(StudioMixin, QMainWindow):
             from makebench.core.navigation import OVERRIDES
 
             if key not in OVERRIDES:
-                self.statusBar().showMessage("Edite a estrutura e o layout no estado Padrão.", 6000)
+                self.statusBar().showMessage(
+                    tr("Edit structure and layout in the Default state."), 6000
+                )
                 self._refresh()
                 return
             state = next(
@@ -658,7 +684,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 if field:
                     field.setText(self.project.name)
                     field.setModified(False)
-                self.statusBar().showMessage("O nome do projeto não pode ficar vazio.", 5000)
+                self.statusBar().showMessage(tr("The project name cannot be empty."), 5000)
                 return
             if self.project.name == cleaned:
                 return
@@ -707,7 +733,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._refresh_property(component_id, key)
 
     def _refresh_property(self, identifier, key, finish=True):
-        """Atualiza valores sem destruir o campo em edição nem a árvore de widgets."""
+        """Update values without destroying the field being edited or the widget tree."""
         structural = {
             "layout",
             "size_mode",
@@ -783,7 +809,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 if effective.properties.get("source"):
                     image.loadFromData(self.assets.read(effective.properties["source"]))
                 widget.image = image
-                widget.setAccessibleName(effective.properties.get("alt_text", "Imagem"))
+                widget.setAccessibleName(effective.properties.get("alt_text", tr("Image")))
                 widget.update()
         if frame:
             if key == "visible":
@@ -813,7 +839,7 @@ class MainWindow(StudioMixin, QMainWindow):
                     label.property("componentId") == identifier
                     and label.parentWidget().objectName() == "app_window_titlebar"
                 ):
-                    label.setText(str(effective.properties.get("title", "Interface")))
+                    label.setText(str(effective.properties.get("title", tr("Interface"))))
         item = self._tree_items.get(identifier)
         if item:
             count = sum(
@@ -824,7 +850,11 @@ class MainWindow(StudioMixin, QMainWindow):
                 0,
                 ("◌ " if not node.properties.get("visible", True) else "")
                 + (node.properties.get("code_name") or node.display_name)
-                + (f" · {count} evento(s)" if count else ""),
+                + (
+                    " · " + ntr("{count} event", "{count} events", count).format(count=count)
+                    if count
+                    else ""
+                ),
             )
         if self.active_state != "@default":
             state = next(
@@ -847,9 +877,9 @@ class MainWindow(StudioMixin, QMainWindow):
             self.zoom_view.update_bounds()
 
     def choose_component_icon(self, identifier):
-        """Importa ícone portátil no documento, sem vincular caminhos externos."""
+        """Import a portable icon into the document, never linking external paths."""
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Ícone do botão", "", "Ícones (*.png *.svg)"
+            self, tr("Button icon"), "", tr("Icons (*.png *.svg)")
         )
         if filename:
             try:
@@ -858,8 +888,8 @@ class MainWindow(StudioMixin, QMainWindow):
                 self._show_error(str(exc))
 
     def reveal_navigation(self, edge):
-        """O inspetor do Designer abre a conexão exata no Mapa."""
-        self.set_mode("Mapa")
+        """The Designer's inspector opens the exact connection in the Map."""
+        self.set_mode("map")
         line = next(
             (
                 line
@@ -874,8 +904,8 @@ class MainWindow(StudioMixin, QMainWindow):
             self.map_panel.view.ensureVisible(line)
 
     def _finish_field_edit(self) -> bool:
-        """Confirma texto ainda em edição antes de salvar ou substituir o projeto."""
-        # Também confirma edição por acessibilidade/testes sem janela ativa.
+        """Commit text still being edited before saving or replacing the project."""
+        # Also commits edits made through accessibility/tests without an active window.
         from PySide6.QtWidgets import QLineEdit
 
         for field in self.inspector.findChildren(QLineEdit):
@@ -890,21 +920,21 @@ class MainWindow(StudioMixin, QMainWindow):
         return self.logic.flush()
 
     def add_component(self) -> None:
-        """Insere no contêiner ou página adequada à seleção atual."""
+        """Insert into the container or page that fits the current selection."""
         if self.active_state != "@default":
-            self.statusBar().showMessage("Adicione componentes no estado Padrão.", 6000)
+            self.statusBar().showMessage(tr("Add components in the Default state."), 6000)
             return
         kind = ComponentKind(self.palette.currentData())
 
         def insert():
-            """Insere o tipo escolhido no destino resolvido pela seleção."""
+            """Insert the chosen type into the destination resolved from the selection."""
             parent = self._insertion_parent(kind)
             self.selected_id = self.project.add(parent.id, kind).id
 
         self._edit(insert)
 
     def _insertion_parent(self, kind: ComponentKind) -> Component:
-        """Resolve inserções por botão, inclusive dentro de páginas selecionadas."""
+        """Resolve insertions from the button, including inside selected pages."""
         node = self.project.find(self.selected_id)
         if node.kind == ComponentKind.PAGES and kind != ComponentKind.PAGE:
             return self.canvas.visible_page(node)
@@ -912,10 +942,10 @@ class MainWindow(StudioMixin, QMainWindow):
             if node.accepts(kind):
                 return node
             node = self.project.parent_of(node.id)
-        raise ProjectError("Selecione um conjunto de páginas para adicionar uma página.")
+        raise ProjectError(tr("Select a set of pages to add a page."))
 
     def _page_group(self, node: Component) -> Component | None:
-        """Encontra o conjunto de páginas mais próximo da seleção."""
+        """Find the set of pages closest to the selection."""
         while node:
             if node.kind == ComponentKind.PAGES:
                 return node
@@ -923,7 +953,7 @@ class MainWindow(StudioMixin, QMainWindow):
         return None
 
     def _edit(self, change: Callable[[], None], refresh=True) -> None:
-        """Agrupa um comando em uma alteração e restaura o documento se falhar."""
+        """Group a command into one change and restore the document if it fails."""
         if not self._finish_field_edit():
             return
         before = self.project.to_dict()
@@ -944,7 +974,7 @@ class MainWindow(StudioMixin, QMainWindow):
             self._update_actions()
 
     def change_application(self, key, value):
-        """Metadados do app não precisam destruir os widgets da interface em edição."""
+        """App metadata does not need to destroy the widgets of the interface being edited."""
         if self.project.application.get(key) == value or not self._finish_field_edit():
             return
         before = deepcopy(self.project.application)
@@ -963,7 +993,7 @@ class MainWindow(StudioMixin, QMainWindow):
             self._update_actions()
 
     def _can_drop(self, payload: dict, parent_id: str) -> bool:
-        """Valida arraste sem alterar o documento durante a passagem do mouse."""
+        """Validate a drag without changing the document while the mouse passes over."""
         if self.active_state != "@default":
             return False
         parent = self.project.find(parent_id)
@@ -990,12 +1020,12 @@ class MainWindow(StudioMixin, QMainWindow):
         )
 
     def _on_drop(self, payload: dict, parent_id: str, index: int, geometry: dict | None) -> None:
-        """Transforma um drop de árvore ou tela em uma edição do modelo."""
+        """Turn a tree or screen drop into a model edit."""
         if not self._can_drop(payload, parent_id):
             return
 
         def apply():
-            """Aplica criação/transferência e geometria do drop de uma vez."""
+            """Apply the creation/move and the drop geometry at once."""
             if payload["mode"] == "new":
                 node = self.project.add(parent_id, ComponentKind(payload["kind"]))
             else:
@@ -1013,7 +1043,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._edit(apply)
 
     def _commit_geometry(self, node_id: str, geometry: dict) -> None:
-        """Registra um movimento/redimensionamento completo sem fragmentar o histórico."""
+        """Record a complete move/resize without fragmenting the history."""
         if self.active_state != "@default":
             self._refresh()
             return
@@ -1042,7 +1072,7 @@ class MainWindow(StudioMixin, QMainWindow):
             )
 
             def move_group():
-                """Transfere o grupo preservando posições relativas e limites válidos."""
+                """Move the group keeping relative positions and valid bounds."""
                 for identifier in ids:
                     item = self.project.find(identifier)
                     if self.project.parent_of(identifier) is self.project.parent_of(node_id):
@@ -1061,13 +1091,13 @@ class MainWindow(StudioMixin, QMainWindow):
             self.patch_geometries([node_id])
 
     def duplicate_component(self) -> None:
-        """Duplica a seleção com identificadores próprios e mantém a cópia selecionada."""
+        """Duplicate the selection with its own identifiers and keep the copy selected."""
         if self.active_state != "@default":
-            self.statusBar().showMessage("Edite a estrutura no estado Padrão.", 6000)
+            self.statusBar().showMessage(tr("Edit the structure in the Default state."), 6000)
             return
 
         def duplicate():
-            """Duplica os nós superiores da seleção e mantém o grupo copiado selecionado."""
+            """Duplicate the selection's top nodes and keep the copied group selected."""
             identifiers = self.top_level_selection()
             copies = [self.project.duplicate(identifier).id for identifier in identifiers]
             self.selected_ids = set(copies)
@@ -1076,10 +1106,10 @@ class MainWindow(StudioMixin, QMainWindow):
         self._edit(duplicate)
 
     def reorder_component(self, direction: int) -> None:
-        """Oferece reorganização por teclado, com a mesma semântica do arraste."""
+        """Offer keyboard reordering, with the same semantics as dragging."""
 
         def reorder():
-            """Converte a direção do comando em uma posição de inserção."""
+            """Turn the command's direction into an insertion position."""
             node = self.project.find(self.selected_id)
             parent = self.project.parent_of(node.id)
             if parent:
@@ -1089,13 +1119,13 @@ class MainWindow(StudioMixin, QMainWindow):
         self._edit(reorder)
 
     def add_page(self) -> None:
-        """Acrescenta uma página ao conjunto selecionado ou ancestral."""
+        """Add a page to the selected set or an ancestor."""
         if self.active_state != "@default":
-            self.statusBar().showMessage("Edite a estrutura no estado Padrão.", 6000)
+            self.statusBar().showMessage(tr("Edit the structure in the Default state."), 6000)
             return
 
         def add():
-            """Insere uma página no conjunto ancestral da seleção."""
+            """Insert a page into the selection's ancestor set."""
             group = self._page_group(self.project.find(self.selected_id))
             if group is not None:
                 self.selected_id = self.project.add(group.id, ComponentKind.PAGE).id
@@ -1103,7 +1133,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._edit(add)
 
     def nudge_component(self, dx: int, dy: int) -> None:
-        """Ajusta um componente livre em passos finos sem afetar outros layouts."""
+        """Nudge a free component in fine steps without affecting other layouts."""
         node = self.project.find(self.selected_id)
         parent = self.project.parent_of(node.id)
         if parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE:
@@ -1116,7 +1146,7 @@ class MainWindow(StudioMixin, QMainWindow):
             )
 
     def align_component(self, mode: str) -> None:
-        """Alinha a seleção aos limites visíveis de seu contêiner livre."""
+        """Align the selection to the visible bounds of its free container."""
         node = self.project.find(self.selected_id)
         parent = self.project.parent_of(node.id)
         if not parent or parent.layout != LayoutKind.FREE or parent.kind == ComponentKind.PAGES:
@@ -1132,15 +1162,15 @@ class MainWindow(StudioMixin, QMainWindow):
         self._commit_geometry(node.id, {"x": max(0, min(20000, x)), "y": max(0, min(20000, y))})
 
     def choose_image(self, node_id: str) -> None:
-        """Importa uma imagem escolhida explicitamente, copiando-a ao salvar."""
+        """Import an explicitly chosen image, copying it when saving."""
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Escolher imagem", "", "Imagens (*.png *.jpg *.jpeg *.webp)"
+            self, tr("Choose image"), "", tr("Images (*.png *.jpg *.jpeg *.webp)")
         )
         if not filename:
             return
 
         def choose():
-            """Reserva o recurso importado e atualiza a referência visual."""
+            """Reserve the imported asset and update the visual reference."""
             source = self.assets.import_image(Path(filename))
             node = self.project.find(node_id)
             node.properties.update(source=source, image_name=Path(filename).name)
@@ -1148,19 +1178,19 @@ class MainWindow(StudioMixin, QMainWindow):
         self._edit(choose)
 
     def clear_image(self, node_id: str) -> None:
-        """Remove a referência visual, mantendo o recurso disponível para desfazer."""
+        """Remove the visual reference, keeping the asset available for undo."""
 
         def clear():
-            """Limpa a imagem sem remover o recurso do histórico da sessão."""
+            """Clear the image without removing the asset from the session history."""
             node = self.project.find(node_id)
             node.properties.update(source="", image_name="")
 
         self._edit(clear)
 
     def remove_component(self) -> None:
-        """Remove a seleção, mantendo a exclusão disponível para desfazer."""
+        """Remove the selection, keeping the deletion available for undo."""
         if self.active_state != "@default":
-            self.statusBar().showMessage("Edite a estrutura no estado Padrão.", 6000)
+            self.statusBar().showMessage(tr("Edit the structure in the Default state."), 6000)
             return
         if not self._finish_field_edit():
             return
@@ -1172,7 +1202,7 @@ class MainWindow(StudioMixin, QMainWindow):
         if len(getattr(self, "selected_ids", set())) > 1:
 
             def remove_group():
-                """Agrupa remoções de irmãos/contêineres em uma única alteração reversível."""
+                """Group sibling/container removals into a single reversible change."""
                 identifiers = self.top_level_selection()
                 parent = self.project.parent_of(identifiers[0])
                 for identifier in identifiers:
@@ -1193,7 +1223,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._refresh()
 
     def undo(self) -> None:
-        """Restaura o documento anterior, incluindo propriedades e ordem dos nós."""
+        """Restore the previous document, including properties and node order."""
         if self.tabs.currentIndex() == 2 and (
             not hasattr(self, "code_files") or self.code_files.currentIndex() > 0
         ):
@@ -1205,7 +1235,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._refresh()
 
     def redo(self) -> None:
-        """Reaplica uma alteração previamente desfeita."""
+        """Reapply a change that was undone."""
         if self.tabs.currentIndex() == 2 and (
             not hasattr(self, "code_files") or self.code_files.currentIndex() > 0
         ):
@@ -1217,26 +1247,26 @@ class MainWindow(StudioMixin, QMainWindow):
         self._refresh()
 
     def new_project(self) -> None:
-        """Cria um documento após resolver alterações não salvas."""
+        """Create a document after resolving unsaved changes."""
         if not self._confirm_discard():
             return
         self._replace_project(Project.empty(), None)
 
     def open_project(self) -> None:
-        """Abre um documento validado; falhas não substituem o projeto atual."""
+        """Open a validated document; failures never replace the current project."""
         if not self._confirm_discard():
             return
         filename, _ = QFileDialog.getOpenFileName(
             self.project_dialog_parent(),
-            "Abrir projeto Makebench",
+            tr("Open Makebench project"),
             str(self.path.parent) if self.path else "",
-            "Projetos Makebench (*.makebench.json *.zip);;JSON (*.json)",
+            tr("Makebench projects (*.makebench.json *.zip);;JSON (*.json)"),
         )
         if not filename:
             return
         if filename.lower().endswith(".zip"):
             destination = QFileDialog.getExistingDirectory(
-                self.project_dialog_parent(), "Extrair em pasta vazia", ""
+                self.project_dialog_parent(), tr("Extract into an empty folder"), ""
             )
             if not destination:
                 return
@@ -1258,7 +1288,7 @@ class MainWindow(StudioMixin, QMainWindow):
             self._show_error(str(exc))
 
     def _replace_project(self, project: Project, path: Path | None) -> None:
-        """Troca o documento e inicia um histórico independente."""
+        """Swap the document and start an independent history."""
         path = path.resolve() if path else None
         source = SourceBuffer.load(path)
         self._trusted_session = False
@@ -1284,7 +1314,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.pages.setCurrentWidget(self.editor_page)
 
     def save(self) -> bool:
-        """Salva o projeto ou solicita um destino quando ainda não tem caminho."""
+        """Save the project or ask for a destination when it has no path yet."""
         if not self._finish_field_edit():
             return False
         if self.path is None:
@@ -1292,11 +1322,11 @@ class MainWindow(StudioMixin, QMainWindow):
         return self.save_to(self.path)
 
     def save_as(self) -> bool:
-        """Solicita um destino, sem mudar o caminho atual em caso de falha."""
+        """Ask for a destination, keeping the current path on failure."""
         return self.save_as_dialog()
 
     def save_to(self, path: Path) -> bool:
-        """Persiste o documento e marca como salvo somente depois do sucesso."""
+        """Persist the document and mark it as saved only after success."""
         if not self._finish_field_edit():
             return False
         path = path.resolve()
@@ -1317,18 +1347,22 @@ class MainWindow(StudioMixin, QMainWindow):
         self.clear_recovery()
         if backup:
             self.statusBar().showMessage(
-                f"Projeto atualizado para formato {self.project.to_dict()['format_version']}. A cópia {backup.name} preserva a versão anterior; editores antigos não abrem os recursos novos.",
+                tr(
+                    "Project upgraded to format {version}. The copy {backup} keeps the previous version; older editors cannot open the new features."
+                ).format(version=self.project.to_dict()["format_version"], backup=backup.name),
                 12000,
             )
         return True
 
     def _confirm_discard(self) -> bool:
-        """Oferece salvar alterações antes de fechar, abrir ou criar um projeto."""
+        """Offer to save changes before closing, opening or creating a project."""
         if not self._finish_field_edit():
             choice = QMessageBox.warning(
                 self,
-                "Blocos não confirmados",
-                "Há alterações de lógica ainda não confirmadas. Descartar pode perder blocos ou o script em edição. Deseja descartar e continuar?",
+                tr("Unconfirmed blocks"),
+                tr(
+                    "There are logic changes not confirmed yet. Discarding may lose blocks or the script being edited. Discard and continue?"
+                ),
                 QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel,
             )
@@ -1340,8 +1374,8 @@ class MainWindow(StudioMixin, QMainWindow):
             return True
         choice = QMessageBox.warning(
             self,
-            "Salvar alterações?",
-            "O projeto tem alterações que ainda não foram salvas.",
+            tr("Save changes?"),
+            tr("The project has changes that have not been saved yet."),
             QMessageBox.StandardButton.Save
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Cancel,
@@ -1355,7 +1389,7 @@ class MainWindow(StudioMixin, QMainWindow):
         return False
 
     def _tab_changed(self, index):
-        """Confirma blocos ao sair e inicia WebEngine apenas quando necessário."""
+        """Confirm blocks when leaving and start WebEngine only when needed."""
         if index != 1 and not self._finish_field_edit():
             self.tabs.setCurrentIndex(1)
             return
@@ -1365,20 +1399,20 @@ class MainWindow(StudioMixin, QMainWindow):
         self._update_actions()
 
     def _source_changed(self):
-        """Mantém fonte própria independente da geração e do histórico visual."""
+        """Keep your own source independent of generation and the visual history."""
         self.source.text = self.source_editor.toPlainText()
         self.source_timer.start()
         self.setWindowModified(True)
         if hasattr(self, "code_files"):
-            self.code_files.setTabText(1, "Funções próprias •")
+            self.code_files.setTabText(1, tr("Your functions") + " •")
 
     def _source_analysis_ready(self):
-        """Analisa após uma pausa na digitação, sem atualizar todos os painéis por tecla."""
+        """Analyze after a typing pause, without refreshing every panel per key."""
         self._update_code()
         self._update_actions()
 
     def _update_code(self):
-        """Mostra código e diagnósticos sem importar o arquivo de funções."""
+        """Show code and diagnostics without importing the functions file."""
         self.sync_code_workspace()
         self.logic.update_code()
         generated = self.logic.generated
@@ -1386,15 +1420,17 @@ class MainWindow(StudioMixin, QMainWindow):
             self.generated_editor.setPlainText(generated.text)
         self.code_diagnostics.setText(
             "\n".join(generated.diagnostics)
-            or "Funções recebem ctx e valor. Use o nome no bloco “chamar função”."
+            or tr("Functions receive ctx and value. Use the name in the “call function” block.")
         )
         label = (
-            self.source.path.name if self.source.path else "arquivo .actions.py criado ao salvar"
+            self.source.path.name
+            if self.source.path
+            else tr(".actions.py file created when saving")
         )
-        self.source_label.setText(f"Funções próprias · {label}")
+        self.source_label.setText(tr("Your functions · {file}").format(file=label))
 
     def edit_logic(self, component_id):
-        """Cria ou abre o fluxo do evento selecionado na interface."""
+        """Create or open the flow of the event selected in the interface."""
         if not self._finish_field_edit():
             return
         try:
@@ -1419,7 +1455,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self._update_actions()
 
     def remove_flow(self, flow_id):
-        """Remove só o vínculo de lógica; desfazer recupera blocos e comentários."""
+        """Remove only the logic binding; undo restores blocks and comments."""
         self._edit(
             lambda: setattr(
                 self.project, "workflows", [f for f in self.project.workflows if f["id"] != flow_id]
@@ -1427,7 +1463,7 @@ class MainWindow(StudioMixin, QMainWindow):
         )
 
     def rename_flow(self, flow_id, name):
-        """Altera o rótulo do fluxo sem reidentificar seus blocos."""
+        """Change the flow's label without re-identifying its blocks."""
         flow = next((f for f in self.project.workflows if f["id"] == flow_id), None)
         if flow and name.strip() and flow["name"] != name.strip():
             flow["name"] = name.strip()
@@ -1437,7 +1473,7 @@ class MainWindow(StudioMixin, QMainWindow):
             self._update_actions()
 
     def _receive_flow(self, data):
-        """Valida o modelo neutro recebido; blocos incompletos ficam como rascunho."""
+        """Validate the received neutral model; incomplete blocks stay as a draft."""
         flow = next((f for f in self.project.workflows if f["id"] == data.get("flow")), None)
         if (
             flow is None
@@ -1470,11 +1506,11 @@ class MainWindow(StudioMixin, QMainWindow):
         self._update_actions()
 
     def run_project(self):
-        """Testa snapshot explícito; edição e abertura continuam sem executar código."""
+        """Test an explicit snapshot; editing and opening still never run code."""
         if self.runtime_window is not None and not self.runtime_window.session.closed:
             if self.runtime_window.session.admin_active:
                 self.statusBar().showMessage(
-                    "Aguarde a tarefa administrativa terminar antes de reiniciar.", 7000
+                    tr("Wait for the administrative task to finish before restarting."), 7000
                 )
                 return
             from .settings import preference
@@ -1482,8 +1518,10 @@ class MainWindow(StudioMixin, QMainWindow):
             if self.runtime_window.session.busy and preference("test/confirm_restart"):
                 choice = QMessageBox.warning(
                     self,
-                    "Reiniciar teste?",
-                    "Uma tarefa está em andamento. Reiniciar encerra o teste e os processos comuns.",
+                    tr("Restart test?"),
+                    tr(
+                        "A task is in progress. Restarting ends the test and the ordinary processes."
+                    ),
                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
                     QMessageBox.StandardButton.Cancel,
                 )
@@ -1491,7 +1529,7 @@ class MainWindow(StudioMixin, QMainWindow):
                     return
             if not self.runtime_window.stop():
                 self.statusBar().showMessage(
-                    "Aguarde a tarefa administrativa terminar antes de reiniciar.", 7000
+                    tr("Wait for the administrative task to finish before restarting."), 7000
                 )
                 return
             self._restart_pending = True
@@ -1520,7 +1558,7 @@ class MainWindow(StudioMixin, QMainWindow):
             self.sync_problems()
             self.drawer.show()
             self.drawer.setCurrentIndex(1)
-            self.statusBar().showMessage("Teste impedido: resolva os itens em Problemas.", 7000)
+            self.statusBar().showMessage(tr("Test blocked: resolve the items in Problems."), 7000)
             return
         if self.runtime_window is not None:
             self.runtime_window.close()
@@ -1540,12 +1578,12 @@ class MainWindow(StudioMixin, QMainWindow):
         window.start()
 
     def _runtime_destroyed(self, window):
-        """Remove apenas a referência da janela que foi efetivamente destruída."""
+        """Remove only the reference of the window that was actually destroyed."""
         if self.runtime_window is window:
             self.runtime_window = None
 
     def _runtime_stopped(self):
-        """Retoma fechamento após o supervisor terminar a limpeza dos processos."""
+        """Resume closing after the supervisor finishes cleaning up the processes."""
         self._update_actions()
         if self._closing_after_runtime:
             QTimer.singleShot(0, self.close)
@@ -1554,10 +1592,10 @@ class MainWindow(StudioMixin, QMainWindow):
             QTimer.singleShot(0, self.run_project)
 
     def _locate_runtime_error(self, error, window):
-        """Localiza o bloco atual; linhas próprias só valem se o texto não mudou."""
+        """Find the current block; own lines only count if the text did not change."""
         if self.project.id != window.project.id:
             self.statusBar().showMessage(
-                "O erro pertence a outro projeto aberto na execução.", 7000
+                tr("The error belongs to another project open in the run."), 7000
             )
             return
         from makebench.core.source import source_signature
@@ -1576,28 +1614,38 @@ class MainWindow(StudioMixin, QMainWindow):
         self.activateWindow()
 
     def _show_error(self, message: str) -> None:
-        """Apresenta falhas recuperáveis sem fechar o editor."""
+        """Show recoverable failures without closing the editor."""
         QMessageBox.critical(self.project_dialog_parent(), "Makebench", message)
 
     def show_about(self) -> None:
-        """Informa a versão e o limite funcional da entrega atual."""
+        """Show the version and what this release does."""
         QMessageBox.about(
             self,
-            "Sobre o Makebench",
-            "<h2>Makebench</h2><p>Aplicativos Linux, construídos por você.</p>"
-            f"<p>Versão {__version__} — Bancada, janelas, estados e fonte Python.</p>"
-            "<p>Crie interfaces Qt ou GTK4, conecte blocos e exporte em fonte Python. "
-            "DEB, RPM, AppImage e Flatpak geram receitas; a construção exige ferramentas e SDKs de destino.</p>",
+            tr("About Makebench"),
+            "<h2>Makebench</h2><p>"
+            + tr("Linux applications, built by you.")
+            + "</p>"
+            + "<p>"
+            + tr("Version {version}").format(version=__version__)
+            + "</p>"
+            + "<p>"
+            + tr(
+                "Design Qt or GTK4 interfaces, connect blocks or nodes, write your own Python and export as Python source, DEB, RPM, AppImage or Flatpak."
+            )
+            + "</p>"
+            + "<p>"
+            + tr("Free software under the GNU GPL, version 3 or later.")
+            + "</p>",
         )
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        """Protege alterações não salvas ao encerrar a janela."""
+        """Protect unsaved changes when the window closes."""
         window = self.runtime_window
         if window is not None and window.session.admin_active:
             window.show()
             window.raise_()
             self.statusBar().showMessage(
-                "Aguarde a tarefa administrativa terminar antes de fechar o editor.", 7000
+                tr("Wait for the administrative task to finish before closing the editor."), 7000
             )
             event.ignore()
             return
@@ -1612,7 +1660,7 @@ class MainWindow(StudioMixin, QMainWindow):
         if window is not None and not window.session.closed:
             if not window.stop():
                 self.statusBar().showMessage(
-                    "Aguarde a tarefa administrativa terminar antes de fechar.", 7000
+                    tr("Wait for the administrative task to finish before closing."), 7000
                 )
                 event.ignore()
                 return
@@ -1628,7 +1676,7 @@ class MainWindow(StudioMixin, QMainWindow):
         ):
             self._closing_after_build = True
             self.publish_panel.cancel_build()
-            self.statusBar().showMessage("Cancelando construção antes de fechar…", 5000)
+            self.statusBar().showMessage(tr("Cancelling build before closing…"), 5000)
             QTimer.singleShot(100, self.close)
             event.ignore()
             return
@@ -1639,7 +1687,7 @@ class MainWindow(StudioMixin, QMainWindow):
         if not canvas_ready or not thumbnails_ready:
             self._closing_after_preview = True
             self.setEnabled(False)
-            self.statusBar().showMessage("Encerrando prévias…", 3000)
+            self.statusBar().showMessage(tr("Closing previews…"), 3000)
             QTimer.singleShot(100, self.close)
             event.ignore()
             return

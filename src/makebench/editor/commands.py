@@ -1,23 +1,24 @@
-"""Registro único de QAction e pesquisa de comandos acessível por teclado."""
+"""Single QAction registry and keyboard-accessible command search."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QLineEdit, QListWidget, QListWidgetItem, QVBoxLayout
 from .theme import icon
+from makebench.i18n import tr
 
 
 class CommandPalette(QDialog):
-    """Lista as mesmas ações dos menus, incluindo seus estados e atalhos."""
+    """List the same actions as the menus, including their states and shortcuts."""
 
     def __init__(self, actions, parent=None):
-        """Recebe ações existentes, sem duplicar implementação ou atalhos."""
+        """Receive existing actions, without duplicating implementation or shortcuts."""
         super().__init__(parent)
-        self.setWindowTitle("Paleta de comandos")
+        self.setWindowTitle(tr("Command palette"))
         self.resize(620, 420)
         self.actions = list(actions)
         layout = QVBoxLayout(self)
         self.query = QLineEdit()
-        self.query.setPlaceholderText("Buscar comando…")
-        self.query.setAccessibleName("Buscar comando")
+        self.query.setPlaceholderText(tr("Search commands…"))
+        self.query.setAccessibleName(tr("Search commands"))
         self.items = QListWidget()
         layout.addWidget(self.query)
         layout.addWidget(self.items)
@@ -27,7 +28,7 @@ class CommandPalette(QDialog):
         self.filter("")
 
     def filter(self, query):
-        """Filtra sem perder a identidade da ação nem ativar comandos desabilitados."""
+        """Filter without losing the action's identity or triggering disabled commands."""
         self.items.clear()
         for action in self.actions:
             label = action.text().replace("&", "")
@@ -41,7 +42,7 @@ class CommandPalette(QDialog):
         self.items.setCurrentRow(0)
 
     def invoke(self):
-        """Fecha a pesquisa antes de acionar o comando selecionado."""
+        """Close the search before triggering the selected command."""
         item = self.items.currentItem()
         if item:
             action = item.data(Qt.ItemDataRole.UserRole)
@@ -51,12 +52,12 @@ class CommandPalette(QDialog):
 
 
 def register(window):
-    """Identifica e adorna as ações reais da janela, em um catálogo estável."""
+    """Identify and decorate the window's real actions in a stable catalog."""
     actions = []
     candidates = []
 
     def visit(menu):
-        """Coleta só comandos pertencentes aos menus atuais da bancada."""
+        """Collect only commands that belong to the workbench's current menus."""
         for action in menu.actions():
             if action.menu():
                 visit(action.menu())

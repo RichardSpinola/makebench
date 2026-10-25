@@ -1,4 +1,4 @@
-"""Importação dos módulos congelados, usada exclusivamente no worker em execução."""
+"""Importing frozen modules, used only in the running worker."""
 
 import importlib.abc
 import importlib.util
@@ -6,13 +6,14 @@ import linecache
 import sys
 from pathlib import Path
 from .source import validate_manifest
+from makebench.i18n import tr
 
 
 class SnapshotImporter(importlib.abc.MetaPathFinder, importlib.abc.Loader):
-    """Fornece apenas makebench_user do snapshot, sem recorrer a arquivos mutáveis."""
+    """Provide only makebench_user from the snapshot, never from mutable files."""
 
     def __init__(self, modules, root):
-        """Valida textos e monta nomes de arquivo para traceback e pontos de parada."""
+        """Validate texts and build file names for tracebacks and breakpoints."""
         validate_manifest(list(modules))
         self.modules = dict(modules)
         self.root = Path(root)
@@ -25,22 +26,25 @@ class SnapshotImporter(importlib.abc.MetaPathFinder, importlib.abc.Loader):
         self.filenames = {str(self.root / path): path for path in modules}
 
     def find_spec(self, fullname, path=None, target=None):
-        """Impede que imports do pacote reservado escapem do snapshot iniciado."""
+        """Keep imports of the reserved package from escaping the started snapshot."""
         if fullname != "makebench_user" and not fullname.startswith("makebench_user."):
             return None
         if fullname not in self.names:
-            raise ModuleNotFoundError("Módulo não declarado no projeto: " + fullname, name=fullname)
+            raise ModuleNotFoundError(
+                tr("Module not declared in the project: {name}").format(name=fullname),
+                name=fullname,
+            )
         name = self.names[fullname]
         return importlib.util.spec_from_loader(
             fullname, self, is_package=name.endswith("/__init__.py")
         )
 
     def create_module(self, spec):
-        """Usa o módulo padrão do Python, sem inicialização antecipada."""
+        """Use Python's default module, with no early initialization."""
         return None
 
     def exec_module(self, module):
-        """Compila e executa o texto congelado somente durante import explícito."""
+        """Compile and run the frozen text only during an explicit import."""
         name = self.names[module.__name__]
         filename = str(self.root / name)
         text = self.modules[name]
@@ -51,5 +55,5 @@ class SnapshotImporter(importlib.abc.MetaPathFinder, importlib.abc.Loader):
         exec(compile(text, filename, "exec"), module.__dict__)
 
     def install(self):
-        """Registra o snapshot no worker recém-iniciado, antes da fonte de entrada."""
+        """Register the snapshot in the freshly started worker, before the entry source."""
         sys.meta_path.insert(0, self)

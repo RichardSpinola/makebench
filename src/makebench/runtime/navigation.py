@@ -1,16 +1,17 @@
-"""Coordenação de janelas reais e estados sobre uma única sessão de execução."""
+"""Coordination of real windows and states over a single run session."""
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QMainWindow, QScrollArea
 from makebench.core.project import ComponentKind, ProjectError
 from .view import RuntimeView
+from makebench.i18n import tr
 
 
 class AppWindow(QMainWindow):
-    """Janela adicional do aplicativo; o supervisor permanece no controlador."""
+    """Additional application window; supervision stays in the controller."""
 
     def __init__(self, owner, root, view):
-        """Mantém referência ao controlador até o fechamento da última janela."""
+        """Keep a reference to the controller until the last window closes."""
         super().__init__()
         self.owner = owner
         self.identifier = root.id
@@ -31,12 +32,12 @@ class AppWindow(QMainWindow):
         self.setCentralWidget(scroll)
 
     def closeEvent(self, event):
-        """Remove a janela sem abandonar tarefas administrativas ou processos comuns."""
+        """Remove the window without abandoning administrative tasks or ordinary processes."""
         if self.owner.session.closed:
             event.accept()
             return
         if self.owner.session.admin_active:
-            self.owner.state.setText("Aguarde a tarefa administrativa terminar.")
+            self.owner.state.setText(tr("Wait for the administrative task to finish."))
             event.ignore()
             return
         from makebench.terminal.components import stop_components
@@ -49,10 +50,10 @@ class AppWindow(QMainWindow):
 
 
 class RuntimeNavigation:
-    """Aplica navegação declarada; todas as operações recebem IDs já validados."""
+    """Apply declared navigation; every operation receives already-validated IDs."""
 
     def install_navigation(self, read_asset):
-        """Registra a janela inicial e prepara escopos sem iniciar o worker."""
+        """Register the start window and prepare scopes without starting the worker."""
         self.read_asset = read_asset
         self.views = {self.root_window_id: self.view}
         self.app_windows = {self.root_window_id: self}
@@ -66,7 +67,7 @@ class RuntimeNavigation:
         self.apply_state(self.root_window_id, self.active_states[self.root_window_id])
 
     def apply_state(self, window_id, state):
-        """Restaura propriedades padrão e aplica diferenças sem duplicar componentes."""
+        """Restore default properties and apply differences without duplicating components."""
         effective = self.project.effective_root(window_id, state)
         self.active_states[window_id] = state
         view = self.views.get(window_id)
@@ -96,7 +97,7 @@ class RuntimeNavigation:
                     if p.get("source"):
                         pixmap.loadFromData(self.read_asset(p["source"]))
                     widget.image = pixmap
-                    widget.setAccessibleName(p.get("alt_text", "Imagem"))
+                    widget.setAccessibleName(p.get("alt_text", tr("Image")))
                     widget.update()
                 view.set_enabled(node.id, p.get("enabled", True))
                 view.frames[node.id].setVisible(p.get("visible", True))
@@ -105,15 +106,15 @@ class RuntimeNavigation:
             window = self.app_windows.get(window_id)
             if window:
                 window.setWindowTitle(
-                    ("[Teste] " if self.supervision else "")
+                    (tr("[Test]") + " " if self.supervision else "")
                     + effective.properties.get("title", self.project.name)
                 )
 
     def open_app_window(self, identifier, close_current=False):
-        """Cria ou reapresenta uma janela real; não duplica uma instância aberta."""
+        """Create or re-show a real window; never duplicates an open instance."""
         root = next((r for r in self.project.roots if r.id == identifier), None)
         if root is None:
-            raise ValueError("A janela não existe.")
+            raise ValueError(tr("The window does not exist."))
         was_open = identifier in self.open_windows
         if identifier not in self.views:
             view = RuntimeView(self.project, self.read_asset, window_root=root)
@@ -142,9 +143,9 @@ class RuntimeNavigation:
         return not was_open
 
     def close_app_window(self, identifier, check_last=True):
-        """Fecha uma interface mantendo o controlador vivo até limpar a sessão."""
+        """Close an interface keeping the controller alive until the session is cleaned up."""
         if self.session.admin_active:
-            raise ValueError("Aguarde a tarefa administrativa terminar.")
+            raise ValueError(tr("Wait for the administrative task to finish."))
         from makebench.terminal.components import stop_components
 
         if identifier in self.views:
@@ -156,13 +157,13 @@ class RuntimeNavigation:
             self.stop_if_last()
 
     def stop_if_last(self):
-        """Encerra após responder ao worker, quando não há janelas do app abertas."""
+        """End after replying to the worker, when no application windows are open."""
         if not self.open_windows:
             self.close_pending = True
             QTimer.singleShot(0, self.stop)
 
     def widget_for(self, identifier):
-        """Localiza controles em qualquer janela já criada."""
+        """Find controls in any window already created."""
         if identifier not in {n.id for n in self.project.walk()}:
             node = next(
                 (n for n in self.project.walk() if n.properties.get("code_name") == identifier),
@@ -176,7 +177,7 @@ class RuntimeNavigation:
         return None, None
 
     def queue_event(self, component, kind):
-        """Escolhe filtro específico antes do genérico; preserva ordem do documento."""
+        """Pick the specific filter before the generic one; keep document order."""
         owner = self.project.window_of(component)
         if owner is None:
             return
@@ -192,7 +193,7 @@ class RuntimeNavigation:
         self.dispatch_next()
 
     def dispatch_next(self):
-        """Dispara um fluxo pendente apenas depois da resposta do anterior."""
+        """Fire a pending flow only after the previous one replied."""
         if self._queued_flows and self.session.active and not self.session.busy:
             flow_id = self._queued_flows.pop(0)
             flow = next(f for f in self.project.workflows if f["id"] == flow_id)

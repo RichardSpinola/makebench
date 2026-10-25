@@ -1,4 +1,4 @@
-"""Exportação real de fonte Python portátil, sem executar funções do projeto."""
+"""Real export of portable Python source, never running project functions."""
 
 import ast
 import hashlib
@@ -12,19 +12,20 @@ import zipfile
 import xml.etree.ElementTree as ET
 from .codegen import generate
 from .project import ProjectError
+from makebench.i18n import tr
 
 
 class BuildCancelled(ProjectError):
-    """Construção interrompida antes de publicar qualquer resultado parcial."""
+    """Build interrupted before publishing any partial result."""
 
 
 def effects(project):
-    """Inspeciona programas e privilégios declarados; não executa blocos ou imports."""
+    """Inspect declared programs and privileges; never runs blocks or imports."""
     programs = set()
     admin = False
 
     def visit(value):
-        """Percorre dados estruturados sem executar conteúdo do projeto."""
+        """Walk structured data without running project content."""
         nonlocal admin
         if isinstance(value, dict):
             if value.get("op") in {"run", "script"}:
@@ -57,25 +58,25 @@ def effects(project):
 
 
 def verify(project, source, read_asset):
-    """Retorna impedimentos e avisos de exportação; abrir/salvar não chama execução."""
+    """Return export blockers and warnings; opening/saving never triggers execution."""
     app = project.application
     issues = []
 
     def add(level, message, field):
-        """Registra um diagnóstico com severidade e campo de origem."""
+        """Record a diagnostic with severity and source field."""
         issues.append({"level": level, "message": message, "field": field})
 
     if project.metadata.get("empty_map"):
-        add("error", "Crie a primeira interface no mapa antes de exportar.", "windows")
+        add("error", tr("Create the first interface in the map before exporting."), "windows")
     if not str(app.get("name", "")).strip():
-        add("error", "Informe o nome público do aplicativo.", "name")
+        add("error", tr("Enter the application's public name."), "name")
     if not re.fullmatch(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}", app.get("id", "")):
-        add("error", "Use um identificador como br.exemplo.meuapp.", "id")
+        add("error", tr("Use an identifier such as com.example.myapp."), "id")
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", app.get("version", "")):
-        add("error", "Informe a versão, por exemplo 0.1.0.", "version")
+        add("error", tr("Enter the version, for example 0.1.0."), "version")
     icon = app.get("icon", "")
     if not icon:
-        add("error", "Escolha o ícone do aplicativo.", "icon")
+        add("error", tr("Choose the application icon."), "icon")
     else:
         try:
             data = read_asset(icon)
@@ -85,20 +86,22 @@ def verify(project, source, read_asset):
                     or len(data) < 24
                     or min(struct.unpack(">II", data[16:24])) < 256
                 ):
-                    raise ValueError("Use PNG de pelo menos 256 × 256 pixels.")
+                    raise ValueError(tr("Use a PNG of at least 256 × 256 pixels."))
             elif icon.lower().endswith(".svg"):
                 if ET.fromstring(data).tag.split("}")[-1] != "svg":
-                    raise ValueError("O arquivo não é SVG.")
+                    raise ValueError(tr("The file is not an SVG."))
             else:
-                raise ValueError("Use um ícone PNG ou SVG.")
+                raise ValueError(tr("Use a PNG or SVG icon."))
         except (OSError, ValueError, ProjectError, ET.ParseError) as exc:
-            add("error", "Ícone inválido: " + str(exc), "icon")
+            add("error", tr("Invalid icon: {error}").format(error=exc), "icon")
     from .source import source_files, ENTRY_FILE
 
     if set(source_files(source)) - {ENTRY_FILE} != set(project.python_files):
         add(
             "error",
-            "O manifesto e os módulos não correspondem. Reabra o projeto para revisar os arquivos.",
+            tr(
+                "The manifest and the modules do not match. Reopen the project to review the files."
+            ),
             "python",
         )
     for message in generate(project, source).diagnostics:
@@ -107,13 +110,15 @@ def verify(project, source, read_asset):
         try:
             read_asset(name)
         except (OSError, ProjectError) as exc:
-            add("error", "Recurso ausente: " + name, "assets")
+            add("error", tr("Missing asset: {name}").format(name=name), "assets")
     for dependency in app.get("packages", []):
         if not isinstance(dependency, str) or not re.fullmatch(
             r"[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_,.-]+\])?(?:[<>=!~]=?[A-Za-z0-9.*+!_-]+(?:,[<>=!~]=?[A-Za-z0-9.*+!_-]+)*)?",
             dependency,
         ):
-            add("error", "Dependência Python inválida: " + str(dependency), "packages")
+            add(
+                "error", tr("Invalid Python dependency: {name}").format(name=dependency), "packages"
+            )
     from .build_environment import flatpak_requirements
 
     try:
@@ -122,35 +127,43 @@ def verify(project, source, read_asset):
         add("error", str(exc), "packages")
     programs, admin = effects(project)
     for program in programs:
-        add("warning", "O destino precisa do programa " + program + ".", "dependencies")
+        add(
+            "warning",
+            tr("The target needs the program {program}.").format(program=program),
+            "dependencies",
+        )
     if admin:
         add(
             "warning",
-            "Ações administrativas exigem Polkit/pkexec e agente de autenticação no sistema de destino.",
+            tr(
+                "Administrative actions require Polkit/pkexec and an authentication agent on the target system."
+            ),
             "permissions",
         )
     if not any(i["level"] == "error" for i in issues):
-        add("success", "Projeto pronto para exportar em fonte Python.", "")
+        add("success", tr("Project ready to export as Python source."), "")
     return issues
 
 
-QT_RUNNER = '''"""Aplicativo exportado pelo Makebench. Iniciar executa o código do projeto."""
+QT_RUNNER = '''"""Application exported by Makebench. Starting it runs the project's code."""
 import sys
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
 from makebench.core.storage import load_project
+from makebench.i18n import set_language
 from makebench.core.source import SourceBuffer
 from makebench.runtime.window import RuntimeWindow
 from makebench.ui.dialogs import install_translation
 
 
 def main():
-    """Inicia Qt e executa o projeto exportado somente ao abrir o aplicativo."""
+    """Start Qt and run the exported project only when the application opens."""
     root=Path(__file__).resolve().parent
     app=QApplication(sys.argv)
     install_translation(app)
     path=root/'project.makebench.json'
     project=load_project(path)
+    set_language(project.application.get('language'))
     app.setApplicationName(project.application['name'])
     source=SourceBuffer.load(path)
     window=RuntimeWindow(project,source.text,lambda name:(root/name).read_bytes(),root,source.path,supervision=False)
@@ -166,17 +179,19 @@ if __name__=='__main__':
 '''
 
 
-GTK_RUNNER = r'''"""Aplicativo GTK exportado. Iniciar executa o código do projeto."""
+GTK_RUNNER = r'''"""Exported GTK application. Starting it runs the project's code."""
 from pathlib import Path
 from makebench.core.storage import load_project
+from makebench.i18n import set_language
 from makebench.core.source import SourceBuffer
 from makebench.gtk_runtime.application import GtkRuntime
 
 
 def main():
-    """Inicia controles GTK reais, sem editor nem dependência de Qt."""
+    """Start real GTK controls, with no editor and no Qt dependency."""
     root=Path(__file__).resolve().parent;path=root/'project.makebench.json'
-    return GtkRuntime(load_project(path),SourceBuffer.load(path).text,lambda name:(root/name).read_bytes(),root,root/'project.actions.py',lambda message:print(message.get('text',message.get('message','')),end='' if message.get('type')=='log' else '\n') if message.get('type') in {'log','error'} else None).run()
+    project=load_project(path);set_language(project.application.get('language'))
+    return GtkRuntime(project,SourceBuffer.load(path).text,lambda name:(root/name).read_bytes(),root,root/'project.actions.py',lambda message:print(message.get('text',message.get('message','')),end='' if message.get('type')=='log' else '\n') if message.get('type') in {'log','error'} else None).run()
 
 
 if __name__=='__main__':raise SystemExit(main())
@@ -185,23 +200,25 @@ RUNNER = QT_RUNNER
 
 
 def export_source(project, source, read_asset, destination, progress=None, cancelled=None):
-    """Constrói ZIP em staging, inclui runtime mínimo e só move após sucesso.
+    """Build a ZIP in staging, include the minimal runtime and move it only on success.
 
-    destination não é sobrescrito. Retorna caminho, tamanho e SHA-256. O runtime
-    usa apenas Qt Widgets; Blockly e as ferramentas do editor ficam de fora.
+    destination is never overwritten. Returns path, size and SHA-256. The runtime
+    uses only Qt Widgets; Blockly and the editor tools are left out.
     """
     destination = Path(destination)
     if destination.exists():
-        raise ProjectError("O destino já existe. Escolha outro nome para preservar esse arquivo.")
+        raise ProjectError(
+            tr("The destination already exists. Choose another name to keep that file.")
+        )
     issues = verify(project, source, read_asset)
     errors = [i["message"] for i in issues if i["level"] == "error"]
     if errors:
         raise ProjectError("\n".join(errors))
 
     def step(number, text):
-        """Notifica progresso e atende cancelamento antes da próxima operação."""
+        """Report progress and honor cancellation before the next operation."""
         if cancelled and cancelled():
-            raise BuildCancelled("Construção cancelada.")
+            raise BuildCancelled(tr("Build cancelled."))
         if progress:
             progress(number, text)
 
@@ -211,7 +228,7 @@ def export_source(project, source, read_asset, destination, progress=None, cance
     ) as directory:
         stage = Path(directory) / "app"
         stage.mkdir()
-        step(5, "Preparar arquivos")
+        step(5, tr("Prepare files"))
         (stage / "project.makebench.json").write_text(
             json.dumps(project.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
@@ -220,22 +237,24 @@ def export_source(project, source, read_asset, destination, progress=None, cance
 
         files = source_files(source)
         if set(files) - {ENTRY_FILE} != set(project.python_files):
-            raise ProjectError("O manifesto e os módulos não correspondem.")
+            raise ProjectError(tr("The manifest and the modules do not match."))
         for name, text in files.items():
             if name != ENTRY_FILE:
                 target = stage / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(text, encoding="utf-8")
-        (stage / "gerado.py").write_text(generate(project, source).text, encoding="utf-8")
+        (stage / "generated.py").write_text(generate(project, source).text, encoding="utf-8")
         for name in sorted(project.asset_paths()):
-            step(20, "Copiar recurso " + name)
+            step(20, tr("Copy asset {name}").format(name=name))
             path = stage / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(read_asset(name))
-        step(40, "Incluir runtime do aplicativo")
+        step(40, tr("Include the application runtime"))
         target = stage / "makebench"
         target.mkdir()
         shutil.copy2(package_root / "__init__.py", target / "__init__.py")
+        shutil.copy2(package_root / "i18n.py", target / "i18n.py")
+        shutil.copytree(package_root / "locale", target / "locale")
         backend = project.application.get("backend", "qt")
         for module in (
             ("core", "gtk_runtime", "terminal", "portable")
@@ -274,28 +293,32 @@ def export_source(project, source, read_asset, destination, progress=None, cance
             encoding="utf-8",
         )
         (stage / "requirements.txt").write_text("\n".join(dependencies) + "\n", encoding="utf-8")
-        (stage / "LEIA-ME.txt").write_text(
-            f"Aplicativo exportado pelo Makebench.\nRequer Linux, Python 3.{python_minor}+ e as dependências de requirements.txt. GTK exige também GTK4 e PyGObject do sistema; libadwaita é opcional.\nCrie um ambiente Python, instale requirements.txt e execute python3 run.py.\nIniciar executa as funções e scripts do projeto com suas permissões.\nO runtime acompanha o aplicativo; a supervisão do editor não aparece.\nProgramas externos e Polkit devem estar disponíveis no sistema de destino.\nDefina a licença do seu aplicativo antes de distribuí-lo publicamente.\n",
+        (stage / "README.txt").write_text(
+            tr(
+                "Application exported by Makebench.\nRequires Linux, Python 3.{minor}+ and the dependencies in requirements.txt. GTK also requires the system's GTK4 and PyGObject; libadwaita is optional.\nCreate a Python environment, install requirements.txt and run python3 run.py.\nStarting it runs the project's functions and scripts with your permissions.\nThe runtime ships with the application; the editor's supervision does not appear.\nExternal programs and Polkit must be available on the target system.\nChoose a license for your application before distributing it publicly.\n"
+            ).format(minor=python_minor),
             encoding="utf-8",
         )
-        step(75, "Verificar fontes sem executá-las")
+        step(75, tr("Check sources without running them"))
         for path in stage.rglob("*.py"):
             compile(path.read_text(encoding="utf-8"), str(path), "exec")
         zip_path = Path(directory) / "result.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as archive:
             for path in sorted(stage.rglob("*")):
-                step(85, "Compactar " + str(path.relative_to(stage)))
+                step(85, tr("Compress {path}").format(path=path.relative_to(stage)))
                 if path.is_file():
                     archive.write(path, path.relative_to(stage))
-        step(95, "Finalizar resultado")
-        # Link exclusivo evita corrida de sobrescrita; staging usa o mesmo volume.
+        step(95, tr("Finish result"))
+        # An exclusive link avoids an overwrite race; staging uses the same volume.
         import os
 
         try:
             os.link(zip_path, destination)
         except FileExistsError:
-            raise ProjectError("O destino foi criado por outro processo; escolha outro nome.")
+            raise ProjectError(
+                tr("The destination was created by another process; choose another name.")
+            )
         digest = hashlib.sha256(destination.read_bytes()).hexdigest()
     if progress:
-        progress(100, "Fonte Python exportada")
+        progress(100, tr("Python source exported"))
     return {"path": str(destination), "size": destination.stat().st_size, "sha256": digest}

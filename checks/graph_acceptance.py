@@ -1,4 +1,4 @@
-"""Jornada real: fios, histórico, arquivo, depuração, duas janelas e exportação Qt/GTK."""
+"""Real journey: wires, history, file, debugging, two windows and Qt/GTK export."""
 
 import argparse
 from copy import deepcopy
@@ -14,7 +14,7 @@ import zipfile
 
 
 def main():
-    """Usa a bancada nativa e um aplicativo independente em diretórios descartáveis."""
+    """Use the native workbench and an independent application in disposable folders."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=("qt", "gtk"), required=True)
     parser.add_argument("--theme", choices=("light", "dark"), default="dark")
@@ -52,7 +52,7 @@ def main():
         source = (
             "from pathlib import Path\nPath("
             + repr(str(marker))
-            + ').write_text("explícito")\n'
+            + ').write_text("explicit")\n'
             + source
         )
         shutil.copytree(fixture.parent / "assets", root / "assets")
@@ -63,7 +63,7 @@ def main():
         window.recovery_timer.stop()
         window.logic.ensure_loaded()
         window.show()
-        window.set_mode("Lógica")
+        window.set_mode("logic")
         window.logic.sync(project.workflows[0]["id"])
         panel = window.logic.graph_panel
         results = []
@@ -71,7 +71,7 @@ def main():
         pauses = []
 
         def wait(predicate, seconds=15):
-            """Aguarda estado verificável processando os eventos gráficos nativos."""
+            """Wait for a verifiable state while processing native graphical events."""
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 QTest.qWait(20)
@@ -82,7 +82,7 @@ def main():
             raise AssertionError(("Prazo excedido", window.debug_panel.status.text(), pauses))
 
         def capture(name):
-            """Captura a janela real do editor, sem montagem de interface."""
+            """Capture the real editor window, with no interface mock-up."""
             QTest.qWait(80)
             window.grab().save(str(args.output / (name + ".png")))
 
@@ -93,7 +93,7 @@ def main():
         capture("01-nos")
         panel.disconnect(panel.cards["repeat"].ports[("in", "value", "count")])
         panel.flush()
-        # Arraste real de uma porta de valor; o destino recupera a ligação com o produtor.
+        # Real drag from a value port; the destination gets the link to the producer back.
         first = panel.view.mapFromScene(
             panel.cards["three"].ports[("out", "value", "value")].scenePos()
         )
@@ -110,7 +110,7 @@ def main():
             )["inputs"]["count"]
 
         wait(lambda: binding() == {"node": "three", "port": "value"})
-        results.append("Conexão por arraste real")
+        results.append("Connection by real drag")
         window.undo()
         assert "value" in binding()
         window.redo()
@@ -127,7 +127,7 @@ def main():
         window.undo()
         assert window.project.to_dict() == before
         assert window.source.text == own
-        results.append("Projeto maior com 213 nós e undo")
+        results.append("Larger project with 213 nodes and undo")
         assert window.save_to(path)
         loaded = load_project(path)
         assert loaded.workflows[0]["graph"] == window.project.workflows[0]["graph"]
@@ -135,7 +135,7 @@ def main():
             loaded.workflows[0]["graph_comments"] == window.project.workflows[0]["graph_comments"]
         )
         assert not marker.exists()
-        results.append("Salvar/reabrir preserva grafo e comentários sem executar")
+        results.append("Save/reopen keeps graph and comments without running")
         sourceline = next(
             index for index, line in enumerate(source.splitlines(), 1) if "ctx.variables" in line
         )
@@ -199,11 +199,11 @@ def main():
             assert len(observations[-1]["windows"]) == 2
         results.extend(
             [
-                "Repetição e condição no runtime",
-                "Terminal recebeu três resultados",
+                "Repeat and condition in the runtime",
+                "Terminal received three results",
                 "Duas janelas reais",
-                "Pontos em nós e linha Python",
-                "Pilha/variáveis e destaque do nó",
+                "Breakpoints on nodes and a Python line",
+                "Stack/variables and node highlight",
             ]
         )
         window.stop_test()
@@ -215,7 +215,7 @@ def main():
         if hasattr(window.logic, "page"):
             window.logic.page.deleteLater()
             QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-        # Aplicativo fonte fora do editor: início explícito, encerra sozinho após a segunda janela.
+        # Source application outside the editor: explicit start, ends by itself after the second window.
         exported = Project.from_dict(loaded.to_dict())
         flow = exported.workflows[0]
         flow["event"] = {"component": exported.root.id, "kind": "start"}
@@ -262,7 +262,7 @@ def main():
                 indent=2,
             )
         )
-        print("OK", args.backend, len(results), "cenários")
+        print("OK", args.backend, len(results), "scenarios")
 
 
 if __name__ == "__main__":

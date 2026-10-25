@@ -1,4 +1,4 @@
-"""Fluxos reais do editor Qt em ambiente sem monitor, sem mock da interface."""
+"""Real Qt editor flows in a headless environment, with no interface mocks."""
 
 import os
 import tempfile
@@ -48,10 +48,10 @@ class EditorTests(unittest.TestCase):
         field = self.window.inspector.findChild(QLineEdit, "property_text")
         field.setFocus()
         field.selectAll()
-        QTest.keyClicks(field, "Executar tarefa")
+        QTest.keyClicks(field, "Run task")
         QTest.keyClick(field, Qt.Key.Key_Return)
         self.app.processEvents()
-        self.assertEqual(self.window.project.find(button.id).properties["text"], "Executar tarefa")
+        self.assertEqual(self.window.project.find(button.id).properties["text"], "Run task")
         self.assertTrue(self.window.save_to(self.path))
         self.assertFalse(self.window.history.dirty)
 
@@ -61,7 +61,7 @@ class EditorTests(unittest.TestCase):
             "makebench.editor.window.QFileDialog.getOpenFileName", return_value=(str(self.path), "")
         ):
             self.window.open_project()
-        self.assertEqual(self.window.project.find(button.id).properties["text"], "Executar tarefa")
+        self.assertEqual(self.window.project.find(button.id).properties["text"], "Run task")
         self.window._select(button.id)
         self.window.remove_component()
         self.assertIsNone(self.window.project.find(button.id))
@@ -134,7 +134,7 @@ class EditorTests(unittest.TestCase):
         self.assertGreaterEqual(surface.minimumHeight(), 900 + button.geometry["height"])
 
     def test_format_upgrade_message_names_the_real_backup(self):
-        """Salvar um formato 1 avisa o formato novo e a cópia .bak-v1 criada."""
+        """Saving a format 1 project reports the new format and the .bak-v1 copy created."""
         example = (
             Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
         )
@@ -143,11 +143,11 @@ class EditorTests(unittest.TestCase):
         self.window.project.application["name"] = "Atualizado"
         self.assertTrue(self.window.save_to(self.path))
         message = self.window.statusBar().currentMessage()
-        self.assertIn("formato 5", message)
+        self.assertIn("format 5", message)
         self.assertIn(self.path.name + ".bak-v1", message)
 
     def test_editor_save_keeps_untouched_json_and_commits_modules_last(self):
-        """Salvar pela janela usa o caminho comum: JSON intacto sem edição e módulos no manifesto."""
+        """Saving from the window uses the shared path: JSON untouched without edits and modules in the manifest."""
         example = (
             Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
         )

@@ -1,4 +1,4 @@
-"""Controles nativos para dependências e ícones, sem instalar nem importar pacotes."""
+"""Native controls for dependencies and icons, never installing or importing packages."""
 
 import importlib.metadata
 import re
@@ -12,29 +12,30 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
 )
+from makebench.i18n import tr
 
 
 class Dependencies(QWidget):
-    """Lista requisitos declarados e versões disponíveis no Python do editor."""
+    """List declared requirements and the versions available in the editor's Python."""
 
     changed = Signal(list)
 
     def __init__(self, packages, parent=None):
-        """O diagnóstico consulta metadados; importar o módulo de um pacote é proibido aqui."""
+        """The diagnostic reads metadata; importing a package's module is forbidden here."""
         super().__init__(parent)
         self.packages = list(packages)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.items = QListWidget()
-        self.items.setAccessibleName("Requisitos Python do aplicativo")
+        self.items.setAccessibleName(tr("Application Python requirements"))
         self.items.setMaximumHeight(210)
         self.items.itemActivated.connect(lambda _: self.edit())
         layout.addWidget(self.items)
         row = QHBoxLayout()
         for label, callback in [
-            ("Adicionar…", lambda: self.edit(new=True)),
-            ("Editar…", self.edit),
-            ("Remover", self.remove),
+            (tr("Add…"), lambda: self.edit(new=True)),
+            (tr("Edit…"), self.edit),
+            (tr("Remove"), self.remove),
         ]:
             button = QPushButton(label)
             button.clicked.connect(callback)
@@ -42,7 +43,7 @@ class Dependencies(QWidget):
         row.addStretch()
         layout.addLayout(row)
         hint = QLabel(
-            "Disponibilidade neste Python. A construção Flatpak usa seu próprio SDK e cache."
+            tr("Availability in this Python. The Flatpak build uses its own SDK and cache.")
         )
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -52,25 +53,25 @@ class Dependencies(QWidget):
         self.refresh()
 
     def refresh(self):
-        """Atualiza apenas a lista de requisitos, preservando a declaração original."""
+        """Update only the requirement list, keeping the original declaration."""
         self.items.clear()
         for package in self.packages:
             name = re.split(r"[\[<>=!~]", package, 1)[0]
             try:
-                status = "instalado: " + importlib.metadata.version(name)
+                status = tr("installed: {version}").format(version=importlib.metadata.version(name))
             except importlib.metadata.PackageNotFoundError:
-                status = "ausente neste Python"
+                status = tr("missing in this Python")
             self.items.addItem(package + " · " + status)
 
     def edit(self, _checked=False, new=False):
-        """Valida um requisito sem enviá-lo ao shell ou ao gerenciador de pacotes."""
+        """Validate a requirement without sending it to the shell or the package manager."""
         index = self.items.currentRow()
         if index < 0 and not new:
             return
         text, ok = QInputDialog.getText(
             self,
-            "Dependência Python",
-            "Requisito, por exemplo requests>=2.32",
+            tr("Python dependency"),
+            tr("Requirement, for example requests>=2.32"),
             text="" if new else self.packages[index],
         )
         if not ok or not text.strip():
@@ -81,7 +82,7 @@ class Dependencies(QWidget):
             text,
         ):
             self.notice.setText(
-                "Requisito inválido. Use nome e versão, por exemplo requests>=2.32."
+                tr("Invalid requirement. Use a name and version, for example requests>=2.32.")
             )
             return
         self.notice.clear()
@@ -93,7 +94,7 @@ class Dependencies(QWidget):
         self.refresh()
 
     def remove(self):
-        """Remove a declaração selecionada, sem desinstalar nada do computador."""
+        """Remove the selected declaration, never uninstalling anything from the computer."""
         index = self.items.currentRow()
         if index >= 0:
             self.packages.pop(index)

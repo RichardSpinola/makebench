@@ -1,4 +1,4 @@
-"""Contrato portátil dos blocos: referências, geração e preservação de fontes."""
+"""Portable block contract: references, generation and source preservation."""
 
 import ast
 from copy import deepcopy
@@ -84,7 +84,7 @@ class LogicTests(unittest.TestCase):
             {
                 "id": "a",
                 "op": "assign",
-                "name": "contador",
+                "name": "counter",
                 "value": literal("n", 0),
                 "comment": "Contar mensagens",
             },
@@ -96,12 +96,12 @@ class LogicTests(unittest.TestCase):
                     {
                         "id": "a2",
                         "op": "assign",
-                        "name": "contador",
+                        "name": "counter",
                         "value": {
                             "id": "sum",
                             "op": "binary",
                             "operator": "+",
-                            "left": {"id": "v", "op": "variable", "name": "contador"},
+                            "left": {"id": "v", "op": "variable", "name": "counter"},
                             "right": literal("one", 1),
                         },
                     }
@@ -114,10 +114,10 @@ class LogicTests(unittest.TestCase):
                     "id": "cmp",
                     "op": "binary",
                     "operator": "==",
-                    "left": {"id": "v2", "op": "variable", "name": "contador"},
+                    "left": {"id": "v2", "op": "variable", "name": "counter"},
                     "right": literal("three", 3),
                 },
-                "then": [{"id": "ok", "op": "log", "value": literal("done", "Concluído")}],
+                "then": [{"id": "ok", "op": "log", "value": literal("done", "Completed")}],
                 "else": [{"id": "fail", "op": "message", "value": literal("bad", "Falhou")}],
             },
         ]
@@ -134,17 +134,17 @@ class LogicTests(unittest.TestCase):
             def message(ctx, value):
                 ctx.output.append(value)
 
-        # Executa somente o fixture de teste construído acima, nunca um projeto aberto.
+        # Runs only the test fixture built above, never an opened project.
         namespace = {}
         exec(generated.text, namespace)
         ctx = Context()
         namespace["on_event_1"](ctx)
-        self.assertEqual(ctx.variables["contador"], 3)
-        self.assertEqual(ctx.output, ["Concluído"])
+        self.assertEqual(ctx.variables["counter"], 3)
+        self.assertEqual(ctx.output, ["Completed"])
         self.assertIn("# Contar mensagens", generated.text)
         line = generated.lines[(self.flow["id"], "ok")]
         self.assertEqual(generated.lines[(self.flow["id"], "done")], line)
-        self.assertIn("ctx.log('Concluído')", generated.text.splitlines()[line - 1])
+        self.assertIn("ctx.log('Completed')", generated.text.splitlines()[line - 1])
 
     def test_literals_and_variable_names_cannot_inject_python(self):
         hostile = "x'); __import__('os').system('false') #\n"
@@ -193,9 +193,9 @@ class LogicTests(unittest.TestCase):
         self.assertEqual(names, ["teste"])
         self.assertIsNone(error)
         self.flow["body"] = [
-            {"id": "call", "op": "call", "function": "ausente", "value": literal("arg", "Oi")}
+            {"id": "call", "op": "call", "function": "missing", "value": literal("arg", "Oi")}
         ]
-        self.assertIn("não encontrada", generate(self.project).diagnostics[0])
+        self.assertIn("not found", generate(self.project).diagnostics[0])
         self.assertIsNotNone(function_names("def broken(")[1])
 
 
@@ -220,7 +220,7 @@ class SourceTests(unittest.TestCase):
             self.assertEqual(source_path(other).read_text(), text)
             source_path(other).write_text("# edição externa\n")
             source.text += "# edição interna\n"
-            with self.assertRaisesRegex(ProjectError, "mudou fora"):
+            with self.assertRaisesRegex(ProjectError, "changed outside"):
                 source.write(other)
             self.assertEqual(source_path(other).read_text(), "# edição externa\n")
             self.assertTrue(source.dirty)

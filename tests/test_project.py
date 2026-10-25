@@ -1,4 +1,4 @@
-"""Integridade do documento, compatibilidade e histórico de alterações."""
+"""Document integrity, compatibility and change history."""
 
 import unittest
 
@@ -26,7 +26,7 @@ class ProjectTests(unittest.TestCase):
     def test_future_version_is_rejected_without_migrating_silently(self):
         data = Project.empty().to_dict()
         data["format_version"] = 99
-        with self.assertRaisesRegex(ProjectError, "Versão de projeto não suportada"):
+        with self.assertRaisesRegex(ProjectError, "Unsupported project version"):
             Project.from_dict(data)
 
     def test_duplicate_component_ids_are_rejected(self):
@@ -34,7 +34,7 @@ class ProjectTests(unittest.TestCase):
         project.add(project.root.id, ComponentKind.BUTTON)
         data = project.to_dict()
         data["ui"]["children"][0]["id"] = project.root.id
-        with self.assertRaisesRegex(ProjectError, "repetidos"):
+        with self.assertRaisesRegex(ProjectError, "repeated"):
             Project.from_dict(data)
 
     def test_invalid_property_and_geometry_types_are_rejected(self):
@@ -52,7 +52,7 @@ class ProjectTests(unittest.TestCase):
                 with self.assertRaises(ProjectError):
                     Project.from_dict(data)
         button.properties["text"] = 42
-        with self.assertRaisesRegex(ProjectError, "precisa ser texto"):
+        with self.assertRaisesRegex(ProjectError, "must be text"):
             Project.from_dict(project.to_dict())
 
     def test_leaf_cannot_contain_children_and_window_cannot_be_nested(self):
@@ -86,7 +86,7 @@ class ProjectTests(unittest.TestCase):
         self.assertTrue(history.dirty)
         project = history.undo()
         self.assertFalse(history.dirty)
-        self.assertEqual(project.find(button.id).properties["text"], "Novo botão")
+        self.assertEqual(project.find(button.id).properties["text"], "New button")
         project = history.redo()
         self.assertTrue(history.dirty)
         project = history.undo()
@@ -98,7 +98,7 @@ class ProjectTests(unittest.TestCase):
         project = Project.empty()
         button = project.add(project.root.id, ComponentKind.BUTTON)
         project.workflows = [{"component_id": button.id}]
-        with self.assertRaisesRegex(ProjectError, "validação de referências"):
+        with self.assertRaisesRegex(ProjectError, "reference validation"):
             project.remove(button.id)
         self.assertIsNotNone(project.find(button.id))
 

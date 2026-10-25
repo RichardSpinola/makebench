@@ -1,22 +1,23 @@
-"""Editor único de transições reais, compartilhado por arraste, teclado e inspeção."""
+"""Single editor for real transitions, shared by dragging, keyboard and inspection."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFormLayout, QComboBox, QLabel, QCheckBox, QDialogButtonBox
 from makebench.core.project import ComponentKind
 from makebench.core.navigation import find_navigation_block
 from .controls import reconcile_combo
+from makebench.i18n import tr
 
 
 class ConnectionDialog(QDialog):
-    """Origem, evento, destino e comportamento têm nomes humanos e IDs estáveis."""
+    """Source, event, destination and behavior have human names and stable IDs."""
 
     def __init__(self, panel, source=None, target=None, edge=None):
-        """Todos os destinos são representáveis pelo runtime, sem ligações ilustrativas."""
+        """Every destination can be represented by the runtime, with no illustrative links."""
         super().__init__(panel)
         self.panel = panel
         self.project = panel.window.project
         self.edge = edge
-        self.setWindowTitle("Editar transição" if edge else "Conectar interfaces")
+        self.setWindowTitle(tr("Edit transition") if edge else tr("Connect interfaces"))
         self.resize(570, 270)
         self.setMinimumWidth(500)
         form = QFormLayout(self)
@@ -28,18 +29,18 @@ class ConnectionDialog(QDialog):
         self.event.setObjectName("transition_event")
         self.target = QComboBox()
         self.target.setObjectName("transition_target")
-        self.closing = QCheckBox("Fechar a janela de origem ao abrir o destino")
+        self.closing = QCheckBox(tr("Close the source window when opening the destination"))
         self.notice = QLabel()
         self.notice.setWordWrap(True)
         entries = []
         for root in self.project.roots:
             for state in [
-                {"id": "@default", "name": "Padrão"},
+                {"id": "@default", "name": tr("Default")},
                 *self.project.states.get(root.id, []),
             ]:
                 entries.append(
                     (
-                        root.properties.get("title", "Interface") + " › " + state["name"],
+                        root.properties.get("title", tr("Interface")) + " › " + state["name"],
                         root.id + "|" + state["id"],
                     )
                 )
@@ -48,16 +49,16 @@ class ConnectionDialog(QDialog):
         self.source.setCurrentIndex(
             max(0, self.source.findData(source or self.project.root.id + "|@default"))
         )
-        form.addRow("Interface de origem", self.source)
-        form.addRow("Quando acontecer", self.event)
-        form.addRow("Destino", self.target)
-        form.addRow("Comportamento", self.closing)
+        form.addRow(tr("Source interface"), self.source)
+        form.addRow(tr("When this happens"), self.event)
+        form.addRow(tr("Destination"), self.target)
+        form.addRow(tr("Behavior"), self.closing)
         form.addRow(self.notice)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
         self.buttons.button(QDialogButtonBox.StandardButton.Save).setText(
-            "Aplicar" if edge else "Conectar"
+            tr("Apply") if edge else tr("Connect")
         )
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
@@ -77,18 +78,25 @@ class ConnectionDialog(QDialog):
         self.describe()
 
     def sync(self):
-        """Estados de outra janela não são oferecidos como se fossem páginas navegáveis."""
+        """States of another window are not offered as if they were navigable pages."""
         owner = self.source.currentData().split("|")[0]
         root = self.project.find(owner)
         selected = self.panel.window.selected_id
         if self.project.find(selected).kind != ComponentKind.BUTTON:
             selected = None
         events = [
-            ("Clique em " + (n.properties.get("text") or n.display_name), n.id)
+            (tr("Click on {name}").format(name=n.properties.get("text") or n.display_name), n.id)
             for n in root.walk()
             if n.kind == ComponentKind.BUTTON
         ]
-        events.append(("A janela " + root.properties.get("title", "Interface") + " abrir", root.id))
+        events.append(
+            (
+                tr("Window {title} opens").format(
+                    title=root.properties.get("title", tr("Interface"))
+                ),
+                root.id,
+            )
+        )
         current = self.event.currentData()
         reconcile_combo(
             self.event,
@@ -102,7 +110,7 @@ class ConnectionDialog(QDialog):
         targets = []
         for destination in self.project.roots:
             states = [
-                {"id": "@default", "name": "Padrão"},
+                {"id": "@default", "name": tr("Default")},
                 *self.project.states.get(destination.id, []),
             ]
             for state in states:
@@ -111,7 +119,7 @@ class ConnectionDialog(QDialog):
                 ):
                     targets.append(
                         (
-                            destination.properties.get("title", "Interface")
+                            destination.properties.get("title", tr("Interface"))
                             + " › "
                             + state["name"],
                             destination.id + "|" + state["id"],
@@ -126,16 +134,16 @@ class ConnectionDialog(QDialog):
         self.describe()
 
     def describe(self):
-        """O texto descreve a operação que realmente será adicionada ao evento."""
+        """The text describes the operation that will really be added to the event."""
         same = (
             bool(self.target.currentData())
             and self.source.currentData().split("|")[0] == self.target.currentData().split("|")[0]
         )
         self.closing.setEnabled(not same)
         self.notice.setText(
-            "Mudar o estado da mesma janela, preservando sua estrutura."
+            tr("Change the state of the same window, keeping its structure.")
             if same
-            else "Abrir outra janela real do sistema em seu estado inicial."
+            else tr("Open another real system window in its initial state.")
         )
 
         flow = next(
@@ -157,9 +165,11 @@ class ConnectionDialog(QDialog):
         )
         if flow and not flow.get("states"):
             self.notice.setText(
-                self.notice.text() + " O evento existente é executado em qualquer estado."
+                self.notice.text() + " " + tr("The existing event runs in any state.")
             )
         elif flow and len(flow.get("states", [])) > 1:
             self.notice.setText(
-                self.notice.text() + " A ação compartilha o filtro de estados do evento existente."
+                self.notice.text()
+                + " "
+                + tr("The action shares the existing event's state filter.")
             )

@@ -1,4 +1,4 @@
-"""Preservação de recursos e confinamento das imagens referenciadas por projetos."""
+"""Asset preservation and confinement of images referenced by projects."""
 
 import tempfile
 import unittest
@@ -53,5 +53,5 @@ class AssetTests(unittest.TestCase):
 
     def test_non_image_files_are_rejected_before_becoming_assets(self):
         self.source.write_bytes(b"not an image")
-        with self.assertRaisesRegex(StorageError, "imagem PNG, JPEG, WebP ou SVG"):
+        with self.assertRaisesRegex(StorageError, "valid PNG, JPEG, WebP or SVG image"):
             AssetStore().import_image(self.source)

@@ -1,4 +1,4 @@
-"""GTK real no Designer: seleção e alterações visuais não executam ações do projeto."""
+"""Real GTK in the Designer: selection and visual changes never run project actions."""
 
 import os, tempfile, time
 from pathlib import Path
@@ -19,14 +19,14 @@ app.setQuitOnLastWindowClosed(False)
 app.setPalette(kde_palette("dark"))
 p = Project.empty("Janela GTK nativa")
 button = p.add(p.root.id, ComponentKind.BUTTON)
-button.properties["text"] = "Botão GTK"
+button.properties["text"] = "GTK button"
 p.application["backend"] = "gtk"
 w = MainWindow(p)
 marker = Path(tmp.name) / "nao-executar"
 w.source.text = f"from pathlib import Path\nPath({str(marker)!r}).write_text('erro')\n"
 w.source_editor.setPlainText(w.source.text)
 w.show()
-w.set_mode("Design")
+w.set_mode("design")
 surface = w.canvas.gtk_surface
 
 
@@ -76,7 +76,7 @@ try:
     if out:
         w.grab().save(str(out / "design-qt-nativo.png"))
     print(
-        "OK: imagem GTK verdadeira, áreas nativas, seleção, propriedade atualizada, movimento livre e prévia inerte e retorno ao Qt sem imitação."
+        "OK: real GTK image, native areas, selection, updated property, free movement, inert preview and return to Qt without imitation."
     )
 finally:
     w.history.mark_saved()

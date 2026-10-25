@@ -1,4 +1,4 @@
-"""Ponto de entrada GTK independente e transporte opcional para a bancada."""
+"""Independent GTK entry point and optional transport for the workbench."""
 
 import json
 from pathlib import Path
@@ -10,8 +10,11 @@ from .application import GtkRuntime
 
 
 def main():
-    """Inicia explicitamente um snapshot de teste ou um aplicativo exportado."""
+    """Explicitly start a test snapshot or an exported application."""
     import argparse
+    import os
+
+    from makebench.i18n import set_language
 
     parser = argparse.ArgumentParser()
     parser.add_argument("project", type=Path)
@@ -22,10 +25,12 @@ def main():
     path = args.project.resolve()
     supervised = args.supervised
     project = load_project(path)
+    # Tests follow the editor's language; exported apps use their own setting.
+    set_language(os.environ.get("MAKEBENCH_LANGUAGE") or project.application.get("language"))
     source = SourceBuffer.load(path)
 
     def observe(value):
-        """A supervisão só existe no transporte de teste, nunca na janela criada."""
+        """Supervision exists only in the test transport, never in the created window."""
         if supervised:
             print(json.dumps(value, ensure_ascii=True), flush=True)
         elif value["type"] == "log":
@@ -52,7 +57,7 @@ def main():
             runtime.debug_config = json.loads(config.read_text(encoding="utf-8"))
 
         def commands():
-            """Aceita somente comandos de supervisão no stdin privado do teste."""
+            """Accept only supervision commands on the test's private stdin."""
             for line in sys.stdin:
                 try:
                     value = json.loads(line)
@@ -62,7 +67,7 @@ def main():
             runtime.GLib.idle_add(runtime.stop)
 
         def control(value):
-            """Comandos de teste não carregam código Python adicional."""
+            """Test commands never load additional Python code."""
             command = value.get("command")
             if command == "stop":
                 runtime.stop()

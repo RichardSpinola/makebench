@@ -1,1 +1,1 @@
-"""Renderização Qt compartilhada, sem controles de edição."""
+"""Shared Qt rendering, with no editing controls."""

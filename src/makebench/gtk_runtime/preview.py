@@ -1,4 +1,4 @@
-"""Renderização GTK isolada e inerte: recebe só componentes e imagens, nunca código."""
+"""Isolated, inert GTK rendering: receives only components and images, never code."""
 
 import base64
 import json
@@ -8,17 +8,18 @@ import signal
 import subprocess
 import sys
 import time
+from makebench.i18n import tr
 
 
 def _walk(root):
-    """Percorre apenas dados de componentes para declarar a versão mínima da prévia."""
+    """Walk only component data to declare the preview's minimum format version."""
     yield root
     for child in root.get("children", []):
         yield from _walk(child)
 
 
 def render(input_path, output_path):
-    """Produz PNG e retângulos GTK em Broadway privado, sem conectar eventos do projeto."""
+    """Produce a PNG and GTK rectangles on a private Broadway display, never connecting project events."""
     data = json.loads(Path(input_path).read_text())
     directory = Path(output_path).parent
     environment = dict(
@@ -42,7 +43,7 @@ def render(input_path, output_path):
     )
 
     def interrupted(*_args):
-        """Fecha o display filho também quando o editor cancela ou encerra."""
+        """Close the child display too when the editor cancels or exits."""
         raise SystemExit(1)
 
     signal.signal(signal.SIGTERM, interrupted)
@@ -52,7 +53,7 @@ def render(input_path, output_path):
             if server.poll() is not None:
                 raise RuntimeError(server.stderr.read().decode(errors="replace"))
             if time.monotonic() > deadline:
-                raise RuntimeError("O display privado GTK não ficou disponível.")
+                raise RuntimeError(tr("The private GTK display did not become available."))
             time.sleep(0.02)
         import gi
 
@@ -61,7 +62,7 @@ def render(input_path, output_path):
         from gi.repository import Gtk, Gdk, GLib, Graphene
 
         if not Gtk.init_check() or Gdk.Display.get_default() is None:
-            raise RuntimeError("GTK não abriu o display privado.")
+            raise RuntimeError(tr("GTK did not open the private display."))
         Adw = None
         try:
             gi.require_version("Adw", "1")
@@ -108,7 +109,7 @@ def render(input_path, output_path):
         else:
             window.set_titlebar(Gtk.HeaderBar())
             window.set_child(view.widget)
-        window.set_title(project.root.properties.get("title", "Aplicativo"))
+        window.set_title(project.root.properties.get("title", tr("Application")))
         window.set_default_size(
             project.root.properties.get("width", 640), project.root.properties.get("height", 480)
         )
@@ -118,7 +119,7 @@ def render(input_path, output_path):
         errors = []
 
         def snapshot():
-            """Usa o renderizador GTK real, incluindo controles, fontes e barra Adwaita."""
+            """Use the real GTK renderer, including controls, fonts and the Adwaita bar."""
             try:
                 width, height = window.get_width(), window.get_height()
                 paintable = Gtk.WidgetPaintable.new(window)
@@ -126,13 +127,13 @@ def render(input_path, output_path):
                 paintable.snapshot(snapshot, width, height)
                 node = snapshot.to_node()
                 if node is None:
-                    raise RuntimeError("GTK ainda não produziu a imagem da janela.")
+                    raise RuntimeError(tr("GTK has not produced the window image yet."))
                 texture = window.get_renderer().render_texture(
                     node, Graphene.Rect().init(0, 0, width, height)
                 )
                 image = Path(output_path).with_suffix(".png")
                 if not texture.save_to_png(str(image)):
-                    raise RuntimeError("GTK não gravou a imagem da prévia.")
+                    raise RuntimeError(tr("GTK did not write the preview image."))
                 rectangles = {}
                 for identifier, widget in view.frames.items():
                     if not widget.get_mapped():
@@ -188,4 +189,7 @@ def render(input_path, output_path):
 
 
 if __name__ == "__main__":
+    from makebench.i18n import set_language
+
+    set_language(os.environ.get("MAKEBENCH_LANGUAGE"))
     render(sys.argv[1], sys.argv[2])

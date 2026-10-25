@@ -1,4 +1,4 @@
-"""Aceitação Qt: tema nativo, navegação, início, campos e preferências."""
+"""Qt acceptance: native theme, navigation, start page, fields and preferences."""
 
 import os
 
@@ -12,17 +12,17 @@ from makebench.core.storage import save_project
 
 
 class NativeQtInterfaceTests(unittest.TestCase):
-    """Regressões visuais funcionais do editor Qt e da tela inicial."""
+    """Functional visual regressions of the Qt editor and the start screen."""
 
     @classmethod
     def setUpClass(cls):
-        """Aplicação offscreen mantém estilo Qt padrão para não depender do KDE real."""
+        """The offscreen application keeps the default Qt style so it does not depend on real KDE."""
         from PySide6.QtWidgets import QApplication
 
         cls.app = QApplication.instance() or QApplication([])
 
     def setUp(self):
-        """Isola arquivos e preferências dos testes de ações da tela inicial."""
+        """Isolate files and preferences of the start-screen action tests."""
         from makebench.editor.window import MainWindow
 
         self.temp = tempfile.TemporaryDirectory()
@@ -34,7 +34,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.app.processEvents()
 
     def tearDown(self):
-        """Não deixa diálogos abertos nem ativa confirmação de descarte no fim do teste."""
+        """Leave no dialogs open and enable no discard confirmation at the end of the test."""
         self.window.history.mark_saved()
         self.window.source.mark_saved()
         self.window.close()
@@ -42,11 +42,11 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.app.processEvents()
 
     def test_native_theme_and_stable_navigation_without_global_qss(self):
-        """A barra não some no mapa, publicar ou início; não há stylesheet global."""
+        """The bar does not disappear on the map, publish or start page; there is no global stylesheet."""
         w = self.window
-        for mode in ("Design", "Mapa", "Publicar", "Código", "Lógica"):
-            if mode == "Lógica":
-                continue  # WebEngine é exercitado na integração separada.
+        for mode in ("design", "map", "publish", "code", "logic"):
+            if mode == "logic":
+                continue  # WebEngine is exercised in the separate integration.
             w.set_mode(mode)
             self.app.processEvents()
             self.assertTrue(w.workspace_toolbar.isVisible())
@@ -56,30 +56,30 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(self.app.styleSheet(), "")
 
     def test_insert_library_uses_vertical_space_and_has_search(self):
-        """Biblioteca não mantém limite de 195 px nem rótulo expandido acima da lista."""
+        """The library keeps no 195 px limit and no expanded label above the list."""
         w = self.window
         w.left_tabs.setCurrentIndex(1)
         self.app.processEvents()
         self.assertGreater(w.palette.maximumHeight(), 195)
         self.assertGreater(w.palette.height(), 250)
-        w.insert_search.setText("Separador")
+        w.insert_search.setText("Separator")
         self.app.processEvents()
         visible = [
             w.palette.item(i).text()
             for i in range(w.palette.count())
             if not w.palette.item(i).isHidden()
         ]
-        self.assertEqual(visible, ["Separador"])
+        self.assertEqual(visible, ["Separator"])
 
     def test_preferences_search_apply_and_project_settings_undo(self):
-        """Globais não sujam o projeto; metadados pertencem ao histórico reversível."""
+        """Globals do not dirty the project; metadata belongs to the reversible history."""
         from makebench.editor.settings import EditorPreferences, ApplicationSettings, preference
 
         w = self.window
         dialog = EditorPreferences(w)
         dialog.show()
         self.app.processEvents()
-        dialog.search.setText("Recuperação")
+        dialog.search.setText("recovery")
         self.app.processEvents()
         self.assertEqual(dialog.sections.currentRow(), 2)
         before = w.history.dirty
@@ -98,7 +98,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         settings.close()
 
     def test_recent_project_delete_uses_trash_and_keeps_shared_assets(self):
-        """Ação de excluir só move arquivos declarados por padrão, nunca usa rmtree."""
+        """The delete action moves only declared files by default and never uses rmtree."""
         path = self.root / "project.makebench.json"
         save_project(Project.empty(), path)
         own = self.root / "project.actions.py"
@@ -117,7 +117,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertTrue(image.exists())
 
     def test_switch_document_has_no_callback_exception(self):
-        """O contexto antigo não é consultado depois que outra raiz foi carregada."""
+        """The old context is not consulted after another root was loaded."""
         import sys
 
         errors = []
@@ -127,7 +127,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(errors, [])
 
     def test_image_properties_keep_widgets_and_focus_stable(self):
-        """Editar imagem não destrói o inspetor, o frame nem campos a cada valor."""
+        """Editing an image does not destroy the inspector, the frame or fields on every value."""
         from PySide6.QtWidgets import QLineEdit, QSpinBox
 
         w = self.window
@@ -147,7 +147,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(w.project.find(image.id).geometry["width"], 300)
 
     def test_startup_is_fixed_internal_close_cancel_and_open_same_workspace(self):
-        """Iniciador não redimensiona, cancelar não abre bancada e recente não executa fonte."""
+        """The launcher does not resize, cancel does not open the workbench and a recent never runs source."""
         from PySide6.QtCore import QSettings, Qt, QTimer
         from PySide6.QtWidgets import QApplication
         from makebench.editor.startup import StartupDialog
@@ -197,7 +197,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         del w.startup_dialog
 
     def test_startup_close_does_not_show_workspace(self):
-        """X interno fecha apenas o iniciador; não abre documento ou bancada por efeito colateral."""
+        """The inner X closes only the launcher; it does not open a document or the workbench as a side effect."""
         from makebench.editor.startup import StartupDialog
 
         w = self.window
@@ -212,7 +212,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         dialog.deleteLater()
 
     def test_reselect_preserves_inspector_canvas_and_diagnostic_items(self):
-        """Cliques repetidos não reconstroem os campos, os frames nem a lista de problemas."""
+        """Repeated clicks rebuild neither the fields, the frames nor the problem list."""
         from PySide6.QtWidgets import QLineEdit
 
         w = self.window
@@ -233,7 +233,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertIs(w.problems.item(0), problem)
 
     def test_insert_repaints_only_after_complete_refresh_and_keeps_native_window(self):
-        """Qt não recebe uma bancada parcialmente vazia durante a reconstrução."""
+        """Qt never receives a partially empty workbench during the rebuild."""
         w = self.window
         native = w.winId()
         states = []
@@ -254,7 +254,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(w.project.find(w.selected_id).kind, ComponentKind.LABEL)
 
     def test_map_empty_hint_survives_click_zoom_and_node_click_is_not_edit(self):
-        """Orientação não é um item arrastável; selecionar nó não salva posições por engano."""
+        """The orientation is not a draggable item; selecting a node never saves positions by mistake."""
         from PySide6.QtCore import Qt
         from PySide6.QtTest import QTest
 
@@ -262,7 +262,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         p = Project.empty()
         p.metadata["empty_map"] = True
         w._replace_project(p, None)
-        w.set_mode("Mapa")
+        w.set_mode("map")
         self.app.processEvents()
         panel = w.map_panel
         hint = panel.view.empty_hint
@@ -280,7 +280,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(hint.size(), size)
         self.assertEqual(w.history._index, history)
         w._replace_project(Project.empty(), None)
-        w.set_mode("Mapa")
+        w.set_mode("map")
         self.app.processEvents()
         panel.fit()
         node = next(iter(panel.nodes.values()))
@@ -292,7 +292,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertIs(next(iter(panel.nodes.values())), node)
 
     def test_application_settings_and_nonvisual_preferences_keep_preview_widgets(self):
-        """Metadados e preferências sem efeito visual não refazem o canvas nem o tema."""
+        """Metadata and preferences with no visual effect never redo the canvas or the theme."""
         from PySide6.QtTest import QSignalSpy
         from makebench.editor.settings import ApplicationSettings, EditorPreferences, preference
         from makebench.editor.theme import manager
@@ -315,7 +315,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         prefs.close()
 
     def test_visibility_and_enabled_properties_survive_rebuild(self):
-        """Os controles reais refletem os valores agora e depois de reconstruir a prévia."""
+        """The real controls reflect the values now and after rebuilding the preview."""
         from PySide6.QtWidgets import QCheckBox
 
         w = self.window
@@ -326,7 +326,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         visible = next(
             field
             for field in w.inspector.findChildren(QCheckBox)
-            if field.accessibleName() == "Visível"
+            if field.accessibleName() == "Visible"
         )
         visible.click()
         self.assertTrue(w.canvas._frames[button.id].isHidden())
@@ -341,7 +341,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertFalse(widget.isEnabled())
 
     def test_new_project_starts_empty_and_opens_first_interface_by_double_click(self):
-        """Criação configura identidade, mapa vazio e entrada explícita no Designer."""
+        """Creation sets identity, an empty map and an explicit entry into the Designer."""
         from PySide6.QtCore import QTimer, Qt
         from PySide6.QtWidgets import QApplication, QLineEdit, QComboBox, QDialogButtonBox
         from PySide6.QtTest import QTest
@@ -369,8 +369,8 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(w.project.application["id"], "br.exemplo.qa")
         self.assertEqual(w.project.application["version"], "0.2.0")
         self.assertEqual(w.map_panel.nodes, {})
-        self.assertFalse(w.mode_buttons["Design"].isEnabled())
-        w.set_mode("Código")
+        self.assertFalse(w.mode_buttons["design"].isEnabled())
+        w.set_mode("code")
         self.assertTrue(w.map_panel.isVisible())
         self.assertTrue(
             any(
@@ -381,7 +381,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
 
         def create_interface():
             dialog = QApplication.activeModalWidget()
-            dialog.findChild(QLineEdit, "new_interface_name").setText("Tela principal")
+            dialog.findChild(QLineEdit, "new_interface_name").setText("Main screen")
             dialog.accept()
 
         QTimer.singleShot(30, create_interface)
@@ -389,7 +389,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.app.processEvents()
         self.assertFalse(w.project.metadata.get("empty_map"))
         self.assertEqual(len(w.project.roots), 1)
-        self.assertTrue(w.mode_buttons["Design"].isEnabled())
+        self.assertTrue(w.mode_buttons["design"].isEnabled())
         node = next(iter(w.map_panel.nodes.values()))
         point = w.map_panel.view.mapFromScene(node.sceneBoundingRect().center())
         QTest.mouseDClick(w.map_panel.view.viewport(), Qt.MouseButton.LeftButton, pos=point)
@@ -398,7 +398,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertTrue(w.zoom_view.isVisible())
 
     def test_code_find_is_local_wraps_and_keeps_source_unchanged(self):
-        """Busca não modal funciona em código próprio e gerado, com ida/volta e Escape."""
+        """Non-modal search works in own and generated code, with forward/back and Escape."""
         from PySide6.QtCore import Qt
         from PySide6.QtGui import QTextCursor
         from PySide6.QtTest import QTest
@@ -421,16 +421,16 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertEqual(editor.textCursor().selectionStart(), first)
         editor.find_next(True)
         self.assertEqual(editor.textCursor().selectionStart(), second)
-        editor.find_text.setText("ausente")
+        editor.find_text.setText("missing")
         editor.find_next()
-        self.assertEqual(editor.find_status.text(), "Nenhum resultado")
+        self.assertEqual(editor.find_status.text(), "No results")
         QTest.keyClick(editor.find_text, Qt.Key.Key_Escape)
         self.assertTrue(editor.find_bar.isHidden())
         self.assertEqual(editor.toPlainText(), original)
         editor.close()
 
     def test_native_header_keeps_system_text_legible(self):
-        """Paleta de cabeçalho errada não deixa o menu invisível no tema do desktop."""
+        """A wrong header palette never leaves the menu invisible in the desktop theme."""
         from PySide6.QtGui import QPalette
         from PySide6.QtWidgets import QMenuBar
         from makebench.ui.theme import manager, contrast
@@ -452,15 +452,15 @@ class NativeQtInterfaceTests(unittest.TestCase):
         bar.deleteLater()
 
     def test_export_opens_separate_fixed_dialog_and_preserves_editor(self):
-        """Exportar abre uma única janela compacta e mantém seleção, modo e canvas."""
+        """Export opens a single compact window and keeps the selection, mode and canvas."""
         w = self.window
-        w.set_mode("Design")
+        w.set_mode("design")
         selected = w.selected_id
         native = w.winId()
         canvas = w.canvas
         mode = w.tabs.currentIndex()
         self.assertEqual(w.tabs.count(), 4)
-        self.assertNotIn("Publicar", w.mode_buttons)
+        self.assertNotIn("publish", w.mode_buttons)
         w.export_action.trigger()
         self.app.processEvents()
         dialog = w.publish_dialog

@@ -1,4 +1,4 @@
-"""Adaptador Qt do teste GTK: somente supervisão, sem controles Qt no aplicativo."""
+"""Qt adapter for the GTK test: supervision only, no Qt controls in the application."""
 
 import json
 from pathlib import Path
@@ -8,10 +8,11 @@ from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 from makebench.core.project import Project, ProjectError
 from makebench.core.codegen import generate
 from makebench.core.environment import gtk_support, GTK_HELP
+from makebench.i18n import language, tr
 
 
 class GtkSession(QObject):
-    """Sinais compatíveis com a gaveta de testes existente da bancada."""
+    """Signals compatible with the workbench's existing test drawer."""
 
     output = Signal(str, str)
     busy_changed = Signal(bool)
@@ -25,7 +26,7 @@ class GtkSession(QObject):
     event_done = Signal(dict)
 
     def __init__(self, parent):
-        """Somente armazena o estado observado do processo GTK."""
+        """Only store the observed state of the GTK process."""
         super().__init__(parent)
         self.closed = True
         self.active = False
@@ -33,12 +34,12 @@ class GtkSession(QObject):
         self.admin_active = False
 
     def debug_command(self, action, **values):
-        """Encaminha comandos ao worker neutro através da ponte GTK."""
+        """Forward commands to the neutral worker through the GTK bridge."""
         self.parent().command({"command": "debug", "action": action, **values})
 
 
 class GtkRuntimeBridge(QObject):
-    """Lança GTK somente em start/F5 e mantém referências até o término real."""
+    """Launch GTK only on start/F5 and keep references until it really ends."""
 
     locate_requested = Signal(dict)
     shutdown_finished = Signal()
@@ -54,7 +55,7 @@ class GtkRuntimeBridge(QObject):
         parent=None,
         supervision=False,
     ):
-        """Valida e copia snapshot para staging sem executar conteúdo do projeto."""
+        """Validate and copy the snapshot to staging without running project content."""
         super().__init__(parent)
         if not gtk_support()["gtk4"]:
             raise ProjectError(GTK_HELP)
@@ -86,6 +87,8 @@ class GtkRuntimeBridge(QObject):
             "PYTHONPATH", str(Path(__file__).resolve().parents[2]) + ":" + env.value("PYTHONPATH")
         )
         self.process.setProcessEnvironment(env)
+        env.insert("MAKEBENCH_LANGUAGE", language())
+        self.process.setProcessEnvironment(env)
         self.process.setProgram(sys.executable)
         self.process.setArguments(
             [
@@ -109,7 +112,7 @@ class GtkRuntimeBridge(QObject):
         self.process.errorOccurred.connect(self.process_error)
 
     def start(self):
-        """Inicia o processo GTK explícito, mantendo o editor livre para responder."""
+        """Start the explicit GTK process, keeping the editor free to respond."""
         if self.debug_config:
             (self.path.parent / "debug.json").write_text(
                 json.dumps(self.debug_config), encoding="utf-8"
@@ -120,27 +123,27 @@ class GtkRuntimeBridge(QObject):
         self.process.start()
 
     def command(self, value):
-        """Envia comandos de supervisão para o processo GTK independente."""
+        """Send supervision commands to the independent GTK process."""
         self.process.write((json.dumps(value) + "\n").encode())
 
     def show(self):
-        """Reapresenta janelas GTK já abertas sem criar outra instância."""
+        """Re-show GTK windows already open without creating another instance."""
         if self.process.state() == QProcess.ProcessState.Running:
             self.command({"command": "raise"})
 
     def raise_(self):
-        """Compatibilidade com os comandos de foco do editor."""
+        """Compatibility with the editor's focus commands."""
         self.show()
 
     def activateWindow(self):
-        """Solicita apresentação ao toolkit e compositor da aplicação GTK."""
+        """Ask the toolkit and compositor of the GTK application to present it."""
         self.show()
 
     def read(self):
-        """Remonta protocolo JSON; código do projeto nunca é avaliado no editor."""
+        """Reassemble the JSON protocol; project code is never evaluated in the editor."""
         self.buffer += bytes(self.process.readAllStandardOutput())
         if len(self.buffer) > 2_000_000:
-            self.session.error.emit({"message": "Resposta GTK excedeu o limite."})
+            self.session.error.emit({"message": tr("GTK reply exceeded the limit.")})
             self.stop()
             return
         while b"\n" in self.buffer:
@@ -148,10 +151,12 @@ class GtkRuntimeBridge(QObject):
             try:
                 self.message(json.loads(line))
             except (ValueError, KeyError, TypeError) as exc:
-                self.session.error.emit({"message": "Protocolo GTK inválido: " + str(exc)})
+                self.session.error.emit(
+                    {"message": tr("Invalid GTK protocol: {error}").format(error=exc)}
+                )
 
     def message(self, value):
-        """Converte observação do GTK nos mesmos sinais usados pelo runtime Qt."""
+        """Turn GTK observations into the same signals used by the Qt runtime."""
         kind = value["type"]
         session = self.session
         if kind == "log":
@@ -179,13 +184,13 @@ class GtkRuntimeBridge(QObject):
             session.event_done.emit(value)
 
     def read_error(self):
-        """Encaminha mensagens nativas do GTK como stderr de diagnóstico."""
+        """Forward native GTK messages as diagnostic stderr."""
         text = bytes(self.process.readAllStandardError()).decode("utf-8", errors="replace")
         if text:
             self.session.output.emit("stderr", text)
 
     def stop(self):
-        """Não força GTK nem tarefa administrativa; aguarda limpeza dos grupos comuns."""
+        """Never force GTK or an administrative task; wait for ordinary groups to be cleaned up."""
         if self.session.admin_active:
             return False
         if not self.session.closed:
@@ -193,20 +198,20 @@ class GtkRuntimeBridge(QObject):
         return True
 
     def close(self):
-        """Fecha por protocolo sem abandonar processos de teste."""
+        """Close through the protocol without abandoning test processes."""
         return self.stop()
 
     def setEnabled(self, _enabled):
-        """Compatibilidade de ciclo de vida; sensibilidade pertence ao GTK."""
+        """Lifecycle compatibility; sensitivity belongs to GTK."""
 
     def process_error(self, error):
-        """Falha de inicialização não recebe finished no QProcess."""
+        """A start failure gets no finished signal from QProcess."""
         if error == QProcess.ProcessError.FailedToStart:
             self.session.error.emit({"message": self.process.errorString()})
             self.finished()
 
     def finished(self, *_args):
-        """Libera o snapshot somente após o processo GTK ter terminado."""
+        """Release the snapshot only after the GTK process has ended."""
         self.read()
         self.read_error()
         self.session.closed = True

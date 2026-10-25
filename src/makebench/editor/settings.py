@@ -1,4 +1,4 @@
-"""Centrais de configuração Qt: editor global e aplicativo do projeto."""
+"""Qt settings centers: the global editor and the project's application."""
 
 import json
 import re
@@ -29,13 +29,15 @@ from makebench.core.diagnostics import environment_report
 from makebench.core.exporter import effects
 from makebench import __version__
 from .theme import manager, icon
+from makebench.i18n import language, tr
 
 DEFAULTS = {
     "appearance/theme": "system",
     "appearance/accent": "system",
     "appearance/scale": 100,
     "appearance/reduce_motion": False,
-    "projects/folder": str(Path.home() / "Makebench" / "Projetos"),
+    "appearance/language": "en",
+    "projects/folder": str(Path.home() / "Makebench" / "Projects"),
     "projects/trust": True,
     "projects/backend": "gtk",
     "projects/startup": True,
@@ -52,13 +54,14 @@ CHOICES = {
     "appearance/theme": ["system", "light", "dark"],
     "appearance/accent": ["system"],
     "appearance/scale": [90, 100, 115, 125, 130, 150],
+    "appearance/language": ["en", "pt_BR"],
     "projects/backend": ["gtk", "qt"],
     "editor/recovery": [0, 15, 30, 60],
 }
 
 
 def preference(key, settings=None):
-    """Valores inválidos são ignorados; booleanos QSettings têm conversão explícita."""
+    """Invalid values are ignored; QSettings booleans get an explicit conversion."""
     settings = settings or QSettings("Makebench", "Makebench")
     default = DEFAULTS[key]
     value = settings.value("v1/" + key, default)
@@ -85,10 +88,10 @@ def preference(key, settings=None):
 
 
 class SettingsShell(QDialog):
-    """Janela com navegação, busca de opções e grupos de cartões Qt."""
+    """Window with navigation, option search and Qt card groups."""
 
     def __init__(self, parent, title):
-        """A busca filtra linhas em todas as páginas e mantém foco de teclado."""
+        """The search filters rows across all pages and keeps keyboard focus."""
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(860, 640)
@@ -97,7 +100,7 @@ class SettingsShell(QDialog):
         outer.setContentsMargins(10, 10, 10, 10)
         outer.setSpacing(8)
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Buscar configurações…")
+        self.search.setPlaceholderText(tr("Search settings…"))
         self.search.setClearButtonEnabled(True)
         outer.addWidget(self.search)
         body = QHBoxLayout()
@@ -110,17 +113,17 @@ class SettingsShell(QDialog):
         outer.addLayout(body, 1)
         self.sections.currentRowChanged.connect(self.pages.setCurrentIndex)
         self.search.textChanged.connect(self.filter_rows)
-        close = QPushButton("Fechar")
+        close = QPushButton(tr("Close"))
         close.clicked.connect(self.close)
         outer.addWidget(close, 0, Qt.AlignmentFlag.AlignRight)
         self.rows = []
         self.page_layouts = []
-        self.no_results = QLabel("Nenhuma configuração corresponde à busca.")
+        self.no_results = QLabel(tr("No setting matches the search."))
         self.no_results.hide()
         outer.insertWidget(2, self.no_results)
 
     def add_page(self, title):
-        """Página rolável funciona também com fontes ampliadas e janela menor."""
+        """A scrollable page also works with larger fonts and a smaller window."""
         self.sections.addItem(title)
         page = QWidget()
         layout = QVBoxLayout(page)
@@ -138,7 +141,7 @@ class SettingsShell(QDialog):
         return layout
 
     def group(self, page, title, description=""):
-        """Título fica fora do cartão e a descrição explica a consequência da opção."""
+        """The title sits outside the card and the description explains the option's effect."""
         heading = QLabel(title)
         heading.setProperty("section", True)
         page.addWidget(heading)
@@ -158,7 +161,7 @@ class SettingsShell(QDialog):
         return layout
 
     def row(self, group, label, control, description=""):
-        """Uma linha de opção tem título/descrição e controle alinhado à direita."""
+        """An option row has a title/description and a right-aligned control."""
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -186,7 +189,7 @@ class SettingsShell(QDialog):
         return control
 
     def filter_rows(self, text):
-        """Busca muda para a primeira página com resultados sem alterar valores."""
+        """The search jumps to the first page with results without changing values."""
         query = text.casefold()
         matches = [
             index
@@ -204,104 +207,110 @@ class SettingsShell(QDialog):
 
 
 class EditorPreferences(SettingsShell):
-    """Preferências imediatas em QSettings, independentes do histórico dos projetos."""
+    """Immediate preferences in QSettings, independent of the projects' history."""
 
     def __init__(self, window):
-        """Monta sete páginas e mantém cada opção com uma única fonte de verdade."""
-        super().__init__(window, "Preferências do Makebench")
+        """Build the pages and keep each option with a single source of truth."""
+        super().__init__(window, tr("Makebench preferences"))
         self.window = window
         self.settings = window.settings
         self.controls = {}
         for prefix, title in [
-            ("appearance", "Aparência"),
-            ("projects", "Projetos"),
-            ("editor", "Editor"),
-            ("test", "Teste"),
+            ("appearance", tr("Appearance")),
+            ("projects", tr("Projects")),
+            ("editor", tr("Editor")),
+            ("test", tr("Testing")),
         ]:
             page = self.add_page(title)
-            group = self.group(page, title, "As alterações são aplicadas imediatamente.")
+            group = self.group(page, title, tr("Changes apply immediately."))
             self.populate(group, prefix)
             if prefix == "projects":
-                clear = QPushButton("Limpar projetos recentes")
+                clear = QPushButton(tr("Clear recent projects"))
                 clear.clicked.connect(
                     lambda: (self.settings.remove("projects/recent"), window.refresh_recents())
                 )
                 group.addWidget(clear)
-            reset = QPushButton("Restaurar padrões desta página")
+            reset = QPushButton(tr("Restore this page's defaults"))
             reset.clicked.connect(lambda _, prefix=prefix: self.reset_page(prefix))
             page.addWidget(reset, 0, Qt.AlignmentFlag.AlignRight)
-        page = self.add_page("Atalhos")
+        page = self.add_page(tr("Shortcuts"))
         group = self.group(
             page,
             "Comandos",
-            "Atalhos somente leitura nesta versão. A busca também encontra os nomes dos comandos.",
+            tr("Shortcuts are read-only in this version. The search also finds command names."),
         )
         from .commands import register
 
         register(window)
         for action in window.commands:
-            shortcut = QLabel(action.shortcut().toString() or "Sem atalho")
+            shortcut = QLabel(action.shortcut().toString() or tr("No shortcut"))
             self.row(group, action.text().replace("&", "").replace("…", ""), shortcut)
-        page = self.add_page("Ambiente")
-        group = self.group(page, "Diagnóstico do ambiente")
+        page = self.add_page(tr("Environment"))
+        group = self.group(page, tr("Environment diagnostics"))
         self.report = QPlainTextEdit(diagnostic(window))
         self.report.setReadOnly(True)
         self.report.setMinimumHeight(300)
         group.addWidget(self.report)
-        copy = QPushButton("Copiar relatório")
+        copy = QPushButton(tr("Copy report"))
         copy.clicked.connect(lambda: QApplication.clipboard().setText(self.report.toPlainText()))
         group.addWidget(copy)
-        page = self.add_page("Plugins")
-        group = self.group(page, "Plugins", "Suporte planejado para uma próxima etapa.")
+        page = self.add_page(tr("Plugins"))
+        group = self.group(page, tr("Plugins"), tr("Support planned for a future release."))
         label = QLabel(
-            "Este espaço será usado para gerenciar extensões do Makebench. A instalação e a execução de plugins ainda não estão disponíveis."
+            tr(
+                "This space will be used to manage Makebench extensions. Installing and running plugins is not available yet."
+            )
         )
         label.setWordWrap(True)
         group.addWidget(label)
-        page = self.add_page("Sobre")
+        page = self.add_page(tr("About"))
         group = self.group(page, "Makebench " + __version__)
         label = QLabel(
-            "Editor visual de aplicativos Linux. Sem conta, servidor ou IA em execução.\n\nPySide6/Qt: LGPL/GPL/comercial. Blockly 13.4.0: Apache-2.0. Backend GTK opcional: GTK4 e PyGObject (LGPL), libadwaita opcional (LGPL). Símbolos de reserva são vetores próprios.\n\nA licença do Makebench ainda precisa ser definida pelo autor."
+            tr(
+                "Visual editor for Linux applications. No account, server or AI at run time.\n\nPySide6/Qt: LGPL/GPL/commercial. Blockly 13.4.0: Apache-2.0. Optional GTK backend: GTK4 and PyGObject (LGPL), optional libadwaita (LGPL). Fallback symbols are our own vectors.\n\nMakebench is free software under the GNU GPL, version 3 or later."
+            )
         )
         label.setWordWrap(True)
         group.addWidget(label)
-        documentation = QPushButton("Abrir checklist de validação")
+        documentation = QPushButton(tr("Open the user guide"))
         documentation.clicked.connect(lambda: open_checklist(window))
         group.addWidget(documentation)
 
     def populate(self, group, prefix):
-        """Cria controles vinculados a chaves versionadas e opções validadas."""
+        """Create controls bound to versioned keys and validated options."""
         labels = {
-            "appearance/theme": "Tema",
-            "appearance/accent": "Cor de destaque",
-            "appearance/scale": "Tamanho do texto",
-            "appearance/reduce_motion": "Reduzir movimento",
-            "projects/folder": "Pasta dos novos projetos",
-            "projects/trust": "Avisar sobre projeto não confiável",
-            "projects/backend": "Backend padrão",
-            "projects/startup": "Mostrar a janela inicial ao abrir",
-            "editor/code_font": "Fonte do código",
-            "editor/code_size": "Tamanho do código",
-            "editor/wrap": "Quebrar linhas do código",
-            "editor/recovery": "Recuperação automática",
-            "editor/grid": "Encaixar na grade por padrão",
-            "test/clear": "Limpar saída ao iniciar",
-            "test/confirm_restart": "Confirmar reinício durante uma tarefa",
-            "test/duration": "Mostrar tempo de execução",
+            "appearance/theme": tr("Theme"),
+            "appearance/accent": tr("Accent color"),
+            "appearance/scale": tr("Text size"),
+            "appearance/reduce_motion": tr("Reduce motion"),
+            "appearance/language": tr("Interface language"),
+            "projects/folder": tr("Folder for new projects"),
+            "projects/trust": tr("Warn about untrusted projects"),
+            "projects/backend": tr("Default backend"),
+            "projects/startup": tr("Show the start window on launch"),
+            "editor/code_font": tr("Code font"),
+            "editor/code_size": tr("Code size"),
+            "editor/wrap": tr("Wrap code lines"),
+            "editor/recovery": tr("Automatic recovery"),
+            "editor/grid": tr("Snap to grid by default"),
+            "test/clear": tr("Clear output on start"),
+            "test/confirm_restart": tr("Confirm restart during a task"),
+            "test/duration": tr("Show run time"),
         }
         option_labels = {
-            "appearance/theme": ["Sistema", "Claro", "Escuro"],
-            "appearance/accent": ["Do sistema"],
+            "appearance/theme": [tr("System"), tr("Light"), tr("Dark")],
+            "appearance/accent": [tr("From the system")],
             "appearance/scale": ["90%", "100%", "115%", "125%", "130%", "150%"],
+            "appearance/language": ["English", "Português (Brasil)"],
             "projects/backend": ["GTK", "Qt"],
-            "editor/recovery": ["Desligada", "15 segundos", "30 segundos", "60 segundos"],
+            "editor/recovery": [tr("Off"), tr("15 seconds"), tr("30 seconds"), tr("60 seconds")],
         }
         for key, label in labels.items():
             if not key.startswith(prefix + "/"):
                 continue
             value = preference(key, self.settings)
             if key == "appearance/accent":
-                field = QLabel("Do sistema")
+                field = QLabel(tr("From the system"))
             elif key in CHOICES:
                 field = QComboBox()
                 for text, item in zip(option_labels[key], CHOICES[key]):
@@ -325,16 +334,23 @@ class EditorPreferences(SettingsShell):
                 field.textChanged.connect(lambda value, key=key: self.changed(key, value))
             self.controls[key] = field
             self.row(
-                group, label, field, "Recuo fixo de 4 espaços." if key == "editor/code_font" else ""
+                group,
+                label,
+                field,
+                tr("Fixed 4-space indentation.")
+                if key == "editor/code_font"
+                else tr("Takes effect the next time Makebench starts.")
+                if key == "appearance/language"
+                else "",
             )
 
     def changed(self, key, value):
-        """Persiste somente preferências, aplica sem reiniciar nem marcar o projeto."""
+        """Persist only preferences; apply without restarting or marking the project."""
         self.settings.setValue("v1/" + key, value)
         apply_preferences(self.window)
 
     def reset_page(self, prefix):
-        """Restaura só uma página e atualiza seus controles sem recursão de sinais."""
+        """Restore only one page and update its controls without signal recursion."""
         for key, field in self.controls.items():
             if not key.startswith(prefix + "/"):
                 continue
@@ -348,13 +364,13 @@ class EditorPreferences(SettingsShell):
             elif isinstance(field, QSpinBox):
                 field.setValue(value)
             else:
-                field.setText("Do sistema" if key == "appearance/accent" else value)
+                field.setText(tr("From the system") if key == "appearance/accent" else value)
             field.blockSignals(False)
         apply_preferences(self.window)
 
 
 def apply_preferences(window):
-    """Aplica tema, código, recuperação e comportamento aos widgets existentes."""
+    """Apply theme, code, recovery and behavior to the existing widgets."""
     theme = manager()
     theme.mode = preference("appearance/theme")
     theme.accent = "system"
@@ -388,35 +404,35 @@ def apply_preferences(window):
 
 
 def diagnostic(window=None):
-    """Coleta estado Qt real sem executar ferramentas nem código do projeto."""
+    """Collect the real Qt state without running tools or project code."""
     app = QApplication.instance()
     theme = manager()
     screen = window.screen() if window else app.primaryScreen()
     return environment_report(
         {
             "Qt": __import__("PySide6.QtCore", fromlist=["qVersion"]).qVersion(),
-            "Plugin de plataforma": app.platformName(),
-            "Tema": "Escuro" if theme.tokens["dark"] else "Claro",
-            "Destaque do sistema": theme.tokens.get("system_accent", "Indisponível"),
-            "Destaque ajustado para contraste": str(theme.tokens.get("accent_adjusted", False)),
-            "Escala da tela": str(screen.devicePixelRatio()) if screen else "Indisponível",
+            tr("Platform plugin"): app.platformName(),
+            tr("Theme"): tr("Dark") if theme.tokens["dark"] else tr("Light"),
+            tr("System accent"): theme.tokens.get("system_accent", tr("Unavailable")),
+            tr("Accent adjusted for contrast"): str(theme.tokens.get("accent_adjusted", False)),
+            tr("Screen scale"): str(screen.devicePixelRatio()) if screen else tr("Unavailable"),
         }
     )
 
 
 def show_diagnostic(window):
-    """Janela própria oferece relatório completo e ação de copiar."""
+    """A dedicated window offers the full report and a copy action."""
     dialog = QDialog(window)
-    dialog.setWindowTitle("Diagnóstico do ambiente")
+    dialog.setWindowTitle(tr("Environment diagnostics"))
     dialog.resize(760, 580)
     layout = QVBoxLayout(dialog)
     report = QPlainTextEdit(diagnostic(window))
     report.setReadOnly(True)
     layout.addWidget(report)
-    copy = QPushButton("Copiar relatório")
+    copy = QPushButton(tr("Copy report"))
     copy.clicked.connect(lambda: QApplication.clipboard().setText(report.toPlainText()))
     layout.addWidget(copy)
-    close = QPushButton("Fechar")
+    close = QPushButton(tr("Close"))
     close.clicked.connect(dialog.close)
     layout.addWidget(close)
     dialog.show()
@@ -425,36 +441,40 @@ def show_diagnostic(window):
 
 
 def open_checklist(window):
-    """Abre o arquivo local, que acompanha o fonte e o pacote do editor."""
-    path = Path(__file__).resolve().parents[3] / "docs" / "validacao-desktop.md"
+    """Open the local user guide that ships with the source and the editor package."""
+    path = (
+        Path(__file__).resolve().parents[3]
+        / "docs"
+        / ("user-guide.pt-BR.md" if language() == "pt_BR" else "user-guide.md")
+    )
     if path.exists():
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
     else:
-        window._show_error("Consulte docs/validacao-desktop.md na pasta do Makebench.")
+        window._show_error(tr("See docs/user-guide.md in the Makebench folder."))
 
 
 class ApplicationSettings(SettingsShell):
-    """Configuração por projeto, com alterações reversíveis e busca de campos."""
+    """Per-project settings, with reversible changes and field search."""
 
     def __init__(self, window):
-        """Identidade, ícone, backend, dependências, permissões, janelas, dados e destinos."""
-        super().__init__(window, "Configurações do aplicativo")
+        """Identity, icon, backend, dependencies, permissions, windows, data and targets."""
+        super().__init__(window, tr("Application settings"))
         self.window = window
         self.fields = {}
         self.validation_errors = {}
         app = window.project.application
-        page = self.add_page("Identidade")
+        page = self.add_page(tr("Identity"))
         group = self.group(
-            page, "Identidade", "Estas informações acompanham o aplicativo exportado."
+            page, tr("Identity"), tr("This information ships with the exported application.")
         )
         for key, label in [
-            ("name", "Nome público"),
-            ("id", "Identificador"),
-            ("version", "Versão"),
-            ("description", "Descrição"),
-            ("author", "Autor"),
-            ("license", "Licença"),
-            ("category", "Categorias"),
+            ("name", tr("Public name")),
+            ("id", tr("Identifier")),
+            ("version", tr("Version")),
+            ("description", tr("Description")),
+            ("author", tr("Author")),
+            ("license", tr("License")),
+            ("category", tr("Categories")),
         ]:
             field = QLineEdit(str(app.get(key, "")))
             field.setMinimumWidth(230)
@@ -465,9 +485,9 @@ class ApplicationSettings(SettingsShell):
                 group,
                 label,
                 field,
-                "Ex.: br.exemplo.meuapp; identifica o aplicativo nos pacotes."
+                tr("E.g. com.example.myapp; identifies the application in packages.")
                 if key == "id"
-                else "Ex.: 0.1.0"
+                else tr("E.g. 0.1.0")
                 if key == "version"
                 else "",
             )
@@ -475,8 +495,8 @@ class ApplicationSettings(SettingsShell):
         self.identity_notice = QLabel()
         self.identity_notice.setWordWrap(True)
         group.addWidget(self.identity_notice)
-        page = self.add_page("Ícone")
-        group = self.group(page, "Ícone do aplicativo", "PNG com pelo menos 256 pixels ou SVG.")
+        page = self.add_page(tr("Icon"))
+        group = self.group(page, tr("Application icon"), tr("PNG of at least 256 pixels, or SVG."))
         self.icon_preview = QLabel()
         self.icon_preview.setFixedSize(128, 128)
         preview_row = QHBoxLayout()
@@ -491,33 +511,53 @@ class ApplicationSettings(SettingsShell):
             self.icon_previews[size] = image
         preview_row.addStretch()
         group.addLayout(preview_row)
-        choose = QPushButton("Escolher ícone…")
+        choose = QPushButton(tr("Choose icon…"))
         choose.clicked.connect(self.choose_icon)
         group.addWidget(choose)
         self.update_icon()
-        page = self.add_page("Aparência")
+        page = self.add_page(tr("Appearance"))
         group = self.group(
             page,
-            "Backend do aplicativo",
-            "O editor é Qt. Esta escolha define os controles do aplicativo que você está criando.",
+            tr("Application backend"),
+            tr(
+                "The editor is Qt. This choice sets the controls of the application you are building."
+            ),
         )
         backend = QComboBox()
         backend.addItem("GTK4 / Adwaita", "gtk")
         backend.addItem("Qt / PySide6", "qt")
         backend.setCurrentIndex(backend.findData(app.get("backend", "qt")))
         backend.currentIndexChanged.connect(lambda _: self.change("backend", backend.currentData()))
-        self.row(group, "Aparência e execução", backend)
+        self.row(group, tr("Appearance and execution"), backend)
+        app_language = QComboBox()
+        app_language.setAccessibleName(tr("Application language"))
+        app_language.addItem("English", "en")
+        app_language.addItem("Português (Brasil)", "pt_BR")
+        app_language.setCurrentIndex(max(0, app_language.findData(app.get("language", "en"))))
+        app_language.currentIndexChanged.connect(
+            lambda _: self.change("language", app_language.currentData())
+        )
+        self.row(
+            group,
+            tr("Application language"),
+            app_language,
+            tr("Language of the messages and dialogs that Makebench adds to your application."),
+        )
         if not gtk_support()["gtk4"]:
             notice = QLabel(
-                "GTK4 ausente neste Python. O teste GTK informa os pacotes necessários, sem instalar automaticamente."
+                tr(
+                    "GTK4 is missing in this Python. The GTK test lists the required packages, without installing them automatically."
+                )
             )
             notice.setWordWrap(True)
             group.addWidget(notice)
-        page = self.add_page("Dependências")
+        page = self.add_page(tr("Dependencies"))
         group = self.group(
             page,
-            "Dependências",
-            "Python mínimo 3.12; versões suportadas 3.12–3.14. GTK exige PyGObject/GTK4; Qt exige PySide6 6.11.2.",
+            tr("Dependencies"),
+            tr(
+                "Minimum Python 3.12; supported versions 3.12–3.14. GTK requires PyGObject/GTK4; Qt requires PySide6 6.11.2."
+            ),
         )
         from .settings_fields import Dependencies
 
@@ -527,35 +567,43 @@ class ApplicationSettings(SettingsShell):
         self.fields["packages"] = packages
         programs, admin = effects(window.project)
         label = QLabel(
-            "Programas detectados: "
-            + (", ".join(programs) or "nenhum")
-            + ". Funções próprias podem exigir outros programas."
+            tr("Detected programs: {programs}.").format(programs=", ".join(programs) or tr("none"))
+            + " "
+            + tr("Your own functions may require other programs.")
         )
         label.setWordWrap(True)
         group.addWidget(label)
-        page = self.add_page("Permissões")
-        group = self.group(page, "Acesso ao sistema")
+        page = self.add_page(tr("Permissions"))
+        group = self.group(page, tr("System access"))
         text = QLabel(
-            "Fonte Python, DEB, RPM e AppImage executam com as permissões do usuário. O teste não é uma sandbox.\n\n"
-            + (
-                "Há ações administrativas declaradas: Polkit/pkexec e agente do sistema são necessários. O Makebench não pede senhas."
-                if admin
-                else "Nenhuma ação administrativa declarada nos blocos."
+            tr(
+                "Python source, DEB, RPM and AppImage run with the user's permissions. Testing is not a sandbox."
             )
-            + "\n\nFlatpak isolado bloqueia programas do host e administração. Dependências adicionais devem existir dentro do pacote."
+            + "\n\n"
+            + (
+                tr(
+                    "There are declared administrative actions: Polkit/pkexec and a system agent are required. Makebench never asks for passwords."
+                )
+                if admin
+                else tr("No administrative action declared in the blocks.")
+            )
+            + "\n\n"
+            + tr(
+                "The isolated Flatpak blocks host programs and administration. Additional dependencies must exist inside the package."
+            )
         )
         text.setWordWrap(True)
         group.addWidget(text)
-        page = self.add_page("Janelas")
-        group = self.group(page, "Janelas do aplicativo")
+        page = self.add_page(tr("Windows"))
+        group = self.group(page, tr("Application windows"))
         initial = QComboBox()
         roots = [] if window.project.metadata.get("empty_map") else window.project.roots
         if not roots:
-            notice = QLabel("Nenhuma interface. Crie a primeira pelo mapa.")
+            notice = QLabel(tr("No interface yet. Create the first one in the map."))
             group.addWidget(notice)
         initial.setEnabled(bool(roots))
         for root in roots:
-            initial.addItem(root.properties.get("title", "Interface"), root.id)
+            initial.addItem(root.properties.get("title", tr("Interface")), root.id)
         initial.setCurrentIndex(
             initial.findData(window.project.entry_window or window.project.root.id)
         )
@@ -564,21 +612,21 @@ class ApplicationSettings(SettingsShell):
                 lambda: setattr(window.project, "entry_window", initial.currentData())
             )
         )
-        self.row(group, "Janela inicial", initial)
+        self.row(group, tr("Start window"), initial)
         for root in roots:
             group = self.group(
                 page,
-                root.properties.get("title", "Interface"),
-                "Tamanho inicial em pixels lógicos.",
+                root.properties.get("title", tr("Interface")),
+                tr("Initial size in logical pixels."),
             )
-            field = QLineEdit(root.properties.get("title", "Interface"))
+            field = QLineEdit(root.properties.get("title", tr("Interface")))
             field.editingFinished.connect(
                 lambda identifier=root.id, field=field: window._edit(
                     lambda: window.project.find(identifier).properties.update(title=field.text())
                 )
             )
-            self.row(group, "Título da interface", field)
-            for key, label, default in [("width", "Largura", 640), ("height", "Altura", 480)]:
+            self.row(group, tr("Interface title"), field)
+            for key, label, default in [("width", tr("Width"), 640), ("height", tr("Height"), 480)]:
                 spin = QSpinBox()
                 spin.setRange(100, 20000)
                 spin.setValue(root.properties.get(key, default))
@@ -597,9 +645,9 @@ class ApplicationSettings(SettingsShell):
                     lambda: window.project.find(identifier).properties.update(resizable=value)
                 )
             )
-            self.row(group, "Permitir redimensionar", resizable)
+            self.row(group, tr("Allow resizing"), resizable)
             state = QComboBox()
-            state.addItem("Padrão", "@default")
+            state.addItem(tr("Default"), "@default")
             for entry in window.project.states.get(root.id, []):
                 state.addItem(entry["name"], entry["id"])
             state.setCurrentIndex(state.findData(root.properties.get("initial_state", "@default")))
@@ -610,26 +658,26 @@ class ApplicationSettings(SettingsShell):
                     )
                 )
             )
-            self.row(group, "Estado ao abrir", state)
-            choose = QPushButton("Escolher ícone desta janela…")
+            self.row(group, tr("State on open"), state)
+            choose = QPushButton(tr("Choose an icon for this window…"))
             choose.clicked.connect(
                 lambda _, identifier=root.id: self.choose_window_icon(identifier)
             )
             group.addWidget(choose)
-        page = self.add_page("Dados")
+        page = self.add_page(tr("Data"))
         group = self.group(
             page,
-            "Variáveis e valores iniciais",
-            "Dados do projeto ou de uma janela. Valores são JSON: texto, número, booleano ou lista.",
+            tr("Variables and initial values"),
+            tr("Project or window data. Values are JSON: text, number, boolean or list."),
         )
         self.variables_view = QListWidget()
-        self.variables_view.setAccessibleName("Nome, tipo, escopo e valor inicial")
+        self.variables_view.setAccessibleName(tr("Name, type, scope and initial value"))
         group.addWidget(self.variables_view)
         self.variables_view.itemActivated.connect(lambda _: self.edit_variable())
         row = QHBoxLayout()
         for label, callback in [
-            ("Adicionar…", lambda: self.edit_variable(new=True)),
-            ("Editar…", self.edit_variable),
+            (tr("Add…"), lambda: self.edit_variable(new=True)),
+            (tr("Edit…"), self.edit_variable),
         ]:
             button = QPushButton(label)
             button.clicked.connect(callback)
@@ -637,14 +685,16 @@ class ApplicationSettings(SettingsShell):
         row.addStretch()
         group.addLayout(row)
         self.refresh_variables()
-        page = self.add_page("Destinos")
+        page = self.add_page(tr("Targets"))
         group = self.group(
             page,
             "Exportadores",
-            "O resultado só é marcado como construído depois de passar pela ferramenta e pela verificação.",
+            tr(
+                "A result is marked as built only after passing through the tool and the verification."
+            ),
         )
         for name, tool in [
-            ("Fonte Python", None),
+            (tr("Python source"), None),
             ("DEB", "dpkg-deb"),
             ("AppImage", "appimagetool"),
             ("Flatpak", "flatpak-builder"),
@@ -653,21 +703,21 @@ class ApplicationSettings(SettingsShell):
             from makebench.core.build_environment import prepared
 
             status = QLabel(
-                "Construção pela janela Exportar"
+                tr("Build from the Export window")
                 if not tool or build_tools().get(tool) or tool != "flatpak-builder" and prepared()
-                else "Preparar ferramentas na janela Exportar"
+                else tr("Prepare tools in the Export window")
             )
             self.row(group, name, status)
 
     def change(self, key, value):
-        """Grava apenas o campo alterado, sem regenerar nem executar fontes próprias."""
+        """Write only the changed field, without regenerating or running your own sources."""
         error = ""
         if key == "id" and not re.fullmatch(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}", value):
-            error = "Use um identificador como br.exemplo.meuapp."
+            error = tr("Use an identifier such as com.example.myapp.")
         elif key == "version" and not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", value):
-            error = "Use uma versão como 0.1.0."
+            error = tr("Use a version such as 0.1.0.")
         elif key == "name" and not value.strip():
-            error = "Informe o nome público do aplicativo."
+            error = tr("Enter the application's public name.")
         if error:
             self.validation_errors[key] = error
         else:
@@ -680,9 +730,9 @@ class ApplicationSettings(SettingsShell):
             self.window.change_application(key, value)
 
     def choose_icon(self):
-        """Importa recurso no cache portátil do projeto e mostra sua aparência real."""
+        """Import the asset into the project's portable cache and show its real appearance."""
         path, _ = QFileDialog.getOpenFileName(
-            self, "Ícone do aplicativo", "", "Ícones (*.png *.svg)"
+            self, tr("Application icon"), "", tr("Icons (*.png *.svg)")
         )
         if path:
             try:
@@ -692,8 +742,10 @@ class ApplicationSettings(SettingsShell):
                 self.window._show_error(str(exc))
 
     def choose_window_icon(self, identifier):
-        """Cada janela pode ter um ícone próprio sem depender do caminho original."""
-        path, _ = QFileDialog.getOpenFileName(self, "Ícone da janela", "", "Ícones (*.png *.svg)")
+        """Each window can have its own icon without depending on the original path."""
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("Window icon"), "", tr("Icons (*.png *.svg)")
+        )
         if path:
             try:
                 name = self.window.assets.import_image(Path(path))
@@ -704,7 +756,7 @@ class ApplicationSettings(SettingsShell):
                 self.window._show_error(str(exc))
 
     def update_icon(self):
-        """A imagem usa o mesmo recurso que acompanhará o aplicativo exportado."""
+        """The image uses the same asset that will ship with the exported application."""
         from PySide6.QtGui import QPixmap
 
         name = self.window.project.application.get("icon")
@@ -725,32 +777,34 @@ class ApplicationSettings(SettingsShell):
                 self.icon_preview.clear()
 
     def refresh_variables(self):
-        """A lista reflete o modelo atual sem trocar a fonte de verdade dos dados."""
+        """The list reflects the current model without swapping the data's source of truth."""
         self.variables_view.clear()
         for variable in self.window.project.variables:
             value = variable.get("initial")
             scope = (
-                "Projeto"
+                tr("Project")
                 if variable.get("scope", "project") == "project"
-                else self.window.project.find(variable["window"]).properties.get("title", "Janela")
+                else self.window.project.find(variable["window"]).properties.get(
+                    "title", tr("Window")
+                )
             )
             kind = (
-                "Nulo"
+                tr("Null")
                 if value is None
-                else "Booleano"
+                else tr("Boolean")
                 if isinstance(value, bool)
-                else "Número"
+                else tr("Number")
                 if isinstance(value, (int, float))
-                else "Texto"
+                else tr("Text")
                 if isinstance(value, str)
-                else "Lista"
+                else tr("List")
                 if isinstance(value, list)
-                else "Objeto"
+                else tr("Object")
             )
             self.variables_view.addItem(f"{variable['name']} · {kind} · {scope}\n{value!r}")
 
     def edit_variable(self, _checked=False, new=False):
-        """Abre o editor existente e atualiza a lista depois de confirmar ou cancelar."""
+        """Open the existing editor and refresh the list after confirming or cancelling."""
         index = None if new else self.variables_view.currentRow()
         if index is not None and index < 0:
             return

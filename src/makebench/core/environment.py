@@ -1,13 +1,16 @@
-"""Detecção somente leitura de bibliotecas e ferramentas opcionais."""
+"""Read-only detection of optional libraries and tools."""
 
 import importlib.util
 import shutil
+from makebench.i18n import tr
 
-GTK_HELP = "GTK4 não está disponível neste Python. Debian/Ubuntu: python3-gi, gir1.2-gtk-4.0 e, opcionalmente, gir1.2-adw-1. Fedora: python3-gobject, gtk4 e, opcionalmente, libadwaita. Instale pelo gerenciador da sua distribuição; o Makebench não instala pacotes."
+GTK_HELP = tr(
+    "GTK4 is not available in this Python. Debian/Ubuntu: python3-gi, gir1.2-gtk-4.0 and, optionally, gir1.2-adw-1. Fedora: python3-gobject, gtk4 and, optionally, libadwaita. Install them with your distribution's package manager; Makebench does not install packages."
+)
 
 
 def gtk_support():
-    """Detecta introspecção sem inicializar GTK, abrir janelas ou iniciar processos."""
+    """Detect introspection without initializing GTK, opening windows or starting processes."""
     result = {"pygobject": False, "gtk4": False, "adwaita": False, "reason": ""}
     try:
         import gi
@@ -26,7 +29,7 @@ def gtk_support():
 
 
 def build_tools():
-    """Retorna caminhos de ferramentas sem instalar ou executar qualquer uma."""
+    """Return tool paths without installing or running any of them."""
     return {
         name: shutil.which(name)
         for name in (

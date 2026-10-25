@@ -1,4 +1,4 @@
-"""Imagens portáveis: importação explícita e recursos relativos ao projeto."""
+"""Portable images: explicit import and project-relative assets."""
 
 from __future__ import annotations
 
@@ -11,24 +11,25 @@ from PySide6.QtCore import QBuffer, QByteArray, QIODevice
 from PySide6.QtGui import QImageReader
 
 from makebench.core.storage import StorageError
+from makebench.i18n import tr
 
 
 class AssetStore:
-    """Mantém imagens em memória até salvar e resolve apenas caminhos locais.
+    """Keep images in memory until saved and resolve only local paths.
 
-    O cache persiste no Salvar como, permitindo desfazer a exclusão de uma imagem
-    mesmo depois de trocar a pasta do documento. Nunca lê URLs ou caminhos externos
-    indicados por um projeto; só a importação explícita aceita um arquivo externo.
+    The cache survives Save As, so deleting an image can be undone even after
+    the document's folder changes. Never reads URLs or external paths named by a
+    project; only an explicit import accepts an external file.
     """
 
     def __init__(self, root: Path | None = None) -> None:
-        """Associa o documento à pasta em que seus recursos são encontrados."""
+        """Bind the document to the folder where its assets are found."""
         self.root = root.resolve() if root else None
         self._cache: dict[str, bytes] = {}
 
     @staticmethod
     def _inside(root: Path, source: str) -> Path:
-        """Recusa caminhos absolutos, travessia e links que escapem do projeto."""
+        """Reject absolute paths, traversal and links that escape the project."""
         parts = PurePosixPath(source)
         if (
             parts.is_absolute()
@@ -37,45 +38,45 @@ class AssetStore:
             or not parts.parts
             or parts.parts[0] != "assets"
         ):
-            raise StorageError("O recurso precisa estar dentro da pasta assets do projeto.")
+            raise StorageError(tr("The asset must be inside the project's assets folder."))
         path = (root / source).resolve()
         if not path.is_relative_to(root.resolve()):
-            raise StorageError("O caminho da imagem aponta para fora do projeto.")
+            raise StorageError(tr("The image path points outside the project."))
         return path
 
     def import_image(self, path: Path) -> str:
-        """Valida PNG/JPEG/WebP/SVG e reserva uma cópia identificada pelo conteúdo."""
+        """Validate PNG/JPEG/WebP/SVG and reserve a copy identified by its content."""
         try:
             data = path.read_bytes()
         except OSError as exc:
-            raise StorageError(f"Não foi possível ler a imagem: {exc}") from exc
+            raise StorageError(tr("Could not read the image: {error}").format(error=exc)) from exc
         buffer = QBuffer()
         buffer.setData(QByteArray(data))
         buffer.open(QIODevice.OpenModeFlag.ReadOnly)
         reader = QImageReader(buffer)
         format_name = bytes(reader.format()).decode("ascii", errors="replace").lower()
         if format_name not in {"png", "jpeg", "jpg", "webp", "svg"} or reader.read().isNull():
-            raise StorageError("Escolha uma imagem PNG, JPEG, WebP ou SVG válida.")
+            raise StorageError(tr("Choose a valid PNG, JPEG, WebP or SVG image."))
         extension = "jpg" if format_name == "jpeg" else format_name
         relative = f"assets/{hashlib.sha256(data).hexdigest()}.{extension}"
         self._cache[relative] = data
         return relative
 
     def read(self, source: str) -> bytes:
-        """Lê uma imagem confinada ao projeto ou já importada nesta sessão."""
+        """Read an image confined to the project or already imported in this session."""
         if source in self._cache:
             return self._cache[source]
         if self.root is None:
-            raise StorageError("Salve o projeto ou selecione a imagem novamente.")
+            raise StorageError(tr("Save the project or select the image again."))
         try:
             data = self._inside(self.root, source).read_bytes()
         except OSError as exc:
-            raise StorageError(f"Imagem não encontrada: {source}") from exc
+            raise StorageError(tr("Image not found: {source}").format(source=source)) from exc
         self._cache[source] = data
         return data
 
     def write_referenced(self, root: Path, sources: set[str]) -> None:
-        """Copia recursos antes do JSON, sem substituir arquivos de conteúdo diferente."""
+        """Copy assets before the JSON, never replacing files with different content."""
         root = root.resolve()
         for source in sorted(sources):
             data = self.read(source)
@@ -85,7 +86,9 @@ class AssetStore:
                 if destination.exists():
                     if destination.read_bytes() != data:
                         raise StorageError(
-                            f"Já existe outra imagem em {source}; escolha outra pasta de destino."
+                            tr(
+                                "Another image already exists at {source}; choose another destination folder."
+                            ).format(source=source)
                         )
                     continue
                 destination.parent.mkdir(parents=True, exist_ok=True)
@@ -94,10 +97,14 @@ class AssetStore:
                     stream.write(data)
                     stream.flush()
                     os.fsync(stream.fileno())
-                # Um link atômico não substitui um arquivo criado por outro processo.
+                # An atomic link never replaces a file created by another process.
                 os.link(temporary, destination)
             except OSError as exc:
-                raise StorageError(f"Não foi possível copiar a imagem {source}: {exc}") from exc
+                raise StorageError(
+                    tr("Could not copy the image {source}: {error}").format(
+                        source=source, error=exc
+                    )
+                ) from exc
             finally:
                 if temporary is not None:
                     temporary.unlink(missing_ok=True)

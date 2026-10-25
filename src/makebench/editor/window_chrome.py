@@ -1,26 +1,27 @@
-"""Decoração de edição Qt desenhada pelo estilo nativo, sem tema próprio."""
+"""Qt editing decoration drawn by the native style, with no theme of our own."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QWidget, QStyle, QStyleOptionTitleBar
+from makebench.i18n import tr
 
 
 class QtWindowChrome(QWidget):
-    """Usa a mesma primitiva de barra de título do Qt instalado no desktop."""
+    """Use the same title bar primitive as the Qt installed on the desktop."""
 
     def __init__(self, root, parent=None):
-        """Os botões de janela são visuais no canvas; não fecham a ferramenta de edição."""
+        """Window buttons are visual on the canvas; they never close the editing tool."""
         super().__init__(parent)
         self.root = root
         self.setFixedHeight(self.style().pixelMetric(QStyle.PixelMetric.PM_TitleBarHeight))
-        self.setAccessibleName("Barra de título da janela")
+        self.setAccessibleName(tr("Window title bar"))
 
     def paintEvent(self, event):
-        """Título, ícone e controles de janela seguem QStyle e QPalette nativos."""
+        """Title, icon and window controls follow the native QStyle and QPalette."""
         option = QStyleOptionTitleBar()
         option.initFrom(self)
         option.rect = self.rect()
-        option.text = self.root.properties.get("title", "Aplicativo")
+        option.text = self.root.properties.get("title", tr("Application"))
         option.titleBarFlags = (
             Qt.WindowType.Window
             | Qt.WindowType.WindowSystemMenuHint

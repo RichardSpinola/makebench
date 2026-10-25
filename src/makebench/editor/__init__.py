@@ -1,1 +1,1 @@
-"""Interface Qt do editor; não deve conter regras de persistência."""
+"""The editor's Qt interface; must not contain persistence rules."""

@@ -1,4 +1,4 @@
-"""Orquestra testes reais no convidado; nunca instala artefatos no host."""
+"""Orchestrate real tests in the guest; never installs artifacts on the host."""
 
 import argparse
 import hashlib
@@ -10,7 +10,7 @@ from machine import Machine
 
 
 def main():
-    """Copia artefato e rotina; traz evidências reais inclusive quando o teste falha."""
+    """Copy the artifact and routine; bring back real evidence even when the test fails."""
     parser = argparse.ArgumentParser()
     parser.add_argument("machine", type=Path)
     parser.add_argument("artifact", type=Path)
@@ -23,7 +23,7 @@ def main():
     parser.add_argument("--quick-close", action="store_true")
     args = parser.parse_args()
     if (args.output / "results.json").exists():
-        raise RuntimeError("Escolha uma pasta nova para não sobrescrever evidências anteriores.")
+        raise RuntimeError("Choose a new folder so earlier evidence is not overwritten.")
     machine = Machine(args.machine)
     root = "/home/qa/case-" + args.backend + "-" + args.format
     machine.ssh("mkdir -p " + shlex.quote(root))

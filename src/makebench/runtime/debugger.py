@@ -1,4 +1,4 @@
-"""Depuração do snapshot Python, com comandos concorrentes e inspeção sem eval."""
+"""Debugging the Python snapshot, with concurrent commands and inspection without eval."""
 
 from __future__ import annotations
 import queue
@@ -6,17 +6,18 @@ import sys
 import threading
 from collections import deque
 from itertools import islice
+from makebench.i18n import tr
 
 
 class DebugStopped(BaseException):
-    """Interrompe o worker inclusive se o projeto captura Exception."""
+    """Stop the worker even if the project catches Exception."""
 
 
 def inspect_value(value, depth=0, budget=None):
-    """Serializa valores nativos sem chamar repr, propriedades ou código do projeto."""
+    """Serialize native values without calling repr, properties or project code."""
     budget = [1000] if budget is None else budget
     if budget[0] <= 0:
-        return "<limite de inspeção>"
+        return "<" + tr("inspection limit") + ">"
     budget[0] -= 1
     kind = type(value)
     if kind in (str, int, float, bool, type(None)):
@@ -27,7 +28,7 @@ def inspect_value(value, depth=0, budget=None):
 
             return value if math.isfinite(value) else str(value)
         if kind is int and value.bit_length() > 1024:
-            return "<inteiro grande>"
+            return "<" + tr("large integer") + ">"
         return value
     if depth >= 3:
         return "<" + type.__getattribute__(kind, "__name__")[:100] + ">"
@@ -43,10 +44,10 @@ def inspect_value(value, depth=0, budget=None):
 
 
 class Debugger:
-    """Controla pausas apenas em fontes do projeto no worker principal."""
+    """Pause only in project sources in the main worker."""
 
     def __init__(self, send):
-        """Prepara sincronização; configuração explícita habilita o rastreamento."""
+        """Prepare synchronization; an explicit configuration enables tracing."""
         self.send = send
         self.condition = threading.Condition()
         self.enabled = False
@@ -66,7 +67,7 @@ class Debugger:
         self.last_location = None
 
     def configure(self, config, source_filename, generated, context, file_names=None):
-        """Associa mapas do snapshot, sem aceitar avaliação ou fontes adicionais."""
+        """Bind the snapshot maps, never accepting evaluation or extra sources."""
         self.enabled = bool(config.get("enabled"))
         self.file_names = file_names or {source_filename: "@actions"}
         self.files = {*self.file_names, "<makebench-generated>"}
@@ -77,7 +78,7 @@ class Debugger:
         self.command({"action": "breakpoints", "items": config.get("breakpoints", [])})
 
     def command(self, message):
-        """Recebe comandos da thread de transporte mesmo com o worker aguardando UI."""
+        """Receive commands from the transport thread even while the worker waits for the UI."""
         action = message.get("action")
         with self.condition:
             if action == "breakpoints":
@@ -102,7 +103,7 @@ class Debugger:
             self.condition.notify_all()
 
     def frame_depth(self, frame):
-        """Conta apenas chamadas pertencentes às fontes autorizadas do snapshot."""
+        """Count only calls that belong to the snapshot's authorized sources."""
         count = 0
         while frame:
             count += frame.f_code.co_filename in self.files
@@ -110,7 +111,7 @@ class Debugger:
         return count
 
     def location(self, frame):
-        """Resolve linha própria ou ID de bloco no código gerado do snapshot."""
+        """Resolve your own line or a block ID in the snapshot's generated code."""
         if frame.f_code.co_filename == "<makebench-generated>":
             flow, block = self.lines.get(frame.f_lineno, (self.flow, None))
             if block is None and frame.f_code.co_name == "_value":
@@ -133,7 +134,7 @@ class Debugger:
         }
 
     def snapshot(self, frame, reason):
-        """Captura pilha e dados limitados; nenhuma expressão é avaliada."""
+        """Capture the stack and bounded data; no expression is evaluated."""
         stack = []
         current = frame
         budget = [1000]
@@ -168,7 +169,7 @@ class Debugger:
         }
 
     def checkpoint(self, frame=None, waiting=False):
-        """Atende pausa/cancelamento, inclusive dentro de uma espera por resposta da UI."""
+        """Honor pause/cancel, including while waiting for a UI reply."""
         if self.stopping:
             raise DebugStopped()
         if not self.enabled:
@@ -180,7 +181,7 @@ class Debugger:
             self.pause(frame, "pause")
 
     def pause(self, frame, reason):
-        """Suspende o worker sem bloquear o leitor de comandos ou a interface."""
+        """Suspend the worker without blocking the command reader or the interface."""
         self.last_frame = frame
         with self.condition:
             self.paused = True
@@ -193,7 +194,7 @@ class Debugger:
         self.send({"type": "debug", "state": "running"})
 
     def trace(self, frame, event, arg):
-        """Rastreia linhas próprias e instruções mapeadas; bibliotecas ficam fora."""
+        """Trace your own lines and mapped statements; libraries are left out."""
         if not self.enabled or frame.f_code.co_filename not in self.files:
             return None
         if event != "line":
@@ -239,15 +240,15 @@ class Debugger:
 
 
 class WorkerTransport:
-    """Um leitor proprietário separa comandos de depuração de eventos e respostas."""
+    """A dedicated reader separates debug commands from events and replies."""
 
     def __init__(self, receive, debugger):
-        """Inicia leitor somente após o snapshot; entrada é protocolo JSON privado."""
+        """Start the reader only after the snapshot; input is a private JSON protocol."""
         self.queue = queue.Queue()
         self.debugger = debugger
 
         def read():
-            """Desvia comandos sem consumir respostas aguardadas pelo contexto."""
+            """Divert commands without consuming replies the context is waiting for."""
             try:
                 while True:
                     value = receive()
@@ -270,7 +271,7 @@ class WorkerTransport:
         self.deferred = deque()
 
     def receive(self, response=None):
-        """Espera por tipo/ID, preservando outras mensagens e atendendo Pausar/Parar."""
+        """Wait by type/ID, keeping other messages and honoring Pause/Stop."""
         if response is None and self.deferred:
             return self.deferred.popleft()
         while True:

@@ -1,11 +1,11 @@
-"""Transações de apresentação: uma edição não mostra painéis intermediários vazios."""
+"""Presentation transactions: one edit never shows empty intermediate panels."""
 
 from contextlib import contextmanager
 
 
 @contextmanager
 def hold_updates(widget):
-    """Agrupa repinturas e respeita uma transação externa já em andamento."""
+    """Group repaints and respect an external transaction already in progress."""
     enabled = widget.updatesEnabled()
     if enabled:
         widget.setUpdatesEnabled(False)

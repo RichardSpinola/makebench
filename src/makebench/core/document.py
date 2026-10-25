@@ -1,4 +1,4 @@
-"""Documento sem interface (ferramentas e testes), histórico e recuperação, sem execução implícita."""
+"""Headless document (tools and tests), history and recovery, with no implicit execution."""
 
 import base64
 import json
@@ -12,10 +12,10 @@ from makebench.core.assets import AssetStore
 
 
 class Document:
-    """Única autoridade de dados; widgets nunca substituem silenciosamente o modelo."""
+    """Single data authority; widgets never silently replace the model."""
 
     def __init__(self, project=None, path=None):
-        """Lê apenas JSON, imagens e texto Python; não importa o arquivo próprio."""
+        """Read only JSON, images and Python text; never imports the user's file."""
         self.path = Path(path).resolve() if path else None
         self.project = project or (load_project(self.path) if self.path else Project.empty())
         self.source = SourceBuffer.load(self.path)
@@ -25,11 +25,11 @@ class Document:
 
     @property
     def dirty(self):
-        """Inclui fonte Python e alterações estruturais no mesmo aviso de fechamento."""
+        """Include Python source and structural changes in the same close warning."""
         return self.history.dirty or self.source.dirty
 
     def edit(self, change):
-        """Valida atomicamente uma alteração e conserva IDs/extensões desconhecidas."""
+        """Validate a change atomically and keep IDs/unknown extensions."""
         before = self.project.to_dict()
         try:
             change(self.project)
@@ -40,7 +40,7 @@ class Document:
             raise
 
     def save(self, path=None):
-        """Usa o mesmo caminho do editor; preserva bytes/mtime do JSON sem edição."""
+        """Use the editor's save path; keep JSON bytes/mtime when unedited."""
         target = Path(path or self.path).resolve()
         self.saved, backup = save_workspace(
             self.project,
@@ -54,7 +54,7 @@ class Document:
         return backup
 
     def recovery(self, path):
-        """Grava snapshot inerte, incluindo texto ainda com erro de sintaxe e imagens."""
+        """Write an inert snapshot, including text with syntax errors and images."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         value = {
@@ -73,7 +73,7 @@ class Document:
 
     @classmethod
     def recover(cls, path):
-        """Abre snapshot sem executar código nem substituir o projeto de origem."""
+        """Open a snapshot without running code or replacing the source project."""
         value = json.loads(Path(path).read_text(encoding="utf-8"))
         doc = cls(Project.from_dict(value["project"]))
         from .source import SourceText

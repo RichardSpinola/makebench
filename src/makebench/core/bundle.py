@@ -1,4 +1,4 @@
-"""Compartilhamento de documentos e recursos, sempre como dados inertes."""
+"""Sharing documents and assets, always as inert data."""
 
 import json
 from pathlib import Path, PurePosixPath
@@ -7,12 +7,13 @@ import zipfile
 from .project import ProjectError
 from .storage import load_project, save_project
 from .source import source_path
+from makebench.i18n import tr
 
 MAX_BUNDLE_SIZE = 100 * 1024 * 1024
 
 
 def write_bundle(project, source, read_asset, destination):
-    """Cria ZIP portátil; não inclui arquivos arbitrários da pasta do usuário."""
+    """Create a portable ZIP; never includes arbitrary files from the user's folder."""
     destination = Path(destination)
     temporary = destination.with_name("." + destination.name + ".tmp")
     try:
@@ -27,15 +28,17 @@ def write_bundle(project, source, read_asset, destination):
             files = source_files(source)
             validate_manifest(list(project.python_files))
             if set(files) - {ENTRY_FILE} != set(project.python_files):
-                raise ProjectError("O manifesto e os módulos não correspondem.")
+                raise ProjectError(tr("The manifest and the modules do not match."))
             for name, text in files.items():
                 if name != ENTRY_FILE:
                     archive.writestr(name, text)
             for name in sorted(project.asset_paths()):
                 archive.writestr(name, read_asset(name))
             archive.writestr(
-                "LEIA-ME.txt",
-                "Projeto Makebench. Abra project.makebench.json.\nAbrir não executa código. Testar executa Python e scripts com suas permissões.\n",
+                "README.txt",
+                tr(
+                    "Makebench project. Open project.makebench.json.\nOpening never runs code. Testing runs Python and scripts with your permissions.\n"
+                ),
             )
         temporary.replace(destination)
     finally:
@@ -43,17 +46,17 @@ def write_bundle(project, source, read_asset, destination):
 
 
 def read_bundle(source, destination):
-    """Extrai um projeto em pasta nova; recusa escapes, links e volume excessivo."""
+    """Extract a project into a new folder; reject escapes, links and excessive size."""
     destination = Path(destination)
     if destination.exists() and any(destination.iterdir()):
-        raise ProjectError("Escolha uma pasta vazia para extrair o projeto.")
+        raise ProjectError(tr("Choose an empty folder to extract the project."))
     try:
         with zipfile.ZipFile(source) as archive:
             members = archive.infolist()
             if len(members) > 2000 or sum(item.file_size for item in members) > MAX_BUNDLE_SIZE:
-                raise ProjectError("O projeto excede o limite de 100 MiB ou 2000 arquivos.")
+                raise ProjectError(tr("The project exceeds the limit of 100 MiB or 2000 files."))
             if "project.makebench.json" not in archive.namelist():
-                raise ProjectError("O pacote não contém project.makebench.json.")
+                raise ProjectError(tr("The package does not contain project.makebench.json."))
             from .project import Project
 
             project = Project.from_dict(json.loads(archive.read("project.makebench.json")))
@@ -69,27 +72,29 @@ def read_bundle(source, destination):
                     or stat.S_ISLNK(item.external_attr >> 16)
                     or item.filename in names
                 ):
-                    raise ProjectError("O arquivo contém um caminho ou link não permitido.")
+                    raise ProjectError(tr("The file contains a path or link that is not allowed."))
                 names.add(item.filename)
                 if not (
                     item.is_dir()
                     and path.parts[0] == "assets"
                     or item.filename
-                    in {"project.makebench.json", "project.actions.py", "LEIA-ME.txt"}
+                    in {"project.makebench.json", "project.actions.py", "README.txt", "LEIA-ME.txt"}
                     or len(path.parts) > 1
                     and path.parts[0] == "assets"
                     or item.filename in allowed_modules
                     or item.is_dir()
                     and any(name.startswith(item.filename) for name in allowed_modules)
                 ):
-                    raise ProjectError("O pacote contém arquivos fora do projeto e de assets.")
+                    raise ProjectError(
+                        tr("The package contains files outside the project and assets.")
+                    )
             if "project.makebench.json" not in names:
-                raise ProjectError("O pacote não contém project.makebench.json.")
+                raise ProjectError(tr("The package does not contain project.makebench.json."))
             from .project import Project
 
             Project.from_dict(json.loads(archive.read("project.makebench.json")))
             if not allowed_modules <= names:
-                raise ProjectError("O pacote não contém todos os módulos declarados.")
+                raise ProjectError(tr("The package does not contain all declared modules."))
             destination.mkdir(parents=True, exist_ok=True)
             for item in members:
                 path = destination / item.filename
@@ -102,5 +107,5 @@ def read_bundle(source, destination):
 
                         shutil.copyfileobj(stream, output)
     except (zipfile.BadZipFile, UnicodeError, ValueError) as exc:
-        raise ProjectError(f"Pacote de projeto inválido: {exc}") from exc
+        raise ProjectError(tr("Invalid project package: {error}").format(error=exc)) from exc
     return destination / "project.makebench.json"

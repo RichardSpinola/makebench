@@ -1,4 +1,4 @@
-"""Validação GTK real: assistente, API ctx, tarefas, erro e fonte exportada."""
+"""Real GTK validation: wizard, ctx API, tasks, error and exported source."""
 
 import json
 import os
@@ -16,7 +16,7 @@ from makebench.gtk_runtime.application import GtkRuntime
 
 
 def check_runtime():
-    """Exercita três estados, duas janelas, pergunta GTK e tarefa com stdout/stderr."""
+    """Exercise three states, two windows, a GTK question and a task with stdout/stderr."""
     with tempfile.TemporaryDirectory(prefix="makebench-gtk-runtime-test-") as directory:
         root = Path(directory)
         p = welcome_template()
@@ -60,7 +60,7 @@ def check_runtime():
         failure = []
 
         def tick():
-            """Responde ao diálogo por API GTK e avança somente depois de cada fluxo."""
+            """Answer the dialog through the GTK API and advance only after each flow."""
             try:
                 if runtime.dialogs:
                     dialog = next(iter(runtime.dialogs))
@@ -80,7 +80,7 @@ def check_runtime():
                 if step[0] == 1:
                     assert hasattr(
                         runtime.views[p.root.id].widgets[launch.id], "_makebench_label"
-                    ), "O botão perdeu seu ícone"
+                    ), "The button lost its icon"
                     assert any(
                         m["type"] == "error" and "3" in m.get("message", "") for m in messages
                     ), messages
@@ -89,11 +89,9 @@ def check_runtime():
                         for m in messages
                     )
                     text = runtime.views[p.root.id].read(output.id, "text")
-                    assert "saida" in text and "aviso" in text and "[Erro]" in text, text
+                    assert "saida" in text and "aviso" in text and "[Error]" in text, text
                     step[0] = 2
-                next_button = next(
-                    n for n in p.root.walk() if n.properties.get("text") == "Próximo"
-                )
+                next_button = next(n for n in p.root.walk() if n.properties.get("text") == "Next")
                 if step[0] in (2, 3, 4):
                     runtime.queue_event(next_button.id)
                     step[0] += 1
@@ -110,7 +108,7 @@ def check_runtime():
         runtime.GLib.timeout_add(100, tick)
 
         def timeout():
-            """Falha não deixa a aplicação de teste executando indefinidamente."""
+            """A failure does not leave the test application running forever."""
             if step[0] != 6:
                 failure.append(AssertionError("GTK excedeu 15 segundos."))
                 runtime.stop()
@@ -124,18 +122,18 @@ def check_runtime():
             raise failure[0]
         assert step[0] == 6
         print(
-            "OK: GTK4 real, três etapas/duas janelas, ler/alterar, progresso, pergunta, stdout/stderr e origem de falha."
+            "OK: real GTK4, three steps/two windows, read/change, progress, question, stdout/stderr and failure origin."
         )
 
 
 def check_export():
-    """Executa fonte GTK fora do Makebench e confere encerramento na última janela."""
+    """Run the GTK source outside Makebench and check that it ends at the last window."""
     with tempfile.TemporaryDirectory(prefix="makebench-export-gtk-test-") as directory:
         root = Path(directory)
-        p = Project.empty("Exportação GTK")
+        p = Project.empty("GTK export")
         p.application = {
             "backend": "gtk",
-            "name": "Exportação GTK",
+            "name": "GTK export",
             "id": "br.exemplo.exportado",
             "version": "0.1.0",
             "icon": "assets/icon.svg",
@@ -162,7 +160,7 @@ def check_export():
         )
         assert result.returncode == 0, result.stderr
         assert (root / "app/executou.txt").read_text() == "GTK independente"
-        print("OK: fonte GTK executada fora do editor; encerramento da última janela.")
+        print("OK: GTK source run outside the editor; closing the last window ends it.")
 
 
 if __name__ == "__main__":

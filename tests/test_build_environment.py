@@ -1,4 +1,4 @@
-"""Preparação isolada: integridade das rodas, limites dos comandos e cancelamento."""
+"""Isolated preparation: wheel integrity, command limits and cancellation."""
 
 import hashlib
 import json
@@ -23,10 +23,10 @@ from makebench.core.build_environment import (
 
 
 class BuildEnvironmentTests(unittest.TestCase):
-    """Valida fronteiras que impedem builds parciais, rede implícita e cache alterado."""
+    """Validate the boundaries that prevent partial builds, implicit network and changed caches."""
 
     def setUp(self):
-        """Cache descartável não altera recibos nem ferramentas do proprietário."""
+        """A disposable cache never changes the owner's receipts or tools."""
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
@@ -35,7 +35,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.addCleanup(self.environment.stop)
 
     def test_receipt_query_is_readonly_and_container_mounts_only_stage(self):
-        """Abrir Publicar não inicia ferramentas e o build não monta a pasta pessoal."""
+        """Opening Publish starts no tools and the build never mounts the home folder."""
         root = self.root / "makebench/builders"
         root.mkdir(parents=True)
         (root / "tools.json").write_text(json.dumps({"image": IMAGE}))
@@ -56,7 +56,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertEqual(command[command.index("--volume") + 1], str(stage) + ":/work:rw,Z")
 
     def test_wheel_integrity_is_checked_before_copy(self):
-        """Dependência alterada entre preparação e construção é rejeitada."""
+        """A dependency changed between preparation and build is rejected."""
         p = Project.empty()
         p.application["backend"] = "qt"
         cache = flatpak_wheels(p)
@@ -69,11 +69,11 @@ class BuildEnvironmentTests(unittest.TestCase):
         copy_flatpak_wheels(p, self.root / "ok")
         self.assertEqual((self.root / "ok" / wheel.name).read_bytes(), wheel.read_bytes())
         wheel.write_bytes(b"alterado")
-        with self.assertRaisesRegex(ProjectError, "alterada"):
+        with self.assertRaisesRegex(ProjectError, "changed in the cache"):
             copy_flatpak_wheels(p, self.root / "falha")
 
     def test_python_dependencies_cannot_be_pip_options_or_urls(self):
-        """Preparação baixa rodas binárias por nomes, sem fontes ou hooks do projeto."""
+        """Preparation downloads binary wheels by name, with no project sources or hooks."""
         p = Project.empty()
         for dependency in [
             "--index-url=https://example.com",

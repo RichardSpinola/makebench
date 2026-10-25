@@ -1,4 +1,4 @@
-"""Auxiliar de QA: publica o endereço do barramento privado e inicia KWin virtual."""
+"""QA helper: publish the private bus address and start a virtual KWin."""
 
 import json
 import os

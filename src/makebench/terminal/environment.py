@@ -1,4 +1,4 @@
-"""Ambiente de processos externos de pacotes relocáveis, compartilhado por Qt/GTK."""
+"""Environment for external processes of relocatable packages, shared by Qt/GTK."""
 
 import json
 import os
@@ -7,11 +7,11 @@ import shutil
 
 
 def external_environment(program, base=None):
-    """Preserva bibliotecas empacotadas só para executáveis do próprio pacote.
+    """Keep bundled libraries only for the package's own executables.
 
-    Programas do sistema não devem receber PYTHONHOME, plugins Qt/GTK ou bibliotecas
-    de outra distribuição. PATH conserva os auxiliares do pacote, incluindo o
-    lançador de Python3, que estabelece seu próprio ambiente ao ser chamado.
+    System programs must not receive PYTHONHOME, Qt/GTK plugins or libraries from
+    another distribution. PATH keeps the package helpers, including the Python 3
+    launcher, which sets up its own environment when called.
     """
     environment = dict(os.environ if base is None else base)
     root = environment.get("MAKEBENCH_PORTABLE_ROOT")
@@ -31,6 +31,6 @@ def external_environment(program, base=None):
             environment.pop(key, None)
         else:
             environment[key] = value
-    # O Python3 do pacote é um lançador que configura seu runtime separadamente.
+    # The package's python3 is a launcher that sets up its runtime separately.
     environment["PATH"] = str(Path(root) / "usr/bin") + ":" + (original.get("PATH") or os.defpath)
     return environment

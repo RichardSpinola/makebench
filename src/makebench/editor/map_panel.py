@@ -1,4 +1,4 @@
-"""Mapa de interfaces reais e inspeção de transições derivadas dos mesmos blocos."""
+"""Map of real interfaces and inspection of transitions derived from the same blocks."""
 
 import json
 from PySide6.QtCore import Qt, QPointF, QTimer
@@ -31,13 +31,14 @@ from .map_view import NavigationView
 from .map_preview import ThumbnailCache
 from .map_connections import ConnectionDialog
 from .theme import manager, icon
+from makebench.i18n import ntr, tr
 
 
 class MapPanel(QWidget):
-    """Composição em miniatura, navegação por teclado e inspeção contextual no mesmo espaço."""
+    """Thumbnail composition, keyboard navigation and contextual inspection in one space."""
 
     def __init__(self, window):
-        """As miniaturas e preferências de grupos nunca viram outra fonte de dados do app."""
+        """Thumbnails and group preferences never become another data source for the app."""
         super().__init__()
         self.window = window
         self.nodes = {}
@@ -58,11 +59,11 @@ class MapPanel(QWidget):
         row.addWidget(self.summary, 1)
         self.interface_actions = []
         for symbol, label, callback in [
-            ("settings", "Aplicativo…", window.application_settings),
-            ("add", "Nova interface…", window.new_window_dialog),
-            ("logic", "Conectar…", self.connect_dialog),
-            ("map", "Organizar", self.organize),
-            ("fit", "Enquadrar tudo", self.fit),
+            ("settings", tr("Application…"), window.application_settings),
+            ("add", tr("New interface…"), window.new_window_dialog),
+            ("logic", tr("Connect…"), self.connect_dialog),
+            ("map", tr("Arrange"), self.organize),
+            ("fit", tr("Fit all"), self.fit),
         ]:
             button = QToolButton()
             button.setIcon(icon(symbol))
@@ -86,13 +87,13 @@ class MapPanel(QWidget):
         left.setContentsMargins(6, 2, 2, 4)
         left.setSpacing(6)
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Buscar interface…")
+        self.search.setPlaceholderText(tr("Search interfaces…"))
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(self.filter_outline)
         left.addWidget(self.search)
         self.outline = QTreeWidget()
         self.outline.setHeaderHidden(True)
-        self.outline.setAccessibleName("Interfaces, estados e transições")
+        self.outline.setAccessibleName(tr("Interfaces, states and transitions"))
         self.outline.itemSelectionChanged.connect(self.outline_selected)
         self.outline.itemActivated.connect(self.outline_open)
         self.outline.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -113,7 +114,7 @@ class MapPanel(QWidget):
         self.details.hide()
         self.splitter.setSizes([195, 850, 260])
         self.hint = QLabel(
-            "Selecione uma interface ou conexão para inspecionar. Duplo clique abre o Designer."
+            tr("Select an interface or connection to inspect it. Double-click opens the Designer.")
         )
         self.hint.hide()
         self.view.setToolTip(self.hint.text())
@@ -126,7 +127,7 @@ class MapPanel(QWidget):
         )
 
     def sync(self):
-        """Topologia e miniaturas têm invalidação independente; seleção e zoom sobrevivem."""
+        """Topology and thumbnails are invalidated separately; selection and zoom survive."""
         project = self.window.project
         empty = bool(project.metadata.get("empty_map"))
         self.summary.setText(
@@ -134,7 +135,7 @@ class MapPanel(QWidget):
             + " · "
             + project.application.get("backend", "qt").upper()
         )
-        self.summary.setToolTip("Mapa das janelas e estados do aplicativo")
+        self.summary.setToolTip(tr("Map of the application's windows and states"))
         for action in self.interface_actions:
             action.setEnabled(not empty)
         if getattr(self, "_project", None) != project.id:
@@ -148,7 +149,7 @@ class MapPanel(QWidget):
             "roots": [
                 (
                     r.id,
-                    r.properties.get("title", "Interface"),
+                    r.properties.get("title", tr("Interface")),
                     r.properties.get("initial_state", "@default"),
                     len(list(r.walk())),
                 )
@@ -182,7 +183,7 @@ class MapPanel(QWidget):
         self.previews.retain(set(self.nodes))
 
     def rebuild(self, edges, empty):
-        """Reconstrói só topologia alterada e mantém uma lista nativa acessível do mapa."""
+        """Rebuild only the changed topology and keep an accessible native list of the map."""
         thumbnails = {key: (node.thumbnail, node.preview_error) for key, node in self.nodes.items()}
         selected_edge = next(
             ((line.edge["flow"], line.edge["block"]) for line in self.edges if line.isSelected()),
@@ -211,8 +212,8 @@ class MapPanel(QWidget):
         project = self.window.project
         incoming = {e["target"] for e in edges if e["op"] == "open_window"}
         for row, root in enumerate(project.roots):
-            states = [{"id": "@default", "name": "Padrão"}, *project.states.get(root.id, [])]
-            title = root.properties.get("title", "Interface")
+            states = [{"id": "@default", "name": tr("Default")}, *project.states.get(root.id, [])]
+            title = root.properties.get("title", tr("Interface"))
             tree_root = QTreeWidgetItem([title])
             tree_root.setIcon(0, icon("window"))
             tree_root.setData(
@@ -232,7 +233,7 @@ class MapPanel(QWidget):
                     [
                         state["name"]
                         + (
-                            " · inicial"
+                            " · " + tr("initial")
                             if root.id == (project.entry_window or project.root.id)
                             and state["id"] == root.properties.get("initial_state", "@default")
                             else ""
@@ -248,7 +249,7 @@ class MapPanel(QWidget):
                     "id"
                 ] == root.properties.get("initial_state", "@default")
                 issue = (
-                    "Sem transição de entrada por blocos."
+                    tr("No incoming transition from blocks.")
                     if root.id != (project.entry_window or project.root.id)
                     and root.id not in incoming
                     else ""
@@ -258,10 +259,10 @@ class MapPanel(QWidget):
                     for f in project.editable_flows
                     if project.window_of(f["event"]["component"]).id == root.id
                 ):
-                    issue = "Há um comportamento incompleto nesta interface."
+                    issue = tr("There is an incomplete behavior in this interface.")
                 node = MapNode(
                     key,
-                    title + "\nJanela · " + state["name"],
+                    title + "\n" + tr("Window · {state}").format(state=state["name"]),
                     project.map_layout.get(
                         key, [column * (CARD_WIDTH + 70), row * (CARD_HEIGHT + 135)]
                     ),
@@ -289,7 +290,8 @@ class MapPanel(QWidget):
             header = GroupHeader(
                 ("▸ " if root.id in self.collapsed else "▾ ")
                 + title
-                + f" · {len(states)} estado(s)",
+                + " · "
+                + ntr("{count} state", "{count} states", len(states)).format(count=len(states)),
                 root.id,
                 self,
             )
@@ -315,13 +317,13 @@ class MapPanel(QWidget):
                 line.setSelected(True)
 
     def node_for(self, owner, state):
-        """Estados recolhidos usam o cartão representante, mantendo IDs reais no inspetor."""
+        """Collapsed states use the representative card, keeping real IDs in the inspector."""
         return self.nodes.get(owner + "|" + state) or next(
             (n for key, n in self.nodes.items() if key.startswith(owner + "|")), None
         )
 
     def add_edge(self, edge):
-        """A seta deriva exclusivamente de um bloco de navegação executável."""
+        """The arrow comes only from a runnable navigation block."""
         project = self.window.project
         for state in effective_edge_states(project, edge):
             source = self.node_for(edge["source"], state)
@@ -360,7 +362,7 @@ class MapPanel(QWidget):
             self.edges.append(line)
 
     def thumbnail_ready(self, key, image, error):
-        """Atualiza um único cartão, inclusive depois de editar texto ou trocar imagem."""
+        """Update a single card, including after editing text or swapping an image."""
         node = self.nodes.get(key)
         if node:
             if not image.isNull():
@@ -368,11 +370,12 @@ class MapPanel(QWidget):
             node.preview_error = error
             node.update()
             node.setToolTip(
-                node.label + ("\n" + error if error else "\nDuplo clique abre o Designer.")
+                node.label
+                + ("\n" + error if error else "\n" + tr("Double-click opens the Designer."))
             )
 
     def selection_changed(self):
-        """Clique simples inspeciona; abrir o Designer permanece uma ação explícita."""
+        """A single click inspects; opening the Designer stays an explicit action."""
         if self._syncing:
             return
         selected = self.view.scene().selectedItems()
@@ -383,7 +386,7 @@ class MapPanel(QWidget):
             self.outline.blockSignals(True)
             self.outline.setCurrentItem(self._outline_items.get(node.key))
             self.outline.blockSignals(False)
-            # Abrir o inspetor no mouse-down alteraria as coordenadas de um arraste.
+            # Opening the inspector on mouse-down would change a drag's coordinates.
             if not self.view.dragging_card:
                 self.show_details(node=node)
         elif edge:
@@ -393,31 +396,31 @@ class MapPanel(QWidget):
             self.details.hide()
 
     def clear_details(self):
-        """Destrói só o inspetor lateral; miniaturas e cena continuam disponíveis."""
+        """Destroy only the side inspector; thumbnails and scene stay available."""
         while self.detail_layout.count():
             item = self.detail_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
     def show_details(self, node=None, edge=None):
-        """Inspeção mostra origem/evento/destino e ações ligadas ao documento."""
+        """Inspection shows source/event/destination and actions tied to the document."""
         self.clear_details()
         self.details.show()
-        heading = QLabel("Transição" if edge else "Interface")
+        heading = QLabel(tr("Transition") if edge else tr("Interface"))
         font = heading.font()
         font.setBold(True)
         heading.setFont(font)
         self.detail_layout.addWidget(heading)
 
         def label(text):
-            """Campos de leitura aceitam nomes longos sem ampliar o painel."""
+            """Read-only fields accept long names without widening the panel."""
             field = QLabel(text)
             field.setWordWrap(True)
             field.setTextFormat(Qt.TextFormat.PlainText)
             self.detail_layout.addWidget(field)
 
         def action(text, callback):
-            """Cada ação usa os mesmos comandos do Designer e da Lógica."""
+            """Each action uses the same commands as the Designer and Logic."""
             button = QPushButton(text)
             button.clicked.connect(callback)
             self.detail_layout.addWidget(button)
@@ -430,40 +433,41 @@ class MapPanel(QWidget):
             label(
                 f"{root.properties.get('width', 640)} × {root.properties.get('height', 480)} · {self.window.project.application.get('backend', 'qt').upper()}"
             )
-            action("Abrir Designer", lambda: self.activate(node.key))
-            action("Editar ao iniciar", lambda: self.open_logic_for_node(node.key))
-            action("Definir como inicial", lambda: self.set_initial(node.key))
+            action(tr("Open Designer"), lambda: self.activate(node.key))
+            action(tr("Edit on start"), lambda: self.open_logic_for_node(node.key))
+            action(tr("Set as initial"), lambda: self.set_initial(node.key))
         else:
             flow, block = find_navigation_block(self.window.project, edge["flow"], edge["block"])
             if not flow or not block:
                 return
             owner = self.window.project.find(edge["source"])
-            label(owner.properties.get("title", "Interface") + " → " + edge["event"])
+            label(owner.properties.get("title", tr("Interface")) + " → " + edge["event"])
             target = self.window.project.find(edge["target"]) if edge["target"] else None
             if block["op"] == "go_state":
                 label(
-                    "Mudar para "
+                    tr("Change to")
+                    + " "
                     + next(
                         (
                             s["name"]
                             for s in self.window.project.states.get(owner.id, [])
                             if s["id"] == edge["target"]
                         ),
-                        "Padrão",
+                        tr("Default"),
                     )
                 )
             elif target:
-                label("Destino: " + target.display_name)
+                label(tr("Destination: {name}").format(name=target.display_name))
             else:
-                label("Fechar esta janela")
+                label(tr("Close this window"))
             if block["op"] in {"go_state", "open_window"}:
-                action("Editar transição…", lambda: self.edit_edge(edge))
-            action("Ver na Lógica", lambda: self.window.navigate_to_item("flow", edge["flow"]))
-            action("Ver Python gerado", lambda: self.open_edge_code(edge))
-            action("Remover transição", lambda: self.remove_edge(edge))
+                action(tr("Edit transition…"), lambda: self.edit_edge(edge))
+            action(tr("Show in Logic"), lambda: self.window.navigate_to_item("flow", edge["flow"]))
+            action(tr("Show generated Python"), lambda: self.open_edge_code(edge))
+            action(tr("Remove transition"), lambda: self.remove_edge(edge))
 
     def filter_outline(self, _text=None):
-        """Busca por janela/estado com ancestrais visíveis e identidade preservada."""
+        """Search by window/state with visible ancestors and preserved identity."""
         query = self.search.text().casefold()
         for index in range(self.outline.topLevelItemCount()):
             root = self.outline.topLevelItem(index)
@@ -476,7 +480,7 @@ class MapPanel(QWidget):
             root.setHidden(not visible)
 
     def outline_selected(self):
-        """A lista nativa também seleciona cartões recolhidos, sem exigir arraste."""
+        """The native list also selects collapsed cards, without requiring a drag."""
         if self._syncing:
             return
         item = self.outline.currentItem()
@@ -490,13 +494,13 @@ class MapPanel(QWidget):
                 self.view.ensureVisible(node)
 
     def outline_open(self, item, _column=0):
-        """Enter ou ativação abre exatamente a composição selecionada."""
+        """Enter or activation opens exactly the selected composition."""
         key = item.data(0, Qt.ItemDataRole.UserRole)
         if key:
             self.activate(key)
 
     def outline_menu(self, point):
-        """Alternativa por teclado/mouse aos gestos do espaço gráfico."""
+        """Keyboard/mouse alternative to gestures in the graphics area."""
         item = self.outline.itemAt(point)
         key = item.data(0, Qt.ItemDataRole.UserRole) if item else None
         if key:
@@ -505,49 +509,51 @@ class MapPanel(QWidget):
             menu.exec(self.outline.viewport().mapToGlobal(point))
 
     def populate_context(self, menu, key):
-        """Ações contextuais preservam o escopo da janela sob o cursor."""
+        """Contextual actions keep the scope of the window under the cursor."""
         owner, state = key.split("|", 1)
-        menu.addAction("Abrir Designer", lambda: self.activate(key))
-        menu.addAction("Editar ao iniciar", lambda: self.open_logic_for_node(key))
-        menu.addAction("Definir como inicial", lambda: self.set_initial(key))
+        menu.addAction(tr("Open Designer"), lambda: self.activate(key))
+        menu.addAction(tr("Edit on start"), lambda: self.open_logic_for_node(key))
+        menu.addAction(tr("Set as initial"), lambda: self.set_initial(key))
         menu.addSeparator()
-        menu.addAction("Atualizar prévia", lambda: self.refresh_thumbnail(key))
-        menu.addAction("Expandir/recolher estados", lambda: self.toggle_group(owner))
-        menu.addAction("Criar estado…", lambda: self.create_state(key))
-        menu.addAction("Duplicar interface…", lambda: self.duplicate_interface(owner))
+        menu.addAction(tr("Refresh preview"), lambda: self.refresh_thumbnail(key))
+        menu.addAction(tr("Expand/collapse states"), lambda: self.toggle_group(owner))
+        menu.addAction(tr("Create state…"), lambda: self.create_state(key))
+        menu.addAction(tr("Duplicate interface…"), lambda: self.duplicate_interface(owner))
 
     def create_state(self, key):
-        """Seleciona o dono antes de usar o mesmo comando de criação do editor."""
+        """Select the owner before using the editor's same creation command."""
         self.window.activate_window(*key.split("|", 1))
         self.window.new_state_dialog()
 
     def duplicate_interface(self, owner):
-        """Duplicação usa remapeamento existente de componentes, estados e fluxos."""
+        """Duplication uses the existing remapping of components, states and flows."""
         from PySide6.QtWidgets import QInputDialog
         from makebench.core.navigation import add_window
 
         title, ok = QInputDialog.getText(
             self,
-            "Duplicar interface",
-            "Nome",
-            text=self.window.project.find(owner).properties.get("title", "Interface") + " — cópia",
+            tr("Duplicate interface"),
+            tr("Name"),
+            text=self.window.project.find(owner).properties.get("title", tr("Interface"))
+            + " — "
+            + tr("copy"),
         )
         if ok and title.strip():
             self.window._edit(lambda: add_window(self.window.project, title, owner))
 
     def set_initial(self, key):
-        """Janela e estado iniciais mudam juntos em uma única entrada de histórico."""
+        """The start window and state change together in a single history entry."""
         owner, state = key.split("|", 1)
 
         def change():
-            """Persiste o destino real de inicialização, sem tabela paralela do mapa."""
+            """Persist the real start destination, with no parallel map table."""
             self.window.project.entry_window = owner
             self.window.project.find(owner).properties["initial_state"] = state
 
         self.window._edit(change)
 
     def toggle_group(self, owner):
-        """Recolher altera só a preferência visual deste projeto."""
+        """Collapsing changes only this project's visual preference."""
         if owner in self.collapsed:
             self.collapsed.remove(owner)
         else:
@@ -558,29 +564,29 @@ class MapPanel(QWidget):
         self.sync()
 
     def activate(self, key):
-        """Duplo clique entra no estado exato do cartão."""
+        """Double-click enters the card's exact state."""
         owner, state = key.split("|", 1)
         self.window.activate_window(owner, state)
-        self.window.set_mode("Design")
+        self.window.set_mode("design")
 
     def open_logic_for_node(self, key):
-        """A programação de abertura é ligada à janela correta."""
+        """The opening logic is bound to the correct window."""
         owner, state = key.split("|", 1)
         self.window.activate_window(owner, state)
         self.window.edit_logic(owner)
 
     def open_edge_code(self, edge):
-        """Linha gerada aponta ao bloco que produz esta conexão."""
+        """The generated line points to the block that produces this connection."""
         line = self.window.logic.generated.lines.get((edge["flow"], edge["block"]), 1)
         self.window.show_generated_line(line)
 
     def connect_dialog(self):
-        """Uma única janela substitui escolhas soltas de origem e destino."""
+        """A single dialog replaces loose source and destination choices."""
         if self.nodes:
             self.connect_nodes(self.selected_key or next(iter(self.nodes)), None)
 
     def connect_nodes(self, source, target):
-        """Arraste e botão usam o mesmo editor de navegação e a mesma semântica."""
+        """Dragging and the button use the same navigation editor and semantics."""
         dialog = ConnectionDialog(self, source, target)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self.window._edit(
@@ -594,7 +600,7 @@ class MapPanel(QWidget):
             )
 
     def edit_edge(self, edge):
-        """Editar uma ligação altera o bloco original, inclusive dentro de uma condição."""
+        """Editing a link changes the original block, even inside a condition."""
         flow, block = find_navigation_block(self.window.project, edge["flow"], edge["block"])
         if not block:
             return
@@ -622,13 +628,13 @@ class MapPanel(QWidget):
             )
 
     def remove_edge(self, edge):
-        """Remove somente a ação de navegação, com suporte a desfazer/refazer."""
+        """Remove only the navigation action, with undo/redo support."""
         self.window._edit(
             lambda: remove_navigation_block(self.window.project, edge["flow"], edge["block"])
         )
 
     def organize(self):
-        """Reposiciona cartões em linhas por janela, preservando todas as ligações."""
+        """Lay cards out in rows per window, keeping every link."""
         positions = {}
         for row, root in enumerate(self.window.project.roots):
             for col, state in enumerate(
@@ -643,7 +649,7 @@ class MapPanel(QWidget):
         self.fit()
 
     def fit(self):
-        """Enquadra todos os cartões sem tornar miniaturas desproporcionalmente grandes."""
+        """Fit every card without making thumbnails disproportionately large."""
         if not self.nodes:
             self.view.resetTransform()
             self.view.centerOn(self.view.sceneRect().center())
@@ -658,14 +664,14 @@ class MapPanel(QWidget):
         self.view.zoom_changed.emit(self.view.transform().m11())
 
     def showEvent(self, event):
-        """O primeiro enquadramento espera os painéis obterem dimensões reais."""
+        """The first fit waits for the panels to get real sizes."""
         super().showEvent(event)
         if self._fit_project != self.window.project.id:
             self._fit_project = self.window.project.id
             QTimer.singleShot(0, self.fit)
 
     def refresh_edges(self):
-        """Reposiciona ligações durante o arraste sem reconstruir os cartões nativos."""
+        """Reposition links while dragging without rebuilding the native cards."""
         for line in self.edges:
             self.view.scene().removeItem(line)
         self.edges = []
@@ -673,6 +679,6 @@ class MapPanel(QWidget):
             self.add_edge(edge)
 
     def refresh_thumbnail(self, key):
-        """Atualização manual só invalida esta composição, sem executar o aplicativo."""
+        """A manual refresh only invalidates this composition, never running the application."""
         self.previews.invalidate(key)
         self.sync()

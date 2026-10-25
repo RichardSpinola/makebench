@@ -1,4 +1,4 @@
-"""Entrada confiável do pacote relocável; não lê nem importa projetos na preparação."""
+"""Trusted entry point of the relocatable package; never reads or imports projects while preparing."""
 
 from pathlib import Path
 import hashlib
@@ -9,7 +9,7 @@ import sys
 
 
 def main():
-    """Configura dados/typelibs relativos ao pacote e inicia o aplicativo explicitamente."""
+    """Set package-relative data/typelibs and start the application explicitly."""
     root = Path(__file__).resolve().parent
     usr = root / "usr"
     site = usr / "lib/python3.12/site-packages"
@@ -35,7 +35,7 @@ def main():
         original[key] = environment.get("MAKEBENCH_ORIGINAL_" + key) or None
     environment["MAKEBENCH_ORIGINAL_ENV"] = json.dumps(original)
     environment["MAKEBENCH_PORTABLE_ROOT"] = str(root)
-    # O Python incluído usa certificados confiados pela distribuição de destino.
+    # The bundled Python uses the certificates trusted by the target distribution.
     if not environment.get("SSL_CERT_FILE"):
         for candidate in (
             "/etc/ssl/certs/ca-certificates.crt",

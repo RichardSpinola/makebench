@@ -1,4 +1,4 @@
-"""Aceitação real Qt/GTK: prévia inerte, terminal, pilha, teclas e encerramento."""
+"""Real Qt/GTK acceptance: inert preview, terminal, stack, keys and shutdown."""
 
 import argparse
 import json
@@ -10,7 +10,7 @@ import time
 
 
 def main():
-    """Executa o exemplo versionado em display real; salva evidências e resultados."""
+    """Run the versioned example on a real display; save evidence and results."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=("qt", "gtk"), required=True)
     parser.add_argument("--theme", choices=("light", "dark"), default="dark")
@@ -34,7 +34,7 @@ def main():
     config = {"enabled": True, "breakpoints": [{"file": "source", "line": 10}]}
 
     def observe(message, send):
-        """A primeira parada entra na função e a segunda alcança a linha própria."""
+        """The first stop steps into the function and the second reaches the own line."""
         if message.get("type") == "error":
             errors.append(message)
         if message.get("type") == "debug" and message.get("state") == "paused":
@@ -64,7 +64,7 @@ def main():
             assert not preview.terminal.running
             assert preview.start_terminal() is None
             preview.close()
-            results.append("Prévia sem processos")
+            results.append("Preview without processes")
             window = RuntimeWindow(
                 project,
                 source,
@@ -76,7 +76,7 @@ def main():
             window.session.snapshot["debug"] = config
 
             def wait(predicate, seconds=10):
-                """Aguarda observação real processando eventos nativos."""
+                """Wait for a real observation while processing native events."""
                 deadline = time.monotonic() + seconds
                 while time.monotonic() < deadline:
                     QTest.qWait(20)
@@ -133,13 +133,13 @@ def main():
             assert not next(
                 w for w in preview.widgets.values() if hasattr(w, "terminal")
             ).terminal.running
-            results.append("Prévia sem processos")
+            results.append("Preview without processes")
             runtime = None
             deadline = time.monotonic() + 20
             phase = {"clicked": False, "done": False, "typed": False, "capture": False}
 
             def observer(message):
-                """Observa os mesmos comandos e estados entregues à ponte do editor."""
+                """Observe the same commands and states delivered to the editor bridge."""
                 observe(message, lambda action: runtime.send({"type": "debug", "action": action}))
                 if message["type"] == "done":
                     phase["done"] = True
@@ -150,7 +150,7 @@ def main():
             runtime.debug_config = config
 
             def poll():
-                """Interage com terminal GTK e captura a janela real após o evento."""
+                """Interact with the GTK terminal and capture the real window after the event."""
                 try:
                     if errors:
                         raise AssertionError(errors)
@@ -182,7 +182,7 @@ def main():
                             assert texture.save_to_png(str(args.output / "runtime.png"))
                             phase["actual_scale"] = window.get_surface().get_scale()
                             runtime.stop()
-                            results.extend(["Python interativo GTK", "Entrada e saída GTK"])
+                            results.extend(["Python interativo GTK", "GTK input and output"])
                             assert not terminal.terminal.running
                             return False
                 except BaseException as exc:
@@ -202,8 +202,8 @@ def main():
         results.extend(
             [
                 "Ponto em bloco",
-                "Entrar na função Python",
-                "Ponto em linha própria",
+                "Step into the Python function",
+                "Breakpoint on an own line",
                 "Pilha e valores somente leitura",
                 "Fechamento recolhe processos",
             ]
@@ -224,7 +224,7 @@ def main():
                 indent=2,
             )
         )
-        print("OK", args.backend, len(results), "cenários")
+        print("OK", args.backend, len(results), "scenarios")
 
 
 if __name__ == "__main__":

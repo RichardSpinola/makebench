@@ -1,22 +1,23 @@
-"""Sugestões explícitas e navegação estática nos editores Python próprios."""
+"""Explicit suggestions and static navigation in your own Python editors."""
 
 import re
 from PySide6.QtCore import QObject, Qt, QEvent
 from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QFrame
+from makebench.i18n import tr
 
 
 class CodeAssist(QObject):
-    """Adapta o índice do projeto ao editor sem avaliação nem servidor de linguagem."""
+    """Adapt the project index to the editor with no evaluation and no language server."""
 
     def __init__(self, window, editor, filename):
-        """Instala controles locais, mantendo geração e scripts fora das sugestões."""
+        """Install local controls, keeping generated code and scripts out of the suggestions."""
         super().__init__(editor)
         self.window = window
         self.editor = editor
         self.filename = filename
         self.popup = QListWidget(editor.viewport())
-        self.popup.setAccessibleName("Sugestões de código")
+        self.popup.setAccessibleName(tr("Code suggestions"))
         self.popup.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.popup.setFrameShape(QFrame.Shape.Box)
         self.popup.hide()
@@ -24,18 +25,18 @@ class CodeAssist(QObject):
         self.prefix = ""
         editor.installEventFilter(self)
         editor.setToolTip(
-            "Ctrl+Espaço: sugestões · Ctrl+Shift+Espaço: parâmetros · F12: definição local"
+            tr("Ctrl+Space: suggestions · Ctrl+Shift+Space: parameters · F12: local definition")
         )
         editor.cursorPositionChanged.connect(self.parameters)
 
     def before(self):
-        """Converte posição UTF-16 do Qt para texto Python sem cortar caracteres Unicode."""
+        """Convert Qt's UTF-16 position to Python text without splitting Unicode characters."""
         cursor = self.editor.textCursor()
         cursor.setPosition(0, QTextCursor.MoveMode.KeepAnchor)
         return cursor.selectedText().replace("\u2029", "\n")
 
     def complete(self):
-        """Abre sugestões por Ctrl+Espaço, incluindo componentes em chamadas ctx."""
+        """Open suggestions with Ctrl+Space, including components in ctx calls."""
         self.window.refresh_code_index()
         before = self.before()
         match = re.search(r"[\w.]+$", before)
@@ -83,16 +84,16 @@ class CodeAssist(QObject):
             self.popup.raise_()
         else:
             self.popup.hide()
-            self.window.statusBar().showMessage("Nenhuma sugestão estática neste contexto.", 3000)
+            self.window.statusBar().showMessage(tr("No static suggestion in this context."), 3000)
 
     def accept(self, text):
-        """Confirma uma sugestão sem abrir outra janela nativa ou perder foco."""
+        """Confirm a suggestion without opening another native window or losing focus."""
         self.insert(text)
         self.popup.hide()
         self.editor.setFocus()
 
     def insert(self, text):
-        """Substitui somente o prefixo, como uma única edição reversível."""
+        """Replace only the prefix, as a single reversible edit."""
         cursor = self.editor.textCursor()
         cursor.beginEditBlock()
         for _ in range(len(self.prefix.encode("utf-16-le")) // 2):
@@ -102,14 +103,14 @@ class CodeAssist(QObject):
         self.editor.setTextCursor(cursor)
 
     def definition(self):
-        """F12 abre uma definição local conhecida, sem executar seu módulo."""
+        """F12 opens a known local definition, without running its module."""
         self.window.refresh_code_index()
         cursor = self.editor.textCursor()
         cursor.select(QTextCursor.SelectionType.WordUnderCursor)
         before = self.before()
         match = re.search(r"[\w.]+$", before)
         token = match.group() if match else cursor.selectedText()
-        # Inclui o restante da palavra se o cursor estiver no meio dela.
+        # Include the rest of the word if the cursor is in the middle of it.
         line = self.editor.textCursor().block().text()
         position = self.editor.textCursor().positionInBlock()
         suffix = re.match(r"\w*", line.encode("utf-16-le")[position * 2 :].decode("utf-16-le"))
@@ -119,10 +120,10 @@ class CodeAssist(QObject):
         if target and target.file:
             self.window.open_code_file(target.file, target.line, target.column)
         else:
-            self.window.statusBar().showMessage("Definição local não encontrada.", 3000)
+            self.window.statusBar().showMessage(tr("Local definition not found."), 3000)
 
     def parameters(self):
-        """Apresenta assinatura contextual discretamente no rodapé da área Código."""
+        """Show the contextual signature discreetly in the Code area's footer."""
         if not self.editor.hasFocus():
             return
         signature = self.window.code_index.call_signature(self.filename, self.before())
@@ -130,7 +131,7 @@ class CodeAssist(QObject):
         self.window.code_signature.setToolTip(signature)
 
     def eventFilter(self, watched, event):
-        """Controla a lista filha do editor, sem grabs nativos que causem piscadas no Wayland."""
+        """Drive the editor's child list, with no native grabs that cause flicker on Wayland."""
         controls = (
             bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
             if event.type() in {QEvent.Type.KeyPress, QEvent.Type.ShortcutOverride}

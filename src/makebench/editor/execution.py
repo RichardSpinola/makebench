@@ -1,4 +1,4 @@
-"""Supervisão do teste na gaveta do editor, utilizando sinais do runtime real."""
+"""Test supervision in the editor's drawer, using the real runtime's signals."""
 
 from datetime import datetime
 import time
@@ -16,18 +16,19 @@ from PySide6.QtWidgets import (
 )
 from makebench.runtime.window import append_output
 from .theme import manager
+from makebench.i18n import tr
 
 
 class ExecutionMixin:
-    """Apresenta logs, tarefas e origem sem executar código no processo do editor."""
+    """Present logs, tasks and origin without running code in the editor process."""
 
     def install_execution(self):
-        """Acrescenta filtros e comandos sobre o mesmo log compartilhado."""
+        """Add filters and commands over the same shared log."""
         self.log_entries = []
         self.task_items = {}
         self.task_running = {}
         self.test_started = None
-        # Remover antes de reparentear evita deslocar e apagar a aba Problemas.
+        # Removing before reparenting avoids shifting and deleting the Problems tab.
         self.drawer.removeTab(self.drawer.indexOf(self.output_log))
         self.drawer.setMinimumHeight(145)
         output = QWidget()
@@ -36,16 +37,16 @@ class ExecutionMixin:
         row = QHBoxLayout()
         self.output_filter = QComboBox()
         for label, key in [
-            ("Tudo", None),
-            ("Saída padrão", "stdout"),
-            ("Avisos / stderr", "stderr"),
-            ("Erros", "error"),
-            ("Execução", "status"),
+            (tr("Everything"), None),
+            (tr("Standard output"), "stdout"),
+            (tr("Warnings / stderr"), "stderr"),
+            (tr("Errors"), "error"),
+            (tr("Execution"), "status"),
         ]:
             self.output_filter.addItem(label, key)
         self.output_filter.currentIndexChanged.connect(self.rebuild_output)
         row.addWidget(self.output_filter)
-        self.process_info = QLabel("Nenhum teste iniciado")
+        self.process_info = QLabel(tr("No test started"))
         row.addWidget(self.process_info, 1)
         for label, callback in [
             (
@@ -56,7 +57,7 @@ class ExecutionMixin:
                     .setText(self.output_log.toPlainText())
                 ),
             ),
-            ("Limpar", self.clear_output),
+            (tr("Clear"), self.clear_output),
         ]:
             button = QPushButton(label)
             button.clicked.connect(callback)
@@ -64,31 +65,31 @@ class ExecutionMixin:
         layout.addLayout(row)
         layout.addWidget(self.output_log, 1)
         self.output_log.show()
-        self.drawer.insertTab(0, output, "Saída")
+        self.drawer.insertTab(0, output, tr("Output"))
         tasks = QWidget()
         tl = QVBoxLayout(tasks)
         self.task_tree = QTreeWidget()
-        self.task_tree.setHeaderLabels(["Tarefa", "Tipo", "Estado", "Duração"])
+        self.task_tree.setHeaderLabels([tr("Task"), tr("Type"), tr("State"), tr("Duration")])
         tl.addWidget(self.task_tree)
         self.task_empty = QLabel(
-            "As tarefas iniciadas pelo aplicativo aparecem aqui, com resultado e duração."
+            tr("Tasks started by the application appear here, with their result and duration.")
         )
         self.task_empty.setWordWrap(True)
         tl.addWidget(self.task_empty)
-        self.cancel_task_button = QPushButton("Cancelar tarefa comum e encerrar teste")
+        self.cancel_task_button = QPushButton(tr("Cancel ordinary task and end test"))
         self.cancel_task_button.setEnabled(False)
         self.cancel_task_button.clicked.connect(self.stop_test)
         tl.addWidget(self.cancel_task_button)
-        self.drawer.addTab(tasks, "Tarefas")
+        self.drawer.addTab(tasks, tr("Tasks"))
         error = QWidget()
         er = QVBoxLayout(error)
         self.run_error_label = QLabel()
         self.run_error_label.setWordWrap(True)
         er.addWidget(self.run_error_label)
-        locate = QPushButton("Ir à origem")
+        locate = QPushButton(tr("Go to source"))
         locate.clicked.connect(self.locate_test_error)
         er.addWidget(locate, 0, Qt.AlignmentFlag.AlignLeft)
-        details = QPushButton("Detalhes técnicos")
+        details = QPushButton(tr("Technical details"))
         details.setCheckable(True)
         er.addWidget(details, 0, Qt.AlignmentFlag.AlignLeft)
         self.run_trace = QPlainTextEdit()
@@ -96,7 +97,7 @@ class ExecutionMixin:
         self.run_trace.hide()
         details.toggled.connect(self.run_trace.setVisible)
         er.addWidget(self.run_trace)
-        self.drawer.addTab(error, "Erro")
+        self.drawer.addTab(error, tr("Error"))
         from makebench.terminal.qt import TerminalPanel
 
         self.terminal_panel = TerminalPanel(self)
@@ -105,11 +106,11 @@ class ExecutionMixin:
         self.terminal_panel.directory_provider = lambda: (
             self.path.parent if self.path else Path.home()
         )
-        self.drawer.addTab(self.terminal_panel, "Terminal")
+        self.drawer.addTab(self.terminal_panel, tr("Terminal"))
         from .debug import DebugPanel
 
         self.debug_panel = DebugPanel(self)
-        self.drawer.addTab(self.debug_panel, "Depurar")
+        self.drawer.addTab(self.debug_panel, tr("Debug"))
         self.debug_panel.command.connect(self.debug_command)
         self.debug_panel.locate.connect(self.locate_debug)
         self.source_editor.breakpoints_enabled = True
@@ -129,7 +130,7 @@ class ExecutionMixin:
         manager().changed.connect(self.rebuild_output)
 
     def execution_fingerprint(self):
-        """Compara código e documento do snapshot, excluindo marcas de depuração."""
+        """Compare the snapshot's code and document, excluding debug marks."""
         import hashlib, json
 
         data = self.project.to_dict()
@@ -141,7 +142,7 @@ class ExecutionMixin:
         ).hexdigest()
 
     def monitor_runtime(self, window):
-        """Conecta um processo real antes de seu início explícito."""
+        """Connect a real process before its explicit start."""
         from .settings import preference
 
         if preference("test/clear"):
@@ -149,17 +150,27 @@ class ExecutionMixin:
         self.run_number += 1
         self.test_started = time.monotonic()
         self._runtime_project_fingerprint = self.execution_fingerprint()
-        self.process_info.setText(f"Execução {self.run_number} · {datetime.now():%H:%M:%S}")
+        self.process_info.setText(
+            tr("Run {number} · {time}").format(
+                number=self.run_number, time=f"{datetime.now():%H:%M:%S}"
+            )
+        )
         self.task_empty.setVisible(not self.task_items)
         self.add_output(
             "status",
-            f"\n──────── Execução {self.run_number} · {datetime.now():%H:%M:%S} ────────\n",
+            "\n──────── "
+            + tr("Run {number} · {time}").format(
+                number=self.run_number, time=f"{datetime.now():%H:%M:%S}"
+            )
+            + " ────────\n",
         )
         process = getattr(window.session, "process", None) or getattr(window, "process", None)
         if process:
             process.started.connect(
                 lambda: self.process_info.setText(
-                    f"Execução {self.run_number} · Python · PID {process.processId()}"
+                    tr("Run {number} · Python · PID {pid}").format(
+                        number=self.run_number, pid=process.processId()
+                    )
                 )
             )
         if self._debug_active:
@@ -176,12 +187,12 @@ class ExecutionMixin:
         self.drawer.setCurrentIndex(0)
 
     def debug_project(self):
-        """Inicia novo snapshot depurável por ação separada de Executar."""
+        """Start a new debuggable snapshot through an action separate from Run."""
         self._next_debug = True
         self.run_project()
 
     def debug_command(self, action):
-        """Envia somente controles conhecidos ao processo proprietário do snapshot."""
+        """Send only known controls to the process that owns the snapshot."""
         window = self.runtime_window
         if window is None or window.session.closed:
             return
@@ -191,17 +202,17 @@ class ExecutionMixin:
         window.session.debug_command(action)
 
     def breakpoints(self):
-        """Lê marcas declarativas do projeto, sem executá-las ao abrir."""
+        """Read the project's declarative marks, never running them on open."""
         return self.project.metadata.get("debug_breakpoints", [])
 
     def toggle_source_breakpoint(self, line, path="@actions"):
-        """Alterna uma linha própria e atualiza o worker se houver depuração ativa."""
+        """Toggle one of your own lines and update the worker if debugging is active."""
         self._toggle_breakpoint(
             {"file": "source", "line": line, **({"path": path} if path != "@actions" else {})}
         )
 
     def toggle_generated_breakpoint(self, line):
-        """Resolve linha gerada para o ID original em vez de armazenar linha instável."""
+        """Resolve a generated line to the original ID instead of storing an unstable line."""
         key = next(
             (key for key, number in self.logic.generated.lines.items() if number == line), None
         )
@@ -209,11 +220,11 @@ class ExecutionMixin:
             self.toggle_block_breakpoint(*key)
 
     def toggle_block_breakpoint(self, flow, block):
-        """Armazena origem por ID para preservar pontos entre salvamentos."""
+        """Store the origin by ID so breakpoints survive saves."""
         self._toggle_breakpoint({"file": "block", "flow": flow, "block": block})
 
     def _toggle_breakpoint(self, point):
-        """Altera marcas por transação, preservando histórico e workspace Blockly."""
+        """Change marks through a transaction, keeping history and the Blockly workspace."""
         points = [dict(p) for p in self.breakpoints()]
         if point in points:
             points.remove(point)
@@ -226,7 +237,7 @@ class ExecutionMixin:
             window.session.debug_command("breakpoints", items=points)
 
     def sync_breakpoints(self):
-        """Atualiza margens sem reconstruir o código nem os controles do Designer."""
+        """Update margins without rebuilding the code or the Designer controls."""
         if not hasattr(self, "debug_panel"):
             return
         points = self.breakpoints()
@@ -260,7 +271,7 @@ class ExecutionMixin:
             )
 
     def debug_changed(self, message):
-        """Exibe observações do snapshot e destaca sua origem sem editar o projeto."""
+        """Show the snapshot's observations and highlight their origin without editing the project."""
         message = dict(message)
         window = self.runtime_window
         if window:
@@ -278,29 +289,29 @@ class ExecutionMixin:
                 card.active = False
                 card.update()
         if message.get("state") == "paused":
-            self.test_status.setText("Pausado")
+            self.test_status.setText(tr("Paused"))
             self.drawer.show()
             self.drawer.setCurrentWidget(self.debug_panel)
             self.locate_debug(message)
 
     def locate_debug(self, message):
-        """Navega somente se a origem ainda corresponde ao documento em edição."""
+        """Navigate only if the origin still matches the document being edited."""
         window = self.runtime_window
         if not window or self.project.id != window.project.id:
             return
         if self.execution_fingerprint() != self._runtime_project_fingerprint:
             self.debug_panel.status.setText(
-                "Snapshot pausado · projeto alterado; reinicie para aplicar as mudanças."
+                tr("Snapshot paused · project changed; restart to apply the changes.")
             )
             return
         if message.get("source_line"):
             self.open_code_file(message.get("source_file", "@actions"), message["source_line"])
         elif message.get("block"):
-            self.set_mode("Lógica")
+            self.set_mode("logic")
             self.logic.focus_block(message["flow"], message["block"])
 
     def add_output(self, channel, text):
-        """Mantém canais separados; stderr é aviso, falha explícita é erro."""
+        """Keep channels separate; stderr is a warning, an explicit failure is an error."""
         self.log_entries.append((channel, text))
         if sum(len(t) for _, t in self.log_entries) > 500000:
             self.log_entries = self.log_entries[-1000:]
@@ -318,7 +329,7 @@ class ExecutionMixin:
             append_output(self.output_log, text, color)
 
     def rebuild_output(self):
-        """Filtra a apresentação, preservando o histórico recebido."""
+        """Filter the presentation, keeping the received history."""
         entries = list(self.log_entries)
         self.output_log.clear()
         self.log_entries = []
@@ -326,12 +337,12 @@ class ExecutionMixin:
             self.add_output(channel, text)
 
     def clear_output(self):
-        """Limpa somente a observação da execução, sem apagar arquivos ou lógica."""
+        """Clear only the run's observation, never deleting files or logic."""
         self.log_entries = []
         self.output_log.clear()
 
     def update_task(self, data):
-        """Mostra duração e resultado de tarefas comuns ou administrativas."""
+        """Show the duration and result of ordinary or administrative tasks."""
         self.task_empty.hide()
         key = f"{self.run_number}:{data['id']}"
         item = self.task_items.get(key)
@@ -339,38 +350,47 @@ class ExecutionMixin:
             item = QTreeWidgetItem()
             self.task_tree.addTopLevelItem(item)
             self.task_items[key] = item
-        if data["state"] == "Executando":
+        if data["state"] == "running":
             self.task_running[key] = time.monotonic() - data.get("duration", 0)
         else:
             self.task_running.pop(key, None)
         item.setText(0, data["program"])
-        item.setText(1, "Administrativa" if data["admin"] else "Comum")
-        item.setText(2, data["state"])
+        item.setText(1, tr("Administrative") if data["admin"] else tr("Ordinary"))
+        item.setText(
+            2,
+            {
+                "running": tr("Running"),
+                "completed": tr("Completed"),
+                "failed": tr("Not completed"),
+            }.get(data["state"], data["state"]),
+        )
         item.setText(3, f"{data.get('duration', 0):.1f} s")
-        self.cancel_task_button.setEnabled(not data["admin"] and data["state"] == "Executando")
+        self.cancel_task_button.setEnabled(not data["admin"] and data["state"] == "running")
         if data["admin"]:
             self.cancel_task_button.setToolTip(
-                "Aguarde o término da tarefa autorizada pelo sistema; não há interrupção forçada administrativa."
+                tr(
+                    "Wait for the task authorized by the system to finish; there is no forced administrative interruption."
+                )
             )
 
     def show_test_error(self, error):
-        """Exibe causa e origem, mantendo traceback recolhido por padrão."""
+        """Show the cause and origin, keeping the traceback collapsed by default."""
         self._test_error = error
         self.run_error_label.setText(error["message"])
         self.run_trace.setPlainText(error.get("traceback", ""))
         self.run_trace.hide()
-        self.add_output("error", "[Erro] " + error["message"] + "\n")
+        self.add_output("error", tr("[Error]") + " " + error["message"] + "\n")
         self.drawer.show()
         self.drawer.setCurrentIndex(4)
-        self.test_status.setText("Erro")
+        self.test_status.setText(tr("Error"))
 
     def locate_test_error(self):
-        """Reutiliza o mapa bloco/linha do snapshot, sem adivinhar a origem."""
+        """Reuse the snapshot's block/line map, never guessing the origin."""
         if self.runtime_window and hasattr(self, "_test_error"):
             self._locate_runtime_error(self._test_error, self.runtime_window)
 
     def update_test_time(self):
-        """Avisa quando a edição se distancia do snapshot que está em execução."""
+        """Warn when editing drifts away from the snapshot that is running."""
         for key, started in self.task_running.items():
             self.task_items[key].setText(3, f"{time.monotonic() - started:.1f} s")
         window = self.runtime_window
@@ -383,40 +403,41 @@ class ExecutionMixin:
             and preference("test/duration")
         ):
             self.statusBar().showMessage(
-                f"Teste em execução · {time.monotonic() - self.test_started:.0f} s"
+                tr("Test running · {seconds} s").format(
+                    seconds=f"{time.monotonic() - self.test_started:.0f}"
+                )
             )
         if (
             window
             and not window.session.closed
             and self._runtime_project_fingerprint != self.execution_fingerprint()
         ):
-            self.set_test_status("Projeto alterado · F5 para reiniciar")
+            self.set_test_status(tr("Project changed · F5 to restart"))
 
     def set_test_status(self, text):
-        """Mantém o cabeçalho compacto e o texto completo disponível no tooltip."""
+        """Keep the header compact, with the full text available in the tooltip."""
         compact = text
         for phrase, label in [
-            ("administrativa", "Autorização do sistema"),
-            ("Aguardando resposta", "Aguardando resposta"),
-            ("Iniciando", "Iniciando"),
-            ("Fluxo concluído", "Concluído"),
-            ("Fluxo cancelado", "Interrompido"),
-            ("Erro", "Erro"),
-            ("erro", "Erro"),
-            ("Executando fluxo", "Executando"),
-            ("Aplicativo em execução", "Em execução"),
-            ("Encerrando", "Encerrando"),
-            ("encerrada", "Parado"),
-            ("Projeto alterado", "Alterações · F5 para reiniciar"),
+            (tr("administrative"), tr("System authorization")),
+            (tr("Waiting for an answer"), tr("Waiting for an answer")),
+            (tr("Starting"), tr("Starting")),
+            (tr("Flow completed"), tr("Completed")),
+            (tr("Flow cancelled"), tr("Interrupted")),
+            (tr("error"), tr("Error")),
+            (tr("Running flow"), tr("Running")),
+            (tr("Application running"), tr("Running")),
+            (tr("Stopping"), tr("Stopping")),
+            (tr("ended"), tr("Stopped")),
+            (tr("Project changed"), tr("Changes · F5 to restart")),
         ]:
-            if phrase in text:
+            if phrase.casefold() in text.casefold():
                 compact = label
                 break
         self.test_status.setText(compact)
         self.test_status.setToolTip(text)
 
     def runtime_stopped(self):
-        """Registra encerramento com duração real, sem misturar diagnóstico de edição."""
+        """Record the end with the real duration, without mixing in editing diagnostics."""
         self.debug_panel.changed({"state": "stopped"})
         for card in self.logic.graph_panel.cards.values():
             card.active = False
@@ -424,11 +445,17 @@ class ExecutionMixin:
         elapsed = time.monotonic() - self.test_started if self.test_started else 0
         for key in list(self.task_running):
             if key.startswith(str(self.run_number) + ":"):
-                self.task_items[key].setText(2, "Interrompido")
+                self.task_items[key].setText(2, tr("Interrupted"))
                 self.task_items[key].setText(
                     3, f"{time.monotonic() - self.task_running.pop(key):.1f} s"
                 )
-        self.test_status.setText("Parado")
-        self.process_info.setText(f"Execução {self.run_number} · encerrada · {elapsed:.1f} s")
+        self.test_status.setText(tr("Stopped"))
+        self.process_info.setText(
+            tr("Run {number} · ended · {seconds} s").format(
+                number=self.run_number, seconds=f"{elapsed:.1f}"
+            )
+        )
         self.cancel_task_button.setEnabled(False)
-        self.add_output("status", f"\nExecução encerrada · {elapsed:.1f} s\n")
+        self.add_output(
+            "status", "\n" + tr("Run ended · {seconds} s").format(seconds=f"{elapsed:.1f}") + "\n"
+        )

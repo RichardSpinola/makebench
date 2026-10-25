@@ -1,4 +1,4 @@
-"""Edição de janelas/estados e mapa derivado da lógica neutra."""
+"""Editing windows/states and the map derived from the neutral logic."""
 
 from PySide6.QtWidgets import (
     QComboBox,
@@ -12,45 +12,46 @@ from makebench.core.navigation import add_state, add_window, navigation_edges
 
 
 from .map_panel import MapPanel
+from makebench.i18n import tr
 
 
 class NavigationMixin:
-    """Mantém contexto selecionado sem gravá-lo no arquivo do aplicativo."""
+    """Keep the selected context without writing it to the application file."""
 
     def install_navigation_editor(self):
-        """Adiciona seletores, comandos e mapa de navegação real."""
+        """Add selectors, commands and the real navigation map."""
         self.active_window = self.project.root.id
         self.active_state = "@default"
         self.tree.active_root = lambda: self.active_window
         self.window_selector = QComboBox()
-        self.window_selector.setAccessibleName("Janela em edição")
+        self.window_selector.setAccessibleName(tr("Window being edited"))
         self.window_selector.setMaximumWidth(210)
         self.state_selector = QComboBox()
-        self.state_selector.setAccessibleName("Estado em edição")
+        self.state_selector.setAccessibleName(tr("State being edited"))
         self.state_selector.setMaximumWidth(170)
         self.context_bar.insertWidget(self.context_bar.actions()[0], self.window_selector)
         self.context_bar.insertWidget(self.context_bar.actions()[-1], self.state_selector)
         self.window_selector.currentIndexChanged.connect(self.window_selected)
         self.state_selector.currentIndexChanged.connect(self.state_selected)
-        menu = self.menuBar().addMenu("&Projeto")
+        menu = self.menuBar().addMenu(tr("&Project"))
         for label, callback in [
-            ("Nova janela…", self.new_window_dialog),
-            ("Novo estado…", self.new_state_dialog),
-            ("Definir janela como inicial", self.make_entry_window),
-            ("Definir estado como inicial", self.make_initial_state),
-            ("Renomear estado…", self.rename_state_dialog),
-            ("Restaurar seleção do Padrão", self.restore_default_properties),
-            ("Remover estado", self.remove_state),
-            ("Remover janela", self.remove_window),
+            (tr("New window…"), self.new_window_dialog),
+            (tr("New state…"), self.new_state_dialog),
+            (tr("Set window as initial"), self.make_entry_window),
+            (tr("Set state as initial"), self.make_initial_state),
+            (tr("Rename state…"), self.rename_state_dialog),
+            (tr("Restore selection from Default"), self.restore_default_properties),
+            (tr("Remove state"), self.remove_state),
+            (tr("Remove window"), self.remove_window),
         ]:
             action = menu.addAction(label)
             action.triggered.connect(callback)
         self.map_panel = MapPanel(self)
-        self.tabs.addTab(self.map_panel, "Mapa")
+        self.tabs.addTab(self.map_panel, tr("Map"))
         self.sync_navigation()
 
     def sync_navigation(self):
-        """Reconcilia seleção com desfazer, carregamento e remoção de janelas."""
+        """Reconcile the selection with undo, loading and window removal."""
         if not hasattr(self, "window_selector"):
             return
         if self.active_window not in {r.id for r in self.project.roots}:
@@ -66,12 +67,12 @@ class NavigationMixin:
         self.window_selector.setEnabled(not empty)
         self.state_selector.setEnabled(not empty)
         if empty:
-            reconcile_combo(self.window_selector, [("Nenhuma interface", None)], None)
+            reconcile_combo(self.window_selector, [(tr("No interface"), None)], None)
             reconcile_combo(self.state_selector, [], None)
             return
         reconcile_combo(
             self.window_selector,
-            [(root.properties.get("title", "Janela"), root.id) for root in self.project.roots],
+            [(root.properties.get("title", tr("Window")), root.id) for root in self.project.roots],
             self.active_window,
         )
         states = self.project.states.get(self.active_window, [])
@@ -82,7 +83,7 @@ class NavigationMixin:
             [
                 (
                     self.project.find(self.active_window).properties.get(
-                        "default_state_name", "Padrão"
+                        "default_state_name", tr("Default")
                     ),
                     "@default",
                 ),
@@ -92,7 +93,7 @@ class NavigationMixin:
         )
 
     def activate_window(self, window_id, state="@default"):
-        """Muda o contexto após confirmar alterações dos blocos e campos."""
+        """Change context after confirming block and field changes."""
         if not self._finish_field_edit():
             return
         self.active_window = window_id
@@ -101,12 +102,12 @@ class NavigationMixin:
         self._refresh()
 
     def window_selected(self):
-        """Recebe escolha explícita de uma janela real."""
+        """Receive an explicit choice of a real window."""
         if self.window_selector.currentData():
             self.activate_window(self.window_selector.currentData())
 
     def state_selected(self):
-        """Revela uma variação mantendo a seleção válida da mesma janela."""
+        """Reveal a variation, keeping the same window's selection valid."""
         if self.state_selector.currentData() is not None:
             if not self._finish_field_edit():
                 return
@@ -114,26 +115,31 @@ class NavigationMixin:
             self._refresh()
 
     def new_window_dialog(self):
-        """Cria janela vazia ou cópia da composição atual com novos IDs."""
+        """Create an empty window or a copy of the current composition with new IDs."""
         dialog = QDialog(self)
-        dialog.setWindowTitle("Nova interface")
+        dialog.setWindowTitle(tr("New interface"))
         form = QFormLayout(dialog)
         from PySide6.QtWidgets import QLineEdit
 
         empty = bool(self.project.metadata.get("empty_map"))
-        name = QLineEdit("Tela principal" if empty else "Nova interface")
+        name = QLineEdit(tr("Main screen") if empty else tr("New interface"))
         name.setObjectName("new_interface_name")
         base = QComboBox()
-        base.addItem("Em branco", None)
+        base.addItem(tr("Blank"), None)
         if not empty:
             for root in self.project.roots:
-                base.addItem("Duplicar " + root.properties.get("title", "Janela"), root.id)
-        form.addRow("Nome", name)
-        form.addRow("Base", base)
+                base.addItem(
+                    tr("Duplicate {title}").format(
+                        title=root.properties.get("title", tr("Window"))
+                    ),
+                    root.id,
+                )
+        form.addRow(tr("Name"), name)
+        form.addRow(tr("Base"), base)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Save).setText("Criar interface")
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText(tr("Create interface"))
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         form.addRow(buttons)
@@ -141,7 +147,7 @@ class NavigationMixin:
             return
 
         def create():
-            """Cria o item solicitado com os valores validados do diálogo."""
+            """Create the requested item with the dialog's validated values."""
             if self.project.metadata.pop("empty_map", False):
                 root = self.project.root
                 root.properties["title"] = name.text().strip()
@@ -154,29 +160,29 @@ class NavigationMixin:
         self._edit(create)
 
     def new_state_dialog(self):
-        """Cria variação independente sobre a estrutura padrão."""
+        """Create an independent variation over the default structure."""
         from PySide6.QtWidgets import QLineEdit
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Novo estado")
+        dialog.setWindowTitle(tr("New state"))
         form = QFormLayout(dialog)
         name = QLineEdit()
         base = QComboBox()
-        base.addItem("Padrão", "@default")
+        base.addItem(tr("Default"), "@default")
         for state in self.project.states.get(self.active_window, []):
             base.addItem(state["name"], state["id"])
         base.setCurrentIndex(base.findData(self.active_state))
-        form.addRow("Nome", name)
-        form.addRow("Começar de", base)
+        form.addRow(tr("Name"), name)
+        form.addRow(tr("Start from"), base)
         note = QLabel(
-            "Copia as diferenças da etapa escolhida. A estrutura continua vindo do Padrão."
+            tr("Copies the differences of the chosen step. The structure still comes from Default.")
         )
         note.setWordWrap(True)
         form.addRow(note)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Save).setText("Criar estado")
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText(tr("Create state"))
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         form.addRow(buttons)
@@ -184,18 +190,18 @@ class NavigationMixin:
             return
 
         def create():
-            """Cria o item solicitado com os valores validados do diálogo."""
+            """Create the requested item with the dialog's validated values."""
             state = add_state(self.project, self.active_window, name.text(), base.currentData())
             self.active_state = state["id"]
 
         self._edit(create)
 
     def make_entry_window(self):
-        """Define explicitamente qual janela abre ao iniciar o aplicativo."""
+        """Explicitly set which window opens when the application starts."""
         self._edit(lambda: setattr(self.project, "entry_window", self.active_window))
 
     def make_initial_state(self):
-        """Define a variação aplicada antes do evento de início da janela."""
+        """Set the variation applied before the window's start event."""
         self._edit(
             lambda: self.project.find(self.active_window).properties.update(
                 initial_state=self.active_state
@@ -203,14 +209,14 @@ class NavigationMixin:
         )
 
     def rename_state_dialog(self):
-        """Renomeia a variação mantendo IDs e todas as transições."""
+        """Rename the variation, keeping IDs and every transition."""
         if self.active_state == "@default":
             root = self.project.find(self.active_window)
             name, ok = QInputDialog.getText(
                 self,
-                "Nome da composição padrão",
-                "Nome da etapa inicial",
-                text=root.properties.get("default_state_name", "Padrão"),
+                tr("Default composition name"),
+                tr("Name of the initial step"),
+                text=root.properties.get("default_state_name", tr("Default")),
             )
             if ok and name.strip():
                 self._edit(lambda: root.properties.update(default_state_name=name.strip()))
@@ -218,17 +224,17 @@ class NavigationMixin:
         state = next(
             s for s in self.project.states[self.active_window] if s["id"] == self.active_state
         )
-        name, ok = QInputDialog.getText(self, "Renomear estado", "Nome", text=state["name"])
+        name, ok = QInputDialog.getText(self, tr("Rename state"), tr("Name"), text=state["name"])
         if ok and name.strip():
             self._edit(lambda: state.update(name=name.strip()))
 
     def restore_default_properties(self):
-        """Remove somente sobrescritas da seleção no estado ativo."""
+        """Remove only the selection's overrides in the active state."""
         if self.active_state == "@default":
             return
 
         def restore():
-            """Remove as diferenças escolhidas, preservando os demais dados."""
+            """Remove the chosen differences, keeping the remaining data."""
             state = next(
                 s for s in self.project.states[self.active_window] if s["id"] == self.active_state
             )
@@ -237,7 +243,7 @@ class NavigationMixin:
         self._edit(restore)
 
     def remove_state(self):
-        """Recusa exclusão de estado ainda referenciado pela lógica."""
+        """Refuse to delete a state still referenced by the logic."""
         if self.active_state == "@default":
             return
         state_id = self.active_state
@@ -245,11 +251,11 @@ class NavigationMixin:
             if state_id in flow.get("states", []) or any(
                 e["target"] == state_id for e in navigation_edges(self.project)
             ):
-                self._show_error("Revise os fluxos que usam este estado antes de removê-lo.")
+                self._show_error(tr("Review the flows that use this state before removing it."))
                 return
 
         def remove():
-            """Remove os dados selecionados como uma operação reversível."""
+            """Remove the selected data as a reversible operation."""
             self.project.states[self.active_window] = [
                 s for s in self.project.states[self.active_window] if s["id"] != state_id
             ]
@@ -260,20 +266,20 @@ class NavigationMixin:
         self._edit(remove)
 
     def remove_window(self):
-        """Protege a raiz e janelas referenciadas; remoção é reversível pelo histórico."""
+        """Protect the root and referenced windows; removal is reversible through history."""
         if len(self.project.roots) == 1:
-            self._show_error("Mantenha pelo menos uma janela no aplicativo.")
+            self._show_error(tr("Keep at least one window in the application."))
             return
         identifier = self.active_window
         ids = {n.id for n in self.project.find(identifier).walk()}
         if any(e["target"] == identifier for e in navigation_edges(self.project)) or any(
             f["event"]["component"] in ids for f in self.project.workflows
         ):
-            self._show_error("Revise os fluxos desta janela e suas conexões antes de removê-la.")
+            self._show_error(tr("Review this window's flows and connections before removing it."))
             return
 
         def remove():
-            """Remove os dados selecionados como uma operação reversível."""
+            """Remove the selected data as a reversible operation."""
             if identifier == self.project.root.id:
                 self.project.root = self.project.windows.pop(0)
             else:

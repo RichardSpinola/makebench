@@ -1,4 +1,4 @@
-"""Capturas reais do editor para QA; nunca executa scripts do projeto."""
+"""Real editor screenshots for QA; never runs project scripts."""
 
 import argparse
 import os
@@ -11,7 +11,7 @@ os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu")
 
 
 def main():
-    """Gera matriz de modos/tamanhos/temas usando um projeto conhecido em memória."""
+    """Generate a matrix of modes/sizes/themes using a known in-memory project."""
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument("--sizes", nargs="+", default=["1280x800", "1920x1080"])
@@ -35,7 +35,7 @@ def main():
         window = MainWindow(welcome_template())
         window.recovery_timer.stop()
         window.show()
-        window.set_mode("Lógica")
+        window.set_mode("logic")
         deadline = time.monotonic() + 15
         while not window.logic.ready and time.monotonic() < deadline:
             QTest.qWait(25)
@@ -44,8 +44,8 @@ def main():
         from native_palette import kde_palette
 
         for theme in args.themes:
-            # Só QA: offscreen não recebe o esquema do compositor. Paleta vem
-            # dos esquemas Breeze instalados, sem paleta inventada pelo editor.
+            # QA only: offscreen does not receive the compositor scheme. The palette comes
+            # from the installed Breeze schemes, with no palette invented by the editor.
             app.setPalette(kde_palette(theme))
             manager().set_mode("system")
             for size in args.sizes:
@@ -53,49 +53,46 @@ def main():
                 window.resize(width, height)
                 window.activate_window(window.project.root.id, "@default")
                 QTest.qWait(100)
-                for mode in ["Início", "Design", "Lógica", "Código", "Mapa", "Publicar"]:
+                for mode in ["start", "design", "logic", "code", "map", "publish"]:
                     window.publish_dialog.hide()
-                    if mode == "Início":
+                    if mode == "start":
                         window.show_home()
                     else:
-                        if mode == "Lógica":
+                        if mode == "logic":
                             button = next(
                                 node
                                 for node in window.project.root.walk()
-                                if node.properties.get("text") == "Próximo"
+                                if node.properties.get("text") == "Next"
                             )
                             window._select(button.id)
                         window.set_mode(mode)
                     app.processEvents()
-                    if mode == "Mapa":
+                    if mode == "map":
                         window.map_panel.fit()
-                    QTest.qWait(400 if mode == "Lógica" else 100)
-                    filename = (
-                        args.output
-                        / f"{theme}-{size}-{ {'Início': 'inicio', 'Design': 'design', 'Lógica': 'logica', 'Código': 'codigo', 'Mapa': 'mapa', 'Publicar': 'publicar'}[mode] }.png"
-                    )
+                    QTest.qWait(400 if mode == "logic" else 100)
+                    filename = args.output / f"{theme}-{size}-{mode}.png"
                     if (
-                        not (window.publish_dialog if mode == "Publicar" else window)
+                        not (window.publish_dialog if mode == "publish" else window)
                         .grab()
                         .save(str(filename))
                     ):
                         raise RuntimeError("Falha ao gravar " + str(filename))
                 window.publish_dialog.hide()
-                window.set_mode("Design")
+                window.set_mode("design")
                 window.left_tabs.setCurrentIndex(1)
                 QTest.qWait(80)
                 window.grab().save(str(args.output / f"{theme}-{size}-inserir.png"))
                 window.left_tabs.setCurrentIndex(0)
                 window.show_test_error(
                     {
-                        "message": "Exemplo de falha: tarefa terminou com código 3.",
-                        "traceback": "Diagnóstico de verificação visual.",
+                        "message": "Example failure: task ended with code 3.",
+                        "traceback": "Visual check diagnostic.",
                     }
                 )
                 QTest.qWait(80)
                 window.grab().save(str(args.output / f"{theme}-{size}-gaveta-erro.png"))
                 window.drawer.hide()
-                window.test_status.setText("Parado")
+                window.test_status.setText("Stopped")
                 window.preferences()
                 QTest.qWait(80)
                 window.preferences_dialog.grab().save(
@@ -109,7 +106,7 @@ def main():
                 )
                 window.app_settings_dialog.close()
 
-                # O diálogo é real; somente capturado e cancelado, sem criar pasta.
+                # The dialog is real; it is only captured and cancelled, without creating a folder.
                 def capture_dialog():
                     dialog = app.activeModalWidget()
                     if dialog:

@@ -1,4 +1,4 @@
-"""Miniaturas nativas inertes, com cache limitado e renderização GTK serializada."""
+"""Inert native thumbnails, with a bounded cache and serialized GTK rendering."""
 
 from collections import OrderedDict
 import base64
@@ -9,15 +9,16 @@ from PySide6.QtGui import QPixmap, QImage
 from makebench.core.project import Project
 from .native_preview import GtkPreviewJob
 from .theme import manager
+from makebench.i18n import tr
 
 
 class ThumbnailCache(QObject):
-    """Recebe só composição e imagens: nunca fonte própria ou eventos executáveis."""
+    """Receive only composition and images: never the user's source or runnable events."""
 
     ready = Signal(str, QPixmap, str)
 
     def __init__(self, parent):
-        """O cache LRU guarda no máximo 96 imagens pequenas; só há um helper GTK ativo."""
+        """The LRU cache keeps at most 96 small images; only one GTK helper is active."""
         super().__init__(parent)
         self.cache = OrderedDict()
         self.pending = OrderedDict()
@@ -35,7 +36,7 @@ class ThumbnailCache(QObject):
         self.timer.timeout.connect(self.next)
 
     def request(self, key, root, backend, read_asset):
-        """Invalida pela composição efetiva, imagens e tema, sem reconstruir o mapa."""
+        """Invalidate by effective composition, images and theme, without rebuilding the map."""
         assets = {}
         for node in root.walk():
             for name in (node.properties.get("source"), node.properties.get("icon")):
@@ -79,7 +80,7 @@ class ThumbnailCache(QObject):
             self.timer.start()
 
     def next(self):
-        """Qt renderiza um cartão por evento; GTK desenha fora da thread da interface."""
+        """Qt renders one card per event; GTK draws outside the interface thread."""
         if self.closed or self.job or not self.pending:
             return
         key, (signature, backend, data) = self.pending.popitem(last=False)
@@ -98,7 +99,7 @@ class ThumbnailCache(QObject):
             job.failed.connect(lambda error: self.fail(key, signature, error))
 
             def finished():
-                """O próximo cartão só inicia depois da limpeza do display privado."""
+                """The next card starts only after the private display is cleaned up."""
                 self.job = None
                 self.active = None
                 job.deleteLater()
@@ -116,7 +117,7 @@ class ThumbnailCache(QObject):
                 self.timer.start()
 
     def qt_image(self, data):
-        """Usa o mesmo renderer e a mesma decoração do Designer, sem RuntimeSession."""
+        """Use the same renderer and decoration as the Designer, with no RuntimeSession."""
         from .canvas import PreviewCanvas
 
         document = Project.empty().to_dict()
@@ -140,7 +141,7 @@ class ThumbnailCache(QObject):
             canvas.deleteLater()
 
     def complete(self, key, signature, pixmap):
-        """Resultados antigos não substituem uma composição editada enquanto renderizava."""
+        """Old results never replace a composition edited while rendering."""
         if self.closed or self.wanted.get(key) != signature:
             return
         image = pixmap.scaled(
@@ -149,7 +150,7 @@ class ThumbnailCache(QObject):
             Qt.TransformationMode.SmoothTransformation,
         )
         if image.isNull():
-            self.fail(key, signature, "O renderizador não produziu uma imagem válida.")
+            self.fail(key, signature, tr("The renderer did not produce a valid image."))
             return
         self.delivered[key] = signature
         self.failures.pop(key, None)
@@ -160,7 +161,7 @@ class ThumbnailCache(QObject):
         self.ready.emit(key, image, "")
 
     def retain(self, keys):
-        """Descarta pedidos de cartões removidos, recolhidos ou de outro projeto."""
+        """Drop requests for removed, collapsed or other-project cards."""
         self.resources = {key: value for key, value in self.resources.items() if key in keys}
         used = set().union(*self.resources.values()) if self.resources else set()
         self.asset_versions = {
@@ -174,14 +175,14 @@ class ThumbnailCache(QObject):
         )
 
     def fail(self, key, signature, error):
-        """Uma falha é estável até mudar a composição ou pedir atualização explícita."""
+        """A failure is stable until the composition changes or a refresh is requested."""
         if self.closed or self.wanted.get(key) != signature:
             return
         self.failures[key] = signature
         self.ready.emit(key, QPixmap(), error)
 
     def invalidate(self, key):
-        """Permite tentar novamente depois de corrigir recursos ou instalar o suporte GTK."""
+        """Allow retrying after fixing assets or installing GTK support."""
         self.delivered.pop(key, None)
         self.failures.pop(key, None)
         signature = self.wanted.get(key)
@@ -189,7 +190,7 @@ class ThumbnailCache(QObject):
             self.cache.pop(signature, None)
 
     def shutdown(self):
-        """Fecha somente o helper de miniatura criado pelo editor."""
+        """Close only the thumbnail helper created by the editor."""
         self.closed = True
         self.timer.stop()
         self.pending.clear()

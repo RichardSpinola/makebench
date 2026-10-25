@@ -1,4 +1,4 @@
-"""Coordenação Qt de worker Python, tarefas e chamadas de interface."""
+"""Qt coordination of the Python worker, tasks and interface calls."""
 
 from __future__ import annotations
 import json
@@ -10,11 +10,12 @@ import sys
 import time
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signal
+from makebench.i18n import language, tr
 from .process import TaskProcess, signal_group
 
 
 class RuntimeSession(QObject):
-    """Executa um snapshot sem importar funções no processo do editor."""
+    """Run a snapshot without importing functions into the editor process."""
 
     ready = Signal()
     busy_changed = Signal(bool)
@@ -28,7 +29,7 @@ class RuntimeSession(QObject):
     task_changed = Signal(dict)
 
     def __init__(self, project, source, root, source_filename, parent=None):
-        """Mantém snapshot e transporte; construção não inicia execução."""
+        """Keep the snapshot and transport; construction does not start execution."""
         super().__init__(parent)
         self.project = project
         self.root = Path(root)
@@ -40,6 +41,7 @@ class RuntimeSession(QObject):
             "source": source,
             "root": str(self.root),
             "source_filename": str(source_filename),
+            "language": language(),
         }
         self.process = QProcess(self)
         self.process.setUnixProcessParameters(QProcess.UnixProcessFlag.CreateNewSession)
@@ -75,7 +77,7 @@ class RuntimeSession(QObject):
         self.kill_timer.timeout.connect(self._force_stop)
 
     def start(self):
-        """Inicia execução explícita, inclusive carregamento de funções próprias."""
+        """Start the explicit run, including loading the user's own functions."""
         self.closed = False
         self.active = False
         self.stopping = False
@@ -84,7 +86,7 @@ class RuntimeSession(QObject):
         self.process.start()
 
     def _started(self):
-        """Entrega snapshot depois que o canal de entrada está disponível."""
+        """Deliver the snapshot once the input channel is available."""
         self.pgid = int(self.process.processId())
         if self.stopping:
             signal_group(self.pgid, signal.SIGTERM)
@@ -92,18 +94,18 @@ class RuntimeSession(QObject):
             self.send(self.snapshot)
 
     def send(self, value):
-        """Envia uma mensagem sem bloquear o ciclo de eventos Qt."""
+        """Send a message without blocking the Qt event loop."""
         if self.process.state() == QProcess.ProcessState.Running:
             self.process.write(
                 (json.dumps(value, ensure_ascii=True, allow_nan=False) + "\n").encode()
             )
 
     def debug_command(self, action, **values):
-        """Envia controle ao leitor independente do worker, inclusive durante diálogos."""
+        """Send control to the worker's independent reader, even during dialogs."""
         self.send({"type": "debug", "action": action, **values})
 
     def reply(self, identifier, value=None, *, ok=True, cancelled=False, error=""):
-        """Responde a uma requisição de UI ou tarefa externa."""
+        """Reply to a UI request or an external task."""
         self.send(
             {
                 "type": "response",
@@ -116,7 +118,7 @@ class RuntimeSession(QObject):
         )
 
     def dispatch(self, flow_id):
-        """Aceita um evento por vez; cliques durante trabalho não enfileiram instalações."""
+        """Accept one event at a time; clicks during work do not queue installations."""
         if not self.active or self.busy or self.stopping:
             return False
         self.busy = True
@@ -132,26 +134,28 @@ class RuntimeSession(QObject):
         return True
 
     def _read(self):
-        """Remonta mensagens partidas no pipe e mantém limite por mensagem."""
+        """Reassemble messages split in the pipe and keep a per-message limit."""
         self.buffer += bytes(self.process.readAllStandardOutput())
         while b"\n" in self.buffer:
             line, self.buffer = self.buffer.split(b"\n", 1)
             if len(line) > 2_000_000:
-                self.error.emit({"message": "Resposta do processo excedeu o limite."})
+                self.error.emit({"message": tr("The process reply exceeded the limit.")})
                 self.stop()
                 return
             try:
                 self._message(json.loads(line))
             except (ValueError, KeyError, TypeError, AttributeError) as exc:
-                self.error.emit({"message": f"Protocolo de execução inválido: {exc}"})
+                self.error.emit(
+                    {"message": tr("Invalid execution protocol: {error}").format(error=exc)}
+                )
                 self.stop()
                 return
         if len(self.buffer) > 2_000_000:
-            self.error.emit({"message": "Resposta incompleta excedeu o limite."})
+            self.error.emit({"message": tr("Incomplete reply exceeded the limit.")})
             self.stop()
 
     def _message(self, message):
-        """Encaminha somente tipos de protocolo conhecidos; não evalua mensagens."""
+        """Forward only known protocol types; messages are never evaluated."""
         if self.stopping:
             return
         kind = message.get("type")
@@ -182,15 +186,15 @@ class RuntimeSession(QObject):
                 self.request.emit(message)
 
     def _stderr(self, final=False):
-        """Encaminha saída direta em descritores e erros do interpretador."""
+        """Forward direct descriptor output and interpreter errors."""
         text = self.stderr_decoder.decode(bytes(self.process.readAllStandardError()), final=final)
         if text:
             self.output.emit("stderr", text)
 
     def _run_task(self, message):
-        """Mantém a tarefa no supervisor Qt, inclusive se o worker falhar."""
+        """Keep the task in the Qt supervisor, even if the worker fails."""
         if self.task is not None:
-            self.reply(message["id"], ok=False, error="Já existe uma tarefa em execução.")
+            self.reply(message["id"], ok=False, error=tr("A task is already running."))
             return
         try:
             task = TaskProcess(
@@ -209,7 +213,7 @@ class RuntimeSession(QObject):
                 "id": task.identifier,
                 "program": task.program_label,
                 "admin": task.admin,
-                "state": "Executando",
+                "state": "running",
                 "duration": 0,
             }
         )
@@ -220,15 +224,15 @@ class RuntimeSession(QObject):
         task.start()
 
     def _task_finished(self, task, identifier, result):
-        """Libera bloqueio administrativo somente depois do término observado."""
+        """Release the administrative lock only after the observed end."""
         self.task_changed.emit(
             {
                 "id": task.identifier,
                 "program": task.program_label,
                 "admin": task.admin,
-                "state": "Concluído"
+                "state": "completed"
                 if result.get("ok") and result.get("value", {}).get("code") == 0
-                else "Não concluído",
+                else "failed",
                 "duration": time.monotonic() - task.started_at,
             }
         )
@@ -241,7 +245,10 @@ class RuntimeSession(QObject):
         self.admin_active = False
         self.admin_changed.emit(False)
         if result.get("ok"):
-            self.output.emit("status", f"Tarefa terminou com código {result['value']['code']}.\n")
+            self.output.emit(
+                "status",
+                tr("Task ended with code {code}.").format(code=result["value"]["code"]) + "\n",
+            )
         if not self.stopping:
             self.send({"type": "response", "id": identifier, **result})
         if self.process.state() == QProcess.ProcessState.NotRunning and not self.stopping:
@@ -249,25 +256,27 @@ class RuntimeSession(QObject):
         self._maybe_stopped()
 
     def _process_error(self, error):
-        """Explica falha de início sem esperar por um finished que não virá."""
+        """Explain a start failure without waiting for a finished signal that will not come."""
         if error == QProcess.ProcessError.FailedToStart:
             self.error.emit({"message": self.process.errorString()})
             self.stop()
 
     def _finished(self, code, status):
-        """Registra saída inesperada e limpa tarefas de usuário restantes."""
+        """Record an unexpected exit and clean up remaining user tasks."""
         self._read()
         self._stderr(True)
         self.active = False
         if not self.stopping:
             if not self.reported_error:
-                self.error.emit({"message": f"O processo Python foi encerrado (código {code})."})
+                self.error.emit(
+                    {"message": tr("The Python process ended (code {code}).").format(code=code)}
+                )
             if not self.admin_active:
                 self.stop()
         self._maybe_stopped()
 
     def stop(self):
-        """Cancela worker e grupos comuns; bloqueia fechamento com tarefa elevada ativa."""
+        """Cancel the worker and ordinary groups; block closing while an elevated task runs."""
         if self.admin_active:
             return False
         if self.closed or self.stopping:
@@ -283,7 +292,7 @@ class RuntimeSession(QObject):
         return True
 
     def _force_stop(self):
-        """Após prazo curto, encerra grupos que ignoraram TERM, inclusive descendentes."""
+        """After a short delay, end groups that ignored TERM, including descendants."""
         signal_group(self.pgid, signal.SIGKILL)
         if self.process.state() != QProcess.ProcessState.NotRunning:
             self.process.kill()
@@ -292,7 +301,7 @@ class RuntimeSession(QObject):
         self._maybe_stopped()
 
     def _maybe_stopped(self):
-        """Conclui só depois da limpeza dos grupos e dos processos supervisionados."""
+        """Finish only after cleaning up the groups and supervised processes."""
         if not self.stopping or self.kill_timer.isActive():
             return
         running = self.process.state() != QProcess.ProcessState.NotRunning or any(

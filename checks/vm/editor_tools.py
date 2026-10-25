@@ -1,11 +1,11 @@
-"""Sonda confiável do runtime do editor; não importa projetos do usuário."""
+"""Trusted probe of the editor runtime; never imports user projects."""
 
 import json
 import ssl
 
 
 def probe():
-    """Exerce o bootstrap real e ferramentas do host, mantendo certificados do destino."""
+    """Exercise the real bootstrap and host tools, keeping the target certificates."""
     from makebench.core.build_environment import run_tool
 
     version = run_tool(["/usr/bin/flatpak", "--version"]).strip()
@@ -17,7 +17,7 @@ def probe():
         ]
     )
     certificates = ssl.create_default_context().cert_store_stats()["x509_ca"]
-    assert certificates > 0, "Python portátil não encontrou certificados confiáveis do destino"
+    assert certificates > 0, "Portable Python did not find the target's trusted certificates"
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication
     from PySide6.QtTest import QTest

@@ -1,4 +1,4 @@
-"""Interações Qt reais de arraste, redimensionamento, páginas e imagens portáveis."""
+"""Real Qt interactions: dragging, resizing, pages and portable images."""
 
 import os
 import tempfile

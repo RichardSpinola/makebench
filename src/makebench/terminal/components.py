@@ -1,11 +1,12 @@
-"""Ciclo de vida de terminais de componentes sem importar Qt ou GTK."""
+"""Lifecycle of component terminals without importing Qt or GTK."""
 
 from pathlib import Path
 from makebench.core.project import ComponentKind
+from makebench.i18n import tr
 
 
 def start_components(root, widgets, directory):
-    """Inicia os terminais configurados somente no runtime explicitamente iniciado."""
+    """Start the configured terminals only in the explicitly started runtime."""
     for node in root.walk():
         if node.kind != ComponentKind.TERMINAL:
             continue
@@ -19,16 +20,16 @@ def start_components(root, widgets, directory):
 
 
 def stop_components(widgets):
-    """Encerra sessões possuídas pelos widgets antes de fechar a execução."""
+    """Stop sessions owned by the widgets before closing the run."""
     for widget in widgets.values():
         if hasattr(widget, "stop_terminal"):
             widget.stop_terminal()
 
 
 def terminal_request(widget, method, request):
-    """Atende a API declarada sem encaminhar operações a controles incompatíveis."""
+    """Serve the declared API without forwarding operations to incompatible controls."""
     if not hasattr(widget, "terminal"):
-        raise ValueError("Selecione um componente Terminal de uma janela aberta.")
+        raise ValueError(tr("Select a Terminal component of an open window."))
     if method == "terminal_start":
         return widget.start_terminal(request.get("program") or None, request.get("arguments", []))
     if method == "terminal_send":
@@ -36,4 +37,4 @@ def terminal_request(widget, method, request):
     if method == "terminal_stop":
         widget.stop_terminal()
         return None
-    raise ValueError("Operação de terminal desconhecida.")
+    raise ValueError(tr("Unknown terminal operation."))

@@ -1,4 +1,4 @@
-"""Bancada de trabalho: modos, contexto persistente e diagnóstico navegável."""
+"""Workbench: modes, persistent context and navigable diagnostics."""
 
 from PySide6.QtCore import Qt, QSettings, QTimer, QSize
 from PySide6.QtGui import QAction, QKeySequence
@@ -35,6 +35,18 @@ from .designer import DesignerMixin
 from .development import DevelopmentMixin
 from .execution import ExecutionMixin
 from .resources import ResourceMixin
+from makebench.i18n import tr
+from makebench.i18n import ntr
+
+# Internal mode keys are stable identifiers; only the labels are translated.
+MODE_LABELS = {"map": tr("Map"), "design": tr("Design"), "logic": tr("Logic"), "code": tr("Code")}
+MODE_ICONS = {
+    "map": "map",
+    "design": "select",
+    "logic": "logic",
+    "code": "code",
+    "publish": "export",
+}
 
 
 class StudioMixin(
@@ -46,18 +58,18 @@ class StudioMixin(
     ExecutionMixin,
     ResourceMixin,
 ):
-    """Adapta as vistas existentes sem duplicar documento, geração ou execução."""
+    """Adapt the existing views without duplicating the document, generation or execution."""
 
     def install_studio(self):
-        """Substitui a navegação antiga; preserva os widgets e APIs de edição."""
+        """Replace the old navigation; keep the editing widgets and APIs."""
         self.settings = QSettings("Makebench", "Makebench")
-        self._mode = "Design"
+        self._mode = "design"
         self._problem_targets = []
         for toolbar in self.findChildren(QToolBar):
             toolbar.hide()
         self.tabs.tabBar().hide()
         self.design_splitter = self.tabs.widget(0)
-        # Remonta as vistas existentes em painéis com responsabilidades explícitas.
+        # Rebuild the existing views into panels with explicit responsibilities.
         old_left = self.design_splitter.widget(0)
         left = QWidget()
         ll = QVBoxLayout(left)
@@ -70,8 +82,8 @@ class StudioMixin(
         sl.setContentsMargins(4, 4, 4, 4)
         sl.setSpacing(4)
         self.tree_search = QLineEdit()
-        self.tree_search.setPlaceholderText("Buscar componente…")
-        self.tree_search.setAccessibleName("Buscar componente")
+        self.tree_search.setPlaceholderText(tr("Search components…"))
+        self.tree_search.setAccessibleName(tr("Search components"))
         sl.addWidget(self.tree_search)
         sl.addWidget(self.tree)
         self.tree_search.textChanged.connect(self.filter_tree)
@@ -79,7 +91,7 @@ class StudioMixin(
         il = QVBoxLayout(insert)
         il.setContentsMargins(6, 6, 6, 6)
         self.insert_search = QLineEdit()
-        self.insert_search.setPlaceholderText("Buscar elemento…")
+        self.insert_search.setPlaceholderText(tr("Search elements…"))
         self.insert_search.setClearButtonEnabled(True)
         il.addWidget(self.insert_search)
         self.palette.setMaximumHeight(16777215)
@@ -93,8 +105,8 @@ class StudioMixin(
         from .catalog import CATEGORIES, filter_library
 
         self.insert_category = QComboBox()
-        self.insert_category.setAccessibleName("Categoria de componentes")
-        self.insert_category.addItem("Todos os componentes", None)
+        self.insert_category.setAccessibleName(tr("Component category"))
+        self.insert_category.addItem(tr("All components"), None)
         for key, label in CATEGORIES.items():
             self.insert_category.addItem(label, key)
         il.addWidget(self.insert_category)
@@ -103,17 +115,17 @@ class StudioMixin(
         filter_library(self)
         il.addWidget(self.palette, 1)
 
-        add = QPushButton(icon("add"), "Inserir")
-        add.setToolTip("Inserir o elemento selecionado")
+        add = QPushButton(icon("add"), tr("Insert"))
+        add.setToolTip(tr("Insert the selected element"))
         add.clicked.connect(self.add_component)
         il.addWidget(add)
         self.data_list = QListWidget()
-        self.data_list.setAccessibleName("Recursos e funções do projeto")
-        self.left_tabs.addTab(structure, "Estrutura")
-        self.left_tabs.addTab(insert, "Inserir")
-        self.left_tabs.addTab(self.data_list, "Dados")
+        self.data_list.setAccessibleName(tr("Project assets and functions"))
+        self.left_tabs.addTab(structure, tr("Structure"))
+        self.left_tabs.addTab(insert, tr("Insert"))
+        self.left_tabs.addTab(self.data_list, tr("Data"))
         ll.addWidget(self.left_tabs)
-        # O botão antigo será destruído; seu callback visual não deve sobreviver.
+        # The old button will be destroyed; its visual callback must not survive.
         self.remove_action.changed.disconnect()
         self.design_splitter.replaceWidget(0, left)
         old_left.hide()
@@ -123,21 +135,21 @@ class StudioMixin(
         ml = middle.layout()
         ml.setContentsMargins(0, 0, 0, 0)
         ml.setSpacing(0)
-        # Remove títulos e instruções que competiam com a área de criação.
+        # Remove titles and instructions that competed with the creation area.
         for n in reversed(range(ml.count())):
             widget = ml.itemAt(n).widget()
             if isinstance(widget, QLabel):
                 ml.removeWidget(widget)
                 widget.deleteLater()
         middle.setObjectName("pasteboard")
-        tools = QToolBar("Ferramentas de criação")
+        tools = QToolBar(tr("Creation tools"))
         tools.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         tools.setIconSize(QSize(16, 16))
         tools.setMovable(False)
-        select = tools.addAction(icon("select"), "Selecionar")
+        select = tools.addAction(icon("select"), tr("Select"))
         select.setCheckable(True)
         select.setChecked(True)
-        pan = tools.addAction(icon("pan"), "Mover a visão")
+        pan = tools.addAction(icon("pan"), tr("Pan the view"))
         pan.setCheckable(True)
         select.setProperty("makebenchIcon", "select")
         pan.setProperty("makebenchIcon", "pan")
@@ -166,7 +178,7 @@ class StudioMixin(
         self.property_tabs.setDocumentMode(True)
         self.property_tabs.setTabPosition(QTabWidget.TabPosition.South)
         self.design_splitter.replaceWidget(2, self.property_tabs)
-        self.property_tabs.addTab(old_right, "Propriedades")
+        self.property_tabs.addTab(old_right, tr("Properties"))
         self.right_panel = self.property_tabs
         from PySide6.QtWidgets import QFrame
 
@@ -185,7 +197,7 @@ class StudioMixin(
                 "workspace/design_panels", self.design_splitter.saveState()
             )
         )
-        # Uma gaveta compartilhada em todos os modos, fora do documento.
+        # One drawer shared by every mode, outside the document.
         self.drawer = QTabWidget()
         self.drawer.setDocumentMode(True)
         self.drawer.setTabPosition(QTabWidget.TabPosition.South)
@@ -197,29 +209,29 @@ class StudioMixin(
         self.output_log.highlighter.language = "plain"
         self.output_log.highlighter.rehighlight()
         self.output_log.origin_enabled = False
-        self.output_log.setAccessibleName("Saída da execução")
-        self.output_log.setPlaceholderText("A saída aparece aqui ao testar o aplicativo.")
+        self.output_log.setAccessibleName(tr("Run output"))
+        self.output_log.setPlaceholderText(tr("Output appears here when you test the application."))
         self.problems = QListWidget()
         self.problems.itemActivated.connect(self.go_to_problem)
         self.problems.itemClicked.connect(self.go_to_problem)
         self.script_editor = CodeEditor()
         self.script_editor.setPlaceholderText(
-            "Selecione um bloco Bash e escolha Editar texto ou script."
+            tr("Select a Bash block and choose Edit text or script.")
         )
-        self.script_apply = QPushButton("Aplicar ao bloco · Ctrl+Enter")
+        self.script_apply = QPushButton(tr("Apply to block · Ctrl+Enter"))
         self.script_apply.setEnabled(False)
         script = QWidget()
         sc = QVBoxLayout(script)
         self.script_context = QLabel(
-            "Selecione um bloco de texto ou Bash na Lógica e use Editar texto ou script."
+            tr("Select a text or Bash block in Logic and use Edit text or script.")
         )
         self.script_context.setWordWrap(True)
         sc.addWidget(self.script_context)
         sc.addWidget(self.script_editor)
         sc.addWidget(self.script_apply)
-        self.drawer.addTab(self.output_log, "Saída")
-        self.drawer.addTab(self.problems, "Problemas")
-        self.drawer.addTab(script, "Script")
+        self.drawer.addTab(self.output_log, tr("Output"))
+        self.drawer.addTab(self.problems, tr("Problems"))
+        self.drawer.addTab(script, tr("Script"))
         self.drawer.hide()
         self.workspace_splitter = QSplitter(Qt.Orientation.Vertical)
         self.workspace_splitter.setHandleWidth(4)
@@ -231,7 +243,7 @@ class StudioMixin(
         el = QVBoxLayout(editor)
         el.setContentsMargins(0, 0, 0, 0)
         el.setSpacing(0)
-        self.context_bar = QToolBar("Contexto de criação")
+        self.context_bar = QToolBar(tr("Creation context"))
         self.context_bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.context_bar.setIconSize(QSize(16, 16))
         self.context_bar.setMovable(False)
@@ -240,7 +252,7 @@ class StudioMixin(
         self.context_label.setTextFormat(Qt.TextFormat.PlainText)
         self.context_label.setFixedWidth(190)
         self.overview_action = self.context_bar.addAction(
-            icon("map"), "Mapa", lambda: self.set_mode("Mapa")
+            icon("map"), tr("Map"), lambda: self.set_mode("map")
         )
         self.overview_action.setProperty("makebenchIcon", "map")
         self.context_bar.addWidget(self.context_label)
@@ -250,8 +262,8 @@ class StudioMixin(
         self.drawer_toggle.setIcon(icon("output"))
         self.drawer_toggle.setAutoRaise(True)
         self.drawer_toggle.setFixedSize(26, 24)
-        self.drawer_toggle.setToolTip("Saída e problemas · Ctrl+J")
-        self.drawer_toggle.setAccessibleName("Saída e problemas")
+        self.drawer_toggle.setToolTip(tr("Output and problems · Ctrl+J"))
+        self.drawer_toggle.setAccessibleName(tr("Output and problems"))
         self.drawer_toggle.clicked.connect(self.toggle_drawer)
         self.drawer_toggle.setProperty("makebenchIcon", "output")
         self.statusBar().addPermanentWidget(self.drawer_toggle)
@@ -259,12 +271,12 @@ class StudioMixin(
         self.editor_page = editor
         self.pages.addWidget(editor)
         self.setCentralWidget(self.pages)
-        bar = QToolBar("Bancada")
+        bar = QToolBar(tr("Workbench"))
         bar.setObjectName("workspace_toolbar")
         bar.setMovable(False)
         bar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         bar.setIconSize(QSize(16, 16))
-        self.home_action = QAction(icon("home"), "Início", self)
+        self.home_action = QAction(icon("home"), tr("Start page"), self)
         self.home_action.setProperty("makebenchIcon", "home")
         self.home_action.triggered.connect(self.show_home)
         bar.addAction(self.home_action)
@@ -285,19 +297,9 @@ class StudioMixin(
         mode_row = QHBoxLayout(self.mode_switcher)
         mode_row.setContentsMargins(6, 0, 0, 0)
         mode_row.setSpacing(0)
-        for number, name in enumerate(["Mapa", "Design", "Lógica", "Código"], 1):
+        for number, (mode, name) in enumerate(MODE_LABELS.items(), 1):
             button = QToolButton()
-            button.setIcon(
-                icon(
-                    {
-                        "Mapa": "map",
-                        "Design": "select",
-                        "Lógica": "logic",
-                        "Código": "code",
-                        "Publicar": "export",
-                    }[name]
-                )
-            )
+            button.setIcon(icon(MODE_ICONS[mode]))
             button.setIconSize(QSize(16, 16))
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             button.setText(name)
@@ -306,14 +308,14 @@ class StudioMixin(
             button.setAutoRaise(True)
             button.setProperty("mode", True)
             button.setCheckable(True)
-            button.setAccessibleName("Modo " + name)
-            button.clicked.connect(lambda _, m=name: self.set_mode(m))
+            button.setAccessibleName(tr("{mode} mode").format(mode=name))
+            button.clicked.connect(lambda _, m=mode: self.set_mode(m))
             self.mode_group.addButton(button)
             mode_row.addWidget(button)
-            self.mode_buttons[name] = button
-            action = QAction("Modo " + name, self)
+            self.mode_buttons[mode] = button
+            action = QAction(tr("{mode} mode").format(mode=name), self)
             action.setShortcut(QKeySequence(f"Ctrl+{number}"))
-            action.triggered.connect(lambda _, m=name: self.set_mode(m))
+            action.triggered.connect(lambda _, m=mode: self.set_mode(m))
             self.addAction(action)
         self.menuBar().setCornerWidget(self.mode_switcher, Qt.Corner.TopRightCorner)
         spacer = QWidget()
@@ -321,49 +323,49 @@ class StudioMixin(
 
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         bar.addWidget(spacer)
-        self.test_status = QLabel("Parado")
+        self.test_status = QLabel(tr("Stopped"))
         self.test_status.setMaximumWidth(190)
         bar.addWidget(self.test_status)
         bar.addAction(self.run_action)
         bar.widgetForAction(self.run_action).setProperty("primary", True)
-        self.stop_action = QAction(icon("stop"), "Parar teste", self)
+        self.stop_action = QAction(icon("stop"), tr("Stop test"), self)
         self.stop_action.setShortcut(QKeySequence("Shift+F5"))
         self.stop_action.setProperty("makebenchIcon", "stop")
         self.stop_action.triggered.connect(self.stop_test)
         bar.addAction(self.stop_action)
         self.workspace_toolbar = bar
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, bar)
-        view = self.menuBar().addMenu("E&xibir")
+        view = self.menuBar().addMenu(tr("&View"))
         for label, shortcut, callback in [
-            ("Painel esquerdo", "Ctrl+B", lambda: self.toggle_side("left")),
-            ("Inspetor", "Ctrl+Alt+B", lambda: self.toggle_side("right")),
-            ("Saída e problemas", "Ctrl+J", self.toggle_drawer),
-            ("Paleta de comandos…", "Ctrl+K", self.show_commands),
-            ("Preferências…", "Ctrl+,", self.preferences),
-            ("Alternar região de foco", "F6", self.cycle_focus),
+            (tr("Left panel"), "Ctrl+B", lambda: self.toggle_side("left")),
+            (tr("Inspector"), "Ctrl+Alt+B", lambda: self.toggle_side("right")),
+            (tr("Output and problems"), "Ctrl+J", self.toggle_drawer),
+            (tr("Command palette…"), "Ctrl+K", self.show_commands),
+            (tr("Preferences…"), "Ctrl+,", self.preferences),
+            (tr("Cycle focus region"), "F6", self.cycle_focus),
         ]:
             action = QAction(label, self)
             action.setShortcut(QKeySequence(shortcut))
             action.triggered.connect(callback)
             view.addAction(action)
         view.addAction(self.home_action)
-        grid = view.addAction("Encaixar na grade")
+        grid = view.addAction(tr("Snap to grid"))
         grid.setCheckable(True)
         grid.setChecked(self.snap_check.isChecked())
         grid.toggled.connect(self.snap_check.setChecked)
         self.snap_check.hide()
         self.command_palette_action = next(
-            a for a in view.actions() if a.text().startswith("Paleta")
+            a for a in view.actions() if a.text().startswith(tr("Command palette"))
         )
         register(self)
         manager().changed.connect(self.theme_changed)
-        self.mode_buttons["Design"].setChecked(True)
+        self.mode_buttons["design"].setChecked(True)
         self.tabs.currentChanged.connect(self.sync_mode_button)
         self.logic.script_requested.connect(self.edit_script_inline)
         self.script_apply.clicked.connect(self.apply_script_inline)
         self.script_editor.textChanged.connect(self.script_text_changed)
         self.logic.before_switch = self.prepare_script_change
-        script_action = QAction("Aplicar script", self)
+        script_action = QAction(tr("Apply script"), self)
         script_action.setShortcut(QKeySequence("Ctrl+Return"))
         script_action.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         script_action.triggered.connect(self.apply_script_inline)
@@ -385,27 +387,31 @@ class StudioMixin(
 
         self.publish_dialog = ExportDialog(self)
         self.publish_panel = self.publish_dialog.panel
-        self.export_action = QAction(icon("export"), "Exportar aplicativo…", self)
+        self.export_action = QAction(icon("export"), tr("Export application…"), self)
         self.export_action.setProperty("makebenchIcon", "export")
         self.export_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
         self.export_action.triggered.connect(self.export_application)
         self.workspace_toolbar.insertAction(self.run_action, self.export_action)
         project_menu = next(
-            (a.menu() for a in self.menuBar().actions() if a.text().replace("&", "") == "Projeto"),
+            (
+                a.menu()
+                for a in self.menuBar().actions()
+                if a.text().replace("&", "") == tr("Project")
+            ),
             None,
-        ) or self.menuBar().addMenu("Projeto")
-        project_menu.addAction("Configurações do aplicativo…", self.application_settings)
+        ) or self.menuBar().addMenu(tr("&Project"))
+        project_menu.addAction(tr("Application settings…"), self.application_settings)
         project_menu.addAction(self.export_action)
         from .settings import show_diagnostic, open_checklist, apply_preferences
 
         help_menu = next(
-            a.menu() for a in self.menuBar().actions() if a.text().replace("&", "") == "Ajuda"
+            a.menu() for a in self.menuBar().actions() if a.text().replace("&", "") == tr("Help")
         )
-        help_menu.addAction("Diagnóstico do ambiente…", lambda: show_diagnostic(self))
-        help_menu.addAction("Checklist de validação", lambda: open_checklist(self))
+        help_menu.addAction(tr("Environment diagnostics…"), lambda: show_diagnostic(self))
+        help_menu.addAction(tr("User guide"), lambda: open_checklist(self))
         gear = QToolButton()
         gear.setIcon(icon("settings"))
-        gear.setToolTip("Configurações do aplicativo")
+        gear.setToolTip(tr("Application settings"))
         gear.clicked.connect(self.application_settings)
         sl.insertWidget(0, gear, 0, Qt.AlignmentFlag.AlignRight)
         gear.setProperty("makebenchIcon", "settings")
@@ -413,7 +419,7 @@ class StudioMixin(
         register(self)
 
     def export_application(self):
-        """Abre uma janela de exportação sem substituir nem desmontar a área de trabalho."""
+        """Open an export window without replacing or tearing down the workspace."""
         if not self._finish_field_edit():
             return
         self.publish_panel.sync()
@@ -422,74 +428,76 @@ class StudioMixin(
         self.publish_dialog.activateWindow()
 
     def insert_kind(self, kind):
-        """Insere uma ferramenta usando o mesmo histórico da paleta por arraste."""
+        """Insert a tool using the same history as the drag palette."""
         self.palette.setCurrentRow(self.palette.findData(kind.value))
         self.add_component()
 
     def set_mode(self, mode):
-        """Troca a tarefa preservando seleção e confirmação dos blocos."""
-        if mode == "Publicar":
+        """Switch tasks keeping the selection and the blocks' confirmation."""
+        if mode == "publish":
             self.export_application()
             return
         if getattr(self, "_compact_home", False):
             self._compact_home = False
             self.setMinimumSize(980, 600)
             self.resize(1280, 800)
-        if self.project.metadata.get("empty_map") and mode in {"Design", "Lógica", "Código"}:
-            mode = "Mapa"
-            self.statusBar().showMessage("Crie a primeira interface no mapa para começar.", 6000)
-        indexes = {"Design": 0, "Lógica": 1, "Código": 2, "Mapa": 3}
+        if self.project.metadata.get("empty_map") and mode in {"design", "logic", "code"}:
+            mode = "map"
+            self.statusBar().showMessage(
+                tr("Create the first interface in the map to get started."), 6000
+            )
+        indexes = {"design": 0, "logic": 1, "code": 2, "map": 3}
         index = indexes[mode]
         if index >= self.tabs.count():
             return
         self.pages.setCurrentWidget(self.editor_page)
         self.workspace_toolbar.show()
         if (
-            mode == "Design"
+            mode == "design"
             and hasattr(self, "zoom_view")
             and getattr(self, "_fitted_interface", None) != (self.project.id, self.active_window)
         ):
             self._fitted_interface = (self.project.id, self.active_window)
             QTimer.singleShot(0, self.zoom_view.fit)
-        if mode == "Lógica" and self.tabs.currentIndex() != 1:
+        if mode == "logic" and self.tabs.currentIndex() != 1:
             self.logic.select_component_event(self.selected_id, self.active_state)
         self.tabs.setCurrentIndex(index)
         self.sync_mode_button(self.tabs.currentIndex())
 
     def sync_mode_button(self, index):
-        """Acompanha atalhos e navegação automática para a origem dos erros."""
-        modes = ["Design", "Lógica", "Código", "Mapa"]
+        """Follow shortcuts and automatic navigation to the origin of errors."""
+        modes = ["design", "logic", "code", "map"]
         if 0 <= index < len(modes):
             self._mode = modes[index]
             self.mode_buttons[self._mode].setChecked(True)
         if hasattr(self, "zoom_actions"):
             for action in self.zoom_actions:
                 action.setVisible(True)
-                action.setEnabled(self._mode in {"Design", "Mapa"})
+                action.setEnabled(self._mode in {"design", "map"})
         if hasattr(self, "overview_action"):
             self.overview_action.setVisible(True)
         for name, button in self.mode_buttons.items():
             button.setVisible(True)
             button.setEnabled(
-                not self.project.metadata.get("empty_map") or name in {"Mapa", "Publicar"}
+                not self.project.metadata.get("empty_map") or name in {"map", "publish"}
             )
         self.sync_studio()
         if hasattr(self, "zoom_reset_button"):
             self.update_zoom_label()
 
     def sync_studio(self):
-        """Atualiza somente dados derivados; nunca executa código do projeto."""
+        """Update only derived data; never runs project code."""
         if not hasattr(self, "project_heading"):
             return
         empty = bool(self.project.metadata.get("empty_map"))
         for name, button in self.mode_buttons.items():
-            button.setEnabled(not empty or name in {"Mapa", "Publicar"})
+            button.setEnabled(not empty or name in {"map", "publish"})
         dirty = self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
         self.project_heading.setText(self.project.name + (" •" if dirty else ""))
         node = self.project.find(self.selected_id)
         context = (
             ""
-            if self._mode in {"Mapa", "Publicar"} or node is None or node.kind.value == "window"
+            if self._mode in {"map", "publish"} or node is None or node.kind.value == "window"
             else node.display_name
         )
         self.context_label.setText(
@@ -504,7 +512,7 @@ class StudioMixin(
             from makebench.core.logic import function_names
 
             for name in function_names(self.source.text)[0]:
-                self.data_list.addItem("Função · " + name + "(ctx, valor)")
+                self.data_list.addItem(tr("Function") + " · " + name + tr("(ctx, value)"))
             self.sync_variables()
         self.sync_navigation()
         self.sync_problems()
@@ -515,7 +523,7 @@ class StudioMixin(
             self.map_panel.sync()
 
     def sync_problems(self):
-        """Concentra diagnósticos estáticos com vínculo ao fluxo ou à linha."""
+        """Gather static diagnostics, linked to their flow or line."""
         if not hasattr(self, "code_index"):
             return
         import json
@@ -549,11 +557,11 @@ class StudioMixin(
         names = set(function_names(self.source.text)[0])
 
         def visit(value, flow):
-            """Percorre dados estruturados sem executar conteúdo do projeto."""
+            """Walk structured data without running project content."""
             if isinstance(value, dict):
                 if value.get("op") == "call" and value.get("function") not in names:
                     self._add_problem(
-                        "Função ausente: " + value.get("function", ""),
+                        tr("Missing function: {name}").format(name=value.get("function", "")),
                         {"flow": flow["id"], "block": value["id"]},
                     )
                 for child in value.values():
@@ -566,14 +574,14 @@ class StudioMixin(
 
         if not editable(self.project):
             self._add_problem(
-                "Fluxos reservados foram preservados. A execução exige uma versão compatível.", {}
+                tr("Reserved flows were kept. Running them requires a compatible version."), {}
             )
         for flow in self.project.editable_flows:
             if flow.get("body") is None:
                 self._add_problem(
-                    flow.get("name", "Fluxo")
+                    flow.get("name", tr("Flow"))
                     + ": "
-                    + ("; ".join(flow.get("errors", [])) or "Complete os blocos."),
+                    + ("; ".join(flow.get("errors", [])) or tr("Complete the blocks.")),
                     {"flow": flow["id"]},
                 )
             visit(flow.get("body"), flow)
@@ -589,30 +597,38 @@ class StudioMixin(
                     and root.id not in incoming
                 ):
                     self._add_problem(
-                        "Aviso · "
-                        + root.properties.get("title", "Janela")
-                        + ": sem transição de entrada por blocos. Funções Python podem abri-la.",
+                        tr(
+                            "Warning · {window}: no incoming transition from blocks. Python functions can open it."
+                        ).format(window=root.properties.get("title", tr("Window"))),
                         {"component": root.id},
                     )
         if not self.problems.count():
-            item = QListWidgetItem("Nenhum problema encontrado.")
+            item = QListWidgetItem(tr("No problems found."))
             item.setFlags(Qt.ItemFlag.NoItemFlags)
             self.problems.addItem(item)
         count = len(self._problem_targets)
-        self.drawer.setTabText(1, f"Problemas ({count})" if count else "Problemas")
-        self.mode_buttons["Lógica"].setToolTip(
-            "Lógica · Ctrl+3" + (f" · {count} problema(s)" if count else "")
+        self.drawer.setTabText(
+            1, tr("Problems ({count})").format(count=count) if count else tr("Problems")
+        )
+        self.mode_buttons["logic"].setToolTip(
+            MODE_LABELS["logic"]
+            + " · Ctrl+3"
+            + (
+                " · " + ntr("{count} problem", "{count} problems", count).format(count=count)
+                if count
+                else ""
+            )
         )
 
     def _add_problem(self, label, target):
-        """Acrescenta uma linha navegável sem interpretar texto como instrução."""
+        """Add a navigable row without interpreting text as an instruction."""
         item = QListWidgetItem(label)
         item.setData(Qt.ItemDataRole.UserRole, target)
         self.problems.addItem(item)
         self._problem_targets.append(target)
 
     def go_to_problem(self, item):
-        """Seleciona o arquivo ou o fluxo de origem do diagnóstico."""
+        """Select the diagnostic's source file or flow."""
         target = item.data(Qt.ItemDataRole.UserRole)
         if not target:
             return
@@ -630,11 +646,11 @@ class StudioMixin(
                 self.logic.focus_block(target["flow"], target["block"])
 
     def toggle_drawer(self):
-        """Recolhe a gaveta sem perder logs ou o texto de um script em edição."""
+        """Collapse the drawer without losing logs or a script being edited."""
         self.drawer.setVisible(not self.drawer.isVisible())
 
     def show_commands(self):
-        """Abre a busca sobre as mesmas QAction utilizadas pelos menus."""
+        """Open the search over the same QActions used by the menus."""
         import ast
         from PySide6.QtGui import QAction
 
@@ -642,7 +658,7 @@ class StudioMixin(
         dynamic = []
 
         def add(label, callback):
-            """Liga uma entrada temporária ao item real do documento atual."""
+            """Bind a temporary entry to the real item of the current document."""
             action = QAction(label, palette)
             action.triggered.connect(callback)
             dynamic.append(action)
@@ -650,8 +666,9 @@ class StudioMixin(
         for node in self.project.walk():
             owner = self.project.window_of(node.id)
             add(
-                "Ir para componente · "
-                + owner.properties.get("title", "Janela")
+                tr("Go to component")
+                + " · "
+                + owner.properties.get("title", tr("Window"))
                 + " › "
                 + (node.properties.get("code_name") or node.display_name),
                 lambda _, identifier=node.id: self.navigate_to_item("component", identifier),
@@ -659,8 +676,9 @@ class StudioMixin(
         for owner, states in self.project.states.items():
             for state in states:
                 add(
-                    "Ir para estado · "
-                    + self.project.find(owner).properties.get("title", "Janela")
+                    tr("Go to state")
+                    + " · "
+                    + self.project.find(owner).properties.get("title", tr("Window"))
                     + " › "
                     + state["name"],
                     lambda _, identifier=state["id"], owner=owner: self.navigate_to_item(
@@ -669,14 +687,14 @@ class StudioMixin(
                 )
         for flow in self.project.editable_flows:
             add(
-                "Ir para fluxo · " + flow["name"],
+                tr("Go to flow") + " · " + flow["name"],
                 lambda _, identifier=flow["id"]: self.navigate_to_item("flow", identifier),
             )
         try:
             for node in ast.parse(self.source.text).body:
                 if isinstance(node, ast.FunctionDef):
                     add(
-                        "Ir para função · " + node.name,
+                        tr("Go to function") + " · " + node.name,
                         lambda _, name=node.name: self.find_function_name(name),
                     )
         except (SyntaxError, ValueError):
@@ -687,10 +705,10 @@ class StudioMixin(
         palette.deleteLater()
 
     def filter_tree(self, query):
-        """Mantém ancestrais visíveis quando um descendente combina com a busca."""
+        """Keep ancestors visible when a descendant matches the search."""
 
         def match(item):
-            """Mantém ancestrais visíveis quando um descendente corresponde à busca."""
+            """Keep ancestors visible when a descendant matches the search."""
             visible = query.casefold() in item.text(0).casefold()
             for n in range(item.childCount()):
                 visible = match(item.child(n)) or visible
@@ -701,14 +719,14 @@ class StudioMixin(
             match(self.tree.topLevelItem(n))
 
     def preferences(self):
-        """Abre preferências Qt com aplicação imediata e busca em todas as páginas."""
+        """Open Qt preferences, applied immediately and searchable across all pages."""
         from .settings import EditorPreferences
 
         self.preferences_dialog = EditorPreferences(self)
         self.preferences_dialog.show()
 
     def application_settings(self, field=None):
-        """Abre a central única de configuração do aplicativo criado."""
+        """Open the single settings center of the application being built."""
         if not self._finish_field_edit():
             return
         from .settings import ApplicationSettings
@@ -721,7 +739,7 @@ class StudioMixin(
         self.app_settings_dialog.show()
 
     def edit_script_inline(self, data):
-        """Edita literal no painel inferior, mantendo token e identificador Blockly."""
+        """Edit a literal in the bottom panel, keeping the Blockly token and identifier."""
         target = (self.logic.token, data["id"])
         if getattr(self, "_script_target", None) == target and self.script_dirty():
             self.drawer.show()
@@ -735,15 +753,16 @@ class StudioMixin(
         flow = next((f for f in self.project.editable_flows if f["id"] == self.logic.flow_id), None)
         self.script_context.setText(
             (
-                "Evento: "
+                tr("Event:")
+                + " "
                 + flow["name"]
                 + " · "
                 + self.project.window_of(flow["event"]["component"]).properties.get(
-                    "title", "Janela"
+                    "title", tr("Window")
                 )
             )
             if flow
-            else "Texto do bloco selecionado"
+            else tr("Text of the selected block")
         )
         self.script_editor.setPlainText(data["text"])
         self.script_apply.setEnabled(False)
@@ -752,7 +771,7 @@ class StudioMixin(
         self.script_editor.setFocus()
 
     def apply_script_inline(self):
-        """Aplica texto apenas ao workspace que originou a edição."""
+        """Apply text only to the workspace the edit came from."""
         import json
 
         target = getattr(self, "_script_target", None)
@@ -765,7 +784,7 @@ class StudioMixin(
         )
 
         def applied(result):
-            """Confirma o buffer somente quando Blockly aceitou o texto no alvo certo."""
+            """Commit the buffer only when Blockly accepted the text at the right target."""
             if result and getattr(self, "_script_target", None) == target:
                 self._script_original = text
                 self.script_apply.setEnabled(self.script_dirty())
@@ -774,26 +793,28 @@ class StudioMixin(
         self.logic.page.runJavaScript(code, applied)
 
     def script_dirty(self):
-        """Inclui texto ainda não aplicado no aviso de alterações e na recuperação."""
+        """Include text not applied yet in the changes notice and in recovery."""
         return bool(
             getattr(self, "_script_target", None)
             and self.script_editor.toPlainText() != getattr(self, "_script_original", "")
         )
 
     def script_text_changed(self):
-        """Mantém aplicação e indicador de alterações disponíveis durante a digitação."""
+        """Keep applying and the changes indicator available while typing."""
         self.script_apply.setEnabled(self.script_dirty())
         if hasattr(self, "project_heading"):
             self._update_actions()
 
     def prepare_script_change(self):
-        """Confirma script pendente antes de salvar, trocar fluxo, desfazer ou fechar."""
+        """Confirm a pending script before saving, switching flows, undoing or closing."""
         if not self.script_dirty():
             return True
         target = getattr(self, "_script_target", None)
         if not self.logic.ready or target[0] != self.logic.token or self.logic._flushing:
             self.statusBar().showMessage(
-                "O script continua na gaveta. Copie o texto ou retorne ao bloco antes de continuar.",
+                tr(
+                    "The script is still in the drawer. Copy the text or go back to the block before continuing."
+                ),
                 8000,
             )
             return False
@@ -801,17 +822,17 @@ class StudioMixin(
         return self.logic.flush() and not self.script_dirty()
 
     def stop_test(self):
-        """Solicita cancelamento real, respeitando tarefas administrativas ativas."""
+        """Request a real cancellation, respecting active administrative tasks."""
         if self.runtime_window:
             self.runtime_window.stop()
 
     def cycle_focus(self):
-        """Percorre regiões da bancada por teclado, incluindo uma saída do canvas."""
+        """Cycle through the workbench regions by keyboard, including a way out of the canvas."""
         regions = (
             [self.tree, self.canvas, self.inspector, self.drawer]
-            if self._mode == "Design"
+            if self._mode == "design"
             else [self.logic.events, self.logic.view, self.logic.code, self.drawer]
-            if self._mode == "Lógica"
+            if self._mode == "logic"
             else [self.code_files, self.source_editor, self.function_outline, self.drawer]
         )
         regions = [region for region in regions if region is not None and region.isVisible()]
@@ -832,7 +853,7 @@ class StudioMixin(
             regions[(index + 1) % len(regions)].setFocus(Qt.FocusReason.ShortcutFocusReason)
 
     def theme_changed(self, _tokens):
-        """Atualiza ícones e mantém a seleção/campos intactos ao alternar aparência."""
+        """Update icons and keep the selection/fields intact when switching appearance."""
         register(self)
         QTimer.singleShot(0, self, self._sync_native_bars)
         from PySide6.QtWidgets import QAbstractButton
@@ -845,52 +866,42 @@ class StudioMixin(
             item = self.palette.item(index)
             item.setIcon(icon(item.data(Qt.ItemDataRole.UserRole)))
         for mode, button in self.mode_buttons.items():
-            button.setIcon(
-                icon(
-                    {
-                        "Mapa": "map",
-                        "Design": "select",
-                        "Lógica": "logic",
-                        "Código": "code",
-                        "Publicar": "export",
-                    }[mode]
-                )
-            )
+            button.setIcon(icon(MODE_ICONS[mode]))
         for identifier, item in self._tree_items.items():
             node = self.project.find(identifier)
             if node:
                 item.setIcon(0, icon(node.kind.value))
 
     def toggle_side(self, side):
-        """Alterna apenas o painel pertencente ao modo em uso."""
+        """Toggle only the panel that belongs to the current mode."""
         target = None
-        if self._mode == "Design":
+        if self._mode == "design":
             target = self.left_panel if side == "left" else self.right_panel
-        elif self._mode == "Lógica" and side == "right":
+        elif self._mode == "logic" and side == "right":
             target = self.logic.splitter.widget(1)
-        elif self._mode == "Mapa":
+        elif self._mode == "map":
             target = self.map_panel.outline_panel if side == "left" else self.map_panel.details
-        elif self._mode == "Código" and side == "right":
+        elif self._mode == "code" and side == "right":
             target = self.function_outline.parentWidget()
-        elif self._mode == "Publicar" and side == "left":
+        elif self._mode == "publish" and side == "left":
             target = self.publish_panel.checks
         if target:
             target.setVisible(not target.isVisible())
 
     def navigate_to_item(self, kind, identifier, owner=None):
-        """Localiza componentes, estados e fluxos preservando texto pendente e contexto."""
+        """Find components, states and flows, keeping pending text and context."""
         if not self._finish_field_edit():
             return
         if kind == "state":
             self.activate_window(owner, identifier)
-            self.set_mode("Design")
+            self.set_mode("design")
             return
         if kind == "flow":
             flow = next(f for f in self.project.editable_flows if f["id"] == identifier)
             window = self.project.window_of(flow["event"]["component"])
             self.activate_window(window.id, (flow.get("states") or ["@default"])[0])
             self._select(flow["event"]["component"])
-            self.set_mode("Lógica")
+            self.set_mode("logic")
             self.logic.sync(identifier)
             return
         node = self.project.find(identifier)
@@ -900,4 +911,4 @@ class StudioMixin(
                 window.id, self.active_state if window.id == self.active_window else "@default"
             )
             self._select(identifier)
-            self.set_mode("Design")
+            self.set_mode("design")

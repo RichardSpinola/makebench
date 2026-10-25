@@ -1,4 +1,4 @@
-"""Contratos de distribuição isolada, compatibilidade e ambiente de processos externos."""
+"""Contracts for isolated distribution, compatibility and the environment of external processes."""
 
 import ast
 import hashlib
@@ -24,7 +24,7 @@ from makebench.terminal.environment import external_environment
 
 
 class PortableTests(unittest.TestCase):
-    """Verificações não podem preparar SDKs, executar fontes nem aceitar cache alterado."""
+    """Checks may not prepare SDKs, run sources or accept a changed cache."""
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -35,7 +35,7 @@ class PortableTests(unittest.TestCase):
         self.addCleanup(self.environment.stop)
 
     def test_ready_and_requirements_are_inert(self):
-        """Abrir Exportar inspeciona recibos; não inicia Podman, pip ou código de projeto."""
+        """Opening Export inspects receipts; it never starts Podman, pip or project code."""
         project = Project.empty()
         project.application = {"backend": "gtk", "packages": ["packaging==25.0"]}
         with patch("subprocess.Popen") as popen, patch("subprocess.run") as run:
@@ -48,7 +48,7 @@ class PortableTests(unittest.TestCase):
             requirements(project)
 
     def test_staging_is_only_mount_and_network_disabled(self):
-        """Construir usa somente staging; resolver pacotes precisa da preparação explícita."""
+        """Building uses only staging; resolving packages requires explicit preparation."""
         with patch("shutil.which", return_value="/usr/bin/podman"):
             args = command(["python3.12", str(self.root / "payload.py")], self.root)
         self.assertIn("--network=none", args)
@@ -59,7 +59,7 @@ class PortableTests(unittest.TestCase):
         self.assertIn("/work/payload.py", args)
 
     def test_changed_wheel_never_reaches_installer(self):
-        """O hash da cópia em staging é conferido antes de rodar a ferramenta."""
+        """The hash of the staged copy is checked before running the tool."""
         project = Project.empty()
         project.application["backend"] = "gtk"
         root = wheel_root(project)
@@ -86,21 +86,21 @@ class PortableTests(unittest.TestCase):
         appdir.mkdir(parents=True)
         wheel.write_bytes(b"alterado")
         with patch("subprocess.Popen") as popen:
-            with self.assertRaisesRegex(ProjectError, "alterada"):
+            with self.assertRaisesRegex(ProjectError, "changed in the cache"):
                 assemble(project, appdir)
             popen.assert_not_called()
         self.assertFalse((appdir.parent / "wheels" / wheel.name).exists())
 
     def test_target_grammar_is_checked_without_running_code(self):
-        """Uma construção para Python3.12 rejeita gramática incompatível antes de preparar."""
+        """A build for Python 3.12 rejects incompatible grammar before preparing."""
         source = 'type Alias = int\nraise RuntimeError("não executar")\n'
         self.assertIsNone(syntax_compatibility(source, 12))
-        self.assertIn("incompatível", syntax_compatibility(source, 11))
+        self.assertIn("incompatible", syntax_compatibility(source, 11))
         for path in (Path(__file__).resolve().parents[1] / "src").rglob("*.py"):
             ast.parse(path.read_text(), feature_version=(3, 12))
 
     def test_host_programs_do_not_receive_bundled_python_or_libraries(self):
-        """Terminal/tarefas do sistema preservam seu Python e bibliotecas próprios."""
+        """System terminal/tasks keep their own Python and libraries."""
         root = self.root / "AppDir"
         root.mkdir()
         original = {
@@ -128,7 +128,7 @@ class PortableTests(unittest.TestCase):
         self.assertEqual(bundled["PYTHONHOME"], str(root / "usr"))
 
     def test_build_tools_use_host_environment_from_portable_editor(self):
-        """Ferramentas externas também não recebem o PYTHONHOME privado do AppImage."""
+        """External tools also never receive the AppImage's private PYTHONHOME."""
         import sys
         from makebench.core.build_environment import run_tool
 
@@ -157,33 +157,33 @@ class PortableTests(unittest.TestCase):
         self.assertIn("FERRAMENTA_OK", output)
 
     def test_missing_sdk_is_not_a_fake_package(self):
-        """Pedir DEB sem preparar falha claramente, sem criar um ZIP com extensão DEB."""
+        """Asking for a DEB without preparing fails clearly, without creating a ZIP with a DEB extension."""
         from makebench.core.packages import build_package
 
         project = Project.empty()
         project.application = {
-            "name": "Teste",
+            "name": "Testing",
             "id": "org.exemplo.test",
             "version": "0.1.0",
             "backend": "gtk",
             "icon": "assets/icon.svg",
         }
         target = self.root / "app.deb"
-        with self.assertRaisesRegex(ProjectError, "Preparar"):
+        with self.assertRaisesRegex(ProjectError, "Prepare tools"):
             build_package(
                 project, "", lambda _: b'<svg xmlns="http://www.w3.org/2000/svg"/>', target, "deb"
             )
         self.assertFalse(target.exists())
 
     def test_flatpak_allows_sandbox_tasks_without_host_permission(self):
-        """Comandos comuns e terminal continuam dentro do pacote; admin é recusado."""
+        """Ordinary commands and the terminal stay inside the package; admin is refused."""
         from makebench.core.packages import preflight, write_recipe
         from makebench.core.logic import create_flow
         from makebench.core.logic_defaults import default_block
 
         project = Project.empty()
         project.application = {
-            "name": "Teste",
+            "name": "Testing",
             "id": "org.exemplo.test",
             "version": "0.1.0",
             "backend": "gtk",
@@ -207,10 +207,10 @@ class PortableTests(unittest.TestCase):
 
 
 class PortableInterfaceTests(unittest.TestCase):
-    """Trocar o produto preserva a configuração do projeto sem preparar ou executar."""
+    """Switching the product keeps the project settings without preparing or running."""
 
     def test_editor_product_is_appimage_and_preserves_project_recipe(self):
-        """Receita escondida não muda a ação do editor; retornar restaura formato/receita."""
+        """A hidden recipe option does not change the editor action; switching back restores format/recipe."""
         from PySide6.QtWidgets import QApplication
         from makebench.editor.window import MainWindow
 
@@ -237,7 +237,7 @@ class PortableInterfaceTests(unittest.TestCase):
                 with patch("subprocess.Popen") as popen, patch("subprocess.run") as run:
                     panel.product.setCurrentIndex(1)
                     self.assertEqual(panel.format.currentData(), "appimage")
-                    self.assertEqual(panel.build.text(), "Construir AppImage…")
+                    self.assertEqual(panel.build.text(), "Build AppImage…")
                     self.assertTrue(panel.recipe_only.isHidden())
                     self.assertFalse(
                         panel.format.model().item(panel.format.findData("rpm")).isEnabled()
@@ -255,7 +255,7 @@ class PortableInterfaceTests(unittest.TestCase):
                 app.processEvents()
 
     def test_close_waits_for_inflight_designer_preview(self):
-        """Fechar cancela a prévia e mantém sua QThread viva até limpar o helper."""
+        """Closing cancels the preview and keeps its QThread alive until the helper is cleaned up."""
         import threading
         import time
         from PySide6.QtWidgets import QApplication
@@ -267,7 +267,7 @@ class PortableInterfaceTests(unittest.TestCase):
         started = threading.Event()
 
         def rendering(job):
-            """Simula um renderizador ainda finalizando recursos após receber cancelamento."""
+            """Simulate a renderer still releasing resources after receiving a cancellation."""
             started.set()
             job.cancel.wait(5)
             time.sleep(0.25)

@@ -1,42 +1,43 @@
-"""Modelos de comportamento: dados neutros reais, sem execução nem dependência Qt."""
+"""Behavior templates: real neutral data, with no execution or Qt dependency."""
 
 from .project import ComponentKind, ProjectError, new_id
 from .logic_defaults import default_block, literal
+from makebench.i18n import tr
 
 TEMPLATES = [
-    ("open_window", "Abrir janela"),
-    ("go_state", "Mudar estado"),
-    ("message", "Mostrar mensagem"),
-    ("read_field", "Ler campo"),
-    ("set_text", "Alterar texto"),
-    ("save_value", "Guardar valor em variável"),
-    ("validate_input", "Validar entrada"),
-    ("run", "Executar tarefa"),
-    ("confirm", "Solicitar confirmação"),
+    ("open_window", tr("Open window")),
+    ("go_state", tr("Change state")),
+    ("message", tr("Show message")),
+    ("read_field", tr("Read field")),
+    ("set_text", tr("Change text")),
+    ("save_value", tr("Store value in variable")),
+    ("validate_input", tr("Validate input")),
+    ("run", tr("Run task")),
+    ("confirm", tr("Ask for confirmation")),
 ]
 
 
 def behavior_template(kind, project, window):
-    """Retorna blocos válidos para a janela informada ou explica a pré-condição ausente.
+    """Return valid blocks for the given window or explain the missing precondition.
 
-    Referências são componentes reais. Guardar valor mantém memória da execução,
-    não grava arquivos. Criar estes dados não inicia código ou processos.
+    References are real components. Storing a value keeps it in run-time memory and
+    does not write files. Creating this data never starts code or processes.
     """
     root = project.find(window)
     if root is None or root.kind != ComponentKind.WINDOW:
-        raise ProjectError("Selecione uma interface.")
+        raise ProjectError(tr("Select an interface."))
     fields = [n for n in root.walk() if n.kind == ComponentKind.TEXT_INPUT]
 
     def read():
-        """Constrói uma leitura do primeiro campo desta interface."""
+        """Build a read of the first field in this interface."""
         if not fields:
-            raise ProjectError("Adicione um campo de texto a esta interface primeiro.")
+            raise ProjectError(tr("Add a text field to this interface first."))
         return {"id": new_id("value"), "op": "read", "component": fields[0].id, "attribute": "text"}
 
     if kind == "open_window" and len(project.roots) < 2:
-        raise ProjectError("Crie outra interface no Mapa antes de abrir uma janela.")
+        raise ProjectError(tr("Create another interface in the Map before opening a window."))
     if kind == "go_state" and not project.states.get(window):
-        raise ProjectError("Crie um estado no Mapa antes de usar este modelo.")
+        raise ProjectError(tr("Create a state in the Map before using this template."))
     if kind in {"open_window", "go_state", "message", "set_text", "run"}:
         try:
             return [default_block(kind, project, window)]
@@ -44,7 +45,7 @@ def behavior_template(kind, project, window):
             raise ProjectError(str(exc)) from exc
     if kind in {"read_field", "save_value"}:
         node = default_block("assign", project, window)
-        node["value"] = read() if kind == "read_field" else literal("Novo valor")
+        node["value"] = read() if kind == "read_field" else literal(tr("New value"))
         return [node]
     if kind == "validate_input":
         node = default_block("if", project, window)
@@ -56,21 +57,21 @@ def behavior_template(kind, project, window):
             "right": literal(""),
         }
         success = default_block("message", project, window)
-        success["value"] = literal("Entrada preenchida.")
+        success["value"] = literal(tr("Input filled in."))
         failure = default_block("message", project, window)
-        failure["value"] = literal("Preencha o campo antes de continuar.")
+        failure["value"] = literal(tr("Fill in the field before continuing."))
         node.update(then=[success], **{"else": [failure]})
         return [node]
     if kind == "confirm":
         confirm = default_block("confirm", project, window)
         return [confirm]
-    raise ProjectError("Modelo de comportamento desconhecido.")
+    raise ProjectError(tr("Unknown behavior template."))
 
 
 def append_behavior(flow, blocks):
-    """Acrescenta ações mantendo IDs/comentários anteriores, invalida só a vista derivada."""
+    """Append actions keeping earlier IDs/comments; only the derived view is invalidated."""
     if flow.get("body") is None:
-        raise ProjectError("Complete os blocos soltos antes de inserir um modelo.")
+        raise ProjectError(tr("Complete the loose blocks before inserting a template."))
     from copy import deepcopy
 
     flow["body"].extend(deepcopy(blocks))

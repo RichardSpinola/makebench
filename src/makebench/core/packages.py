@@ -1,4 +1,4 @@
-"""Receitas e construção de pacotes em staging, sem executar código do projeto."""
+"""Package recipes and builds in staging, never running project code."""
 
 import hashlib
 import json
@@ -13,9 +13,10 @@ from contextlib import ExitStack
 from .exporter import export_source, verify, effects, BuildCancelled
 from .project import ProjectError
 from .environment import build_tools
+from makebench.i18n import tr
 
 FORMATS = {
-    "source": ("Fonte Python", None, ".zip"),
+    "source": (tr("Python source"), None, ".zip"),
     "deb": ("DEB", "dpkg-deb", ".deb"),
     "appimage": ("AppImage", "appimagetool", ".AppImage"),
     "flatpak": ("Flatpak", "flatpak-builder", ".flatpak"),
@@ -24,17 +25,17 @@ FORMATS = {
 
 
 def one_line(value):
-    """Metadados nunca injetam linhas de controle, comandos ou entradas desktop."""
+    """Metadata never injects control lines, commands or desktop entries."""
     return re.sub(r"[\r\n\x00-\x1f]", " ", str(value)).strip()
 
 
 def preflight(project, source, read_asset, format):
-    """Inclui ferramentas e restrições explícitas por destino, sem executar builds."""
+    """Include explicit tools and restrictions per target, without running builds."""
     issues = verify(project, source, read_asset)
     programs, admin = effects(project)
     for issue in issues:
         if issue["level"] == "success":
-            issue["message"] = "Verificação do projeto concluída."
+            issue["message"] = tr("Project check completed.")
     tool = FORMATS[format][1]
     from .portable import ready
 
@@ -43,7 +44,9 @@ def preflight(project, source, read_asset, format):
         issues.append(
             {
                 "level": "warning",
-                "message": "Prepare o runtime portátil e as dependências em ambiente isolado antes de construir.",
+                "message": tr(
+                    "Prepare the portable runtime and dependencies in an isolated environment before building."
+                ),
                 "field": "destinations",
             }
         )
@@ -51,7 +54,9 @@ def preflight(project, source, read_asset, format):
         issues.append(
             {
                 "level": "warning",
-                "message": f"Prepare as ferramentas de construção ({tool}) ou exporte a receita.",
+                "message": tr("Prepare the build tools ({tool}) or export the recipe.").format(
+                    tool=tool
+                ),
                 "field": "destinations",
             }
         )
@@ -66,7 +71,7 @@ def preflight(project, source, read_asset, format):
         issues.append(
             {
                 "level": "error",
-                "message": "Ações administrativas não estão disponíveis no Flatpak isolado.",
+                "message": tr("Administrative actions are not available in the isolated Flatpak."),
                 "field": "permissions",
             }
         )
@@ -74,7 +79,9 @@ def preflight(project, source, read_asset, format):
         issues.append(
             {
                 "level": "warning",
-                "message": "Tarefas e terminal executam somente dentro do Flatpak. Programas do host não ficam disponíveis.",
+                "message": tr(
+                    "Tasks and the terminal run only inside the Flatpak. Host programs are not available."
+                ),
                 "field": "dependencies",
             }
         )
@@ -82,7 +89,9 @@ def preflight(project, source, read_asset, format):
         issues.append(
             {
                 "level": "warning",
-                "message": "As dependências Python declaradas serão resolvidas no ambiente isolado durante Preparar ferramentas.",
+                "message": tr(
+                    "The declared Python dependencies will be resolved in the isolated environment during Prepare tools."
+                ),
                 "field": "packages",
             }
         )
@@ -90,18 +99,20 @@ def preflight(project, source, read_asset, format):
 
 
 def policy_xml(project):
-    """Declara a necessidade de autenticação sem conceder permissão automática.
+    """Declare that authentication is needed without granting automatic permission.
 
-    Não associa um executável genérico a um ID que permitiria elevar qualquer
-    argumento sem confirmação. pkexec usa sua política padrão de autenticação.
+    Never binds a generic executable to an ID that would allow elevating any
+    argument without confirmation. pkexec uses its default authentication policy.
     """
     app = project.application
     root = ET.Element("policyconfig")
     action = ET.SubElement(root, "action", id=app["id"] + ".admin")
-    ET.SubElement(action, "description").text = "Ação administrativa de " + app["name"]
-    ET.SubElement(
-        action, "message"
-    ).text = "Autorize a ação administrativa solicitada pelo aplicativo."
+    ET.SubElement(action, "description").text = tr("Administrative action of {name}").format(
+        name=app["name"]
+    )
+    ET.SubElement(action, "message").text = tr(
+        "Authorize the administrative action requested by the application."
+    )
     defaults = ET.SubElement(action, "defaults")
     for tag, value in [
         ("allow_any", "no"),
@@ -113,7 +124,7 @@ def policy_xml(project):
 
 
 def write_recipe(project, source, read_asset, format, root, progress=None, cancelled=None):
-    """Gera entradas completas; a presença da receita nunca significa pacote pronto."""
+    """Generate complete entries; having a recipe never means a ready package."""
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     app = project.application
@@ -132,7 +143,7 @@ def write_recipe(project, source, read_asset, format, root, progress=None, cance
     if icon_ext.lower() == ".svg":
         ET.register_namespace("", "http://www.w3.org/2000/svg")
         svg = ET.fromstring(icon_data)
-        # AppStream precisa do viewBox para rasterizar ícones SVG sem deformação.
+        # AppStream needs the viewBox to rasterize SVG icons without distortion.
         if "viewBox" not in svg.attrib:
             dimensions = [
                 re.fullmatch(r"([0-9.]+)(?:px)?", svg.get(axis, "")) for axis in ("width", "height")
@@ -151,7 +162,9 @@ def write_recipe(project, source, read_asset, format, root, progress=None, cance
     binary = payload / "usr/bin" / identifier
     binary.parent.mkdir(parents=True, exist_ok=True)
     binary.write_text(
-        '#!/bin/sh\necho "Runtime ainda não montado. Use build-recipe.py." >&2\nexit 1\n'
+        '#!/bin/sh\necho "'
+        + tr("Runtime not assembled yet. Use build-recipe.py.")
+        + '" >&2\nexit 1\n'
     )
     binary.chmod(0o755)
     for target, origin in [
@@ -180,9 +193,9 @@ def write_recipe(project, source, read_asset, format, root, progress=None, cance
         deps = "libc6 (>= 2.39), libgl1, libegl1"
         if admin:
             deps += ", policykit-1"
-        text = f"Package: {identifier.replace('_', '-')}\nVersion: {version}\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: {one_line(app.get('author') or 'Autor não informado')}\nDepends: {deps}\nDescription: {one_line(app.get('description') or name)}\n"
+        text = f"Package: {identifier.replace('_', '-')}\nVersion: {version}\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: {one_line(app.get('author') or tr('Author not specified'))}\nDepends: {deps}\nDescription: {one_line(app.get('description') or name)}\n"
         (control / "control").write_text(text, encoding="utf-8")
-        # Python/backend e rodas são incluídos no payload pelo ambiente isolado.
+        # Python/backend and wheels are added to the payload by the isolated environment.
     elif format == "rpm":
         spec = f"Name: {identifier.replace('_', '-')}\nVersion: {version.split('-')[0].split('+')[0]}\nRelease: 1%{{?dist}}\nSummary: {one_line(app.get('description') or name)}\nLicense: {one_line(app.get('license') or 'LicenseRef-unspecified')}\nBuildArch: x86_64\nAutoReqProv: no\nRequires: glibc >= 2.39\nRequires: libGL.so.1()(64bit), libEGL.so.1()(64bit)\n"
         spec += "%global debug_package %{nil}\n"
@@ -203,14 +216,16 @@ def write_recipe(project, source, read_asset, format, root, progress=None, cance
         )
         if admin:
             spec += "/usr/share/polkit-1/actions/" + identifier + ".policy\n"
-        # Os macros do template são controlados; texto livre não pode adicionar macros.
+        # Template macros are controlled; free text cannot add macros.
         for raw in (
             one_line(app.get("description") or name),
             one_line(app.get("license") or "LicenseRef-unspecified"),
         ):
             if "%" in raw:
                 raise ProjectError(
-                    "Remova % dos metadados antes de gerar RPM; macros não são aceitos em texto livre."
+                    tr(
+                        "Remove % from the metadata before generating an RPM; macros are not accepted in free text."
+                    )
                 )
         (root / "app.spec").write_text(spec, encoding="utf-8")
     elif format == "appimage":
@@ -220,11 +235,15 @@ def write_recipe(project, source, read_asset, format, root, progress=None, cance
         shutil.copy2(root / icon_name, appdir / icon_name)
         launcher = appdir / "AppRun"
         launcher.write_text(
-            '#!/bin/sh\necho "Runtime ainda não montado. Construa esta receita com o Makebench." >&2\nexit 1\n'
+            '#!/bin/sh\necho "'
+            + tr("Runtime not assembled yet. Build this recipe with Makebench.")
+            + '" >&2\nexit 1\n'
         )
         launcher.chmod(0o755)
-        (root / "DEPENDENCIAS.txt").write_text(
-            "O build isolado inclui Python 3.12, backend e dependências declaradas. Linux x86_64 com glibc2.39+, X11/Wayland e drivers do sistema. FUSE ou --appimage-extract-and-run. Programas externos usados pelo projeto continuam requisitos explícitos.\n",
+        (root / "DEPENDENCIES.txt").write_text(
+            tr(
+                "The isolated build includes Python 3.12, the backend and the declared dependencies. Linux x86_64 with glibc 2.39+, X11/Wayland and the system drivers. FUSE or --appimage-extract-and-run. External programs used by the project remain explicit requirements.\n"
+            ),
             encoding="utf-8",
         )
     elif format == "flatpak":
@@ -301,10 +320,10 @@ def write_recipe(project, source, read_asset, format, root, progress=None, cance
             '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(metadata, encoding="unicode"),
             encoding="utf-8",
         )
-    (root / "LEIA-ME-PACOTE.txt").write_text(
-        "Receita "
-        + FORMATS[format][0]
-        + " gerada pelo Makebench. Gerar não significa construir ou validar instalação.\nRuntime nativo incluído: Python 3.12, backend e dependências Python declaradas. Destinos: Ubuntu24.04/Fedora44 x86_64, glibc2.39+.\nNenhuma fonte do projeto foi executada. Preparar ferramentas resolve dependências em ambiente isolado; construir usa cache verificado.\nPolítica Polkit não concede acesso automático; pkexec mantém autenticação padrão do sistema.\n",
+    (root / "PACKAGE-README.txt").write_text(
+        tr(
+            "{format} recipe generated by Makebench. Generating does not mean building or validating installation.\nNative runtime included: Python 3.12, the backend and the declared Python dependencies. Targets: Ubuntu 24.04/Fedora 44 x86_64, glibc 2.39+.\nNo project source was run. Prepare tools resolves dependencies in an isolated environment; building uses a verified cache.\nThe Polkit policy grants no automatic access; pkexec keeps the system's default authentication.\n"
+        ).format(format=FORMATS[format][0]),
         encoding="utf-8",
     )
     (root / "build-recipe.py").write_text(
@@ -344,7 +363,7 @@ def build_package(
     recipe_only=False,
     environment="system",
 ):
-    """Constrói com ferramentas presentes; publica exclusivamente ao terminar e verificar."""
+    """Build with available tools; publish exclusively after finishing and verifying."""
     if format in {"deb", "rpm", "appimage"} and not recipe_only:
         issues = preflight(project, source, read_asset, format)
         errors = [item["message"] for item in issues if item["level"] == "error"]
@@ -356,7 +375,7 @@ def build_package(
     if format == "source":
         return dict(
             export_source(project, source, read_asset, destination, progress, cancelled),
-            status="Construído e verificado",
+            status=tr("Built and verified"),
             format=format,
         )
     issues = preflight(project, source, read_asset, format)
@@ -365,32 +384,32 @@ def build_package(
         raise ProjectError("\n".join(errors))
     destination = Path(destination).resolve()
     if destination.exists():
-        raise ProjectError("O destino já existe. Escolha outro nome.")
+        raise ProjectError(tr("The destination already exists. Choose another name."))
     tool = FORMATS[format][1]
     available = build_tools().get(tool)
     from .build_environment import run_tool
 
     if not available and not recipe_only:
-        raise ProjectError("Prepare as ferramentas ou escolha Somente gerar receita.")
+        raise ProjectError(tr("Prepare the tools or choose Generate recipe only."))
     recipe = recipe_only
 
     def step(number, message):
-        """Cancelamento acontece antes de publicar qualquer artefato no destino."""
+        """Cancellation happens before publishing any artifact to the destination."""
         if cancelled and cancelled():
-            raise BuildCancelled("Construção cancelada.")
+            raise BuildCancelled(tr("Build cancelled."))
         if progress:
             progress(number, message)
 
     def run(arguments, cwd):
-        """Ferramenta explícita, sem shell; logs e cancelamento da árvore de build."""
-        step(50, "Executar " + Path(arguments[0]).name)
+        """Explicit tool, no shell; logs and cancellation of the build tree."""
+        step(50, tr("Run {tool}").format(tool=Path(arguments[0]).name))
         return run_tool(arguments, cwd, progress, cancelled)
 
     with ExitStack() as stack:
         directory = stack.enter_context(
             tempfile.TemporaryDirectory(prefix=".makebench-package-", dir=destination.parent)
         )
-        # AppStream usa caminhos IPC limitados; mantenha a construção Flatpak curta.
+        # AppStream uses limited IPC paths; keep the Flatpak build path short.
         build_directory = (
             stack.enter_context(tempfile.TemporaryDirectory(prefix="mb-flatpak-"))
             if format == "flatpak"
@@ -405,17 +424,17 @@ def build_package(
             progress,
             cancelled,
         )
-        step(35, "Receita gerada")
+        step(35, tr("Recipe generated"))
         if recipe:
             result = Path(directory) / "recipe.zip"
             with zipfile.ZipFile(result, "w", zipfile.ZIP_DEFLATED) as z:
                 for path in sorted(root.rglob("*")):
                     if path.is_file():
                         z.write(path, path.relative_to(root))
-            status = (
-                "Gerado, não construído ("
-                + ("receita solicitada" if available else "falta " + tool)
-                + ")"
+            status = tr("Generated, not built ({reason})").format(
+                reason=tr("recipe requested")
+                if available
+                else tr("missing {tool}").format(tool=tool)
             )
         else:
             identifier = project.application["id"]
@@ -458,7 +477,7 @@ def build_package(
             )
             flatpak = shutil.which("flatpak")
             if not flatpak:
-                raise ProjectError("Falta flatpak para gerar o bundle final.")
+                raise ProjectError(tr("flatpak is missing to generate the final bundle."))
             result = Path(directory) / "app.flatpak"
             run(
                 [
@@ -471,8 +490,8 @@ def build_package(
                 ],
                 root,
             )
-            status = "Construído e verificado (instalação no destino ainda não testada)"
-        step(95, "Publicar resultado completo")
+            status = tr("Built and verified (installation on the target not tested yet)")
+        step(95, tr("Publish complete result"))
         if format == "flatpak" and not recipe:
             staged = Path(directory) / "bundle.flatpak"
             shutil.copy2(result, staged)

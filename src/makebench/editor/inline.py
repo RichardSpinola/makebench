@@ -1,29 +1,29 @@
-"""Edição de texto sobre o componente, com confirmação e cancelamento explícitos."""
+"""Text editing over the component, with explicit confirmation and cancellation."""
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLineEdit, QPlainTextEdit
 
 
 class InlineText(QLineEdit):
-    """Campo de uma linha; a composição permanece intacta até confirmar."""
+    """Single-line field; the composition stays intact until confirmed."""
 
     finished = Signal(str, bool)
 
     def __init__(self, text, parent):
-        """Guarda uma sessão para não confirmar duas vezes ao perder o foco."""
+        """Keep a session so losing focus does not confirm twice."""
         super().__init__(text, parent)
         self.done = False
         self.selectAll()
 
     def finish(self, accept):
-        """Conclui antes de emitir, impedindo reentrada na saída de foco."""
+        """Finish before emitting, preventing re-entry when focus leaves."""
         if self.done:
             return
         self.done = True
         self.finished.emit(self.text(), accept)
 
     def keyPressEvent(self, event):
-        """Enter confirma; Escape cancela e mantém o texto anterior."""
+        """Enter confirms; Escape cancels and keeps the previous text."""
         if event.key() in {Qt.Key.Key_Return, Qt.Key.Key_Enter}:
             self.finish(True)
         elif event.key() == Qt.Key.Key_Escape:
@@ -32,31 +32,31 @@ class InlineText(QLineEdit):
             super().keyPressEvent(event)
 
     def focusOutEvent(self, event):
-        """Confirma ao mudar de controle, sem destruir o campo durante o evento."""
+        """Confirm when moving to another control, without destroying the field during the event."""
         self.finish(True)
         super().focusOutEvent(event)
 
 
 class InlineParagraph(QPlainTextEdit):
-    """Texto multilinha; Ctrl+Enter confirma e Escape cancela."""
+    """Multi-line text; Ctrl+Enter confirms and Escape cancels."""
 
     finished = Signal(str, bool)
 
     def __init__(self, text, parent):
-        """Mantém conteúdo de várias linhas como texto, sem qualquer avaliação."""
+        """Keep multi-line content as text, with no evaluation at all."""
         super().__init__(text, parent)
         self.done = False
         self.selectAll()
 
     def finish(self, accept):
-        """Finaliza uma única edição para o histórico do documento."""
+        """Finish a single edit for the document history."""
         if self.done:
             return
         self.done = True
         self.finished.emit(self.toPlainText(), accept)
 
     def keyPressEvent(self, event):
-        """Mantém Enter como nova linha, com confirmação explícita por Ctrl+Enter."""
+        """Keep Enter as a new line, with explicit confirmation by Ctrl+Enter."""
         if event.key() == Qt.Key.Key_Escape:
             self.finish(False)
         elif (
@@ -68,6 +68,6 @@ class InlineParagraph(QPlainTextEdit):
             super().keyPressEvent(event)
 
     def focusOutEvent(self, event):
-        """Confirma o texto atual quando a pessoa muda de controle."""
+        """Confirm the current text when the user moves to another control."""
         self.finish(True)
         super().focusOutEvent(event)

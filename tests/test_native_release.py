@@ -1,4 +1,4 @@
-"""Compatibilidade inerte do editor GTK e conteúdo dos cinco exportadores."""
+"""Inert compatibility of the GTK editor and content of the five exporters."""
 
 import json
 from pathlib import Path
@@ -18,20 +18,20 @@ from makebench.core.diagnostics import environment_report
 
 
 class NativeReleaseTests(unittest.TestCase):
-    """Testes de dados não precisam de display e não iniciam subprocessos do projeto."""
+    """Data tests need no display and start no project subprocesses."""
 
     def setUp(self):
-        """Cada teste usa arquivos descartáveis; não muda preferências do proprietário."""
+        """Each test uses disposable files; owner preferences are never changed."""
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
     def fixture(self, backend="gtk"):
-        """Aplicativo de identidade válida com ícone próprio embutido."""
+        """Application with a valid identity and its own embedded icon."""
         p = welcome_template()
         p.application = {
             "backend": backend,
-            "name": "Meu aplicativo",
+            "name": "My application",
             "id": "br.exemplo.app",
             "version": "0.1.0",
             "icon": "assets/icon.svg",
@@ -44,7 +44,7 @@ class NativeReleaseTests(unittest.TestCase):
         return p, assets
 
     def test_open_save_recovery_never_execute_and_noop_is_unchanged(self):
-        """JSON e fonte com efeito malicioso são somente dados durante estas operações."""
+        """JSON and source with malicious effects are only data during these operations."""
         p, assets = self.fixture()
         path = self.root / "project.makebench.json"
         save_project(p, path)
@@ -78,7 +78,7 @@ class NativeReleaseTests(unittest.TestCase):
         )
 
     def test_model_to_gtk_layout_translation(self):
-        """Layouts e tamanhos neutros possuem tradução independente de contexto gráfico."""
+        """Neutral layouts and sizes have a translation independent of the graphical context."""
         p = Project.empty()
         p.root.layout = LayoutKind.GRID
         p.root.properties.update(spacing=18, padding=24, columns=3)
@@ -91,7 +91,7 @@ class NativeReleaseTests(unittest.TestCase):
         self.assertEqual(spec["children"][0]["size"], child.properties["size_mode"])
 
     def test_source_backends_include_only_corresponding_runtime(self):
-        """GTK exportado não precisa de Qt e inclui o worker neutro."""
+        """Exported GTK needs no Qt and includes the neutral worker."""
         for backend in ("gtk", "qt"):
             p, assets = self.fixture(backend)
             path = self.root / (backend + ".zip")
@@ -111,7 +111,7 @@ class NativeReleaseTests(unittest.TestCase):
                 self.assertFalse(any("/editor/" in n or "/gtk_editor/" in n for n in names))
 
     def test_each_recipe_contains_metadata_launchers_and_no_execution(self):
-        """Control, spec, manifesto e AppDir são arquivos inspecionáveis e inertes."""
+        """Control, spec, manifest and AppDir are inspectable, inert files."""
         p, assets = self.fixture()
         for format in ("deb", "appimage", "flatpak", "rpm"):
             with self.subTest(format=format), patch("subprocess.Popen") as process:
@@ -141,7 +141,7 @@ class NativeReleaseTests(unittest.TestCase):
                     self.assertTrue((root / "AppDir/AppRun").stat().st_mode & 0o111)
 
     def test_admin_policy_requires_authentication_and_flatpak_blocks_host(self):
-        """Pacotes administrativos não acrescentam política de autorização automática."""
+        """Administrative packages add no automatic authorization policy."""
         from makebench.core.logic import create_flow
 
         p, assets = self.fixture()
@@ -161,12 +161,12 @@ class NativeReleaseTests(unittest.TestCase):
         )
 
     def test_missing_tools_and_cancel_never_publish_partial_package(self):
-        """Receita gerada tem estado explícito; cancelamento preserva o destino vazio."""
+        """A generated recipe has an explicit status; cancelling keeps the destination empty."""
         p, assets = self.fixture()
         target = self.root / "deb-recipe.zip"
         with patch("makebench.core.packages.build_tools", return_value={}):
             result = build_package(p, "", assets.__getitem__, target, "deb", recipe_only=True)
-        self.assertIn("Gerado, não construído", result["status"])
+        self.assertIn("Generated, not built", result["status"])
         self.assertTrue(zipfile.is_zipfile(target))
         with self.assertRaises(BuildCancelled):
             build_package(
@@ -182,11 +182,11 @@ class NativeReleaseTests(unittest.TestCase):
         self.assertFalse(list(self.root.glob(".makebench-package-*")))
 
     def test_environment_report_is_readonly_and_clear_about_polkit(self):
-        """Gerar o diagnóstico não executa ferramentas nem sugere autenticação validada."""
+        """Building the diagnostics runs no tools and does not suggest validated authentication."""
         with patch("subprocess.run") as run, patch("subprocess.Popen") as process:
             report = environment_report({"Display": "teste"})
             run.assert_not_called()
             process.assert_not_called()
         self.assertIn("Qt Widgets", report)
-        self.assertIn("não valida o agente Polkit", report)
+        self.assertIn("does not validate the Polkit agent", report)
         self.assertIn("Display: teste", report)

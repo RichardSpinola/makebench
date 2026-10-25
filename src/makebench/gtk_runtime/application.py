@@ -1,4 +1,4 @@
-"""Aplicativo GTK real, worker Python e tarefas supervisionadas sem dependência Qt."""
+"""Real GTK application, Python worker and supervised tasks with no Qt dependency."""
 
 from copy import deepcopy
 import json
@@ -12,11 +12,12 @@ import threading
 import time
 from makebench.core.codegen import generate
 from makebench.core.project import ComponentKind, ProjectError
+from makebench.i18n import language, tr
 from .renderer import GtkView
 
 
 def terminate_group(process, force=False):
-    """Sinaliza só grupos criados pelo runtime; nunca um processo administrativo."""
+    """Signal only groups created by the runtime; never an administrative process."""
     if process:
         try:
             os.killpg(process.pid, signal.SIGKILL if force else signal.SIGTERM)
@@ -25,19 +26,17 @@ def terminate_group(process, force=False):
 
 
 class GtkRuntime:
-    """Compartilha o protocolo ctx do runtime Qt e mantém o ciclo GTK responsivo."""
+    """Share the Qt runtime's ctx protocol and keep the GTK loop responsive."""
 
     def __init__(self, project, source, read_asset, root, source_filename, observer=None):
-        """Prepara o snapshot; construir a instância não executa código próprio."""
+        """Prepare the snapshot; building the instance does not run the user's code."""
         import gi
 
         gi.require_version("Gtk", "4.0")
         from gi.repository import Gtk, GLib, Gio
 
         if not Gtk.init_check():
-            raise ProjectError(
-                "Não foi possível abrir GTK4: nenhum display gráfico está disponível."
-            )
+            raise ProjectError(tr("Could not open GTK4: no graphical display is available."))
         self.Gtk, self.GLib = Gtk, GLib
         self.Adw = None
         try:
@@ -82,15 +81,15 @@ class GtkRuntime:
         self.app.connect("activate", self.activate)
 
     def emit(self, kind, **values):
-        """Encaminha observação à bancada ou ao console do aplicativo independente."""
+        """Forward observations to the workbench or to the standalone application's console."""
         self.observer({"type": kind, **values})
 
     def run(self):
-        """Entrada explícita da execução GTK; iniciar é a única ação que roda código."""
+        """Explicit entry of the GTK run; starting is the only action that runs code."""
         return self.app.run([])
 
     def activate(self, _app):
-        """Abre a janela inicial e inicia o mesmo worker neutro usado por Qt."""
+        """Open the start window and start the same neutral worker used by Qt."""
         if self.process:
             for identifier in self.open_windows:
                 self.windows[identifier].present()
@@ -120,16 +119,17 @@ class GtkRuntime:
                 "root": str(self.root),
                 "source_filename": str(self.source_filename or "<makebench-actions>"),
                 "debug": self.debug_config,
+                "language": language(),
             }
         )
         threading.Thread(target=self.read_worker, daemon=True).start()
         threading.Thread(
             target=self.read_channel, args=(self.process.stderr, "stderr"), daemon=True
         ).start()
-        self.emit("status", text="Iniciando GTK…")
+        self.emit("status", text=tr("Starting GTK…"))
 
     def send(self, value):
-        """Serializa respostas ao worker; falhas de pipe são tratadas no encerramento."""
+        """Serialize replies to the worker; pipe failures are handled at shutdown."""
         if self.process and self.process.poll() is None:
             try:
                 with self.lock:
@@ -139,7 +139,7 @@ class GtkRuntime:
                 pass
 
     def reply(self, identifier, value=None, ok=True, cancelled=False, error=""):
-        """Mantém o contrato de resposta idêntico nos dois toolkits."""
+        """Keep the reply contract identical in both toolkits."""
         self.send(
             {
                 "type": "response",
@@ -152,14 +152,14 @@ class GtkRuntime:
         )
 
     def read_worker(self):
-        """Lê em thread e entrega ao GTK somente por idle_add, sem bloquear desenho."""
+        """Read in a thread and deliver to GTK only through idle_add, without blocking drawing."""
         try:
             while True:
                 line = self.process.stdout.readline(2_000_001)
                 if not line:
                     break
                 if len(line) > 2_000_000:
-                    raise ValueError("Resposta do worker excedeu o limite.")
+                    raise ValueError(tr("The worker reply exceeded the limit."))
                 self.GLib.idle_add(self.message, json.loads(line))
         except (ValueError, OSError) as exc:
             self.GLib.idle_add(lambda message=str(exc): self.emit("error", message=message))
@@ -167,7 +167,7 @@ class GtkRuntime:
             self.GLib.idle_add(self.worker_finished)
 
     def read_channel(self, pipe, channel):
-        """Mantém UTF-8 incremental e saída ao vivo inclusive sem quebras de linha."""
+        """Keep incremental UTF-8 and live output even without line breaks."""
         import codecs
 
         decoder = codecs.getincrementaldecoder("utf-8")("replace")
@@ -183,7 +183,7 @@ class GtkRuntime:
             self.GLib.idle_add(self.output, channel, tail)
 
     def output(self, channel, text):
-        """Registra canais sem interpretar stderr como falha."""
+        """Record channels without treating stderr as failure."""
         self.emit("log", channel=channel, text=text)
         if channel != "status":
             view = self.views.get(self.current)
@@ -199,7 +199,7 @@ class GtkRuntime:
                             )
 
     def message(self, message):
-        """Atende eventos neutros do worker exclusivamente na thread GTK."""
+        """Serve the worker's neutral events only on the GTK thread."""
         if self.stopping:
             return
         kind = message.get("type")
@@ -223,21 +223,21 @@ class GtkRuntime:
         elif kind == "log":
             self.output(message["channel"], message["text"])
         elif kind == "error":
-            self.output("error", "[Erro] " + message.get("message", "Erro") + "\n")
+            self.output("error", tr("[Error]") + " " + message.get("message", tr("Error")) + "\n")
             self.emit("error", **{k: v for k, v in message.items() if k != "type"})
         elif kind == "request":
             self.request(message)
 
     def set_busy(self, busy):
-        """Atualiza sensibilidade de eventos e observação de estado na bancada."""
+        """Update event sensitivity and state observation in the workbench."""
         self.busy = busy
         for view in self.views.values():
             view.busy(busy, self.event_buttons)
         self.emit("busy", value=busy)
-        self.emit("status", text="Executando fluxo" if busy else "Aplicativo GTK em execução")
+        self.emit("status", text=tr("Running flow…") if busy else tr("GTK application running"))
 
     def queue_event(self, identifier, kind="click"):
-        """Seleciona fluxos específicos do estado antes dos fluxos genéricos."""
+        """Pick state-specific flows before generic ones."""
         if kind == "click" and self.busy:
             return
         owner = self.project.window_of(identifier)
@@ -255,7 +255,7 @@ class GtkRuntime:
         self.dispatch()
 
     def dispatch(self):
-        """Executa um único handler por vez; variáveis de janela seguem o evento."""
+        """Run a single handler at a time; window variables follow the event."""
         if self.pending and self.active and not self.busy and not self.stopping:
             identifier = self.pending.pop(0)
             flow = next(f for f in self.project.editable_flows if f["id"] == identifier)
@@ -264,10 +264,10 @@ class GtkRuntime:
             self.send({"type": "event", "flow": identifier, "window": self.current})
 
     def open_window(self, identifier, close_current=False, queue_start=True):
-        """Abre janela GTK real; reabertura reinicializa controles, estado e escopo."""
+        """Open a real GTK window; reopening resets controls, state and scope."""
         root = next((r for r in self.project.roots if r.id == identifier), None)
         if root is None:
-            raise ValueError("A janela não existe.")
+            raise ValueError(tr("The window does not exist."))
         reset = identifier not in self.open_windows
         if reset:
             if identifier in self.windows:
@@ -313,7 +313,7 @@ class GtkRuntime:
         return reset
 
     def apply_state(self, identifier, state):
-        """Aplica apenas diferenças de conteúdo, preservando IDs e a estrutura base."""
+        """Apply only content differences, keeping IDs and the base structure."""
         root = self.project.effective_root(identifier, state)
         view = self.views[identifier]
         self.states[identifier] = state
@@ -351,17 +351,17 @@ class GtkRuntime:
         self.emit("navigation", windows=sorted(self.open_windows), states=dict(self.states))
 
     def window_close(self, identifier):
-        """Não permite fechar ou interromper uma ação administrativa em andamento."""
+        """Never close or interrupt an administrative action in progress."""
         if self.admin:
-            self.emit("status", text="Aguarde a tarefa administrativa terminar.")
+            self.emit("status", text=tr("Wait for the administrative task to finish."))
             return True
         self.close_window(identifier)
         return True
 
     def close_window(self, identifier, check_last=True):
-        """Fecha uma interface e encerra o aplicativo quando não resta outra."""
+        """Close an interface and end the application when no other remains."""
         if self.admin:
-            raise ValueError("Aguarde a tarefa administrativa terminar.")
+            raise ValueError(tr("Wait for the administrative task to finish."))
         from makebench.terminal.components import stop_components
 
         if identifier in self.views:
@@ -374,20 +374,20 @@ class GtkRuntime:
         self.emit("navigation", windows=sorted(self.open_windows), states=dict(self.states))
 
     def locate(self, identifier):
-        """Resolve ID estável ou nome legível em qualquer janela aberta."""
+        """Resolve a stable ID or readable name in any open window."""
         node = self.project.find(identifier) or next(
             (n for n in self.project.walk() if n.properties.get("code_name") == identifier), None
         )
         if node is None:
-            raise ValueError("O componente não existe.")
+            raise ValueError(tr("The component does not exist."))
         owner = self.project.window_of(node.id)
         view = self.views.get(owner.id)
         if view is None:
-            raise ValueError("A janela do componente não está aberta.")
+            raise ValueError(tr("The component's window is not open."))
         return view, node.id
 
     def request(self, r):
-        """Traduz a mesma API ctx para GTK, tarefas e diálogos declarados."""
+        """Translate the same ctx API to GTK, tasks and declared dialogs."""
         identifier = r["id"]
         method = r["method"]
         try:
@@ -422,18 +422,18 @@ class GtkRuntime:
                     widget.set_sensitive(r["value"])
                 elif method == "set_value":
                     if not 0 <= r["value"] <= 100:
-                        raise ValueError("Progresso deve estar entre 0 e 100.")
+                        raise ValueError(tr("Progress must be between 0 and 100."))
                     widget.set_fraction(r["value"] / 100)
                 elif method == "show_page":
                     view.show_page(self.project, key)
                 else:
-                    raise ValueError("Operação desconhecida.")
+                    raise ValueError(tr("Unknown operation."))
             self.reply(identifier, result)
         except (ValueError, TypeError, AttributeError, KeyError, OSError) as exc:
             self.reply(identifier, ok=False, error=str(exc))
 
     def dialog(self, r):
-        """Diálogos GTK explícitos, sem senha própria e sem ler prompts do terminal."""
+        """Explicit GTK dialogs, with no password of their own and no reading of terminal prompts."""
         Gtk = self.Gtk
         parent = self.windows[self.current]
         method = r["method"]
@@ -446,12 +446,12 @@ class GtkRuntime:
                 action=Gtk.FileChooserAction.SELECT_FOLDER
                 if kind == "directory"
                 else Gtk.FileChooserAction.OPEN,
-                accept_label="Selecionar",
-                cancel_label="Cancelar",
+                accept_label=tr("Select"),
+                cancel_label=tr("Cancel"),
             )
 
             def selected(_dialog, response):
-                """Retorna apenas arquivo/pasta local escolhido ou cancelamento."""
+                """Return only the chosen local file/folder or a cancellation."""
                 file = dialog.get_file()
                 accepted = (
                     response == Gtk.ResponseType.ACCEPT
@@ -485,20 +485,22 @@ class GtkRuntime:
                 box.append(field)
             elif kind == "choice":
                 if not r.get("options") or any(not isinstance(v, str) for v in r["options"]):
-                    raise ValueError("Informe opções de texto.")
+                    raise ValueError(tr("Provide text options."))
                 field = Gtk.DropDown.new_from_strings(r["options"])
                 box.append(field)
             else:
-                raise ValueError("Tipo de pergunta desconhecido.")
+                raise ValueError(tr("Unknown question type."))
         if method != "message":
-            dialog.add_button("Não" if method == "confirm" else "Cancelar", Gtk.ResponseType.CANCEL)
+            dialog.add_button(
+                tr("No") if method == "confirm" else tr("Cancel"), Gtk.ResponseType.CANCEL
+            )
         dialog.add_button(
-            "Sim" if method == "confirm" else "Continuar" if method == "ask" else "OK",
+            tr("Yes") if method == "confirm" else tr("Continue") if method == "ask" else tr("OK"),
             Gtk.ResponseType.OK,
         )
 
         def finished(_dialog, response):
-            """Desbloqueia o worker somente após resposta explícita do usuário."""
+            """Unblock the worker only after an explicit user answer."""
             accepted = response == Gtk.ResponseType.OK
             value = None
             if accepted and method == "ask":
@@ -512,12 +514,12 @@ class GtkRuntime:
         dialog.connect("response", finished)
         self.dialogs.add(dialog)
         dialog.present()
-        self.emit("status", text="Aguardando resposta")
+        self.emit("status", text=tr("Waiting for an answer…"))
 
     def run_task(self, r):
-        """Executa argv sem shell implícito, com Polkit opcional e saída incremental."""
+        """Run argv with no implicit shell, optional Polkit and incremental output."""
         if self.task:
-            raise ValueError("Já existe uma tarefa em execução.")
+            raise ValueError(tr("A task is already running."))
         program = r["program"]
         args = r["arguments"]
         admin = r.get("admin", False)
@@ -529,16 +531,16 @@ class GtkRuntime:
             or len(args) > 256
             or any(not isinstance(v, str) or "\0" in v for v in args)
         ):
-            raise ValueError("Programa/argumentos inválidos.")
+            raise ValueError(tr("Invalid program/arguments."))
         executable = (
             str((self.root / program).resolve()) if "/" in program else shutil.which(program)
         )
         if not executable:
-            raise ValueError("Programa não encontrado: " + program)
+            raise ValueError(tr("Program not found: {program}.").format(program=program))
         if admin:
             pkexec = shutil.which("pkexec")
             if not pkexec:
-                raise ValueError("pkexec não está disponível no sistema de destino.")
+                raise ValueError(tr("pkexec is not available on the target system."))
             args = ["--disable-internal-agent", executable, *args]
             executable = pkexec
         from makebench.terminal.environment import external_environment
@@ -557,10 +559,10 @@ class GtkRuntime:
         self.admin = admin
         started = time.monotonic()
         self.emit("admin", value=admin)
-        self.emit("task", id=r["id"], program=program, admin=admin, state="Executando", duration=0)
+        self.emit("task", id=r["id"], program=program, admin=admin, state="running", duration=0)
 
         def wait():
-            """Espera a tarefa em thread e mantém os dois canais fluindo até EOF."""
+            """Wait for the task in a thread and keep both channels flowing until EOF."""
             readers = [
                 threading.Thread(target=self.read_channel, args=(pipe, ch), daemon=True)
                 for pipe, ch in ((task.stdout, "stdout"), (task.stderr, "stderr"))
@@ -575,7 +577,7 @@ class GtkRuntime:
         threading.Thread(target=wait, daemon=True).start()
 
     def task_done(self, r, code, started):
-        """Código determina sucesso; 126/127 administrativos não prometem conclusão."""
+        """The exit code decides success; administrative 126/127 do not promise completion."""
         self.task = None
         self.admin = False
         self.emit("admin", value=False)
@@ -584,7 +586,7 @@ class GtkRuntime:
             id=r["id"],
             program=r["program"],
             admin=r.get("admin", False),
-            state="Concluído" if code == 0 else "Não concluído",
+            state="completed" if code == 0 else "failed",
             duration=time.monotonic() - started,
         )
         if not self.stopping:
@@ -593,7 +595,7 @@ class GtkRuntime:
                     r["id"],
                     ok=False,
                     cancelled=code == 126,
-                    error=f"Tarefa administrativa não concluída (código {code}).",
+                    error=tr("Administrative task not completed (code {code}).").format(code=code),
                 )
             else:
                 self.reply(r["id"], {"code": code, "crashed": code < 0})
@@ -601,16 +603,16 @@ class GtkRuntime:
             self.stop()
 
     def worker_finished(self):
-        """Não abandona tarefa administrativa se o worker terminar inesperadamente."""
+        """Never abandon an administrative task if the worker ends unexpectedly."""
         if not self.stopping:
-            self.emit("error", message="O processo Python foi encerrado.")
+            self.emit("error", message=tr("The Python process ended."))
         if not self.admin:
             self.stop()
 
     def stop(self):
-        """Cancela grupos comuns e aguarda limpeza; tarefa administrativa bloqueia."""
+        """Cancel ordinary groups and wait for cleanup; an administrative task blocks."""
         if self.admin:
-            self.emit("status", text="Aguarde a tarefa administrativa terminar.")
+            self.emit("status", text=tr("Wait for the administrative task to finish."))
             return False
         if self.stopping:
             return False
@@ -629,7 +631,7 @@ class GtkRuntime:
         return False
 
     def finish_stop(self):
-        """Força somente grupos de usuário comum e encerra após recolher os filhos."""
+        """Force only ordinary user groups and end after reaping the children."""
         terminate_group(self.process, True)
         terminate_group(self.task, True)
         if self.process:

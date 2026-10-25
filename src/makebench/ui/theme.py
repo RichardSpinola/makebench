@@ -1,8 +1,9 @@
-"""Identidade visual Qt do Makebench, com contraste e destaque do desktop."""
+"""Makebench's Qt visual identity, with the desktop's contrast and accent."""
 
 from PySide6.QtCore import QObject, QSettings, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QIcon, QPalette
 from PySide6.QtWidgets import QApplication, QStyleFactory
+from makebench.i18n import tr
 
 ACCENTS = {
     "system": None,
@@ -61,10 +62,10 @@ PALETTES = {
 
 
 def contrast(first, second):
-    """Razão WCAG de duas cores sRGB para texto e limites interativos."""
+    """WCAG ratio of two sRGB colors for text and interactive boundaries."""
 
     def luminance(value):
-        """Lineariza os canais sRGB antes da combinação por luminância."""
+        """Linearize sRGB channels before combining them by luminance."""
         c = QColor(value)
         channels = [c.redF(), c.greenF(), c.blueF()]
         return sum(
@@ -77,7 +78,7 @@ def contrast(first, second):
 
 
 def blend(first, second, amount):
-    """Mistura cores sem transparência dependente do compositor."""
+    """Mix colors without compositor-dependent transparency."""
     a, b = QColor(first), QColor(second)
     return QColor(
         *[round(x * (1 - amount) + y * amount) for x, y in zip(a.getRgb()[:3], b.getRgb()[:3])]
@@ -85,7 +86,7 @@ def blend(first, second, amount):
 
 
 def legible(color, backgrounds, ratio):
-    """Ajusta luminosidade minimamente até atingir o contraste requerido."""
+    """Adjust lightness minimally until the required contrast is reached."""
     if all(contrast(color, b) >= ratio for b in backgrounds):
         return QColor(color).name()
     target = max(("#000000", "#ffffff"), key=lambda c: min(contrast(c, b) for b in backgrounds))
@@ -97,7 +98,7 @@ def legible(color, backgrounds, ratio):
 
 
 def derive_tokens(palette, dark=False, accent="system", system_surfaces=True):
-    """Produz tokens testáveis sem alterar QPalette do desktop ou o documento."""
+    """Produce testable tokens without changing the desktop QPalette or the document."""
     t = dict(PALETTES["dark" if dark else "light"], dark=dark)
     if system_surfaces:
         window = palette.color(QPalette.ColorRole.Window).name()
@@ -136,12 +137,12 @@ def derive_tokens(palette, dark=False, accent="system", system_surfaces=True):
 
 
 class ThemeManager(QObject):
-    """Usa o estilo e a paleta nativos de Qt/KDE, sem folha de estilos própria."""
+    """Use Qt/KDE's native style and palette, with no stylesheet of our own."""
 
     changed = Signal(dict)
 
     def __init__(self, app):
-        """Preserva escolhas do desktop; Breeze é a reserva nativa em uma sessão KDE."""
+        """Keep the desktop's choices; Breeze is the native fallback in a KDE session."""
         import os
 
         super().__init__(app)
@@ -171,24 +172,24 @@ class ThemeManager(QObject):
         self.apply()
 
     def repair_bar_palette(self, widget):
-        """Usa só cores nativas para reparar texto ilegível de cabeçalhos Qt/KDE."""
+        """Use only native colors to repair illegible text in Qt/KDE headers."""
         native = self.app.palette()
-        # Breeze pode combinar fundo do app com texto da paleta de cabeçalho.
-        # A paleta completa do aplicativo mantém esses roles coerentes.
+        # Breeze can combine the application background with the header palette text.
+        # The application's full palette keeps those roles consistent.
         if widget.palette() != native:
             widget.setPalette(native)
 
     def palette_changed(self, palette):
-        """Acompanha alterações reais do desktop enquanto o aplicativo está aberto."""
+        """Follow real desktop changes while the application is open."""
         if self._applying:
             return
         self.system_palette = QPalette(palette)
         self.apply()
 
     def set_mode(self, mode):
-        """Solicita o esquema à plataforma Qt; não fabrica uma paleta substituta."""
+        """Ask the Qt platform for the scheme; never fabricates a replacement palette."""
         if mode not in {"system", "light", "dark"}:
-            raise ValueError("Tema desconhecido")
+            raise ValueError(tr("Unknown theme"))
         self.mode = mode
         self.settings.setValue("v1/appearance/theme", mode)
         self.app.styleHints().setColorScheme(
@@ -201,13 +202,13 @@ class ThemeManager(QObject):
         self.apply()
 
     def set_accent(self, _value):
-        """Destaque pertence ao tema do sistema, como solicitado pelo autor."""
+        """The accent belongs to the system theme, as the author requested."""
         self.accent = "system"
         self.settings.setValue("v1/appearance/accent", "system")
         self.apply()
 
     def apply(self):
-        """Lê roles da paleta Qt para desenho do canvas, mapas e sintaxe."""
+        """Read Qt palette roles for drawing the canvas, maps and syntax."""
         if self._applying:
             return
         self._applying = True
@@ -261,7 +262,7 @@ class ThemeManager(QObject):
 
 
 def manager():
-    """Serviço único também disponível em testes diretos dos widgets."""
+    """Single service, also available in direct widget tests."""
     app = QApplication.instance()
     if not hasattr(app, "makebench_theme"):
         app.makebench_theme = ThemeManager(app)
@@ -269,7 +270,7 @@ def manager():
 
 
 def icon(name):
-    """Prefere símbolos do sistema e usa vetores próprios como reserva recolorida."""
+    """Prefer system symbols and use our own vectors as a recolored fallback."""
     aliases = {
         "new": "document-new-symbolic",
         "open": "document-open-symbolic",

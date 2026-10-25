@@ -1,4 +1,4 @@
-"""Arraste nativo de componentes e reorganização da árvore, sem mover dados Qt."""
+"""Native component dragging and tree reordering, without moving Qt data."""
 
 from __future__ import annotations
 
@@ -10,19 +10,20 @@ from PySide6.QtGui import QDrag, QPainter, QPen
 from PySide6.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QTreeWidget
 
 from makebench.core.project import KIND_LABELS, ComponentKind, Project
+from makebench.i18n import tr
 
 MIME_TYPE = "application/x-makebench-component"
 
 
 def mime_for(payload: dict) -> QMimeData:
-    """Codifica somente descrições de inserção/movimento, nunca arquivos ou código."""
+    """Encode only insert/move descriptions, never files or code."""
     data = QMimeData()
     data.setData(MIME_TYPE, json.dumps(payload).encode("utf-8"))
     return data
 
 
 def read_payload(mime: QMimeData) -> dict | None:
-    """Recusa formatos externos e descrições incompletas de arraste."""
+    """Reject external formats and incomplete drag descriptions."""
     if not mime.hasFormat(MIME_TYPE):
         return None
     try:
@@ -47,12 +48,12 @@ def read_payload(mime: QMimeData) -> dict | None:
 
 
 class ComponentPalette(QListWidget):
-    """Biblioteca visual: clique para escolher, arraste ou dê duplo clique para inserir."""
+    """Visual library: click to choose, drag or double-click to insert."""
 
     add_requested = Signal()
 
     def __init__(self, parent=None) -> None:
-        """Preenche os tipos disponíveis e habilita o arraste de cópia."""
+        """Fill in the available types and enable copy dragging."""
         super().__init__(parent)
         for kind, label in KIND_LABELS.items():
             if kind != ComponentKind.WINDOW:
@@ -63,14 +64,14 @@ class ComponentPalette(QListWidget):
         self.setDragEnabled(True)
         self.setMaximumHeight(195)
         self.itemDoubleClicked.connect(lambda _: self.add_requested.emit())
-        self.setToolTip("Arraste um componente para a interface ou dê duplo clique para adicionar.")
+        self.setToolTip(tr("Drag a component onto the interface or double-click to add it."))
 
     def currentData(self) -> str:
-        """Retorna o tipo escolhido para o botão de inserção."""
+        """Return the type chosen for the insert button."""
         return self.currentItem().data(Qt.ItemDataRole.UserRole)
 
     def findData(self, value: str) -> int:
-        """Localiza um tipo por seu identificador, sem depender do texto traduzido."""
+        """Find a type by its identifier, never relying on the translated text."""
         return next(
             (
                 i
@@ -81,7 +82,7 @@ class ComponentPalette(QListWidget):
         )
 
     def startDrag(self, _supported_actions) -> None:
-        """Inicia a inserção com uma prévia do item da paleta."""
+        """Start inserting with a preview of the palette item."""
         drag = QDrag(self)
         drag.setMimeData(mime_for({"mode": "new", "kind": self.currentData()}))
         drag.setPixmap(self.viewport().grab(self.visualItemRect(self.currentItem())))
@@ -89,13 +90,13 @@ class ComponentPalette(QListWidget):
 
 
 class ComponentTree(QTreeWidget):
-    """Árvore que pede movimentos ao documento, sem deixar o Qt mover itens sozinho."""
+    """Tree that asks the document for moves, never letting Qt move items by itself."""
 
     drop_requested = Signal(object, str, int, object)
     remove_requested = Signal()
 
     def __init__(self, project: Callable[[], Project], can_drop: Callable, parent=None) -> None:
-        """Recebe acesso ao documento atual e a validação de destinos de arraste."""
+        """Receive access to the current document and drop-target validation."""
         super().__init__(parent)
         self.project = project
         self.can_drop = can_drop
@@ -108,7 +109,7 @@ class ComponentTree(QTreeWidget):
         self.setAutoScroll(True)
 
     def startDrag(self, _supported_actions) -> None:
-        """Arrasta uma subárvore existente, mantendo seus identificadores."""
+        """Drag an existing subtree, keeping its identifiers."""
         item = self.currentItem()
         if item is None:
             return
@@ -122,7 +123,7 @@ class ComponentTree(QTreeWidget):
         drag.exec(Qt.DropAction.MoveAction)
 
     def _location(self, point, payload):
-        """Interpreta topo/centro/base de uma linha como antes/dentro/depois."""
+        """Read the top/middle/bottom of a row as before/inside/after."""
         project = self.project()
         item = self.itemAt(point)
         if item is None:
@@ -146,14 +147,14 @@ class ComponentTree(QTreeWidget):
         return parent.id, index, item, "after" if zone != "before" else "before"
 
     def dragEnterEvent(self, event) -> None:
-        """Aceita exclusivamente descrições Makebench reconhecidas."""
+        """Accept only recognized Makebench descriptions."""
         if read_payload(event.mimeData()):
             event.acceptProposedAction()
         else:
             event.ignore()
 
     def dragMoveEvent(self, event) -> None:
-        """Mostra a posição de inserção apenas quando a estrutura permite o movimento."""
+        """Show the insertion point only when the structure allows the move."""
         payload = read_payload(event.mimeData())
         if payload:
             parent, index, item, zone = self._location(event.position().toPoint(), payload)
@@ -167,13 +168,13 @@ class ComponentTree(QTreeWidget):
         event.ignore()
 
     def dragLeaveEvent(self, event) -> None:
-        """Remove o destaque ao sair da árvore."""
+        """Remove the highlight when leaving the tree."""
         self._hint = None
         self.viewport().update()
         event.accept()
 
     def dropEvent(self, event) -> None:
-        """Solicita uma única edição do documento, sem modificar QTreeWidgetItems."""
+        """Request a single document edit, never modifying QTreeWidgetItems."""
         payload = read_payload(event.mimeData())
         self._hint = None
         self.viewport().update()
@@ -186,7 +187,7 @@ class ComponentTree(QTreeWidget):
         event.ignore()
 
     def paintEvent(self, event) -> None:
-        """Desenha a indicação de inserção, sem mudar a seleção do usuário."""
+        """Draw the insertion hint without changing the user's selection."""
         super().paintEvent(event)
         if self._hint and self._hint[0] is not None:
             item, zone = self._hint
@@ -201,7 +202,7 @@ class ComponentTree(QTreeWidget):
             painter.end()
 
     def keyPressEvent(self, event) -> None:
-        """Exclui a seleção por teclado sem interceptar edição de texto em outros painéis."""
+        """Delete the selection by keyboard without intercepting text editing in other panels."""
         if event.key() == Qt.Key.Key_Delete:
             self.remove_requested.emit()
         else:

@@ -1,4 +1,4 @@
-"""Regressões de fluxos reais da reformulação: referências, recursos e edição de texto."""
+"""Regressions of real redesign flows: references, assets and text editing."""
 
 import os
 
@@ -19,10 +19,10 @@ from makebench.core.behaviors import TEMPLATES, behavior_template, append_behavi
 
 
 class WorkflowTests(unittest.TestCase):
-    """O mapa e os modelos editam o mesmo documento dos handlers executáveis."""
+    """The map and the templates edit the same document as the runnable handlers."""
 
     def setUp(self):
-        """Uma janela com campo/botão e uma segunda interface são referências conhecidas."""
+        """A window with a field/button and a second interface are known references."""
         self.project = Project.empty()
         self.field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
         self.button = self.project.add(self.project.root.id, ComponentKind.BUTTON)
@@ -30,7 +30,7 @@ class WorkflowTests(unittest.TestCase):
         self.state = add_state(self.project, self.project.root.id, "Etapa 2")
 
     def test_templates_validate_roundtrip_and_preserve_comments(self):
-        """Todos os modelos são ações válidas, portáveis, independentes e inertes."""
+        """Every template is a valid, portable, independent and inert action."""
         p = self.project
         flow = create_flow(p, self.button.id)
         flow["workspace"] = {"workspaceComments": [{"text": "Comentário preservado", "id": "note"}]}
@@ -49,7 +49,7 @@ class WorkflowTests(unittest.TestCase):
             behavior_template("read_field", p, self.other.id)
 
     def test_nested_transition_edit_and_delete_preserve_other_actions(self):
-        """Editar uma conexão geral não muda filtros nem destrói condições/comentários."""
+        """Editing a general connection changes no filters and destroys no conditions/comments."""
         p = self.project
         flow = create_flow(p, self.button.id)
         condition = behavior_template("validate_input", p, p.root.id)[0]
@@ -85,9 +85,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(flow["workspace"]["workspaceComments"][0]["text"], "Nota da área")
 
     def test_cross_window_targets_only_initial_state_and_existing_scope(self):
-        """Uma janela abre em seu estado inicial; o mapa não inventa transições inexequíveis."""
+        """A window opens in its initial state; the map never invents unrunnable transitions."""
         p = self.project
-        other_state = add_state(p, self.other.id, "Pronto")
+        other_state = add_state(p, self.other.id, "Ready")
         with self.assertRaises(ProjectError):
             connect_navigation(
                 p, p.root.id + "|@default", self.button.id, self.other.id + "|" + other_state["id"]
@@ -102,7 +102,7 @@ class WorkflowTests(unittest.TestCase):
         validate(p)
 
     def test_state_specific_connections_match_the_runtime_priority(self):
-        """Uma conexão não é adicionada ao handler geral quando outro atende o estado."""
+        """A connection is not added to the general handler when another one serves the state."""
         from makebench.core.navigation import navigation_edges, effective_edge_states
 
         p = self.project
@@ -118,7 +118,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(effective_edge_states(p, edge), ["@default"])
 
     def test_button_icons_survive_portable_bundle(self):
-        """Salvar/compartilhar inclui ícones dos botões, não só imagens e ícones de janela."""
+        """Save/share includes button icons, not only images and window icons."""
         from makebench.core.bundle import write_bundle, read_bundle
         from makebench.core.storage import load_project
 
@@ -137,17 +137,17 @@ class WorkflowTests(unittest.TestCase):
 
 
 class CodeToolsTests(unittest.TestCase):
-    """Substituição, histórico, delimitadores e texto próprio permanecem locais e inertes."""
+    """Replacement, history, delimiters and own text stay local and inert."""
 
     @classmethod
     def setUpClass(cls):
-        """Widgets usam a aplicação existente ou uma aplicação offscreen."""
+        """Widgets use the existing application or an offscreen one."""
         from PySide6.QtWidgets import QApplication
 
         cls.app = QApplication.instance() or QApplication([])
 
     def test_replace_all_is_literal_and_one_undo(self):
-        """Texto que contém a busca não causa laço nem substituições extras; undo é único."""
+        """Text containing the search causes no loop or extra replacements; undo is single."""
         from makebench.editor.code import CodeEditor
 
         editor = CodeEditor()
@@ -162,7 +162,7 @@ class CodeToolsTests(unittest.TestCase):
         editor.close()
 
     def test_delimiters_ignore_strings_comments_and_handle_unicode(self):
-        """Aspas/comentários não quebram o pareamento; posições Qt consideram UTF-16."""
+        """Quotes/comments do not break pairing; Qt positions account for UTF-16."""
         from makebench.editor.code import CodeEditor
 
         editor = CodeEditor()
@@ -176,7 +176,7 @@ class CodeToolsTests(unittest.TestCase):
         editor.close()
 
     def test_indentation_keeps_multiline_selection_and_undo(self):
-        """Tab em seleção preserva todas as linhas e desfaz em uma operação."""
+        """Tab on a selection keeps every line and undoes in one operation."""
         from makebench.editor.code import CodeEditor
         from PySide6.QtGui import QTextCursor
 
@@ -191,7 +191,7 @@ class CodeToolsTests(unittest.TestCase):
         editor.close()
 
     def test_drawer_keeps_all_pages_and_visible_output_after_reparenting(self):
-        """A saída permanece visível e não apaga Problemas/Script ao remontar a gaveta."""
+        """Output stays visible and does not erase Problems/Script when the drawer is rebuilt."""
         from makebench.editor.window import MainWindow
 
         window = MainWindow(Project.empty())
@@ -203,7 +203,7 @@ class CodeToolsTests(unittest.TestCase):
         try:
             self.assertEqual(
                 [window.drawer.tabText(i) for i in range(window.drawer.count())],
-                ["Saída", "Problemas", "Script", "Tarefas", "Erro", "Terminal", "Depurar"],
+                ["Output", "Problems", "Script", "Tasks", "Error", "Terminal", "Debug"],
             )
             window.add_output("stdout", "saída real\n")
             window.add_output("stderr", "aviso real\n")

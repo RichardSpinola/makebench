@@ -1,4 +1,4 @@
-"""Janelas, estados e transições como dados, independentes do toolkit."""
+"""Windows, states and transitions as data, independent of the toolkit."""
 
 from copy import deepcopy
 import math
@@ -11,6 +11,7 @@ from .project import (
     create_component,
     new_id,
 )
+from makebench.i18n import tr
 
 OVERRIDES = {
     "text",
@@ -27,19 +28,19 @@ OVERRIDES = {
 
 
 def validate_navigation(project):
-    """Valida escopos, alvos e sobrescritas antes de qualquer renderização."""
+    """Validate scopes, targets and overrides before any rendering."""
     roots = {r.id: r for r in project.roots}
     if project.entry_window is not None and project.entry_window not in roots:
-        raise ProjectError("A janela inicial não pertence ao projeto.")
+        raise ProjectError(tr("The start window does not belong to the project."))
     if (
         not isinstance(project.states, dict)
         or not isinstance(project.variables, list)
         or not isinstance(project.map_layout, dict)
     ):
-        raise ProjectError("Estados, variáveis ou posições do mapa inválidos.")
+        raise ProjectError(tr("Invalid states, variables or map positions."))
     for window_id, states in project.states.items():
         if window_id not in roots or not isinstance(states, list) or len(states) > 128:
-            raise ProjectError("Estados devem pertencer a uma janela existente (máximo 128).")
+            raise ProjectError(tr("States must belong to an existing window (at most 128)."))
         ids = set()
         components = {n.id: n for n in roots[window_id].walk()}
         for state in states:
@@ -52,11 +53,11 @@ def validate_navigation(project):
                 or not isinstance(state.get("name"), str)
                 or not state["name"].strip()
             ):
-                raise ProjectError("Estado sem nome ou identificador único.")
+                raise ProjectError(tr("State without a name or unique identifier."))
             ids.add(state["id"])
             overrides = state.get("overrides", {})
             if not isinstance(overrides, dict):
-                raise ProjectError("Sobrescritas de estado inválidas.")
+                raise ProjectError(tr("Invalid state overrides."))
             for identifier, values in overrides.items():
                 if (
                     identifier not in components
@@ -64,17 +65,17 @@ def validate_navigation(project):
                     or values.keys() - OVERRIDES
                 ):
                     raise ProjectError(
-                        "O estado só altera propriedades de componentes da sua janela."
+                        tr("A state only changes properties of components in its own window.")
                     )
                 node = deepcopy(components[identifier])
                 node.properties.update(values)
                 Component.from_dict(node.to_dict())
                 for key in ("visible", "enabled"):
                     if key in values and type(values[key]) is not bool:
-                        raise ProjectError("Visibilidade e habilitação precisam ser booleanas.")
+                        raise ProjectError(tr("Visibility and enabled must be booleans."))
         initial = roots[window_id].properties.get("initial_state", "@default")
         if initial != "@default" and initial not in ids:
-            raise ProjectError("Estado inicial inexistente.")
+            raise ProjectError(tr("The initial state does not exist."))
     seen = set()
     for variable in project.variables:
         if (
@@ -82,14 +83,14 @@ def validate_navigation(project):
             or not isinstance(variable.get("name"), str)
             or not variable["name"].strip()
         ):
-            raise ProjectError("Variável sem nome.")
+            raise ProjectError(tr("Variable without a name."))
         scope = variable.get("scope", "project")
         window = variable.get("window")
         if scope not in {"project", "window"} or scope == "window" and window not in roots:
-            raise ProjectError("Escopo da variável inválido.")
+            raise ProjectError(tr("Invalid variable scope."))
         key = (scope, window if scope == "window" else None, variable["name"])
         if key in seen:
-            raise ProjectError("Variável repetida no mesmo escopo.")
+            raise ProjectError(tr("Repeated variable in the same scope."))
         seen.add(key)
         value = variable.get("initial")
         if (
@@ -97,7 +98,7 @@ def validate_navigation(project):
             or type(value) is float
             and not math.isfinite(value)
         ):
-            raise ProjectError("Valor inicial precisa ser texto, número, booleano ou nulo.")
+            raise ProjectError(tr("The initial value must be text, a number, a boolean or null."))
     for key, point in project.map_layout.items():
         if (
             not isinstance(key, str)
@@ -108,24 +109,24 @@ def validate_navigation(project):
                 for n in point
             )
         ):
-            raise ProjectError("Posição do mapa inválida.")
+            raise ProjectError(tr("Invalid map position."))
     code_names = set()
     for root in project.roots:
         valid_states = {"@default", *[s["id"] for s in project.states.get(root.id, [])]}
         if root.properties.get("initial_state", "@default") not in valid_states:
-            raise ProjectError("Estado inicial inexistente.")
+            raise ProjectError(tr("The initial state does not exist."))
     application = project.application
     if not isinstance(application, dict):
-        raise ProjectError("Configuração do aplicativo inválida.")
+        raise ProjectError(tr("Invalid application settings."))
     if application.get("backend", "qt") not in {"qt", "gtk"}:
-        raise ProjectError("Backend precisa ser GTK ou Qt.")
+        raise ProjectError(tr("The backend must be GTK or Qt."))
     for key in ("name", "id", "version", "description", "author", "license", "category", "icon"):
         if key in application and not isinstance(application[key], str):
-            raise ProjectError("Metadado do aplicativo precisa ser texto: " + key)
+            raise ProjectError(tr("Application metadata must be text: {key}").format(key=key))
     if not isinstance(application.get("packages", []), list) or any(
         not isinstance(v, str) for v in application.get("packages", [])
     ):
-        raise ProjectError("Dependências precisam ser uma lista de textos.")
+        raise ProjectError(tr("Dependencies must be a list of texts."))
     if application.get("icon"):
         from pathlib import PurePosixPath
 
@@ -137,7 +138,7 @@ def validate_navigation(project):
             or len(path.parts) < 2
             or path.parts[0] != "assets"
         ):
-            raise ProjectError("O ícone precisa ficar em assets.")
+            raise ProjectError(tr("The icon must be in assets."))
     for node in project.walk():
         p = node.properties
         if p.get("icon"):
@@ -152,15 +153,15 @@ def validate_navigation(project):
                 or icon.parts[0] != "assets"
                 or "\\" in p["icon"]
             ):
-                raise ProjectError("Ícone da janela precisa ficar em assets.")
+                raise ProjectError(tr("The window icon must be in assets."))
         if not isinstance(p.get("tooltip", ""), str):
-            raise ProjectError("Dica do componente precisa ser texto.")
+            raise ProjectError(tr("The component tooltip must be text."))
         for key in ("visible", "enabled", "resizable"):
             if key in p and type(p[key]) is not bool:
-                raise ProjectError("Propriedade booleana inválida: " + key)
+                raise ProjectError(tr("Invalid boolean property: {key}").format(key=key))
         for key in ("width", "height"):
             if key in p and (type(p[key]) is not int or not 1 <= p[key] <= 20000):
-                raise ProjectError("Tamanho inicial inválido.")
+                raise ProjectError(tr("Invalid initial size."))
         code_name = p.get("code_name", "")
         import keyword
 
@@ -173,25 +174,25 @@ def validate_navigation(project):
                 or code_name in code_names
             )
         ):
-            raise ProjectError("Nome no código inválido ou repetido.")
+            raise ProjectError(tr("Invalid or repeated code name."))
         if code_name:
             code_names.add(code_name)
         if not isinstance(p.get("size_mode", {}), dict):
-            raise ProjectError("Modo de tamanho inválido.")
+            raise ProjectError(tr("Invalid size mode."))
         for key in ("spacing", "padding"):
             if key in p and (type(p[key]) is not int or not 0 <= p[key] <= 2000):
-                raise ProjectError("Espaçamento e margens devem estar entre 0 e 2000.")
+                raise ProjectError(tr("Spacing and margins must be between 0 and 2000."))
         if "alignment_preset" in p and p["alignment_preset"] not in {
             y + "-" + x for y in ("top", "center", "bottom") for x in ("left", "center", "right")
         }:
-            raise ProjectError("Alinhamento inválido.")
+            raise ProjectError(tr("Invalid alignment."))
         if p.get("align", "start") not in {"start", "center", "end", "stretch"}:
-            raise ProjectError("Alinhamento inválido.")
+            raise ProjectError(tr("Invalid alignment."))
         if p.get("distribute", "start") not in {"start", "center", "end", "space-between"}:
-            raise ProjectError("Distribuição inválida.")
+            raise ProjectError(tr("Invalid distribution."))
         for axis, mode in p.get("size_mode", {}).items():
             if axis not in {"width", "height"} or mode not in {"content", "fill", "fixed"}:
-                raise ProjectError("Dimensionamento inválido.")
+                raise ProjectError(tr("Invalid sizing."))
         if "free_geometry" in p:
             candidate = node.to_dict()
             candidate["geometry"] = p["free_geometry"]
@@ -199,16 +200,16 @@ def validate_navigation(project):
 
 
 def add_window(project, name, duplicate=None):
-    """Acrescenta janela real; duplicação remapeia componentes e páginas."""
+    """Add a real window; duplication remaps components and pages."""
     if not name.strip():
-        raise ProjectError("Dê um nome à janela.")
+        raise ProjectError(tr("Give the window a name."))
     root = (
         create_component(ComponentKind.WINDOW)
         if duplicate is None
         else deepcopy(project.find(duplicate))
     )
     if root is None or root.kind != ComponentKind.WINDOW:
-        raise ProjectError("Selecione uma janela para duplicar.")
+        raise ProjectError(tr("Select a window to duplicate."))
     if duplicate:
         from .logic import duplicate_flows
 
@@ -238,7 +239,7 @@ def add_window(project, name, duplicate=None):
             project.states[root.id] = copies
 
         def remap(value):
-            """Atualiza referências sem reescrever texto ou código próprio."""
+            """Update references without rewriting text or the user's own code."""
             if isinstance(value, dict):
                 if value.get("state") in state_mapping:
                     value["state"] = state_mapping[value["state"]]
@@ -271,9 +272,9 @@ def add_window(project, name, duplicate=None):
 
 
 def add_state(project, window_id, name, start="@default"):
-    """Cria diferenças sobre o Padrão; copiar não estabelece herança entre estados."""
+    """Create differences over Default; copying does not create inheritance between states."""
     if not name.strip() or project.window_of(window_id) is None:
-        raise ProjectError("Informe janela e nome do estado.")
+        raise ProjectError(tr("Enter the window and the state name."))
     states = project.states.setdefault(window_id, [])
     base = next((s for s in states if s["id"] == start), None)
     state = {
@@ -286,11 +287,11 @@ def add_state(project, window_id, name, start="@default"):
 
 
 def navigation_edges(project):
-    """Deriva conexões dos blocos, inclusive navegação dentro de condições."""
+    """Derive connections from blocks, including navigation inside conditions."""
     edges = []
 
     def visit(value, flow):
-        """Percorre dados estruturados sem executar conteúdo do projeto."""
+        """Walk structured data without running project content."""
         if isinstance(value, dict):
             if value.get("op") in {"go_state", "open_window", "close_window", "show_page"}:
                 owner = project.window_of(flow["event"]["component"])
@@ -335,38 +336,38 @@ def navigation_edges(project):
     return edges
 
 
-def welcome_template(name="Boas-vindas"):
-    """Exemplo executável: três estados, Voltar/Próximo e abertura de outra janela."""
+def welcome_template(name=None):
+    """Runnable example: three states, Back/Next and opening another window."""
     from .logic import create_flow
 
-    project = Project.empty(name)
+    project = Project.empty(tr("Welcome") if name is None else name)
     root = project.root
     heading = project.add(root.id, ComponentKind.LABEL)
-    heading.properties["text"] = "Bem-vindo ao seu Linux"
+    heading.properties["text"] = tr("Welcome to your Linux")
     body = project.add(root.id, ComponentKind.LABEL)
-    body.properties["text"] = "Conheça as ferramentas que acompanham seu sistema."
+    body.properties["text"] = tr("Discover the tools that come with your system.")
     row = project.add(root.id, ComponentKind.CONTAINER)
     row.layout = LayoutKind.HORIZONTAL
     back = project.add(row.id, ComponentKind.BUTTON)
-    back.properties.update(text="Voltar", enabled=False)
+    back.properties.update(text=tr("Back"), enabled=False)
     next_button = project.add(row.id, ComponentKind.BUTTON)
-    next_button.properties["text"] = "Próximo"
-    second = add_state(project, root.id, "Conheça o sistema")
+    next_button.properties["text"] = tr("Next")
+    second = add_state(project, root.id, tr("Discover the system"))
     second["overrides"] = {
-        heading.id: {"text": "Seu sistema, do seu jeito"},
-        body.id: {"text": "Personalize as ferramentas e preferências quando quiser."},
+        heading.id: {"text": tr("Your system, your way")},
+        body.id: {"text": tr("Customize tools and preferences whenever you like.")},
         back.id: {"enabled": True},
     }
-    third = add_state(project, root.id, "Tudo pronto")
+    third = add_state(project, root.id, tr("All set"))
     third["overrides"] = {
-        heading.id: {"text": "Tudo pronto para começar"},
-        body.id: {"text": "Conclua o assistente para abrir seu painel."},
+        heading.id: {"text": tr("All set to start")},
+        body.id: {"text": tr("Finish the wizard to open your dashboard.")},
         back.id: {"enabled": True},
-        next_button.id: {"text": "Concluir"},
+        next_button.id: {"text": tr("Finish")},
     }
-    panel = add_window(project, "Painel principal")
+    panel = add_window(project, tr("Main dashboard"))
     text = project.add(panel.id, ComponentKind.LABEL)
-    text.properties["text"] = "Bem-vindo! Seu painel está pronto."
+    text.properties["text"] = tr("Welcome! Your dashboard is ready.")
     sequence = ["@default", second["id"], third["id"]]
     for index, state in enumerate(sequence):
         flow = create_flow(project, next_button.id, states=[state])
@@ -390,11 +391,11 @@ def welcome_template(name="Boas-vindas"):
 
 
 def find_navigation_block(project, flow_id, block_id):
-    """Localiza uma ação por identidade, inclusive dentro de condições/repetições."""
+    """Find an action by identity, including inside conditions/repeats."""
     flow = next((f for f in project.editable_flows if f["id"] == flow_id), None)
 
     def visit(value):
-        """IDs não são nomes exibidos e não precisam de interpretação de código."""
+        """IDs are not display names and need no code interpretation."""
         if isinstance(value, dict):
             if value.get("id") == block_id:
                 return value
@@ -414,7 +415,7 @@ def find_navigation_block(project, flow_id, block_id):
 
 
 def remove_navigation_block(project, flow_id, block_id):
-    """Remove só o bloco indicado, preservando outros efeitos e comentários do fluxo."""
+    """Remove only the given block, keeping the flow's other effects and comments."""
     flow, _ = find_navigation_block(project, flow_id, block_id)
     if not flow:
         return
@@ -427,7 +428,7 @@ def remove_navigation_block(project, flow_id, block_id):
         return
 
     def visit(items):
-        """A remoção funciona também em ramificações internas do evento."""
+        """Removal also works in the event's inner branches."""
         for item in list(items or []):
             if item.get("id") == block_id:
                 items.remove(item)
@@ -444,7 +445,7 @@ def remove_navigation_block(project, flow_id, block_id):
 
 
 def connect_navigation(project, source, event_component, target, close_current=False, replace=None):
-    """Cria/edita navegação real no fluxo; janelas abrem no estado inicial suportado."""
+    """Create/edit real navigation in the flow; windows open in their supported initial state."""
     from .logic import create_flow
 
     window_id, state = source.split("|", 1)
@@ -452,18 +453,20 @@ def connect_navigation(project, source, event_component, target, close_current=F
     owner = project.window_of(event_component)
     destination = project.find(target_window)
     if owner is None or owner.id != window_id or destination not in project.roots:
-        raise ProjectError("Origem ou destino da navegação não pertence à interface escolhida.")
+        raise ProjectError(
+            tr("The navigation source or destination does not belong to the chosen interface.")
+        )
     if target_window != window_id and target_state != destination.properties.get(
         "initial_state", "@default"
     ):
         raise ProjectError(
-            "Outra janela abre em seu estado inicial. Escolha esse estado como destino."
+            tr("Another window opens in its initial state. Choose that state as the destination.")
         )
     old_flow, old_block = find_navigation_block(project, *replace) if replace else (None, None)
     comment = old_block.get("comment") if old_block else None
     identifier = old_block["id"] if old_block else new_id("block")
     if replace and not old_block:
-        raise ProjectError("A transição não existe mais.")
+        raise ProjectError(tr("The transition no longer exists."))
     if state not in {
         "@default",
         *[s["id"] for s in project.states.get(window_id, [])],
@@ -471,7 +474,7 @@ def connect_navigation(project, source, event_component, target, close_current=F
         "@default",
         *[s["id"] for s in project.states.get(target_window, [])],
     }:
-        raise ProjectError("O estado da transição não existe.")
+        raise ProjectError(tr("The transition state does not exist."))
     flow = (
         old_flow
         if old_flow
@@ -495,7 +498,7 @@ def connect_navigation(project, source, event_component, target, close_current=F
     if flow is None:
         flow = create_flow(project, event_component, states=[state])
     if flow.get("body") is None:
-        raise ProjectError("Complete o rascunho desse evento antes de adicionar uma transição.")
+        raise ProjectError(tr("Complete this event's draft before adding a transition."))
     block = (
         {"id": identifier, "op": "go_state", "state": target_state}
         if window_id == target_window
@@ -518,7 +521,9 @@ def connect_navigation(project, source, event_component, target, close_current=F
             entry = flow["graph"]["entry"]
             if any(e["from"] == entry and e["out"] == "next" for e in flow["graph"]["edges"]):
                 raise ProjectError(
-                    "Esse evento usa Nós. Adicione e conecte a navegação no editor de Nós para escolher o caminho de execução."
+                    tr(
+                        "This event uses Nodes. Add and connect the navigation in the Nodes editor to choose the execution path."
+                    )
                 )
             flow["graph"]["nodes"].append(
                 {
@@ -545,7 +550,7 @@ def connect_navigation(project, source, event_component, target, close_current=F
 
 
 def effective_edge_states(project, edge):
-    """Deriva estados realmente alcançados, respeitando handlers específicos sobre gerais."""
+    """Derive the states actually reached, with specific handlers over general ones."""
     if edge["states"]:
         return edge["states"]
     flow = next(f for f in project.editable_flows if f["id"] == edge["flow"])

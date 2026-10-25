@@ -1,35 +1,38 @@
-"""Catálogo de componentes para inserção; todos os tipos listados têm renderizador Qt/GTK."""
+"""Component catalog for insertion; every listed type has a Qt/GTK renderer."""
 
 from PySide6.QtCore import Qt
+from makebench.i18n import tr
 
 CATEGORIES = {
-    "layout": "Estrutura",
-    "content": "Conteúdo",
-    "input": "Entrada e ações",
-    "feedback": "Saída e estado",
+    "layout": tr("Structure"),
+    "content": tr("Content"),
+    "input": tr("Input and actions"),
+    "feedback": tr("Output and state"),
 }
 COMPONENTS = {
-    "container": ("layout", "Agrupa elementos em linha, coluna, grade ou posição livre."),
-    "pages": ("layout", "Um conjunto de páginas com abas dentro da mesma janela."),
-    "page": ("layout", "Uma página que pertence a um conjunto de abas."),
-    "spacer": ("layout", "Ocupa espaço livre no layout."),
-    "separator": ("layout", "Separa visualmente grupos de controles."),
-    "label": ("content", "Texto exibido na interface."),
-    "image": ("content", "Imagem importada e salva junto do projeto."),
-    "button": ("input", "Dispara um evento de clique e suas ações."),
-    "text_input": ("input", "Recebe texto digitado pelo usuário."),
-    "checkbox": ("input", "Uma opção que pode ser marcada ou desmarcada."),
+    "container": ("layout", tr("Groups elements in a row, column, grid or free position.")),
+    "pages": ("layout", tr("A set of tabbed pages inside the same window.")),
+    "page": ("layout", tr("A page that belongs to a set of tabs.")),
+    "spacer": ("layout", tr("Takes up free space in the layout.")),
+    "separator": ("layout", tr("Visually separates groups of controls.")),
+    "label": ("content", tr("Text shown in the interface.")),
+    "image": ("content", tr("Image imported and saved with the project.")),
+    "button": ("input", tr("Fires a click event and its actions.")),
+    "text_input": ("input", tr("Receives text typed by the user.")),
+    "checkbox": ("input", tr("An option that can be checked or unchecked.")),
     "terminal": (
         "feedback",
-        "Terminal Linux interativo, com cores e teclado. A prévia não inicia processos.",
+        tr(
+            "Interactive Linux terminal, with colors and keyboard. The preview never starts processes."
+        ),
     ),
-    "progress": ("feedback", "Exibe um valor entre 0 e 100."),
-    "output": ("feedback", "Mostra mensagens e saída das tarefas."),
+    "progress": ("feedback", tr("Shows a value between 0 and 100.")),
+    "output": ("feedback", tr("Shows messages and task output.")),
 }
 
 
 def filter_library(window):
-    """Pesquisa nome/descrição e categoria sem recriar a seleção ou os itens arrastáveis."""
+    """Search name/description and category without re-creating the selection or draggable items."""
     query = window.insert_search.text().casefold()
     category = window.insert_category.currentData()
     for index in range(window.palette.count()):
@@ -40,4 +43,4 @@ def filter_library(window):
             bool(category and group != category)
             or query not in (item.text() + " " + description).casefold()
         )
-        item.setToolTip(description + "\nDisponível em Qt e GTK4.")
+        item.setToolTip(description + "\n" + tr("Available in Qt and GTK4."))

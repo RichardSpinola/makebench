@@ -1,4 +1,4 @@
-"""Aceitação da bancada e da ponte GTK com ações reais de depuração."""
+"""Acceptance of the workbench and the GTK bridge with real debug actions."""
 
 import argparse
 import json
@@ -9,7 +9,7 @@ import time
 
 
 def main():
-    """Verifica F6, pontos, aviso de snapshot, shell explícito e limpeza da IDE."""
+    """Check F9, breakpoints, the snapshot notice, explicit shell and IDE cleanup."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=("qt", "gtk"), required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -41,12 +41,12 @@ def main():
         window.confirm_trust = lambda: True
         window.logic.ensure_loaded()
         window.show()
-        window.set_mode("Design")
+        window.set_mode("design")
         errors = []
         pauses = []
 
         def wait(predicate, seconds=15):
-            """Aguarda sinais e desenho sem bloquear o loop de eventos do editor."""
+            """Wait for signals and drawing without blocking the editor event loop."""
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 QTest.qWait(25)
@@ -79,7 +79,7 @@ def main():
         wait(lambda: len(pauses) >= 2)
         assert pauses[1].get("source_line") == 6
         window.grab().save(str(args.output / "02-python.png"))
-        window.source_editor.appendPlainText("\n# Mudança durante o snapshot")
+        window.source_editor.appendPlainText("\n# Change during the snapshot")
         window.update_test_time()
         window.locate_debug(pauses[1])
         assert "reinicie" in window.debug_panel.status.text()
@@ -109,9 +109,9 @@ def main():
                     "passed": [
                         "Depurar separado de Executar",
                         "Parada no bloco",
-                        "Entrar na função",
+                        "Step into function",
                         "Snapshot preservado ao editar",
-                        "Shell só após clique",
+                        "Shell only after a click",
                         "Fechar IDE encerra shell",
                         "Ponte GTK ou runtime Qt",
                     ],

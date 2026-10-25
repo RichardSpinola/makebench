@@ -1,4 +1,4 @@
-"""Auxiliar mínimo de PTY, iniciado por subprocess sem executar callbacks após fork."""
+"""Minimal PTY helper, started by subprocess with no callbacks after fork."""
 
 import fcntl
 import os
@@ -9,7 +9,7 @@ import termios
 
 
 def main():
-    """Assume a PTY como terminal controlador da nova sessão e substitui o auxiliar."""
+    """Take the PTY as the new session's controlling terminal and replace the helper."""
     try:
         fcntl.ioctl(0, termios.TIOCSCTTY, 0)
         os.tcsetpgrp(0, os.getpgrp())

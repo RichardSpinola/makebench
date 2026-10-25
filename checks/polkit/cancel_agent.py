@@ -1,4 +1,4 @@
-"""Agente descartável que simula o usuário fechando a autenticação."""
+"""Disposable agent that simulates the user closing the authentication."""
 
 import os
 import subprocess
@@ -8,7 +8,7 @@ if (
     os.environ.get("MAKEBENCH_POLKIT_CONTAINER_TEST") != "1"
     or not Path("/run/.containerenv").exists()
 ):
-    raise SystemExit("Este agente é exclusivo do contêiner descartável.")
+    raise SystemExit("This agent is exclusive to the disposable container.")
 import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
@@ -27,7 +27,7 @@ class Agent(dbus.service.Object):
         out_signature="",
     )
     def BeginAuthentication(self, action_id, message, icon_name, details, cookie, identities):
-        """Fecha a solicitação sem fornecer credenciais."""
+        """Close the request without providing credentials."""
         raise dbus.exceptions.DBusException(
             "Cancelado pelo teste.", name="org.freedesktop.PolicyKit1.Error.Cancelled"
         )
@@ -64,7 +64,7 @@ process = subprocess.Popen(
 
 
 def finished():
-    """Termina o loop quando pkexec recebe a recusa do agente."""
+    """End the loop when pkexec receives the agent's refusal."""
     if process.poll() is None:
         return True
     out, err = process.communicate()

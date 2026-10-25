@@ -1,4 +1,4 @@
-"""Controles e layouts comuns à edição e à execução de aplicativos Qt."""
+"""Controls and layouts shared by editing and running Qt applications."""
 
 from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QPainter, QPixmap, QIcon
@@ -18,13 +18,14 @@ from PySide6.QtWidgets import (
 )
 from makebench.core.project import ComponentKind, LayoutKind
 from makebench.core.storage import StorageError
+from makebench.i18n import tr
 
 
 class ImageLabel(QLabel):
-    """Exibe uma imagem proporcional ao espaço disponível, com descrição acessível."""
+    """Show an image scaled to the available space, with an accessible description."""
 
     def __init__(self, image: QPixmap, description: str) -> None:
-        """Guarda a imagem original, evitando perder qualidade a cada redimensionamento."""
+        """Keep the original image so quality is not lost on every resize."""
         super().__init__()
         self.image = image
         self.setMinimumSize(80, 64)
@@ -32,7 +33,7 @@ class ImageLabel(QLabel):
         self.setAccessibleName(description)
 
     def paintEvent(self, event) -> None:
-        """Centraliza a imagem sem deformar ou cortar seu conteúdo."""
+        """Center the image without distorting or cropping its content."""
         if self.image.isNull():
             super().paintEvent(event)
             return
@@ -47,7 +48,7 @@ class ImageLabel(QLabel):
 
 
 def create_control(node, read_asset, editing=False):
-    """Cria um controle nativo; edição desabilita digitação e recebe seleção externa."""
+    """Create a native control; editing disables typing and receives external selection."""
     text = node.properties.get("text", "")
     match node.kind:
         case ComponentKind.SEPARATOR:
@@ -90,15 +91,15 @@ def create_control(node, read_asset, editing=False):
                     pixmap.loadFromData(read_asset(source))
             except StorageError:
                 pass
-            widget = ImageLabel(pixmap, node.properties.get("alt_text", "Imagem"))
+            widget = ImageLabel(pixmap, node.properties.get("alt_text", tr("Image")))
             if pixmap.isNull():
                 widget.setText(
-                    "Imagem indisponível" if source else "Selecione uma imagem nas propriedades"
+                    tr("Image unavailable") if source else tr("Select an image in the properties")
                 )
                 widget.setWordWrap(True)
                 widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
         case _:
-            raise ValueError(f"Componente sem renderizador: {node.kind}")
+            raise ValueError(tr("Component without a renderer: {kind}").format(kind=node.kind))
     if isinstance(widget, QLabel):
         widget.setTextFormat(Qt.TextFormat.PlainText)
     if node.kind == ComponentKind.BUTTON and node.properties.get("icon"):
@@ -115,7 +116,7 @@ def create_control(node, read_asset, editing=False):
 
 
 def place_children(frame, node, render):
-    """Aplica a mesma geometria/layout aos filhos no editor e no aplicativo."""
+    """Apply the same geometry/layout to children in the editor and in the application."""
     if node.layout == LayoutKind.FREE:
         for child in node.children:
             rendered = render(child)

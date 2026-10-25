@@ -1,4 +1,4 @@
-"""Prévia Qt editável com arraste, alças e páginas, sem executar ações do aplicativo."""
+"""Editable Qt preview with dragging, handles and pages, never running application actions."""
 
 from __future__ import annotations
 
@@ -26,15 +26,16 @@ from PySide6.QtWidgets import (
 from makebench.core.project import Component, ComponentKind, LayoutKind, Project
 from makebench.ui.renderer import ImageLabel, create_control, place_children
 from makebench.editor.drag import mime_for, read_payload
+from makebench.i18n import tr
 
 EDGES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
 
 
 class ResizeHandle(QWidget):
-    """Alça desenhada sobre o componente sem ocupar espaço no layout."""
+    """Handle drawn over the component without taking layout space."""
 
     def __init__(self, edge: str, parent: QWidget) -> None:
-        """Configura a direção da alça e seu cursor de redimensionamento."""
+        """Set the handle's direction and its resize cursor."""
         super().__init__(parent)
         self.setFixedSize(8, 8)
         self.setProperty("resizeEdge", edge)
@@ -52,10 +53,10 @@ class ResizeHandle(QWidget):
             )
         )
         self.setCursor(cursor)
-        self.setToolTip("Arraste para redimensionar. Esc cancela o gesto.")
+        self.setToolTip(tr("Drag to resize. Esc cancels the gesture."))
 
     def paintEvent(self, _event) -> None:
-        """Mantém as alças visíveis nos temas claro e escuro."""
+        """Keep the handles visible in light and dark themes."""
         painter = QPainter(self)
         painter.setPen(QPen(self.palette().highlight().color(), 1))
         painter.setBrush(self.palette().base())
@@ -64,10 +65,10 @@ class ResizeHandle(QWidget):
 
 
 class LayoutHandle(QWidget):
-    """Alça de espaçamento/margem que simula durante o gesto e confirma uma vez."""
+    """Spacing/margin handle that simulates during the gesture and confirms once."""
 
     def __init__(self, canvas, parent, node_id, key, vertical=False):
-        """Usa o layout renderizado como prévia, preservando o modelo até soltar."""
+        """Use the rendered layout as a preview, keeping the model until release."""
         super().__init__(parent)
         self.canvas = canvas
         self.node_id = node_id
@@ -77,13 +78,13 @@ class LayoutHandle(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setCursor(Qt.CursorShape.SizeHorCursor if vertical else Qt.CursorShape.SizeVerCursor)
         self.setAccessibleName(
-            "Ajustar " + ("espaçamento" if key == "spacing" else "margens internas")
+            tr("Adjust spacing") if key == "spacing" else tr("Adjust inner margins")
         )
         self.origin = None
         self.value = 0
 
     def paintEvent(self, event):
-        """Desenha a alça sobre a composição com a cor de seleção do tema."""
+        """Draw the handle over the composition in the theme's selection color."""
         painter = QPainter(self)
         painter.setPen(QPen(self.palette().highlight().color(), 3))
         if self.vertical:
@@ -92,7 +93,7 @@ class LayoutHandle(QWidget):
             painter.drawLine(6, self.height() // 2, self.width() - 6, self.height() // 2)
 
     def mousePressEvent(self, event):
-        """Inicia uma edição que pode ser cancelada por Escape."""
+        """Start an edit that Escape can cancel."""
         self.setFocus()
         self.origin = self.mapTo(self.canvas, event.position().toPoint())
         node = self.canvas._project.find(self.node_id)
@@ -101,7 +102,7 @@ class LayoutHandle(QWidget):
         event.accept()
 
     def mouseMoveEvent(self, event):
-        """Atualiza o layout somente na representação visual do gesto."""
+        """Update the layout only in the gesture's visual representation."""
         if self.origin is None:
             return
         delta = self.mapTo(self.canvas, event.position().toPoint()) - self.origin
@@ -112,7 +113,7 @@ class LayoutHandle(QWidget):
         QToolTip.showText(event.globalPosition().toPoint(), str(self.value) + " px", self)
 
     def apply_preview(self, value):
-        """Altera apenas o layout Qt temporário; salvar não observa esse estado."""
+        """Change only the temporary Qt layout; saving never looks at this state."""
         layout = self.parentWidget().layout()
         if self.key == "spacing":
             layout.setSpacing(value)
@@ -120,7 +121,7 @@ class LayoutHandle(QWidget):
             layout.setContentsMargins(value, value, value, value)
 
     def mouseReleaseEvent(self, event):
-        """Confirma uma alteração de documento mesmo após vários movimentos."""
+        """Confirm one document change even after several movements."""
         if self.origin is None:
             return
         self.origin = None
@@ -129,7 +130,7 @@ class LayoutHandle(QWidget):
             self.canvas.layout_requested.emit(self.node_id, self.key, self.value)
 
     def keyPressEvent(self, event):
-        """Cancela o gesto sem gerar histórico ou aplica passo fino por teclado."""
+        """Cancel the gesture without creating history, or apply a fine keyboard step."""
         if event.key() == Qt.Key.Key_Escape and self.origin is not None:
             self.apply_preview(self.original)
             self.origin = None
@@ -150,10 +151,10 @@ class LayoutHandle(QWidget):
 
 
 class ComponentFrame(QFrame):
-    """Superfície de um componente, com alvo de arraste e alças de seleção."""
+    """Surface of a component, with a drop target and selection handles."""
 
     def __init__(self, canvas: PreviewCanvas, node_id: str) -> None:
-        """Registra um alvo que delega alterações ao documento central."""
+        """Register a target that delegates changes to the central document."""
         super().__init__()
         self.canvas = canvas
         self.node_id = node_id
@@ -162,7 +163,7 @@ class ComponentFrame(QFrame):
         self.setProperty("previewNode", True)
 
     def show_handles(self, visible: bool) -> None:
-        """Cria alças somente para componentes livres selecionados."""
+        """Create handles only for selected free components."""
         if visible and not self.handles:
             for edge in EDGES:
                 handle = ResizeHandle(edge, self)
@@ -174,7 +175,7 @@ class ComponentFrame(QFrame):
         self._position_handles()
 
     def _position_handles(self) -> None:
-        """Reposiciona as oito alças quando o componente muda de tamanho."""
+        """Reposition the eight handles when the component changes size."""
         for handle in self.handles:
             edge = handle.property("resizeEdge")
             x = 0 if "w" in edge else self.width() - 8 if "e" in edge else (self.width() - 8) // 2
@@ -182,32 +183,32 @@ class ComponentFrame(QFrame):
             handle.move(x, y)
 
     def resizeEvent(self, event) -> None:
-        """Mantém as alças sobre a borda do componente durante o gesto."""
+        """Keep the handles over the component's border during the gesture."""
         super().resizeEvent(event)
         self._position_handles()
 
     def dragEnterEvent(self, event) -> None:
-        """Valida a entrada e destaca o alvo compatível."""
+        """Validate the entry and highlight the compatible target."""
         self.canvas.drag_on(self, event)
 
     def dragMoveEvent(self, event) -> None:
-        """Atualiza a indicação de destino ao atravessar a superfície."""
+        """Update the target indication while crossing the surface."""
         self.canvas.drag_on(self, event)
 
     def dragLeaveEvent(self, event) -> None:
-        """Limpa o destaque de destino ao sair do componente."""
+        """Clear the target highlight when leaving the component."""
         self.setProperty("dropTarget", False)
         self.style().unpolish(self)
         self.style().polish(self)
         event.accept()
 
     def dropEvent(self, event) -> None:
-        """Confirma uma inserção ou reorganização por arraste."""
+        """Confirm an insertion or reordering by dragging."""
         self.canvas.drop_on(self, event)
 
 
 class PreviewCanvas(QFrame):
-    """Renderiza o documento e emite edições completas para o histórico central."""
+    """Render the document and emit complete edits for the central history."""
 
     component_selected = Signal(str)
     geometry_committed = Signal(str, object)
@@ -223,7 +224,7 @@ class PreviewCanvas(QFrame):
     native_preview_ready = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Prepara seleção, estado efêmero das páginas e controle dos gestos."""
+        """Prepare selection, ephemeral page state and gesture control."""
         super().__init__(parent)
         self._frames: dict[str, ComponentFrame] = {}
         self._tabs: dict[str, QTabWidget] = {}
@@ -250,12 +251,12 @@ class PreviewCanvas(QFrame):
         )
 
     def set_project(self, project: Project) -> None:
-        """Reconstrói a prévia e conserva páginas visíveis do mesmo documento."""
+        """Rebuild the preview and keep the visible pages of the same document."""
         if self._project is None or self._project.id != project.id:
             self._visible_pages = {}
         self._project = project
-        # Controles Qt usam o próprio estilo instalado. GTK é desenhado em
-        # processo separado pelo toolkit real, sem QSS para imitá-lo.
+        # Qt controls use their own installed style. GTK is drawn in a
+        # separate process by the real toolkit, with no QSS imitating it.
         self.setStyleSheet(
             'QFrame[previewNode="true"] { border:1px solid transparent; }'
             'QFrame[previewNode="true"][selectedNode="true"] { border:1px solid palette(highlight); }'
@@ -293,29 +294,29 @@ class PreviewCanvas(QFrame):
                 self.gtk_surface.hide()
 
     def resizeEvent(self, event):
-        """Mantém a superfície GTK sobre a área de desenho ao ajustar zoom e tamanho."""
+        """Keep the GTK surface over the drawing area when zoom and size change."""
         super().resizeEvent(event)
         if hasattr(self, "gtk_surface"):
             self.gtk_surface.setGeometry(self.rect())
 
     def refresh_native_preview(self, force=False):
-        """Atualiza a aparência visual após editar propriedades, sem eventos de execução."""
+        """Update the visual appearance after editing properties, with no run events."""
         if hasattr(self, "title_bar"):
             self.title_bar.update()
         if hasattr(self, "gtk_surface") and self._project.application.get("backend", "qt") == "gtk":
             self.gtk_surface.request(force)
 
     def close_native_preview(self):
-        """A limpeza da janela encerra também o renderizador descartável GTK."""
+        """Cleaning up the window also ends the disposable GTK renderer."""
         return self.gtk_surface.shutdown() if hasattr(self, "gtk_surface") else True
 
     def visible_page(self, node: Component) -> Component:
-        """Retorna a página em edição sem alterar a página inicial do aplicativo."""
+        """Return the page being edited without changing the application's initial page."""
         node_id = self._visible_pages.get(node.id, node.properties.get("initial_page"))
         return next((child for child in node.children if child.id == node_id), node.children[0])
 
     def select(self, component_id: str) -> None:
-        """Destaca a seleção e revela páginas ancestrais sem sujar o documento."""
+        """Highlight the selection and reveal ancestor pages without dirtying the document."""
         self._selected_id = component_id
         previous_pages = dict(self._visible_pages)
         child = self._project.find(component_id)
@@ -347,7 +348,7 @@ class PreviewCanvas(QFrame):
             self.gtk_surface.request()
 
     def show_layout_handles(self, identifier):
-        """Revela alças apenas no contêiner automático selecionado."""
+        """Reveal handles only on the selected automatic container."""
         parent = self._frames.get(identifier)
         signature = (identifier, id(parent))
         if signature == getattr(self, "_layout_selection", None):
@@ -378,7 +379,7 @@ class PreviewCanvas(QFrame):
             self._layout_handles.append(spacing)
 
         def position():
-            """Posiciona alças depois que o layout Qt calculou suas geometrias."""
+            """Position handles after the Qt layout computed their geometries."""
             if self._frames.get(identifier) is not parent:
                 return
             for handle in self._layout_handles:
@@ -403,7 +404,7 @@ class PreviewCanvas(QFrame):
         QTimer.singleShot(0, position)
 
     def select_many(self, identifiers):
-        """Destaca a seleção compartilhada sem duplicar seu estado no documento."""
+        """Highlight the shared selection without duplicating its state in the document."""
         self.native_selection = set(identifiers)
         if hasattr(self, "gtk_surface"):
             self.gtk_surface.update()
@@ -416,14 +417,14 @@ class PreviewCanvas(QFrame):
                 frame.update()
 
     def _watch(self, widget: QWidget, component_id: str) -> None:
-        """Associa controles ao nó de edição e preserva a navegação das abas."""
+        """Bind controls to the editing node and keep tab navigation."""
         widget.setProperty("componentId", component_id)
         widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         widget.setMouseTracking(True)
         widget.installEventFilter(self)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        """Seleciona, movimenta ou inicia arraste sem disparar ações do aplicativo."""
+        """Select, move or start a drag without firing application actions."""
         node_id = watched.property("componentId")
         if not node_id:
             return super().eventFilter(watched, event)
@@ -504,9 +505,9 @@ class PreviewCanvas(QFrame):
             return True
         if event.type() == QEvent.Type.MouseMove and self._gesture:
             gesture = self._gesture
-            # Qt já converteu o evento do viewport para o widget embutido.
-            # Coordenadas globais (e outra divisão pelo zoom) são incorretas
-            # no Wayland e podem variar quando o próprio componente se move.
+            # Qt already converted the viewport event to the embedded widget.
+            # Global coordinates (and another division by zoom) are wrong on
+            # Wayland and can vary when the component itself moves.
             delta = watched.mapTo(self, event.position().toPoint()) - gesture["start"]
             if (
                 not gesture["changed"]
@@ -560,7 +561,7 @@ class PreviewCanvas(QFrame):
         return super().eventFilter(watched, event)
 
     def _update_gesture(self, delta: QPoint) -> None:
-        """Atualiza apenas a prévia; o documento recebe uma alteração ao soltar."""
+        """Update only the preview; the document receives one change on release."""
         gesture = self._gesture
         frame = self._frames[gesture["id"]]
         original = gesture["geometry"]
@@ -629,7 +630,7 @@ class PreviewCanvas(QFrame):
         gesture["changed"] = True
 
     def keyPressEvent(self, event) -> None:
-        """Permite ajuste fino por setas e cancela um gesto com Esc."""
+        """Allow fine adjustment with arrows and cancel a gesture with Esc."""
         native = getattr(self, "gtk_surface", None)
         if event.key() == Qt.Key.Key_Escape and native and (native.drag or native.rubber):
             native.cancel_gesture()
@@ -711,14 +712,14 @@ class PreviewCanvas(QFrame):
             super().keyPressEvent(event)
 
     def clear_guides(self):
-        """Remove apenas guias temporárias de alinhamento do gesto atual."""
+        """Remove only the current gesture's temporary alignment guides."""
         for guide in self._guides:
             guide.hide()
             guide.deleteLater()
         self._guides = []
 
     def external_image(self, mime):
-        """Reconhece a escolha explícita de um arquivo local por drag-and-drop."""
+        """Recognize the explicit choice of a local file by drag-and-drop."""
         if not mime.hasUrls() or len(mime.urls()) != 1:
             return None
         url = mime.urls()[0]
@@ -732,7 +733,7 @@ class PreviewCanvas(QFrame):
         )
 
     def set_insert_tool(self, kind):
-        """Arma inserção por clique; Esc ou Selecionar cancelam sem editar o projeto."""
+        """Arm click insertion; Esc or Select cancel without editing the project."""
         self.insert_tool = kind
         if self._tool_ghost:
             self._tool_ghost.hide()
@@ -741,7 +742,7 @@ class PreviewCanvas(QFrame):
         self.setFocus()
 
     def tool_preview(self, watched, event):
-        """Mostra fantasma em Livre ou linha no ponto de inserção automático."""
+        """Show a ghost in Free layout or a line at the automatic insertion point."""
         frame = self._frames[watched.property("componentId")]
         point = watched.mapTo(frame, event.position().toPoint())
         payload = {"mode": "new", "kind": self.insert_tool}
@@ -778,7 +779,7 @@ class PreviewCanvas(QFrame):
         self._tool_ghost.raise_()
 
     def _drop_location(self, frame: ComponentFrame, point: QPoint, payload: dict):
-        """Escolhe um contêiner/página e uma posição apropriada ao layout."""
+        """Pick a container/page and a position suited to its layout."""
         node = self._project.find(frame.node_id)
         kind = (
             ComponentKind(payload["kind"])
@@ -821,7 +822,7 @@ class PreviewCanvas(QFrame):
         return node.id, index, geometry
 
     def drag_on(self, frame: ComponentFrame, event) -> None:
-        """Mostra aceitação apenas para destinos válidos deste documento."""
+        """Show acceptance only for valid destinations of this document."""
         payload = read_payload(event.mimeData())
         image = self.external_image(event.mimeData())
         if image:
@@ -842,7 +843,7 @@ class PreviewCanvas(QFrame):
         event.ignore()
 
     def drop_on(self, frame: ComponentFrame, event) -> None:
-        """Solicita uma única edição depois de validar novamente o destino."""
+        """Request a single edit after validating the destination again."""
         frame.setProperty("dropTarget", False)
         frame.style().unpolish(frame)
         frame.style().polish(frame)
@@ -867,7 +868,7 @@ class PreviewCanvas(QFrame):
         event.ignore()
 
     def _render(self, node: Component) -> ComponentFrame:
-        """Cria componentes Qt e seus recursos sem executar lógica do aplicativo."""
+        """Create Qt components and their resources without running application logic."""
         frame = ComponentFrame(self, node.id)
         if not node.properties.get("visible", True):
             frame.hide()
@@ -882,7 +883,7 @@ class PreviewCanvas(QFrame):
             tabs.setMinimumHeight(220)
             self._tabs[node.id] = tabs
             for page in node.children:
-                tabs.addTab(self._render(page), page.properties.get("title", "Página"))
+                tabs.addTab(self._render(page), page.properties.get("title", tr("Page")))
             tabs.setCurrentIndex(node.children.index(self.visible_page(node)))
             tabs.currentChanged.connect(lambda index, node=node: self._page_changed(node, index))
             layout.addWidget(tabs)
@@ -900,11 +901,11 @@ class PreviewCanvas(QFrame):
         return frame
 
     def _page_changed(self, node: Component, index: int) -> None:
-        """Troca a página em edição sem alterar a página inicial salva."""
+        """Switch the page being edited without changing the saved initial page."""
         if index >= 0:
             self._visible_pages[node.id] = node.children[index].id
             self.component_selected.emit(node.children[index].id)
 
     def _render_children(self, frame: ComponentFrame, node: Component) -> None:
-        """Aplica layouts nativos ou coordenadas livres a componentes selecionáveis."""
+        """Apply native layouts or free coordinates to selectable components."""
         place_children(frame, node, self._render)

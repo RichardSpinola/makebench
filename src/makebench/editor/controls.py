@@ -1,8 +1,8 @@
-"""Atualizações locais de controles sem apagar seleção, popup ou foco."""
+"""Local control updates without clearing selection, popup or focus."""
 
 
 def reconcile_combo(combo, entries, current):
-    """Preserva itens e seleção quando só o rótulo ou outro painel mudou."""
+    """Keep items and selection when only the label or another panel changed."""
     entries = list(entries)
     blocked = combo.blockSignals(True)
     try:

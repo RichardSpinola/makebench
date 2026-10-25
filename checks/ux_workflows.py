@@ -1,4 +1,4 @@
-"""Aceitação da reformulação com widgets reais, miniaturas nativas e workspace Blockly."""
+"""Redesign acceptance with real widgets, native thumbnails and the Blockly workspace."""
 
 import argparse
 import json
@@ -9,7 +9,7 @@ import time
 
 
 def main():
-    """Percorre Mapa/Design/Lógica/Código e configurações sem usar projetos do proprietário."""
+    """Walk Map/Design/Logic/Code and settings without using the owner's projects."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=("qt", "gtk"), default="qt")
     parser.add_argument("--theme", choices=("light", "dark"), default="dark")
@@ -42,16 +42,16 @@ def main():
             "version": "0.1.0",
             "backend": args.backend,
         }
-        project.root.properties.update(title="Entrar", width=620, height=420)
+        project.root.properties.update(title="Step into", width=620, height=420)
         title = project.add(project.root.id, ComponentKind.LABEL)
         title.properties["text"] = "Acesse seu painel"
         field = project.add(project.root.id, ComponentKind.TEXT_INPUT)
         field.properties["placeholder"] = "Seu nome"
         button = project.add(project.root.id, ComponentKind.BUTTON)
-        button.properties.update(text="Entrar", tooltip="Abrir painel principal")
-        state = add_state(project, project.root.id, "Entrada inválida")
+        button.properties.update(text="Step into", tooltip="Abrir painel principal")
+        state = add_state(project, project.root.id, "Invalid input")
         state["overrides"] = {title.id: {"text": "Preencha seu nome"}}
-        other = add_window(project, "Painel principal")
+        other = add_window(project, "Main dashboard")
         project.add(other.id, ComponentKind.LABEL).properties["text"] = "Seja bem-vindo ao painel"
         window = MainWindow(project)
         window.recovery_timer.stop()
@@ -60,7 +60,7 @@ def main():
         results = []
 
         def wait(predicate, seconds=20):
-            """Espera condições observáveis mantendo a fila de eventos responsiva."""
+            """Wait for observable conditions while keeping the event queue responsive."""
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 QTest.qWait(20)
@@ -72,12 +72,12 @@ def main():
             raise AssertionError("Prazo excedido. " + str(errors) + window.logic.diagnostics.text())
 
         def js(source):
-            """Consulta somente a página Blockly incorporada para verificar dados e seleção."""
+            """Query only the embedded Blockly page to check data and selection."""
             loop = QEventLoop()
             values = []
 
             def done(value):
-                """Conclui uma consulta de dados ao navegador local."""
+                """Finish a data query to the local browser."""
                 values.append(value)
                 loop.quit()
 
@@ -88,12 +88,12 @@ def main():
             return values[0]
 
         def capture(name, widget=None):
-            """Registra a própria janela testada, sem compor uma imagem artificial."""
+            """Record the tested window itself, without composing an artificial image."""
             QTest.qWait(80)
             (widget or window).grab().save(str(args.output / (name + ".png")))
 
         def check(label, callback):
-            """Cada etapa registra resultado real, sem continuar em estado inconsistente."""
+            """Each step records a real result, never continuing in an inconsistent state."""
             started = time.monotonic()
             callback()
             results.append(
@@ -101,12 +101,12 @@ def main():
             )
 
         marker = root / "executed"
-        source = f"from pathlib import Path\nPath({str(marker)!r}).write_text('execução explícita')\n\ndef minha_funcao(ctx, valor):\n    return valor\n"
+        source = f"from pathlib import Path\nPath({str(marker)!r}).write_text('explicit run')\n\ndef my_function(ctx, value):\n    return value\n"
         window.source_editor.setPlainText(source)
 
         def thumbnails():
-            """Miniaturas contêm os controles, distinguem estados e não executam fonte própria."""
-            window.set_mode("Mapa")
+            """Thumbnails contain the controls, tell states apart and never run own source."""
+            window.set_mode("map")
             wait(
                 lambda: (
                     len(window.map_panel.nodes) == 3
@@ -121,12 +121,12 @@ def main():
             assert first.thumbnail.toImage() != second.thumbnail.toImage()
 
         def designer_map_update():
-            """Uma propriedade invalida só a miniatura, preservando cartões e a janela nativa."""
+            """A property invalidates only the thumbnail, keeping cards and the native window."""
             node = window.map_panel.nodes[project.root.id + "|@default"]
             image = node.thumbnail.toImage()
             native = window.winId()
             window.activate_window(project.root.id)
-            window.set_mode("Design")
+            window.set_mode("design")
             window._select(button.id)
             inspector_field = window.inspector.findChild(QLineEdit, "property_text")
             window._change_property(button.id, "text", "Abrir meu painel")
@@ -149,7 +149,7 @@ def main():
             capture("03-biblioteca")
             window.insert_search.clear()
             window.insert_category.setCurrentIndex(0)
-            window.set_mode("Mapa")
+            window.set_mode("map")
             wait(lambda: node.thumbnail.toImage() != image)
             assert window.map_panel.nodes[node.key] is node
             assert not marker.exists()
@@ -160,7 +160,7 @@ def main():
             point = window.map_panel.view.mapFromScene(node.sceneBoundingRect().center())
             QTest.mouseClick(window.map_panel.view.viewport(), Qt.MouseButton.LeftButton, pos=point)
             QTest.qWait(80)
-            assert window._mode == "Mapa"
+            assert window._mode == "map"
             assert window.map_panel.details.isVisible()
             capture("04-mapa-interface")
             point = window.map_panel.view.mapFromScene(node.sceneBoundingRect().center())
@@ -170,14 +170,14 @@ def main():
             QTest.mouseRelease(
                 window.map_panel.view.viewport(), Qt.MouseButton.LeftButton, pos=point
             )
-            wait(lambda: window._mode == "Design")
+            wait(lambda: window._mode == "design")
             assert window.active_state == state["id"]
             assert window.active_window == project.root.id
             window.activate_window(project.root.id)
-            window.set_mode("Mapa")
+            window.set_mode("map")
 
         def map_gestures():
-            """Arraste, histórico, grupos e organização não mudam os comportamentos do app."""
+            """Dragging, history, groups and arranging never change the app behaviors."""
             window.map_panel.details.hide()
             window.map_panel.fit()
             QTest.qWait(app.doubleClickInterval() + 30)
@@ -214,10 +214,10 @@ def main():
             window.map_panel.fit()
 
         def connection():
-            """O diálogo cria uma ligação executável, que também é editável e reversível."""
+            """The dialog creates a runnable link, which is also editable and reversible."""
 
             def accept():
-                """Confirma o evento escolhido no diálogo aberto pelo gesto da porta."""
+                """Confirm the event chosen in the dialog opened by the port gesture."""
                 dialog = app.activeModalWidget()
                 assert isinstance(dialog, QDialog)
                 dialog.findChild(QComboBox, "transition_event").setCurrentIndex(
@@ -240,7 +240,7 @@ def main():
                 view.mapFromScene(edge.path().pointAtPercent(value)) for value in (0.25, 0.5, 0.75)
             ]
             point = next((point for point in points if view.itemAt(point) is edge), None)
-            assert point is not None, "Ligação sem trecho acessível ao clique"
+            assert point is not None, "Link with no clickable segment"
             QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton, pos=point)
             assert edge.isSelected()
             capture("05-transicao")
@@ -249,7 +249,7 @@ def main():
             assert flow["body"][0]["op"] == "open_window"
 
             def edit():
-                """Altera a navegação no editor nativo de transição."""
+                """Change the navigation in the native transition editor."""
                 dialog = app.activeModalWidget()
                 dialog.target.setCurrentIndex(
                     dialog.target.findData(project.root.id + "|" + state["id"])
@@ -266,7 +266,7 @@ def main():
             assert window.logic.context_label.text().startswith("Quando clicar")
 
         def blocks_code():
-            """Modelo real, workspace, comentários e código usam o mesmo bloco e origem."""
+            """Real template, workspace, comments and code use the same block and origin."""
             flow = window.project.workflows[0]
             window.insert_behavior("read_field")
             wait(
@@ -282,14 +282,14 @@ def main():
             window.show_generated_line(line)
             capture("08-codigo-gerado")
             window.generated_origin(line)
-            assert window._mode == "Lógica"
+            assert window._mode == "logic"
             assert window.logic.flow_id == flow["id"]
             window.logic.show_origin()
-            assert window._mode == "Design"
+            assert window._mode == "design"
             assert window.selected_id == button.id
-            window.set_mode("Código")
+            window.set_mode("code")
             window.code_files.setCurrentIndex(1)
-            window.source_editor.find_text.setText("minha_funcao")
+            window.source_editor.find_text.setText("my_function")
             window.source_editor.replace_text.setText("funcao_propria")
             window.source_editor.replace_all()
             assert "def funcao_propria" in window.source.text
@@ -309,14 +309,14 @@ def main():
             assert not marker.exists()
 
         def execution_drawer():
-            """F5 é a primeira execução da fonte; tarefas, filtros e cancelamento são observados."""
+            """F5 is the first run of the source; tasks, filters and cancellation are observed."""
             from makebench.core.logic_defaults import default_block, literal
             from makebench.core.behaviors import append_behavior
 
             flow = window.project.workflows[0]
             task = default_block("script", window.project, project.root.id)
             task["source"] = literal(
-                'printf "saída real\\n"; printf "aviso real\\n" >&2; sleep 0.2'
+                'printf "real output\\n"; printf "real warning\\n" >&2; sleep 0.2'
             )
             window._edit(lambda: append_behavior(flow, [task]))
             assert not marker.exists()
@@ -337,14 +337,14 @@ def main():
                 )
             )
             assert window.task_tree.topLevelItemCount() == 1
-            assert window.task_tree.topLevelItem(0).text(2) == "Concluído"
+            assert window.task_tree.topLevelItem(0).text(2) == "Completed"
             assert "PID" in window.process_info.text()
             window.output_filter.setCurrentIndex(window.output_filter.findData("stderr"))
             assert "aviso real" in window.output_log.toPlainText()
-            assert "saída real" not in window.output_log.toPlainText()
+            assert "real output" not in window.output_log.toPlainText()
             assert [
                 window.drawer.tabText(i).split(" (")[0] for i in range(window.drawer.count())
-            ] == ["Saída", "Problemas", "Script", "Tarefas", "Erro"]
+            ] == ["Output", "Problems", "Script", "Tasks", "Error"]
             window.output_filter.setCurrentIndex(0)
             window.drawer.setCurrentIndex(0)
             assert window.output_log.isVisible()
@@ -362,11 +362,11 @@ def main():
             assert window.output_log.toPlainText() == ""
             window.stop_test()
             wait(lambda: runtime.session.closed)
-            assert "encerrada" in window.process_info.text()
+            assert "ended" in window.process_info.text()
             window.drawer.hide()
 
         def settings():
-            """Valida identidade, exibe páginas e mantém preferências fora do documento."""
+            """Validate identity, show pages and keep preferences out of the document."""
             from makebench.editor.settings import ApplicationSettings, EditorPreferences
 
             dialog = ApplicationSettings(window)
@@ -393,21 +393,21 @@ def main():
 
         try:
             for label, operation in [
-                ("miniaturas nativas e prévia inerte", thumbnails),
+                ("native thumbnails and inert preview", thumbnails),
                 ("propriedade → miniatura sem reconstruir mapa", designer_map_update),
-                ("seleção e duplo clique no estado", select_open),
-                ("arraste, histórico, grupos e organização do mapa", map_gestures),
-                ("criar/editar/desfazer transição real", connection),
+                ("selection and double-click on the state", select_open),
+                ("dragging, history, groups and map arrangement", map_gestures),
+                ("create/edit/undo a real transition", connection),
                 ("modelos → Blockly → Python → origem → salvar/reabrir", blocks_code),
-                ("execução explícita, tarefas e filtros da gaveta", execution_drawer),
-                ("configurações, preferências e exportação", settings),
+                ("explicit run, tasks and drawer filters", execution_drawer),
+                ("settings, preferences and export", settings),
             ]:
                 check(label, operation)
             window.resize(1000, 640)
-            window.set_mode("Mapa")
+            window.set_mode("map")
             window.map_panel.fit()
             capture("13-janela-menor")
-            assert window.mode_buttons["Mapa"].isVisible()
+            assert window.mode_buttons["map"].isVisible()
         finally:
             report = {
                 "platform": app.platformName(),

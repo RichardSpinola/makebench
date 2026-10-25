@@ -1,1 +1,1 @@
-"""Terminal Linux compartilhado por Qt e GTK; importar não inicia processos."""
+"""Linux terminal shared by Qt and GTK; importing never starts processes."""

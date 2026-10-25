@@ -1,24 +1,25 @@
-"""Ferramentas leves de edição: substituição literal e delimitadores sem execução."""
+"""Lightweight editing tools: literal replacement and delimiters, with no execution."""
 
 import io
 import tokenize
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextFormat
 from PySide6.QtWidgets import QInputDialog, QTextEdit
+from makebench.i18n import ntr, tr
 
 
 class CodeTools:
-    """Operações locais no documento, com histórico de texto e realce derivado."""
+    """Local document operations, with text history and derived highlighting."""
 
     def open_replace(self):
-        """Abre substituição apenas no arquivo editável, preservando a seleção atual."""
+        """Open replacement only in the editable file, keeping the current selection."""
         if self.isReadOnly():
             return
         self.replace_row.show()
         self.open_find()
 
     def replace_one(self):
-        """Substitui uma ocorrência literal; texto de substituição nunca é interpretado."""
+        """Replace one literal occurrence; the replacement text is never interpreted."""
         if self.isReadOnly() or not self.find_text.text():
             return
         cursor = self.textCursor()
@@ -31,7 +32,7 @@ class CodeTools:
             self.find_next()
 
     def replace_all(self):
-        """Confirma todas as ocorrências em um único passo de desfazer, sem laço em texto novo."""
+        """Confirm every occurrence in a single undo step, with no loop over new text."""
         text = self.find_text.text()
         if self.isReadOnly() or not text:
             return
@@ -50,14 +51,18 @@ class CodeTools:
             cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
             cursor.insertText(self.replace_text.text())
         cursor.endEditBlock()
-        self.find_status.setText(f"{len(matches)} substituição(ões)")
+        self.find_status.setText(
+            ntr("{count} replacement", "{count} replacements", len(matches)).format(
+                count=len(matches)
+            )
+        )
 
     def go_to_line(self):
-        """Localiza uma linha válida sem alterar o documento."""
+        """Find a valid line without changing the document."""
         line, ok = QInputDialog.getInt(
             self,
-            "Ir para linha",
-            "Linha",
+            tr("Go to line"),
+            tr("Line"),
             self.textCursor().blockNumber() + 1,
             1,
             self.blockCount(),
@@ -67,7 +72,7 @@ class CodeTools:
             self.setFocus()
 
     def delimiters(self):
-        """Tokeniza Python para ignorar delimitadores de strings/comentários, inclusive unicode."""
+        """Tokenize Python to skip delimiters in strings/comments, including Unicode."""
         text = self.toPlainText()
         if getattr(self, "_bracket_text", None) == text:
             return self._brackets
@@ -100,7 +105,7 @@ class CodeTools:
         return self._brackets
 
     def highlight_cursor(self):
-        """Combina linha, diagnóstico e par de delimitadores sem apagar os outros realces."""
+        """Combine line, diagnostic and delimiter-pair highlights without clearing the others."""
         if not hasattr(self, "_error_selections"):
             return
         selections = list(self._error_selections)
@@ -130,22 +135,22 @@ class CodeTools:
         self.setExtraSelections(selections)
 
     def contextMenuEvent(self, event):
-        """O código gerado oferece navegação explícita à origem em blocos."""
+        """Generated code offers explicit navigation to its source block."""
         menu = self.createStandardContextMenu()
         if self.isReadOnly() and getattr(self, "origin_enabled", True):
             menu.addSeparator()
             menu.addAction(
-                "Ir ao bloco de origem · F4",
+                tr("Go to source block · F4"),
                 lambda: self.origin_requested.emit(self.textCursor().blockNumber() + 1),
             )
         elif not self.isReadOnly():
             menu.addSeparator()
-            menu.addAction("Substituir… · Ctrl+H", self.open_replace)
-        menu.addAction("Ir para linha… · Ctrl+G", self.go_to_line)
+            menu.addAction(tr("Replace… · Ctrl+H"), self.open_replace)
+        menu.addAction(tr("Go to line… · Ctrl+G"), self.go_to_line)
         menu.exec(event.globalPos())
 
     def indent_selection(self, reverse=False):
-        """Recua linhas selecionadas sem substituir seu texto, com um único undo."""
+        """Indent selected lines without replacing their text, with a single undo."""
         cursor = self.textCursor()
         start = cursor.selectionStart()
         end = cursor.selectionEnd()

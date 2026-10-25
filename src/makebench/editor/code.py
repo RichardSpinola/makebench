@@ -1,4 +1,4 @@
-"""Editores de código com linhas numeradas e realce de sintaxe Python."""
+"""Code editors with line numbers and Python syntax highlighting."""
 
 import keyword
 import re
@@ -27,13 +27,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
 )
+from makebench.i18n import tr
 
 
 class PythonHighlight(QSyntaxHighlighter):
-    """Realça palavras, strings e comentários sem interpretar código."""
+    """Highlight keywords, strings and comments without interpreting code."""
 
     def highlightBlock(self, text):
-        """Aplica cores leves a uma linha; não substitui análise sintática."""
+        """Apply light colors to a line; does not replace syntax analysis."""
         from .theme import manager
 
         t = manager().tokens
@@ -59,19 +60,19 @@ class PythonHighlight(QSyntaxHighlighter):
 
 
 class LineNumbers(QWidget):
-    """Margem que acompanha apenas as linhas visíveis do editor."""
+    """Margin that follows only the editor's visible lines."""
 
     def __init__(self, editor):
-        """Associa a margem ao documento exibido."""
+        """Bind the margin to the displayed document."""
         super().__init__(editor)
         self.editor = editor
 
     def sizeHint(self):
-        """Reserva espaço conforme o número de dígitos das linhas."""
+        """Reserve space according to the number of line digits."""
         return QSize(self.editor.number_width(), 0)
 
     def mousePressEvent(self, event):
-        """Alterna ponto de parada pela linha real, sem alterar o texto do documento."""
+        """Toggle a breakpoint on the real line, never changing the document text."""
         if getattr(self.editor, "breakpoints_enabled", False):
             block = self.editor.firstVisibleBlock()
             top = (
@@ -89,7 +90,7 @@ class LineNumbers(QWidget):
         super().mousePressEvent(event)
 
     def paintEvent(self, event):
-        """Pinta números alinhados às posições reais dos blocos de texto."""
+        """Paint numbers aligned with the real positions of the text blocks."""
         editor = self.editor
         painter = QPainter(self)
         painter.fillRect(event.rect(), editor.palette().alternateBase())
@@ -122,13 +123,13 @@ from .code_tools import CodeTools
 
 
 class CodeEditor(CodeTools, QPlainTextEdit):
-    """Apresenta Python e destaca a linha correspondente a um bloco."""
+    """Present Python and highlight the line that corresponds to a block."""
 
     origin_requested = Signal(int)
     breakpoint_requested = Signal(int)
 
     def __init__(self, readonly=False, parent=None):
-        """Configura fonte, recuo, margem e sintaxe sem habilitar execução."""
+        """Set font, indentation, margin and syntax without enabling execution."""
         super().__init__(parent)
         self.breakpoints = set()
         self.breakpoints_enabled = False
@@ -136,7 +137,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         self.setReadOnly(readonly)
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(" ") * 4)
-        self.setPlaceholderText("Escreva suas funções Python aqui.")
+        self.setPlaceholderText(tr("Write your Python functions here."))
         self.find_bar = QWidget(self)
         bar_layout = QVBoxLayout(self.find_bar)
         bar_layout.setContentsMargins(4, 2, 4, 2)
@@ -144,8 +145,8 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         find_layout = QHBoxLayout()
         bar_layout.addLayout(find_layout)
         self.find_text = QLineEdit()
-        self.find_text.setPlaceholderText("Buscar no código…")
-        self.find_text.setAccessibleName("Buscar no código")
+        self.find_text.setPlaceholderText(tr("Search in code…"))
+        self.find_text.setAccessibleName(tr("Search in code"))
         self.find_text.setClearButtonEnabled(True)
         self.find_text.installEventFilter(self)
         find_layout.addWidget(self.find_text, 1)
@@ -159,7 +160,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
             button = QToolButton()
             button.setText(label)
             button.setAccessibleName(
-                {"↑": "Resultado anterior", "↓": "Próximo resultado", "×": "Fechar busca"}[label]
+                {"↑": tr("Previous result"), "↓": tr("Next result"), "×": tr("Close search")}[label]
             )
             button.clicked.connect(callback)
             find_layout.addWidget(button)
@@ -167,10 +168,10 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         replacement = QHBoxLayout(self.replace_row)
         replacement.setContentsMargins(0, 0, 0, 0)
         self.replace_text = QLineEdit()
-        self.replace_text.setPlaceholderText("Substituir por…")
-        self.replace_text.setAccessibleName("Texto de substituição")
+        self.replace_text.setPlaceholderText(tr("Replace with…"))
+        self.replace_text.setAccessibleName(tr("Replacement text"))
         replacement.addWidget(self.replace_text, 1)
-        for label, callback in [("Substituir", self.replace_one), ("Todas", self.replace_all)]:
+        for label, callback in [(tr("Replace"), self.replace_one), (tr("All"), self.replace_all)]:
             button = QToolButton()
             button.setText(label)
             button.clicked.connect(callback)
@@ -212,11 +213,11 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         manager().changed.connect(self.theme_changed)
 
     def number_width(self):
-        """Calcula largura suficiente sem reservar uma coluna fixa enorme."""
+        """Compute a sufficient width without reserving a huge fixed column."""
         return 16 + self.fontMetrics().horizontalAdvance("9") * len(str(max(1, self.blockCount())))
 
     def _update_margin(self):
-        """Ajusta a margem quando o documento ganha ou perde linhas."""
+        """Adjust the margin when the document gains or loses lines."""
         height = self.find_bar.sizeHint().height() if not self.find_bar.isHidden() else 0
         self.setViewportMargins(self.number_width(), height, 0, 0)
         rect = self.contentsRect()
@@ -226,7 +227,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         )
 
     def _update_numbers(self, rect, dy):
-        """Sincroniza a margem com rolagem e repintura do texto."""
+        """Sync the margin with scrolling and text repaints."""
         if dy:
             self.numbers.scroll(0, dy)
         else:
@@ -235,12 +236,12 @@ class CodeEditor(CodeTools, QPlainTextEdit):
             self._update_margin()
 
     def resizeEvent(self, event):
-        """Reposiciona a margem junto da área útil do editor."""
+        """Reposition the margin along with the editor's useful area."""
         super().resizeEvent(event)
         self._update_margin()
 
     def show_line(self, line: int) -> None:
-        """Destaca uma linha de origem e a traz para a área visível."""
+        """Highlight a source line and bring it into view."""
         block = self.document().findBlockByNumber(line - 1)
         if not block.isValid():
             return
@@ -254,7 +255,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         self.centerCursor()
 
     def eventFilter(self, watched, event):
-        """Escape também funciona enquanto a busca tem o foco de digitação."""
+        """Escape also works while the search field has typing focus."""
         if (
             watched is getattr(self, "find_text", None)
             and event.type() == QEvent.Type.KeyPress
@@ -265,7 +266,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         return super().eventFilter(watched, event)
 
     def open_find(self):
-        """Busca local não modal, preservando o código e o contexto selecionado."""
+        """Non-modal local search, keeping the code and the selected context."""
         selected = self.textCursor().selectedText()
         if selected and "\u2029" not in selected:
             self.find_text.setText(selected)
@@ -275,7 +276,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         self.find_text.selectAll()
 
     def close_find(self):
-        """Escape devolve o foco ao código sem perder a seleção encontrada."""
+        """Escape returns focus to the code without losing the found selection."""
         if self.find_bar.isHidden():
             return
         self.find_bar.hide()
@@ -284,7 +285,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         self.setFocus()
 
     def find_next(self, backward=False, restart=False):
-        """Percorre ocorrências com retorno ao início/fim e informa ausência de resultados."""
+        """Step through occurrences, wrapping around and reporting when there are none."""
         text = self.find_text.text()
         if not text:
             self.find_status.clear()
@@ -298,14 +299,14 @@ class CodeEditor(CodeTools, QPlainTextEdit):
                 text, self.document().characterCount() - 1 if backward else 0, flags
             )
         if found.isNull():
-            self.find_status.setText("Nenhum resultado")
+            self.find_status.setText(tr("No results"))
         else:
             self.find_status.clear()
             self.setTextCursor(found)
             self.ensureCursorVisible()
 
     def keyPressEvent(self, event):
-        """Oferece busca, comentários e recuo Python sem executar o conteúdo."""
+        """Offer search, comments and Python indentation without running the content."""
         if self.isReadOnly():
             super().keyPressEvent(event)
             return
@@ -358,7 +359,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         super().keyPressEvent(event)
 
     def mark_syntax_error(self, line=None, message=""):
-        """Sublinha um diagnóstico estático sem alterar texto, foco ou possibilidade de salvar."""
+        """Underline a static diagnostic without changing text, focus or the ability to save."""
         self._error_selections = []
         if line:
             block = self.document().findBlockByNumber(line - 1)
@@ -377,7 +378,7 @@ class CodeEditor(CodeTools, QPlainTextEdit):
 
     @Slot(dict)
     def theme_changed(self, _tokens):
-        """Repinta código e números; a conexão acompanha a vida do widget Qt."""
+        """Repaint code and numbers; the connection follows the Qt widget's lifetime."""
         font = QFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         from .theme import manager
 

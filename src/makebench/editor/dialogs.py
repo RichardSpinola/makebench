@@ -1,3 +1,3 @@
-"""Compatibilidade do editor com traduções comuns ao teste e ao aplicativo exportado."""
+"""Editor compatibility shim for translations shared with testing and exported apps."""
 
-from makebench.ui.dialogs import BUTTONS, install_translation, translate_buttons
+from makebench.ui.dialogs import button_labels, install_translation, translate_buttons

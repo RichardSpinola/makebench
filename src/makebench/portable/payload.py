@@ -1,4 +1,4 @@
-"""Auxiliar executado somente no SDK isolado Ubuntu24.04, sem importar o projeto."""
+"""Helper run only in the isolated Ubuntu 24.04 SDK, never importing the project."""
 
 from __future__ import annotations
 import compileall
@@ -27,7 +27,7 @@ GLIBC = {
 
 
 def copy_tree(source, destination):
-    """Copia uma árvore do SDK preservando links relativos, ignorando caches de Python."""
+    """Copy an SDK tree keeping relative links, skipping Python caches."""
     if Path(source).exists():
         shutil.copytree(
             source,
@@ -41,7 +41,7 @@ def copy_tree(source, destination):
 
 
 def elf(path):
-    """Reconhece executáveis/bibliotecas pela assinatura, sem executá-los."""
+    """Recognize executables/libraries by signature, without running them."""
     try:
         with path.open("rb") as stream:
             return stream.read(4) == b"\x7fELF"
@@ -50,7 +50,7 @@ def elf(path):
 
 
 def collect_libraries(appdir):
-    """Fecha dependências ELF de Python/Qt/GTK; glibc e drivers pertencem ao sistema."""
+    """Close the ELF dependencies of Python/Qt/GTK; glibc and drivers belong to the system."""
     library = appdir / "usr/lib"
     library.mkdir(parents=True, exist_ok=True)
     pending = [
@@ -85,7 +85,7 @@ def collect_libraries(appdir):
 
 
 def build(root, backend, editor=False):
-    """Inclui intérprete, stdlib, rodas verificadas e GTK; compila sem importar fontes."""
+    """Include interpreter, stdlib, verified wheels and GTK; compile without importing sources."""
     root = Path(root)
     usr = root / "usr"
     site = usr / "lib/python3.12/site-packages"
@@ -132,7 +132,7 @@ def build(root, backend, editor=False):
             path = Path(pattern)
             if path.exists():
                 shutil.copy2(path, usr / "bin" / path.name)
-        # Typelibs abrem estas bibliotecas por nome; não aparecem no ldd de _gi.
+        # Typelibs open these libraries by name; they do not show up in _gi's ldd.
         for name in (
             "libgtk-4.so.1",
             "libadwaita-1.so.0",
@@ -150,7 +150,7 @@ def build(root, backend, editor=False):
         '<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig><dir>/usr/share/fonts</dir><dir>/usr/local/share/fonts</dir><dir prefix="relative">../../share/fonts</dir><cachedir prefix="xdg">fontconfig</cachedir></fontconfig>'
     )
     missing = collect_libraries(root)
-    # Licenças e avisos dos pacotes do SDK acompanham as bibliotecas redistribuídas.
+    # Licenses and notices of the SDK packages ship with the redistributed libraries.
     copy_tree("/usr/share/doc", usr / "share/third-party-licenses")
     copy_tree("/usr/share/common-licenses", usr / "share/common-licenses")
     for link in list(root.rglob("*")):
@@ -158,7 +158,7 @@ def build(root, backend, editor=False):
             continue
         target = os.readlink(link)
         if target.startswith("/"):
-            # Links absolutos de dados do SDK não podem apontar para fora do pacote.
+            # Absolute links in SDK data cannot point outside the package.
             resolved = link.resolve()
             if resolved.is_file():
                 link.unlink()
@@ -168,9 +168,9 @@ def build(root, backend, editor=False):
                 copy_tree(resolved, link)
             else:
                 link.unlink()
-    # compileall não importa módulos nem executa funções do projeto.
+    # compileall does not import modules or run project functions.
     if not compileall.compile_dir(root / "app", quiet=1, force=True):
-        raise RuntimeError("Fonte incompatível com Python 3.12.")
+        raise RuntimeError("Source incompatible with Python 3.12.")
     subprocess.run([str(usr / "bin/python3.12"), "--version"], check=True)
     distributions = {}
     for metadata in site.glob("*.dist-info/METADATA"):
@@ -192,10 +192,10 @@ def build(root, backend, editor=False):
         "optional_elf_missing": missing,
         "remaining_system_requirements": [
             "Linux x86_64; glibc >=2.39",
-            "Servidor X11 ou Wayland",
-            "Drivers gráficos do sistema",
-            "/bin/sh e programas externos usados pelo projeto",
-            "FUSE para montagem AppImage, ou --appimage-extract-and-run",
+            "X11 or Wayland server",
+            "System graphics drivers",
+            "/bin/sh and external programs used by the project",
+            "FUSE to mount the AppImage, or --appimage-extract-and-run",
         ],
     }
     (root / "runtime-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2))

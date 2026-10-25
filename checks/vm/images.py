@@ -1,4 +1,4 @@
-"""Imagens oficiais para VMs descartáveis; download explícito, com SHA-256 conferido."""
+"""Official images for disposable VMs; explicit download with SHA-256 checked."""
 
 import hashlib
 import json
@@ -14,7 +14,7 @@ FEDORA_SHA = "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f"
 
 
 def fetch(url, path, digest):
-    """Grava em arquivo parcial e publica somente após conferir todo o conteúdo."""
+    """Write to a partial file and publish only after checking the whole content."""
     if path.exists() and hashlib.file_digest(path.open("rb"), "sha256").hexdigest() == digest:
         return path
     part = path.with_suffix(".partial")
@@ -25,14 +25,14 @@ def fetch(url, path, digest):
             hasher.update(block)
     if hasher.hexdigest() != digest:
         part.unlink()
-        raise RuntimeError("SHA256 não confere: " + url)
+        raise RuntimeError("SHA256 mismatch: " + url)
     part.replace(path)
     print("Imagem verificada:", path.name, flush=True)
     return path
 
 
 def main(directory):
-    """Baixa apenas as versões x86_64 declaradas; não inicia nenhuma máquina."""
+    """Download only the declared x86_64 versions; never starts a machine."""
     root = Path(directory).resolve()
     root.mkdir(parents=True, exist_ok=True)
     checksum = urllib.request.urlopen(UBUNTU_BASE + "SHA256SUMS", timeout=30).read().decode()
@@ -40,7 +40,7 @@ def main(directory):
         r"^([0-9a-f]{64})\s+\*?ubuntu-24\.04-server-cloudimg-amd64\.img$", checksum, re.M
     )
     if not match:
-        raise RuntimeError("A imagem Ubuntu não consta do manifesto oficial.")
+        raise RuntimeError("The Ubuntu image is not in the official manifest.")
     records = {
         "ubuntu24.04": {
             "url": UBUNTU_BASE + "ubuntu-24.04-server-cloudimg-amd64.img",

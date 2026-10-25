@@ -1,4 +1,4 @@
-"""Paletas de QA lidas dos esquemas KDE instalados; não é código do produto."""
+"""QA palettes read from the installed KDE schemes; not product code."""
 
 import configparser
 from pathlib import Path
@@ -6,7 +6,7 @@ from PySide6.QtGui import QColor, QPalette
 
 
 def kde_palette(name):
-    """Carrega BreezeLight/Dark reais para simular o desktop no Qt offscreen."""
+    """Load the real BreezeLight/Dark to simulate the desktop in offscreen Qt."""
     file = Path("/usr/share/color-schemes") / (
         "BreezeDark.colors" if name == "dark" else "BreezeLight.colors"
     )

@@ -1,4 +1,4 @@
-"""Ferramentas de distribuição preparadas pelo aplicativo, fora do sistema principal."""
+"""Distribution tools prepared by the application, outside the main system."""
 
 import hashlib
 import json
@@ -14,6 +14,7 @@ import uuid
 from .project import ProjectError
 from .exporter import BuildCancelled
 from makebench.terminal.environment import external_environment
+from makebench.i18n import tr
 
 IMAGE = "localhost/makebench-tools:1"
 APPIMAGE_URL = (
@@ -33,12 +34,12 @@ LABEL io.makebench.tools=1
 
 
 def cache_root():
-    """Somente cache do Makebench; nenhum projeto é montado na preparação."""
+    """Only Makebench's cache; no project is mounted during preparation."""
     return Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "makebench" / "builders"
 
 
 def prepared():
-    """Consulta recibo local sem iniciar comandos ou bloquear a interface."""
+    """Read the local receipt without starting commands or blocking the interface."""
     try:
         return json.loads((cache_root() / "tools.json").read_text()).get("image") == IMAGE
     except (OSError, ValueError):
@@ -46,9 +47,9 @@ def prepared():
 
 
 def run_tool(arguments, cwd=None, progress=None, cancelled=None):
-    """Executa argv fixo com logs limitados, cancelamento e limpeza de processos."""
+    """Run a fixed argv with bounded logs, cancellation and process cleanup."""
     if cancelled and cancelled():
-        raise BuildCancelled("Operação cancelada.")
+        raise BuildCancelled(tr("Operation cancelled."))
     process = subprocess.Popen(
         [str(a) for a in arguments],
         cwd=cwd,
@@ -72,7 +73,7 @@ def run_tool(arguments, cwd=None, progress=None, cancelled=None):
                 except subprocess.TimeoutExpired:
                     os.killpg(process.pid, signal.SIGKILL)
                     process.wait()
-                raise BuildCancelled("Operação cancelada.")
+                raise BuildCancelled(tr("Operation cancelled."))
             for key, _ in selector.select(0.1):
                 data = os.read(key.fileobj.fileno(), 8192)
                 if not data:
@@ -83,7 +84,7 @@ def run_tool(arguments, cwd=None, progress=None, cancelled=None):
                 if progress:
                     progress(55, text.rstrip())
         if process.returncode:
-            raise ProjectError("A ferramenta não concluiu a operação:\n" + tail)
+            raise ProjectError(tr("The tool did not complete the operation:") + "\n" + tail)
         return tail
     finally:
         selector.close()
@@ -103,7 +104,7 @@ def run_tool(arguments, cwd=None, progress=None, cancelled=None):
 
 
 def download(url, destination, digest, progress=None, cancelled=None):
-    """Versões e hashes oficiais fixos; só publica a ferramenta completa e verificada."""
+    """Fixed official versions and hashes; only publishes the complete, verified tool."""
     request = urllib.request.Request(url, headers={"User-Agent": "Makebench-tools/1"})
     hasher = hashlib.sha256()
     with (
@@ -112,28 +113,32 @@ def download(url, destination, digest, progress=None, cancelled=None):
     ):
         while data := response.read(262144):
             if cancelled and cancelled():
-                raise BuildCancelled("Download cancelado.")
+                raise BuildCancelled(tr("Download cancelled."))
             output.write(data)
             hasher.update(data)
     if hasher.hexdigest() != digest:
-        raise ProjectError("O hash da ferramenta baixada não confere. Preparação interrompida.")
+        raise ProjectError(
+            tr("The hash of the downloaded tool does not match. Preparation stopped.")
+        )
     if progress:
-        progress(20, "Download verificado: " + Path(destination).name)
+        progress(20, tr("Download verified: {name}").format(name=Path(destination).name))
 
 
 def prepare_tools(progress=None, cancelled=None):
-    """Prepara DEB/RPM/AppImage no Podman rootless, reutilizável entre projetos."""
+    """Prepare DEB/RPM/AppImage in rootless Podman, reusable across projects."""
     podman = shutil.which("podman")
     if not podman:
         raise ProjectError(
-            "Instale Podman para preparar as ferramentas em ambiente separado, ou escolha as ferramentas do sistema."
+            tr(
+                "Install Podman to prepare the tools in a separate environment, or choose the system tools."
+            )
         )
     root = cache_root()
     root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="prepare-", dir=root) as directory:
         context = Path(directory)
         if progress:
-            progress(5, "Preparando ferramentas de distribuição. A primeira vez exige download.")
+            progress(5, tr("Preparing distribution tools. The first time requires a download."))
         existing = subprocess.run(
             [
                 podman,
@@ -150,7 +155,7 @@ def prepare_tools(progress=None, cancelled=None):
         )
         if existing.returncode == 0 and existing.stdout.strip() == "1":
             if progress:
-                progress(80, "Reutilizando ferramentas já preparadas.")
+                progress(80, tr("Reusing tools already prepared."))
         else:
             download(
                 APPIMAGE_URL, context / "appimagetool.AppImage", APPIMAGE_SHA, progress, cancelled
@@ -206,15 +211,15 @@ def prepare_tools(progress=None, cancelled=None):
         )
         temporary.replace(root / "tools.json")
     if progress:
-        progress(100, "Ferramentas DEB, RPM e AppImage prontas.")
-    return {"status": "Ferramentas DEB, RPM e AppImage prontas.", "image": IMAGE}
+        progress(100, tr("DEB, RPM and AppImage tools ready."))
+    return {"status": tr("DEB, RPM and AppImage tools ready."), "image": IMAGE}
 
 
 def container_command(arguments, root):
-    """Monta só o staging da exportação, sem rede, sem a pasta pessoal ou projetos originais."""
+    """Mount only the export staging, with no network, home folder or original projects."""
     podman = shutil.which("podman")
     if not podman or not prepared():
-        raise ProjectError("Clique em Preparar ferramentas antes de construir este pacote.")
+        raise ProjectError(tr("Click Prepare tools before building this package."))
     root = Path(root).resolve()
     translated = [str(a).replace(str(root), "/work") for a in arguments]
     return [
@@ -245,10 +250,10 @@ def container_command(arguments, root):
 
 
 def prepare_flatpak(project, progress=None, cancelled=None):
-    """Instala somente o SDK/runtime de construção no escopo do usuário Flatpak."""
+    """Install only the build SDK/runtime in the user's Flatpak scope."""
     flatpak = shutil.which("flatpak")
     if not flatpak or not shutil.which("flatpak-builder"):
-        raise ProjectError("Flatpak e flatpak-builder são necessários para este destino.")
+        raise ProjectError(tr("Flatpak and flatpak-builder are required for this target."))
     gtk = project.application.get("backend", "qt") == "gtk"
     sdk = "org.gnome.Sdk//50" if gtk else "org.kde.Sdk//6.10"
     run_tool(
@@ -318,7 +323,7 @@ def prepare_flatpak(project, progress=None, cancelled=None):
                 p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in downloaded.glob("*.whl")
             }
             if not files:
-                raise ProjectError("Nenhuma roda Python disponível para este SDK.")
+                raise ProjectError(tr("No Python wheel is available for this SDK."))
             (downloaded / "receipt.json").write_text(
                 json.dumps({"requirements": requirements, "files": files})
             )
@@ -326,14 +331,14 @@ def prepare_flatpak(project, progress=None, cancelled=None):
                 shutil.rmtree(root)
             downloaded.rename(root)
     if cached and progress:
-        progress(90, "Reutilizando dependências Python verificadas no cache.")
+        progress(90, tr("Reusing verified Python dependencies from the cache."))
     if progress:
-        progress(100, "Ambiente Flatpak pronto.")
-    return {"status": "Ambiente Flatpak pronto.", "sdk": sdk}
+        progress(100, tr("Flatpak environment ready."))
+    return {"status": tr("Flatpak environment ready."), "sdk": sdk}
 
 
 def flatpak_requirements(project):
-    """Somente nomes/restrições PyPI; rejeita URLs, caminhos e opções de pip."""
+    """Only PyPI names/constraints; rejects URLs, paths and pip options."""
     import re
 
     packages = list(project.application.get("packages", []))
@@ -342,7 +347,7 @@ def flatpak_requirements(project):
             r"[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_,.-]+\])?(?:[<>=!~]=?[A-Za-z0-9.*+!_-]+(?:,[<>=!~]=?[A-Za-z0-9.*+!_-]+)*)?",
             package,
         ):
-            raise ProjectError("Dependência Python inválida: " + str(package))
+            raise ProjectError(tr("Invalid Python dependency: {name}").format(name=package))
     packages.insert(0, "pyte==0.8.2")
     if project.application.get("backend", "qt") == "qt":
         packages.insert(0, "PySide6-Essentials==6.11.2")
@@ -350,7 +355,7 @@ def flatpak_requirements(project):
 
 
 def flatpak_wheels(project):
-    """Endereço do cache específico de backend, SDK e dependências declaradas."""
+    """Cache location specific to backend, SDK and declared dependencies."""
     requirements = flatpak_requirements(project)
     gtk = project.application.get("backend", "qt") == "gtk"
     key = hashlib.sha256(
@@ -360,7 +365,7 @@ def flatpak_wheels(project):
 
 
 def copy_flatpak_wheels(project, destination):
-    """Copia apenas rodas verificadas; construir não baixa nem executa pacotes Python."""
+    """Copy only verified wheels; building never downloads or runs Python packages."""
     if not flatpak_requirements(project):
         return
     root = flatpak_wheels(project)
@@ -368,16 +373,16 @@ def copy_flatpak_wheels(project, destination):
         receipt = json.loads((root / "receipt.json").read_text())
     except (OSError, ValueError):
         raise ProjectError(
-            "Prepare as ferramentas Flatpak para baixar as dependências Python deste aplicativo."
+            tr("Prepare the Flatpak tools to download this application's Python dependencies.")
         )
     target = Path(destination)
     target.mkdir()
     for name, digest in receipt.get("files", {}).items():
         if Path(name).name != name or not name.endswith(".whl"):
-            raise ProjectError("Cache de dependências inválido. Prepare novamente.")
+            raise ProjectError(tr("Invalid dependency cache. Prepare again."))
         data = (root / name).read_bytes()
         if hashlib.sha256(data).hexdigest() != digest:
-            raise ProjectError("Dependência Python alterada no cache. Prepare novamente.")
+            raise ProjectError(tr("Python dependency changed in the cache. Prepare again."))
         (target / name).write_bytes(data)
     if not list(target.glob("*.whl")):
-        raise ProjectError("Cache de dependências vazio. Prepare novamente.")
+        raise ProjectError(tr("Empty dependency cache. Prepare again."))

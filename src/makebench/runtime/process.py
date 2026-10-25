@@ -1,4 +1,4 @@
-"""Tarefas QProcess com argv explícito, saída incremental e autenticação Polkit."""
+"""QProcess tasks with explicit argv, incremental output and Polkit authentication."""
 
 from __future__ import annotations
 import codecs
@@ -8,10 +8,11 @@ import shutil
 import signal
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
+from makebench.i18n import tr
 
 
 def signal_group(identifier, number):
-    """Sinaliza apenas o grupo de uma tarefa criada em sessão própria."""
+    """Signal only the group of a task created in its own session."""
     if identifier:
         try:
             os.killpg(identifier, number)
@@ -20,27 +21,27 @@ def signal_group(identifier, number):
 
 
 class TaskProcess(QObject):
-    """Executa uma tarefa e informa término uma única vez, inclusive falha de início."""
+    """Run a task and report its end exactly once, including start failures."""
 
     output = Signal(str, str)
     completed = Signal(dict)
 
     def __init__(self, program, arguments, root: Path, admin=False, parent=None):
-        """Valida argv sem shell implícito; pkexec é reservado às tarefas declaradas."""
+        """Validate argv with no implicit shell; pkexec is reserved for declared tasks."""
         super().__init__(parent)
         if not isinstance(program, str) or not program.strip() or "\0" in program:
-            raise ValueError("Informe um programa válido.")
+            raise ValueError(tr("Enter a valid program."))
         if (
             not isinstance(arguments, list)
             or len(arguments) > 256
             or any(not isinstance(arg, str) or "\0" in arg for arg in arguments)
         ):
-            raise ValueError("Argumentos precisam ser uma lista com até 256 textos.")
+            raise ValueError(tr("Arguments must be a list of up to 256 texts."))
         if type(admin) is not bool:
-            raise ValueError("Permissão administrativa inválida.")
+            raise ValueError(tr("Invalid administrative permission."))
         executable = str((root / program).resolve()) if "/" in program else shutil.which(program)
         if not executable:
-            raise ValueError(f"Programa não encontrado: {program}.")
+            raise ValueError(tr("Program not found: {program}.").format(program=program))
         self.admin = admin
         self.pgid = 0
         self.finished = False
@@ -48,7 +49,9 @@ class TaskProcess(QObject):
             pkexec = shutil.which("pkexec")
             if not pkexec:
                 raise ValueError(
-                    "pkexec não está disponível. Instale o suporte Polkit na distribuição de destino."
+                    tr(
+                        "pkexec is not available. Install Polkit support on the target distribution."
+                    )
                 )
             arguments = ["--disable-internal-agent", executable, *arguments]
             executable = pkexec
@@ -75,16 +78,16 @@ class TaskProcess(QObject):
         self.process.errorOccurred.connect(self._error)
 
     def start(self):
-        """Inicia assincronamente; stdin é fechado porque a interação usa diálogos."""
+        """Start asynchronously; stdin is closed because interaction uses dialogs."""
         self.process.start()
         self.process.closeWriteChannel()
 
     def _started(self):
-        """Guarda o grupo para cancelamento de filhos comuns."""
+        """Keep the group for cancelling ordinary children."""
         self.pgid = int(self.process.processId())
 
     def _read(self, channel, final=False):
-        """Decodifica UTF-8 mesmo quando um caractere chega em vários chunks."""
+        """Decode UTF-8 even when a character arrives in several chunks."""
         data = (
             self.process.readAllStandardOutput()
             if channel == "stdout"
@@ -95,13 +98,13 @@ class TaskProcess(QObject):
             self.output.emit(channel, text)
 
     def _error(self, error):
-        """Falha de inicialização não recebe sinal finished no Qt."""
+        """A start failure gets no finished signal in Qt."""
         if error == QProcess.ProcessError.FailedToStart and not self.finished:
             self.finished = True
             self.completed.emit({"ok": False, "error": self.process.errorString()})
 
     def _finish(self, code, status):
-        """Usa status/código de saída; escrever em stderr não implica falha."""
+        """Use exit status/code; writing to stderr does not mean failure."""
         if self.finished:
             return
         self.finished = True
@@ -112,7 +115,9 @@ class TaskProcess(QObject):
                 {
                     "ok": False,
                     "cancelled": code == 126,
-                    "error": f"Tarefa administrativa não concluída (código {code}). A autenticação pode ter sido cancelada ou recusada; confira a saída.",
+                    "error": tr(
+                        "Administrative task not completed (code {code}). Authentication may have been cancelled or refused; check the output."
+                    ).format(code=code),
                 }
             )
         else:
@@ -124,7 +129,7 @@ class TaskProcess(QObject):
             )
 
     def terminate(self, force=False):
-        """Cancela grupo de usuário comum; nunca força uma tarefa administrativa."""
+        """Cancel an ordinary user group; never forces an administrative task."""
         if self.admin:
             return False
         signal_group(self.pgid, signal.SIGKILL if force else signal.SIGTERM)

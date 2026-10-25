@@ -1,4 +1,4 @@
-"""Grafo livre independente de Blockly: portas, validação e compilador de estados."""
+"""Free graph independent of Blockly: ports, validation and state-machine compiler."""
 
 from __future__ import annotations
 from copy import deepcopy
@@ -6,8 +6,10 @@ import json
 import keyword
 import math
 from .project import ComponentKind, ProjectError, new_id
+from .source import default_names
+from makebench.i18n import tr
 
-# Entradas de valor são distintas das saídas de execução; posições ficam no fluxo.
+# Value inputs are separate from execution outputs; positions live in the flow.
 VALUE_INPUTS = {
     "event": {},
     "constant": {},
@@ -41,40 +43,40 @@ VALUE_INPUTS = {
 VALUE_OPS = {"constant", "variable", "read", "binary", "join"}
 RESULT_OPS = {"call", "run", "script", "terminal_start", "ask", "assign"}
 LABELS = {
-    "event": "Evento",
-    "constant": "Constante",
-    "variable": "Valor de variável",
-    "read": "Ler componente",
-    "binary": "Operação",
-    "join": "Juntar textos",
-    "if": "Condição",
-    "repeat": "Repetir",
-    "sequence": "Sequência",
-    "return": "Retornar",
-    "log": "Registrar na saída",
-    "message": "Mensagem",
-    "assign": "Definir variável",
-    "set_text": "Alterar texto",
-    "set_enabled": "Habilitar componente",
-    "set_value": "Alterar progresso",
-    "call": "Função própria",
-    "run": "Executar programa",
-    "script": "Executar Bash",
-    "terminal_start": "Iniciar terminal",
-    "terminal_send": "Enviar ao terminal",
-    "terminal_stop": "Encerrar terminal",
-    "go_state": "Ir para estado",
-    "open_window": "Abrir janela",
-    "close_window": "Fechar janela",
-    "show_page": "Mostrar página",
-    "ask": "Perguntar",
-    "confirm": "Confirmar",
+    "event": tr("Event"),
+    "constant": tr("Constant"),
+    "variable": tr("Variable value"),
+    "read": tr("Read component"),
+    "binary": tr("Operation"),
+    "join": tr("Join texts"),
+    "if": tr("Condition"),
+    "repeat": tr("Repeat"),
+    "sequence": tr("Sequence"),
+    "return": tr("Return"),
+    "log": tr("Write to output"),
+    "message": tr("Message"),
+    "assign": tr("Set variable"),
+    "set_text": tr("Change text"),
+    "set_enabled": tr("Enable component"),
+    "set_value": tr("Change progress"),
+    "call": tr("Own function"),
+    "run": tr("Run program"),
+    "script": tr("Run Bash"),
+    "terminal_start": tr("Start terminal"),
+    "terminal_send": tr("Send to terminal"),
+    "terminal_stop": tr("Stop terminal"),
+    "go_state": tr("Go to state"),
+    "open_window": tr("Open window"),
+    "close_window": tr("Close window"),
+    "show_page": tr("Show page"),
+    "ask": tr("Ask"),
+    "confirm": tr("Confirm"),
 }
 OPERATORS = {"+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">=", "and", "or"}
 
 
 def execution_outputs(node):
-    """Define portas de execução sem inferir ordem pela posição visual do nó."""
+    """Define execution ports without inferring order from the node's visual position."""
     op = node["op"]
     if op in VALUE_OPS or op == "return":
         return []
@@ -88,7 +90,7 @@ def execution_outputs(node):
 
 
 def value_type(value):
-    """Classifica valores JSON; booleano não é confundido com número."""
+    """Classify JSON values; a boolean is never mistaken for a number."""
     return (
         "bool"
         if type(value) is bool
@@ -103,7 +105,7 @@ def value_type(value):
 
 
 def output_type(node):
-    """Tipo estático de uma porta de valor; variáveis e resultados são dinâmicos."""
+    """Static type of a value port; variables and results are dynamic."""
     op = node["op"]
     p = node.get("parameters", {})
     if op == "constant":
@@ -124,7 +126,7 @@ def output_type(node):
 
 
 def create_graph(flow):
-    """Prepara um novo grafo de evento; a substituição exige confirmação na IDE."""
+    """Prepare a new event graph; replacing it requires confirmation in the IDE."""
     entry = new_id("node")
     return {
         "graph_version": 1,
@@ -135,9 +137,9 @@ def create_graph(flow):
 
 
 def replace_editor(flow, editor):
-    """Troca explicitamente a fonte de verdade e guarda a representação anterior inteira."""
+    """Explicitly switch the source of truth and keep the whole previous representation."""
     if editor not in {"blocks", "nodes"}:
-        raise ProjectError("Editor de comportamento desconhecido.")
+        raise ProjectError(tr("Unknown behavior editor."))
     current = flow.get("editor", "blocks")
     if current == editor:
         return
@@ -145,7 +147,7 @@ def replace_editor(flow, editor):
         key: deepcopy(value) for key, value in flow.items() if key not in {"behavior_backups"}
     }
     if len(flow.get("behavior_backups", [])) >= 1000:
-        raise ProjectError("Limite de 1000 versões recuperáveis atingido.")
+        raise ProjectError(tr("Limit of 1000 recoverable versions reached."))
     flow.setdefault("behavior_backups", []).append(previous)
     flow.update(editor=editor, body=[], workspace={})
     flow.pop("errors", None)
@@ -158,10 +160,10 @@ def replace_editor(flow, editor):
 
 
 def restore_behavior(flow, index=-1):
-    """Restaura uma cópia recuperável e conserva a versão atual na mesma lista."""
+    """Restore a recoverable copy and keep the current version in the same list."""
     backups = flow.get("behavior_backups", [])
     if not backups:
-        raise ProjectError("Não há comportamento anterior para restaurar.")
+        raise ProjectError(tr("There is no previous behavior to restore."))
     restored = deepcopy(backups[index])
     current = {k: deepcopy(v) for k, v in flow.items() if k != "behavior_backups"}
     history = [deepcopy(item) for i, item in enumerate(backups) if i != index % len(backups)]
@@ -171,14 +173,14 @@ def restore_behavior(flow, index=-1):
 
 
 def json_value(value, depth=0):
-    """Valida constantes limitadas, sem Python arbitrário e sem números não finitos."""
+    """Validate bounded constants, with no arbitrary Python and no non-finite numbers."""
     if depth > 12:
-        raise ProjectError("Constante excede 12 níveis.")
+        raise ProjectError(tr("Constant exceeds 12 levels."))
     if type(value) in (str, int, float, bool, type(None)):
         if type(value) is str and len(value) > 100000:
-            raise ProjectError("Constante textual muito extensa.")
+            raise ProjectError(tr("Text constant is too long."))
         if type(value) is float and not math.isfinite(value):
-            raise ProjectError("Constante numérica não finita.")
+            raise ProjectError(tr("Non-finite numeric constant."))
         return
     if type(value) is list and len(value) <= 256:
         for item in value:
@@ -188,18 +190,18 @@ def json_value(value, depth=0):
         for item in value.values():
             json_value(item, depth + 1)
         return
-    raise ProjectError("Use uma constante JSON válida e limitada.")
+    raise ProjectError(tr("Use a valid, bounded JSON constant."))
 
 
 def validate_graph(project, flow):
-    """Rejeita referências e portas inválidas e ciclos de valores; execução pode retornar."""
+    """Reject invalid references and ports and value cycles; execution may loop back."""
     graph = flow.get("graph")
     if (
         not isinstance(graph, dict)
         or type(graph.get("graph_version")) is not int
         or graph.get("graph_version") != 1
     ):
-        raise ProjectError("Versão de grafo inválida.")
+        raise ProjectError(tr("Invalid graph version."))
     nodes = graph.get("nodes")
     edges = graph.get("edges")
     if (
@@ -208,13 +210,13 @@ def validate_graph(project, flow):
         or not isinstance(edges, list)
         or len(edges) > 40000
     ):
-        raise ProjectError("O grafo aceita até 5000 nós e 40000 conexões.")
+        raise ProjectError(tr("The graph accepts up to 5000 nodes and 40000 connections."))
     by_id = {}
     owner = project.window_of(flow["event"]["component"])
     states = {"@default", *[s["id"] for s in project.states.get(owner.id, [])]}
 
     def name(value):
-        """Valida nome de função própria, sem usá-lo como trecho de código."""
+        """Validate an own-function name without using it as a code fragment."""
         return (
             isinstance(value, str)
             and value.isidentifier()
@@ -223,10 +225,10 @@ def validate_graph(project, flow):
         )
 
     def target(value, kinds=None):
-        """Confere alvos contra o documento, mantendo referências por ID."""
+        """Check targets against the document, keeping references by ID."""
         node = project.find(value)
         if node is None or (kinds and node.kind not in kinds):
-            raise ProjectError("Nó aponta para componente inexistente ou incompatível.")
+            raise ProjectError(tr("A node points to a missing or incompatible component."))
 
     for node in nodes:
         if (
@@ -237,7 +239,7 @@ def validate_graph(project, flow):
             or not isinstance(node.get("op"), str)
             or node.get("op") not in VALUE_INPUTS
         ):
-            raise ProjectError("Nó sem ID único ou operação reconhecida.")
+            raise ProjectError(tr("Node without a unique ID or a recognized operation."))
         by_id[node["id"]] = node
         op = node["op"]
         p = node.get("parameters", {})
@@ -247,9 +249,9 @@ def validate_graph(project, flow):
             or not isinstance(inputs, dict)
             or inputs.keys() - VALUE_INPUTS[op].keys()
         ):
-            raise ProjectError("Porta de entrada desconhecida.")
+            raise ProjectError(tr("Unknown input port."))
         if not isinstance(node.get("comment", ""), str):
-            raise ProjectError("Comentário de nó precisa ser texto.")
+            raise ProjectError(tr("A node comment must be text."))
         if op == "constant":
             json_value(p.get("value"))
         if op in {"variable", "assign", "ask"}:
@@ -258,17 +260,17 @@ def validate_graph(project, flow):
                 or not p["name"].strip()
                 or p.get("scope", "project") not in ("project", "window", "local")
             ):
-                raise ProjectError("Variável de nó inválida.")
+                raise ProjectError(tr("Invalid node variable."))
         if op == "call" and not name(p.get("function")):
-            raise ProjectError("Função própria de nó inválida.")
+            raise ProjectError(tr("Invalid own function in node."))
         if op == "binary" and (
             not isinstance(p.get("operator"), str) or p.get("operator") not in OPERATORS
         ):
-            raise ProjectError("Operador de nó desconhecido.")
+            raise ProjectError(tr("Unknown node operator."))
         if op == "sequence" and (
             type(p.get("count", 2)) is not int or not 2 <= p.get("count", 2) <= 8
         ):
-            raise ProjectError("Sequência aceita entre 2 e 8 saídas.")
+            raise ProjectError(tr("A sequence accepts between 2 and 8 outputs."))
         if op in {
             "set_text",
             "set_enabled",
@@ -296,43 +298,49 @@ def validate_graph(project, flow):
             )
             target(p.get("component"), kinds)
             if op == "read" and p.get("attribute") not in ("text", "checked", "value"):
-                raise ProjectError("Propriedade de leitura inválida.")
+                raise ProjectError(tr("Invalid read property."))
         if op == "go_state" and (
             not isinstance(p.get("state"), str) or p.get("state") not in states
         ):
-            raise ProjectError("Estado de nó inexistente.")
+            raise ProjectError(tr("Node state does not exist."))
         if op == "open_window":
             target(p.get("window"), {ComponentKind.WINDOW})
             if type(p.get("close_current", False)) is not bool:
-                raise ProjectError("Opção de fechar janela inválida.")
+                raise ProjectError(tr("Invalid close-window option."))
         if op in {"run", "script"} and type(p.get("admin", False)) is not bool:
-            raise ProjectError("Permissão de tarefa inválida.")
+            raise ProjectError(tr("Invalid task permission."))
         if op == "ask" and p.get("kind", "text") not in ("text", "choice", "file", "directory"):
-            raise ProjectError("Pergunta de nó inválida.")
+            raise ProjectError(tr("Invalid node question."))
     if (
         not isinstance(graph.get("entry"), str)
         or graph.get("entry") not in by_id
         or by_id[graph["entry"]]["op"] != "event"
         or sum(n["op"] == "event" for n in nodes) != 1
     ):
-        raise ProjectError("Mantenha um único nó de evento como entrada.")
+        raise ProjectError(tr("Keep a single event node as the entry."))
     for node in nodes:
         for port, expected in VALUE_INPUTS[node["op"]].items():
             binding = node.get("inputs", {}).get(port)
             if not isinstance(binding, dict) or set(binding) not in ({"value"}, {"node", "port"}):
-                raise ProjectError("Preencha todas as entradas de valor do nó.")
+                raise ProjectError(tr("Fill in every value input of the node."))
             if "value" in binding:
                 json_value(binding["value"])
                 actual = value_type(binding["value"])
             else:
                 if not isinstance(binding["node"], str) or not isinstance(binding["port"], str):
-                    raise ProjectError("Identificador de porta de valor inválido.")
+                    raise ProjectError(tr("Invalid value port identifier."))
                 producer = by_id.get(binding["node"])
                 if producer is None or binding["port"] != "value" or output_type(producer) is None:
-                    raise ProjectError("Conexão de valor aponta para porta inexistente.")
+                    raise ProjectError(
+                        tr("A value connection points to a port that does not exist.")
+                    )
                 actual = output_type(producer)
             if expected != "any" and actual not in {"any", expected}:
-                raise ProjectError(f"Tipos incompatíveis na entrada {port}: {expected} esperado.")
+                raise ProjectError(
+                    tr("Incompatible types on input {port}: {expected} expected.").format(
+                        port=port, expected=expected
+                    )
+                )
     used = set()
     for edge in edges:
         if (
@@ -342,21 +350,21 @@ def validate_graph(project, flow):
             or edge["from"] not in by_id
             or edge["to"] not in by_id
         ):
-            raise ProjectError("Conexão de execução inválida.")
+            raise ProjectError(tr("Invalid execution connection."))
         source, destination = by_id[edge["from"]], by_id[edge["to"]]
         if (
             edge["out"] not in execution_outputs(source)
             or destination["op"] in VALUE_OPS
             or destination["op"] == "event"
         ):
-            raise ProjectError("Portas de execução incompatíveis.")
+            raise ProjectError(tr("Incompatible execution ports."))
         key = (edge["from"], edge["out"])
         if key in used:
             raise ProjectError(
-                "Cada saída de execução aceita uma conexão. Use Sequência para ramificar."
+                tr("Each execution output accepts one connection. Use Sequence to branch.")
             )
         used.add(key)
-    # DFS iterativa evita recursão Python em arquivos grandes ou malformados.
+    # Iterative DFS avoids Python recursion on large or malformed files.
     visited = set()
     for identifier in by_id:
         stack = [(identifier, False)]
@@ -370,12 +378,10 @@ def validate_graph(project, flow):
             if current in visited:
                 continue
             if current in visiting:
-                raise ProjectError(
-                    "Ciclo entre valores. Use uma variável para representar memória."
-                )
+                raise ProjectError(tr("Cycle between values. Use a variable to represent memory."))
             visiting.add(current)
             if len(visiting) > 100:
-                raise ProjectError("Dependência de valores excede 100 níveis.")
+                raise ProjectError(tr("Value dependencies exceed 100 levels."))
             stack.append((current, True))
             stack.extend(
                 (binding["node"], False)
@@ -392,7 +398,7 @@ def validate_graph(project, flow):
         )
         for key, point in layout.items()
     ):
-        raise ProjectError("Posição visual de nó inválida.")
+        raise ProjectError(tr("Invalid visual node position."))
     comments = flow.get("graph_comments", [])
     if (
         not isinstance(comments, list)
@@ -409,13 +415,13 @@ def validate_graph(project, flow):
             for c in comments
         )
     ):
-        raise ProjectError("Comentários livres do grafo inválidos.")
+        raise ProjectError(tr("Invalid free graph comments."))
 
 
 def default_node(op, project, flow):
-    """Cria nó configurável com entradas literais; não executa ações ou gera fios implícitos."""
+    """Create a configurable node with literal inputs; never runs actions or adds implicit wires."""
     if op not in VALUE_INPUTS or op == "event":
-        raise ProjectError("Escolha um tipo de nó disponível.")
+        raise ProjectError(tr("Choose an available node type."))
     inputs = {
         key: {
             "value": False
@@ -431,11 +437,11 @@ def default_node(op, project, flow):
     p = {}
     owner = project.window_of(flow["event"]["component"])
     if op == "constant":
-        p["value"] = "Olá!"
+        p["value"] = tr("Hello!")
     if op in {"variable", "assign", "ask"}:
-        p.update(name="valor", scope="project")
+        p.update(name=default_names()["variable"], scope="project")
     if op == "call":
-        p["function"] = "saudacao"
+        p["function"] = default_names()["function"]
     if op == "binary":
         p["operator"] = "=="
     if op == "sequence":
@@ -445,7 +451,7 @@ def default_node(op, project, flow):
     if op == "run":
         inputs["program"]["value"] = "uname"
     if op == "script":
-        inputs["source"]["value"] = 'printf "Olá\\n"'
+        inputs["source"]["value"] = tr('printf "Hello\\n"')
     if op == "ask":
         p["kind"] = "text"
     if op == "go_state":
@@ -481,7 +487,7 @@ def default_node(op, project, flow):
         component = next((n for n in owner.walk() if kinds is None or n.kind in kinds), None)
         if component is None:
             raise ProjectError(
-                "Insira um componente compatível nesta janela antes de criar este nó."
+                tr("Insert a compatible component in this window before creating this node.")
             )
         p["component"] = component.id
         if op == "read":
@@ -490,13 +496,16 @@ def default_node(op, project, flow):
 
 
 def compile_graph(flow, index, functions):
-    """Compila fluxo livre para máquina de estados Python, sem criar árvore Blockly."""
+    """Compile a free flow into a Python state machine, without creating a Blockly tree."""
     graph = flow["graph"]
     nodes = {node["id"]: node for node in graph["nodes"]}
     edges = {(e["from"], e["out"]): e["to"] for e in graph["edges"]}
     lines = [
         f"# {flow['name'].replace(chr(10), ' ').replace(chr(13), ' ')}",
-        f"# Evento: {flow['event']['kind']} em {flow['event']['component']!r}",
+        "# "
+        + tr("Event: {kind} on {component}").format(
+            kind=flow["event"]["kind"], component=repr(flow["event"]["component"])
+        ),
         f"def on_event_{index}(ctx):",
         "    variables = ctx.variables",
         "    local_variables = {}",
@@ -514,17 +523,17 @@ def compile_graph(flow, index, functions):
     diagnostics = []
 
     def emit(text, indent=3):
-        """Emite linha com indentação controlada pelo compilador."""
+        """Emit a line with indentation controlled by the compiler."""
         lines.append("    " * indent + text)
 
     def expression(binding, path=()):
-        """Resolve valores puros ou resultados previamente produzidos por execução."""
+        """Resolve pure values or results previously produced by execution."""
         if "value" in binding:
             return repr(binding["value"])
         return f"_value({binding['node']!r})"
 
     def node_expression(node):
-        """Uma expressão por produtor; dependências são acessos em vez de expansão textual."""
+        """One expression per producer; dependencies are lookups instead of textual expansion."""
         op = node["op"]
         p = node.get("parameters", {})
         inputs = node.get("inputs", {})
@@ -559,7 +568,7 @@ def compile_graph(flow, index, functions):
         emit("result = " + node_expression(producer), 3)
         emit("_memo[identifier] = result", 3)
         emit("return result", 3)
-    emit('raise RuntimeError("Produtor de valor inexistente.")', 2)
+    emit("raise RuntimeError(" + repr(tr("Value producer does not exist.")) + ")", 2)
     lines.extend(loop)
     emit("_memo.clear()", 2)
     for node in graph["nodes"]:
@@ -598,7 +607,9 @@ def compile_graph(flow, index, functions):
         elif op == "call":
             if p["function"] not in functions:
                 diagnostics.append(
-                    f"{flow['name']}: função ‘{p['function']}’ não encontrada em .actions.py."
+                    tr("{flow}: function ‘{function}’ not found in .actions.py.").format(
+                        flow=flow["name"], function=p["function"]
+                    )
                 )
             emit(f"_values[{identifier!r}] = ctx.call_action({p['function']!r}, {value('value')})")
         elif op in {"run", "script"}:
@@ -645,12 +656,14 @@ def compile_graph(flow, index, functions):
         else:
             emit(f"_pc = {edge()}")
         emit("continue")
-    lines.extend(['        raise RuntimeError("Estado de execução do grafo inválido.")', ""])
+    lines.extend(
+        ["        raise RuntimeError(" + repr(tr("Invalid graph execution state.")) + ")", ""]
+    )
     return lines, origins, diagnostics
 
 
 def duplicate_graph(flow, components):
-    """Regenera IDs e fios internos e remapeia componentes de uma cópia de comportamento."""
+    """Regenerate IDs and internal wires and remap components of a behavior copy."""
     graph = flow["graph"]
     mapping = {node["id"]: new_id("node") for node in graph["nodes"]}
     graph["entry"] = mapping[graph["entry"]]

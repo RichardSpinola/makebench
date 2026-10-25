@@ -1,4 +1,4 @@
-"""Relatório de ambiente somente leitura, sem subprocessos nem instalação."""
+"""Read-only environment report, with no subprocesses or installation."""
 
 import importlib.metadata
 import locale
@@ -6,26 +6,30 @@ import os
 import platform
 from .environment import gtk_support, build_tools
 from makebench import __version__
+from makebench.i18n import tr
 
 
 def environment_report(desktop=None):
-    """Gera texto copiável; dados gráficos podem ser acrescentados pela UI GTK."""
+    """Build copyable text; graphical details can be appended by the GTK UI."""
     try:
         qt = importlib.metadata.version("PySide6")
     except importlib.metadata.PackageNotFoundError:
-        qt = "Não instalado (opcional para aplicativos Qt)"
+        qt = tr("Not installed (optional for Qt applications)")
     gtk = gtk_support()
+    found, absent = tr("Detected"), tr("Missing")
     lines = [
         f"Makebench {__version__}",
         f"Python {platform.python_version()}",
-        f"Sistema {platform.system()} {platform.machine()}",
+        tr("System {system} {machine}").format(
+            system=platform.system(), machine=platform.machine()
+        ),
         "Editor: Qt Widgets",
         f"PySide6: {qt}",
         f"Locale: {locale.getlocale()}",
-        "LANG: " + os.environ.get("LANG", "Não informado"),
-        "PyGObject: " + ("Detectado" if gtk["pygobject"] else "Ausente"),
-        "GTK4: " + ("Detectado" if gtk["gtk4"] else "Ausente"),
-        "libadwaita: " + ("Detectado" if gtk["adwaita"] else "Ausente"),
+        "LANG: " + os.environ.get("LANG", tr("Not set")),
+        "PyGObject: " + (found if gtk["pygobject"] else absent),
+        "GTK4: " + (found if gtk["gtk4"] else absent),
+        "libadwaita: " + (found if gtk["adwaita"] else absent),
     ]
     try:
         import gi
@@ -36,9 +40,9 @@ def environment_report(desktop=None):
         webkit = False
     lines.append(
         "WebKitGTK 6 (Blockly): "
-        + ("Detectado" if webkit else "Ausente — edição nativa de ações disponível")
+        + (found if webkit else tr("Missing — native action editing available"))
     )
     lines.extend(f"{key}: {value}" for key, value in (desktop or {}).items())
-    lines.extend(f"{key}: {value or 'Ausente'}" for key, value in build_tools().items())
-    lines.append("Detectar pkexec não valida o agente Polkit nem a autenticação real.")
+    lines.extend(f"{key}: {value or absent}" for key, value in build_tools().items())
+    lines.append(tr("Detecting pkexec does not validate the Polkit agent or real authentication."))
     return "\n".join(lines)

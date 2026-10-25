@@ -1,4 +1,4 @@
-"""QA visual de exportação e teclado em compositor privado, sem construir nem executar projeto."""
+"""Visual QA of export and keyboard in a private compositor, without building or running a project."""
 
 import argparse
 import faulthandler
@@ -11,7 +11,7 @@ import time
 
 
 def main():
-    """Confere os dois produtos, prévia inerte e Tab/Ctrl+Tab reais no terminal da IDE."""
+    """Check both products, the inert preview and real Tab/Ctrl+Tab in the IDE terminal."""
     faulthandler.enable()
     faulthandler.register(signal.SIGTERM, chain=True)
     parser = argparse.ArgumentParser()
@@ -35,7 +35,7 @@ def main():
         root = Path(directory)
         os.environ["XDG_CONFIG_HOME"] = str(root / "config")
         os.environ["XDG_STATE_HOME"] = str(root / "state")
-        project = Project.empty("Distribuição QA")
+        project = Project.empty("Distribution QA")
         project.application["backend"] = args.backend
         terminal = project.add(project.root.id, "terminal")
         terminal.properties["terminal_autostart"] = True
@@ -45,7 +45,7 @@ def main():
         window.show()
 
         def wait(predicate, seconds=10):
-            """Processa os eventos e cede a GIL ao worker/PTY do teste."""
+            """Process events and yield the GIL to the test worker/PTY."""
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 app.processEvents()
@@ -98,10 +98,10 @@ def main():
                         "theme": args.theme,
                         "actual_scale": ratio,
                         "checks": [
-                            "Cinco destinos e AppImage do editor sem execução",
-                            "Terminal da IDE inerte até ação explícita",
-                            "Tab completa arquivo; Ctrl+Tab sai do terminal",
-                            "Encerramento recolhe a sessão",
+                            "Five targets and the editor AppImage without running",
+                            "IDE terminal inert until an explicit action",
+                            "Tab completes a file; Ctrl+Tab leaves the terminal",
+                            "Closing reaps the session",
                         ],
                     },
                     ensure_ascii=False,

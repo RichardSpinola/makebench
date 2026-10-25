@@ -1,4 +1,4 @@
-"""Jornada visual de Designer, módulos e depuração Qt/GTK em compositor privado."""
+"""Visual journey of the Designer, modules and Qt/GTK debugging in a private compositor."""
 
 import argparse
 import json
@@ -9,7 +9,7 @@ import time
 
 
 def main():
-    """Registra cliques, arquivos e execução reais sem abrir projetos pessoais."""
+    """Record real clicks, files and execution without opening personal projects."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", required=True, choices=("qt", "gtk"))
     parser.add_argument("--theme", default="dark", choices=("light", "dark"))
@@ -51,12 +51,12 @@ def main():
         window.logic.ensure_loaded()
         window.resize(1440, 950)
         window.show()
-        window.set_mode("Design")
+        window.set_mode("design")
         window._show_error = lambda error: errors.append(error)
         native = window.winId()
 
         def wait(predicate, seconds=25):
-            """Processa eventos reais, sempre com prazo para detectar bloqueios."""
+            """Process real events, always with a deadline to detect hangs."""
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
                 QTest.qWait(20)
@@ -68,7 +68,7 @@ def main():
             raise AssertionError("Prazo excedido: " + str(args.backend))
 
         def settle():
-            """Aguarda prévia GTK atual sem pausar a fila de eventos do Qt."""
+            """Wait for a current GTK preview without pausing the Qt event queue."""
             if args.backend == "gtk":
                 wait(
                     lambda: (
@@ -80,7 +80,7 @@ def main():
             QTest.qWait(80)
 
         def capture(name, widget=None):
-            """Captura a janela testada, sem redesenhar a interface em imagem artificial."""
+            """Capture the tested window, without redrawing the interface into an artificial image."""
             QTest.qWait(60)
             assert (widget or window).grab().save(str(args.output / (name + ".png")))
 
@@ -90,7 +90,7 @@ def main():
             frames = dict(window.canvas._frames)
             zoom = window.zoom_view.zoom
             field = window.inspector.findChild(QLineEdit, "batch_text")
-            assert field.placeholderText() == "Múltiplos valores"
+            assert field.placeholderText() == "Multiple values"
             field.setFocus()
             QTest.keyClicks(field, "Texto comum")
             QTest.keyClick(field, Qt.Key.Key_Return)
@@ -120,15 +120,15 @@ def main():
             assert window.winId() == native
             results.extend(
                 [
-                    "Propriedade coletiva por teclado, uma edição e widgets preservados",
+                    "Collective property by keyboard, one edit and preserved widgets",
                     "Alinhamento e movimento reutilizam controles",
-                    "Desfazer/refazer preservam seleção e zoom",
+                    "Undo/redo keep the selection and zoom",
                 ]
             )
             preferences = EditorPreferences(window)
             preferences.show()
             preferences.navigation.setCurrentRow(6) if hasattr(preferences, "navigation") else None
-            # Localiza a página por seu texto, sem presumir posição entre preferências.
+            # Find the page by its text, without assuming its position among the preferences.
             for list_widget in preferences.findChildren(
                 __import__("PySide6.QtWidgets", fromlist=["QListWidget"]).QListWidget
             ):
@@ -138,7 +138,7 @@ def main():
             QTest.qWait(80)
             capture("02-plugins", preferences)
             preferences.close()
-            results.append("Plugins reservado nas Preferências")
+            results.append("Plugins reserved in the Preferences")
             example = (
                 Path(__file__).resolve().parents[1]
                 / "examples/python-modules"
@@ -152,17 +152,17 @@ def main():
             window.source_editor.setPlainText(
                 "from pathlib import Path\nPath(" + repr(str(marker)) + ").touch()\n" + str(source)
             )
-            window.set_mode("Código")
+            window.set_mode("code")
             window.open_code_file("makebench_user/calculations.py", 5)
             editor = window.active_code_editor()
-            editor.appendPlainText("\n# comentário editável")
+            editor.appendPlainText("\n# editable comment")
             window._update_code()
             assert not marker.exists()
             capture("03-arquivos-python")
             before = window.execution_fingerprint()
-            editor.appendPlainText("# mudança ainda não executada")
+            editor.appendPlainText("# change not run yet")
             assert before != window.execution_fingerprint()
-            # Ctrl+Espaço apresenta os métodos reais de ctx; Esc fecha sem alterar o texto.
+            # Ctrl+Space shows the real ctx methods; Esc closes without changing the text.
             window.open_code_file("@actions")
             entry = window.source_editor
             original = entry.toPlainText()
@@ -178,7 +178,7 @@ def main():
             capture("04-sugestoes")
             QTest.keyClick(entry, Qt.Key.Key_Escape)
             entry.setPlainText(original)
-            # Uma sintaxe inválida fica editável e o diagnóstico abre o módulo correto.
+            # Invalid syntax stays editable and the diagnostic opens the right module.
             helper = window.module_editors["makebench_user/calculations.py"]
             text = helper.toPlainText()
             helper.appendPlainText("def incompleta(")
@@ -197,10 +197,10 @@ def main():
             assert not marker.exists()
             results.extend(
                 [
-                    "Árvore e abas de módulos editáveis; gerado somente leitura",
-                    "Ctrl+Espaço real com métodos ctx",
-                    "Diagnóstico por arquivo/linha/coluna abre a origem",
-                    "Abrir, editar e pré-visualizar não executam fonte",
+                    "Editable module tree and tabs; generated code read-only",
+                    "Real Ctrl+Space with ctx methods",
+                    "Diagnostic by file/line/column opens the origin",
+                    "Opening, editing and previewing never run source",
                 ]
             )
             window.toggle_source_breakpoint(6, "makebench_user/calculations.py")
@@ -230,7 +230,9 @@ def main():
             capture("06-depuracao-modulo")
             runtime.session.debug_command("continue")
             wait(lambda: runtime.session.closed)
-            results.append("Depuração Qt/GTK entra no módulo e mostra pilha/variáveis do snapshot")
+            results.append(
+                "Qt/GTK debugging steps into the module and shows the snapshot stack/variables"
+            )
             (args.output / "results.json").write_text(
                 json.dumps(
                     {

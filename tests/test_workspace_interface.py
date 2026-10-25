@@ -1,4 +1,4 @@
-"""Jornadas de edição Qt para arquivos Python e propriedades comuns."""
+"""Qt editing journeys for Python files and common properties."""
 
 import os
 from pathlib import Path
@@ -10,7 +10,7 @@ from makebench.core.storage import load_project
 
 
 class CodeWorkspaceInterfaceTests(unittest.TestCase):
-    """Edição real de múltiplos arquivos e propriedades coletivas com histórico."""
+    """Real editing of multiple files and collective properties with history."""
 
     @classmethod
     def setUpClass(cls):
@@ -74,10 +74,10 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         b.properties["text"] = "B"
         w.history.push(w.project)
         w._refresh()
-        w.set_mode("Design")
+        w.set_mode("design")
         w.select_multiple([a.id, b.id])
         field = w.inspector.findChild(QLineEdit, "batch_text")
-        self.assertEqual(field.placeholderText(), "Múltiplos valores")
+        self.assertEqual(field.placeholderText(), "Multiple values")
         frames = {name: widget for name, widget in w.canvas._frames.items()}
         zoom = w.zoom_view.zoom
         before = w.history._index
@@ -102,7 +102,7 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.select_multiple([a.id, b.id])
         button = w.inspector.findChild(QToolButton, "selection_left")
         self.assertFalse(button.isEnabled())
-        self.assertIn("Livre", button.toolTip())
+        self.assertIn("Free", button.toolTip())
 
     def test_module_diagnostics_navigate_and_snapshot_changes(self):
         w = self.window
@@ -126,7 +126,7 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
 
         w = self.window
         w.show()
-        w.set_mode("Código")
+        w.set_mode("code")
         editor = w.source_editor
         editor.setPlainText("def action(ctx, value):\n    ctx.term")
         editor.moveCursor(editor.textCursor().MoveOperation.End)
@@ -188,7 +188,7 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         a = w.project.add(w.project.root.id, ComponentKind.BUTTON)
         b = w.project.add(w.project.root.id, ComponentKind.BUTTON)
         w._refresh()
-        w.set_mode("Design")
+        w.set_mode("design")
         w.select_multiple([a.id, b.id])
         self.assertIsNotNone(w.inspector.findChild(QCheckBox, "batch_enabled"))
         w.change_multiple_properties("enabled", False)

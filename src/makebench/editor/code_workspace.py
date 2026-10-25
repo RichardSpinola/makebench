@@ -1,4 +1,4 @@
-"""Arquivos Python próprios: edição, índice estático e integração com o documento."""
+"""Your own Python files: editing, static index and integration with the document."""
 
 import hashlib
 import json
@@ -21,13 +21,14 @@ from makebench.core.project import ProjectError
 from .code import CodeEditor
 from .code_assist import CodeAssist
 from .theme import icon
+from makebench.i18n import tr
 
 
 class CodeWorkspaceMixin:
-    """Mantém buffers por arquivo e reutiliza as APIs antigas de fonte principal."""
+    """Keep per-file buffers and reuse the older main-source APIs."""
 
     def install_code_workspace(self):
-        """Acrescenta árvore de arquivos e assistência à área Código existente."""
+        """Add the file tree and assistance to the existing Code area."""
         self.code_index = CodeIndex()
         self.module_editors = {}
         self._workspace_buffer = None
@@ -35,17 +36,17 @@ class CodeWorkspaceMixin:
         layout = pane.layout()
         self.code_tree = QTreeWidget()
         self.code_tree.setHeaderHidden(True)
-        self.code_tree.setAccessibleName("Arquivos Python do projeto")
+        self.code_tree.setAccessibleName(tr("Project Python files"))
         self.code_tree.itemActivated.connect(self.code_tree_open)
         self.code_tree.itemClicked.connect(self.code_tree_open)
         controls = QWidget()
         row = QHBoxLayout(controls)
         row.setContentsMargins(0, 0, 0, 0)
-        row.addWidget(QLabel("Arquivos"), 1)
+        row.addWidget(QLabel(tr("Files")), 1)
         for symbol, label, callback in [
-            ("add", "Novo módulo", self.new_module_dialog),
-            ("edit", "Renomear módulo", self.rename_module_dialog),
-            ("remove", "Excluir módulo", self.delete_module_dialog),
+            ("add", tr("New module"), self.new_module_dialog),
+            ("edit", tr("Rename module"), self.rename_module_dialog),
+            ("remove", tr("Delete module"), self.delete_module_dialog),
         ]:
             button = QToolButton()
             button.setIcon(icon(symbol))
@@ -58,7 +59,7 @@ class CodeWorkspaceMixin:
         self.code_splitter.insertWidget(0, pane)
         self.code_splitter.setSizes([260, 900])
         self.code_signature = QLabel()
-        self.code_signature.setAccessibleName("Assinatura da chamada")
+        self.code_signature.setAccessibleName(tr("Call signature"))
         self.code_signature.setTextFormat(Qt.TextFormat.PlainText)
         self.code_signature.setMinimumWidth(0)
         self.code_signature.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
@@ -73,7 +74,7 @@ class CodeWorkspaceMixin:
         self.sync_code_workspace()
 
     def sync_code_workspace(self):
-        """Reconcilia apenas arquivos adicionados/removidos, sem recriar editores ativos."""
+        """Reconcile only added/removed files, without re-creating active editors."""
         if not hasattr(self, "code_tree"):
             return
         self.project.python_files = sorted(self.source.modules)
@@ -97,7 +98,7 @@ class CodeWorkspaceMixin:
                 continue
             editor = CodeEditor(parent=self.code_files)
             editor.setPlainText(buffer.text)
-            editor.setAccessibleName("Código " + name)
+            editor.setAccessibleName(tr("Code {name}").format(name=name))
             editor.breakpoints_enabled = True
             editor._assist = CodeAssist(self, editor, name)
             editor._source_buffer = buffer
@@ -121,7 +122,7 @@ class CodeWorkspaceMixin:
             self.code_tree.clear()
             folders = {}
             for label, key in [
-                ("gerado.py · leitura", "@generated"),
+                ("generated.py · " + tr("read-only"), "@generated"),
                 (self.source.path.name if self.source.path else "project.actions.py", ENTRY_FILE),
                 *[(name, name) for name in sorted(self.source.modules)],
             ]:
@@ -152,7 +153,7 @@ class CodeWorkspaceMixin:
         self.refresh_code_index()
 
     def current_code_file(self):
-        """Identifica o arquivo ativo, conservando os índices das duas abas legadas."""
+        """Identify the active file, keeping the indexes of the two legacy tabs."""
         widget = self.code_files.currentWidget()
         return next(
             (name for name, editor in self.module_editors.items() if editor is widget),
@@ -160,7 +161,7 @@ class CodeWorkspaceMixin:
         )
 
     def active_code_editor(self):
-        """Entrega o editor ativo para posição, outline e desfazer/refazer."""
+        """Return the active editor for position, outline and undo/redo."""
         if not hasattr(self, "code_files"):
             return self.source_editor
         if self.code_files.currentIndex() == 0:
@@ -168,10 +169,10 @@ class CodeWorkspaceMixin:
         return self.module_editors.get(self.current_code_file(), self.source_editor)
 
     def open_code_file(self, name, line=1, column=1):
-        """Abre arquivo do documento e traz sua localização para a área visível."""
+        """Open a document file and bring its location into view."""
         if name not in {ENTRY_FILE, "@generated", *self.source.modules}:
             return
-        self.set_mode("Código")
+        self.set_mode("code")
         if name in self.source.modules:
             self.sync_code_workspace()
             editor = self.module_editors[name]
@@ -187,11 +188,11 @@ class CodeWorkspaceMixin:
             editor.setTextCursor(cursor)
 
     def code_tree_open(self, item, *_):
-        """Seleção de arquivo é navegação, não altera o projeto."""
+        """Selecting a file is navigation; it does not change the project."""
         self.open_code_file(item.data(0, Qt.ItemDataRole.UserRole))
 
     def code_file_changed(self, *_):
-        """Atualiza outline e posição mantendo texto e histórico por arquivo."""
+        """Update outline and position, keeping text and history per file."""
         if not hasattr(self, "code_tree"):
             return
         self.sync_code_tree_selection()
@@ -201,7 +202,7 @@ class CodeWorkspaceMixin:
         self._update_actions()
 
     def sync_code_tree_selection(self):
-        """Marca o arquivo ativo sem mover a rolagem nem disparar navegação recursiva."""
+        """Mark the active file without moving the scroll or triggering recursive navigation."""
         key = self.current_code_file()
         from PySide6.QtWidgets import QTreeWidgetItemIterator
 
@@ -216,7 +217,7 @@ class CodeWorkspaceMixin:
         self.code_tree.blockSignals(blocked)
 
     def module_changed(self, name, editor):
-        """Confirma texto no buffer e adia análise para não percorrer a UI por tecla."""
+        """Commit text to the buffer and defer analysis so the UI is not walked on every key."""
         if name not in self.source.modules:
             return
         self.source.modules[name].text = editor.toPlainText()
@@ -226,7 +227,7 @@ class CodeWorkspaceMixin:
         self.code_files.setTabText(self.code_files.indexOf(editor), Path(name).name + " •")
 
     def refresh_code_index(self):
-        """Reconstrói índice só quando o conteúdo muda; erros não apagam o último AST."""
+        """Rebuild the index only when content changes; errors never clear the last AST."""
         if not hasattr(self, "code_index"):
             return
         signature = (
@@ -244,22 +245,22 @@ class CodeWorkspaceMixin:
             )
 
     def update_module_manifest(self):
-        """Declara só arquivos reais do documento; formatos antigos não mudam ao abrir."""
+        """Declare only the document's real files; older formats do not change on open."""
         self.project.python_files = sorted(self.source.modules)
         self.sync_code_workspace()
         self._update_code()
         self._update_actions()
 
     def add_code_module(self, name, text=""):
-        """API compartilhada pelo diálogo e testes; criação é editável antes de salvar."""
+        """API shared by the dialog and tests; creation stays editable before saving."""
         self.source.add_module(name, text)
         self.update_module_manifest()
         self.open_code_file(name)
 
     def new_module_dialog(self):
-        """Cria nome validado dentro do pacote reservado, sem tocar no disco."""
+        """Create a validated name inside the reserved package, without touching the disk."""
         name, ok = QInputDialog.getText(
-            self, "Novo módulo", "Arquivo dentro de makebench_user", text="helpers.py"
+            self, tr("New module"), tr("File inside makebench_user"), text="helpers.py"
         )
         if ok:
             try:
@@ -270,12 +271,12 @@ class CodeWorkspaceMixin:
                 self._show_error(str(exc))
 
     def rename_module_dialog(self):
-        """Conserva textos; imports antigos são diagnosticados, sem reescrita implícita."""
+        """Keep texts; old imports are diagnosed, never implicitly rewritten."""
         old = self.current_code_file()
         if old not in self.source.modules:
             return
         name, ok = QInputDialog.getText(
-            self, "Renomear módulo", "Novo caminho (imports não são reescritos)", text=old
+            self, tr("Rename module"), tr("New path (imports are not rewritten)"), text=old
         )
         if ok and name != old:
             try:
@@ -289,18 +290,18 @@ class CodeWorkspaceMixin:
                 self._show_error(str(exc))
 
     def delete_module_dialog(self):
-        """Solicita confirmação concreta e mantém exclusão pendente até salvar."""
+        """Ask for concrete confirmation and keep the deletion pending until saved."""
         name = self.current_code_file()
         if name not in self.source.modules:
             return
         changed = (
-            " Há alterações não salvas neste arquivo." if self.source.modules[name].dirty else ""
+            " " + tr("This file has unsaved changes.") if self.source.modules[name].dirty else ""
         )
         if (
             QMessageBox.question(
                 self,
-                "Excluir módulo?",
-                name + " será removido ao salvar o projeto." + changed,
+                tr("Delete module?"),
+                tr("{name} will be removed when the project is saved.").format(name=name) + changed,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel,
             )
@@ -314,7 +315,7 @@ class CodeWorkspaceMixin:
             self._show_error(str(exc))
 
     def fingerprint(self):
-        """Confiança inclui os módulos que efetivamente serão executados."""
+        """Trust includes the modules that will actually run."""
         return hashlib.sha256(
             (
                 json.dumps(self.project.to_dict(), sort_keys=True)
@@ -323,7 +324,7 @@ class CodeWorkspaceMixin:
         ).hexdigest()
 
     def watch_source(self):
-        """Observa todos os arquivos próprios, sem carregá-los automaticamente."""
+        """Watch every own file, without loading them automatically."""
         if not hasattr(self, "source_watcher"):
             return
         old = self.source_watcher.files()
@@ -340,7 +341,7 @@ class CodeWorkspaceMixin:
             self.source_watcher.addPaths(paths)
 
     def source_changed_externally(self, path):
-        """Sinaliza conflito no arquivo afetado; os buffers continuam preservados."""
+        """Flag a conflict in the affected file; the buffers stay preserved."""
         for buffer in [self.source, *self.source.modules.values()]:
             if buffer.path and str(buffer.path) == path:
                 try:
@@ -354,18 +355,18 @@ class CodeWorkspaceMixin:
                 if changed:
                     self.external_change_row.show()
                     self.statusBar().showMessage(
-                        "Python alterado fora do Makebench: " + path, 15000
+                        tr("Python changed outside Makebench: {path}").format(path=path), 15000
                     )
         self.watch_source()
 
     def reload_source(self):
-        """Recarregamento explícito conserva avisos de erro e atualiza abas dos módulos."""
+        """An explicit reload keeps error notices and updates the module tabs."""
         if (
             self.source.dirty
             and QMessageBox.question(
                 self,
-                "Recarregar arquivos Python?",
-                "Descartar as edições Python não salvas e reler os arquivos do projeto?",
+                tr("Reload Python files?"),
+                tr("Discard unsaved Python edits and reread the project files?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel,
             )
@@ -376,7 +377,7 @@ class CodeWorkspaceMixin:
         self.sync_code_workspace()
 
     def keep_source(self):
-        """Aceita sobrescrita somente por ação explícita, para todos os buffers atuais."""
+        """Accept overwriting only by explicit action, for all current buffers."""
         try:
             from makebench.core.source import _read, module_path
 

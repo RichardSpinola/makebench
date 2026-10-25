@@ -1,4 +1,4 @@
-"""Constrói exemplos de QA em todos os formatos, sem executar suas funções."""
+"""Build QA examples in every format, without running their functions."""
 
 import argparse
 import json
@@ -10,7 +10,7 @@ from makebench.core.packages import build_package, FORMATS
 
 
 def main():
-    """Preparação online explícita; construção usa só ambientes e rodas já verificados."""
+    """Explicit online preparation; the build uses only already verified environments and wheels."""
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument("--backend", choices=("qt", "gtk"), required=True)
@@ -26,7 +26,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
 
     def progress(number, text):
-        """Registra a saída real de cada ferramenta, sem truncar o arquivo de evidência."""
+        """Record the real output of each tool, without truncating the evidence file."""
         print(number, text, flush=True)
 
     if args.editor:

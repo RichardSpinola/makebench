@@ -17,7 +17,7 @@ makebench = "makebench.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "notices/*", "templates/*/*.json", "templates/*/*.py"]
+makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "notices/*", "templates/*/*.json", "templates/*/*.py", "locale/*/*.po"]
 
 [tool.ruff]
 line-length = 100

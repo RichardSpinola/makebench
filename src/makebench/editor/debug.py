@@ -1,4 +1,4 @@
-"""Controles de depuração e inspeção somente leitura do snapshot iniciado."""
+"""Debug controls and read-only inspection of the started snapshot."""
 
 import json
 from PySide6.QtCore import Qt, Signal
@@ -12,28 +12,29 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from makebench.i18n import tr
 
 
 class DebugPanel(QWidget):
-    """Mostra contexto, pilha e valores sem console de avaliação arbitrária."""
+    """Show context, stack and values with no arbitrary evaluation console."""
 
     command = Signal(str)
     locate = Signal(dict)
 
     def __init__(self, parent=None):
-        """Monta comandos que enviam mensagens ao worker, sem executar Python local."""
+        """Build commands that send messages to the worker, never running Python locally."""
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
         row = QHBoxLayout()
         self.buttons = {}
         for label, action, shortcut in [
-            ("Continuar", "continue", "F8"),
-            ("Pausar", "pause", ""),
-            ("Próximo", "step_over", "F10"),
-            ("Entrar", "step_in", "F11"),
-            ("Sair", "step_out", "Shift+F11"),
-            ("Parar", "stop", "Shift+F5"),
+            (tr("Continue"), "continue", "F8"),
+            (tr("Pause"), "pause", ""),
+            (tr("Step over"), "step_over", "F10"),
+            (tr("Step into"), "step_in", "F11"),
+            (tr("Step out"), "step_out", "Shift+F11"),
+            (tr("Stop"), "stop", "Shift+F5"),
         ]:
             button = QPushButton(label)
             button.setToolTip(label + (" · " + shortcut if shortcut else ""))
@@ -43,15 +44,17 @@ class DebugPanel(QWidget):
         row.addStretch()
         layout.addLayout(row)
         self.status = QLabel(
-            "F6 inicia a depuração. Clique na margem do código ou use o menu de um bloco para marcar uma parada."
+            tr(
+                "F9 starts debugging. Click the code margin or use a block's menu to set a breakpoint."
+            )
         )
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
         split = QSplitter()
         self.stack = QTreeWidget()
-        self.stack.setHeaderLabels(["Pilha", "Arquivo", "Linha"])
+        self.stack.setHeaderLabels([tr("Stack"), tr("File"), tr("Line")])
         self.values = QTreeWidget()
-        self.values.setHeaderLabels(["Variável", "Valor"])
+        self.values.setHeaderLabels([tr("Variable"), tr("Value")])
         split.addWidget(self.stack)
         split.addWidget(self.values)
         layout.addWidget(split, 1)
@@ -61,7 +64,7 @@ class DebugPanel(QWidget):
         self.changed({"state": "stopped"})
 
     def changed(self, message):
-        """Apresenta cópia JSON limitada enviada pelo depurador do projeto."""
+        """Show the bounded JSON copy sent by the project's debugger."""
         state = message.get("state", "stopped")
         paused = state == "paused"
         for action, button in self.buttons.items():
@@ -71,18 +74,24 @@ class DebugPanel(QWidget):
                 else state in {"running", "paused"}
             )
         if state == "stopped":
-            self.status.setText("Depurador parado · F6 para iniciar")
+            self.status.setText(tr("Debugger stopped · F9 to start"))
             return
         if not paused:
-            self.status.setText("Depuração em execução")
+            self.status.setText(tr("Debugging running"))
             return
         self.status.setText(
-            "Pausado · "
+            tr("Paused")
+            + " · "
             + str(message.get("component_label") or message.get("component") or "")
             + " · "
             + str(message.get("flow_label") or message.get("flow") or "")
             + " · "
-            + message.get("reason", "")
+            + {
+                "breakpoint": tr("breakpoint"),
+                "step": tr("step"),
+                "entry": tr("entry"),
+                "pause": tr("pause"),
+            }.get(message.get("reason", ""), message.get("reason", ""))
         )
         self.stack.clear()
         self.values.clear()
@@ -90,21 +99,21 @@ class DebugPanel(QWidget):
             item = QTreeWidgetItem(
                 [
                     frame["name"],
-                    frame.get("source_file", "gerado.py"),
+                    frame.get("source_file", "generated.py"),
                     str(frame.get("source_line") or frame.get("line") or ""),
                 ]
             )
             item.setData(0, Qt.ItemDataRole.UserRole, frame)
             self.stack.addTopLevelItem(item)
         values = [
-            ("Projeto", message.get("variables", {})),
-            ("Janela", message.get("window_variables", {})),
+            (tr("Project"), message.get("variables", {})),
+            (tr("Window"), message.get("window_variables", {})),
         ]
         for index, frame in enumerate(message.get("stack", [])):
             values.append((frame["name"] + f" [{index}]", frame.get("variables", {})))
 
         def add(parent, name, value):
-            """Expande somente dados serializados, sem acessar objetos do processo remoto."""
+            """Expand only serialized data, never touching objects of the remote process."""
             compound = isinstance(value, (dict, list))
             item = QTreeWidgetItem(
                 [str(name), "" if compound else json.dumps(value, ensure_ascii=False)]

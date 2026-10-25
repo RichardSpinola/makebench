@@ -1,4 +1,4 @@
-"""Integração real Qt/WebEngine/Blockly; execute separadamente dos testes sem browser."""
+"""Real Qt/WebEngine/Blockly integration; run it separately from the browser-less tests."""
 
 import json
 import os
@@ -42,7 +42,7 @@ class BlocklyTests(unittest.TestCase):
         cls.window.history.mark_saved()
         cls.window.source.mark_saved()
         cls.window.close()
-        # O perfil Chromium deve sobreviver à página que o utiliza.
+        # The Chromium profile must outlive the page that uses it.
         cls.window.logic.page.deleteLater()
         QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         cls.window.deleteLater()
@@ -72,10 +72,10 @@ class BlocklyTests(unittest.TestCase):
         timer.start(5000)
         loop.exec()
         timer.stop()
-        self.assertTrue(results, "O JavaScript não respondeu.")
+        self.assertTrue(results, "The JavaScript did not respond.")
         return results[0]
 
-    def install_log(self, text="Olá do Blockly"):
+    def install_log(self, text="Hello from Blockly"):
         payload = json.dumps(text)
         self.js(
             """(() => {
@@ -87,7 +87,7 @@ class BlocklyTests(unittest.TestCase):
             + """,'TEXT');text.initSvg();text.render();
           log.getInput('VALUE').connection.connect(text.outputConnection);
           hat.getInput('DO').connection.connect(log.previousConnection);
-          log.setCommentText('Comentário do bloco');
+          log.setCommentText('Block comment');
           const comment=ws.newComment('note_1');
           comment.setText('Nota solta preservada');comment.moveTo(new Blockly.utils.Coordinate(450,80));
           return true;
@@ -99,10 +99,10 @@ class BlocklyTests(unittest.TestCase):
         self.install_log()
         self.assertTrue(self.window.logic.flush())
         saved = self.window.project.workflows[0]
-        self.assertEqual(saved["body"][0]["value"]["value"], "Olá do Blockly")
-        self.assertEqual(saved["body"][0]["comment"], "Comentário do bloco")
+        self.assertEqual(saved["body"][0]["value"]["value"], "Hello from Blockly")
+        self.assertEqual(saved["body"][0]["comment"], "Block comment")
         comments = saved["workspace"].get("workspaceComments")
-        self.assertIsNotNone(comments, "Comentários de workspace precisam de serializador.")
+        self.assertIsNotNone(comments, "Workspace comments need a serializer.")
         self.assertEqual(comments[0]["text"], "Nota solta preservada")
         line = self.window.logic.generated.lines[(saved["id"], "log_1")]
         self.window.logic._select_block(saved["id"], "log_1")
@@ -112,9 +112,9 @@ class BlocklyTests(unittest.TestCase):
 
     def test_02_flush_save_reopen_and_source_is_never_executed(self):
         self.install_log("Salvar imediatamente")
-        # Salvar antes dos 220 ms de debounce também deve capturar os blocos.
+        # Saving before the 220 ms debounce must also capture the blocks.
         self.window.source_editor.setPlainText(
-            "raise RuntimeError('não executar')\ndef minha(ctx, valor):\n    return valor\n"
+            "raise RuntimeError('do not run')\ndef mine(ctx, value):\n    return value\n"
         )
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "project.makebench.json"
@@ -149,7 +149,7 @@ class BlocklyTests(unittest.TestCase):
         QTest.qWait(100)
         self.assertEqual(
             self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),
-            "Olá do Blockly",
+            "Hello from Blockly",
         )
         self.window.redo()
         QTest.qWait(100)
@@ -162,7 +162,7 @@ class BlocklyTests(unittest.TestCase):
         self.js("const b=window.makebench.workspace.newBlock('mb_log'); b.initSvg();b.render();")
         self.window.logic.flush()
         self.assertIsNone(self.window.project.workflows[0]["body"])
-        self.assertIn("blocos soltos", self.window.logic.diagnostics.text())
+        self.assertIn("loose blocks", self.window.logic.diagnostics.text())
         self.assertNotIn("def on_event", self.window.logic.generated.text)
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "draft.makebench.json"
@@ -186,7 +186,7 @@ class BlocklyTests(unittest.TestCase):
         QTest.qWait(100)
         self.assertEqual(
             self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),
-            "Olá do Blockly",
+            "Hello from Blockly",
         )
 
     def test_06_neutral_model_overrides_conflicting_visual_state(self):
@@ -202,13 +202,13 @@ class BlocklyTests(unittest.TestCase):
         QTest.qWait(100)
         self.assertEqual(
             self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),
-            "Olá do Blockly",
+            "Hello from Blockly",
         )
 
     def test_07_source_dirty_cancel_conflict_and_separate_undo(self):
         self.window.history.mark_saved()
         self.window.tabs.setCurrentIndex(2)
-        self.window.source_editor.insertPlainText("# minha função\n")
+        self.window.source_editor.insertPlainText("# my function\n")
         self.assertTrue(self.window.source.dirty)
         self.window.undo()
         self.assertFalse(self.window.source.dirty)
@@ -224,11 +224,11 @@ class BlocklyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "source.makebench.json"
             self.assertTrue(self.window.save_to(path))
-            source_path(path).write_text("# edição externa\n")
+            source_path(path).write_text("# external edit\n")
             with patch.object(self.window, "_show_error") as error:
                 self.assertFalse(self.window.save_to(path))
             error.assert_called_once()
-            self.assertEqual(source_path(path).read_text(), "# edição externa\n")
+            self.assertEqual(source_path(path).read_text(), "# external edit\n")
 
     def test_08_all_operations_roundtrip_and_clean_open(self):
         project = load_project("examples/welcome/project.makebench.json")
@@ -238,7 +238,7 @@ class BlocklyTests(unittest.TestCase):
         QTest.qWait(300)
         self.assertTrue(self.window.logic.flush())
         self.assertFalse(
-            self.window.history.dirty, "Só abrir um fluxo não deve alterar o documento."
+            self.window.history.dirty, "Just opening a flow must not change the document."
         )
         compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
         self.assertEqual(compiled["body"], flow["body"])
@@ -278,18 +278,18 @@ class BlocklyTests(unittest.TestCase):
             return node("literal", value=item)
 
         body = [
-            node("assign", name="contador", value=value(0)),
+            node("assign", name="counter", value=value(0)),
             node(
                 "repeat",
                 count=value(3),
                 body=[
                     node(
                         "assign",
-                        name="contador",
+                        name="counter",
                         value=node(
                             "binary",
                             operator="+",
-                            left=node("variable", name="contador"),
+                            left=node("variable", name="counter"),
                             right=value(1),
                         ),
                     )
@@ -298,7 +298,7 @@ class BlocklyTests(unittest.TestCase):
             node(
                 "set_text",
                 component=self.label.id,
-                value=node("join", left=value("Número: "), right=node("variable", name="contador")),
+                value=node("join", left=value("Number: "), right=node("variable", name="counter")),
             ),
             node("set_enabled", component=self.button.id, value=value(False)),
             node("set_value", component=progress.id, value=value(50)),
@@ -312,7 +312,7 @@ class BlocklyTests(unittest.TestCase):
                     left=node("read", component=checkbox.id, attribute="checked"),
                     right=value(True),
                 ),
-                then=[node("message", value=value("Sim"))],
+                then=[node("message", value=value("Yes"))],
                 **{"else": []},
             ),
             node(
@@ -343,7 +343,7 @@ class BlocklyTests(unittest.TestCase):
         QTest.qWait(100)
         self.assertEqual(
             self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),
-            "Olá do Blockly",
+            "Hello from Blockly",
         )
         QTest.keyClick(
             target,
@@ -415,7 +415,7 @@ class BlocklyTests(unittest.TestCase):
             node(
                 "script",
                 source=value('printf "%s\\n" "$1"'),
-                arguments=node("list", items=[value("Olá com espaços")]),
+                arguments=node("list", items=[value("Hello with spaces")]),
                 admin=True,
             ),
         ]
@@ -493,7 +493,7 @@ class BlocklyTests(unittest.TestCase):
         QTest.qWait(100)
         self.assertEqual(
             self.js("window.makebench.workspace.getBlockById('text_1').getFieldValue('TEXT')"),
-            "Olá do Blockly",
+            "Hello from Blockly",
         )
 
     def test_16_multiline_can_replace_shadow_literal_without_losing_connection(self):
@@ -542,7 +542,7 @@ class BlocklyTests(unittest.TestCase):
                 "id": "scope_assign",
                 "op": "assign",
                 "scope": "window",
-                "name": "contador",
+                "name": "counter",
                 "value": {"id": "scope_value", "op": "literal", "value": 3},
             },
             {
@@ -552,7 +552,7 @@ class BlocklyTests(unittest.TestCase):
                     "id": "scope_read",
                     "op": "variable",
                     "scope": "window",
-                    "name": "contador",
+                    "name": "counter",
                 },
             },
             {"id": "go_state", "op": "go_state", "state": state["id"]},

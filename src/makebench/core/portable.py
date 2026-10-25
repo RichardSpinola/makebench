@@ -1,4 +1,4 @@
-"""SDK e dependências portáteis; preparação online explícita e montagem offline isolada."""
+"""Portable SDK and dependencies; explicit online preparation and isolated offline assembly."""
 
 from __future__ import annotations
 import ast
@@ -22,9 +22,10 @@ from .build_environment import (
 )
 from .project import ProjectError
 from makebench.terminal.environment import external_environment
+from makebench.i18n import tr
 
 IMAGE = "localhost/makebench-portable:ubuntu24.04-v1"
-# O digest efetivo e a lista apt são registrados na imagem e no recibo da preparação.
+# The effective digest and apt list are recorded in the image and the preparation receipt.
 CONTAINERFILE = """FROM docker.io/library/ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends python3.12 python3.12-venv python3-pip python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin librsvg2-common libxshmfence1 adwaita-icon-theme hicolor-icon-theme fonts-dejavu-core ca-certificates dpkg-dev rpm file binutils squashfs-tools libegl1 libgl1 libglib2.0-0t64 libdbus-1-3 libnss3 libnspr4 libx11-6 libx11-xcb1 libxext6 libxfixes3 libxi6 libxrender1 libxcb1 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb-xkb1 libxkbcommon0 libxkbcommon-x11-0 libfontconfig1 libfreetype6 libasound2t64 libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64 libcups2t64 libdrm2 libgbm1 libxcomposite1 libxdamage1 libxrandr2 libxtst6 && dpkg-query -W > /opt/makebench-sdk-packages.txt && rm -rf /var/lib/apt/lists/*
@@ -37,8 +38,14 @@ LABEL io.makebench.portable=1
 """
 
 
+def sha256_file(path):
+    """SHA-256 of a file read in chunks, closing it even on error."""
+    with Path(path).open("rb") as handle:
+        return hashlib.file_digest(handle, "sha256").hexdigest()
+
+
 def requirements(project, editor=False):
-    """Resolve somente especificações PyPI declaradas; URLs e opções de pip são recusadas."""
+    """Resolve only declared PyPI specifications; URLs and pip options are rejected."""
     from .build_environment import flatpak_requirements
 
     declared = flatpak_requirements(project)
@@ -49,7 +56,7 @@ def requirements(project, editor=False):
 
 
 def wheel_root(project, editor=False):
-    """Cache identifica imagem, Python3.12, backend e requisitos completos."""
+    """The cache identifies image, Python 3.12, backend and complete requirements."""
     key = hashlib.sha256(
         json.dumps(
             [IMAGE, project.application.get("backend", "qt"), editor, requirements(project, editor)]
@@ -59,7 +66,7 @@ def wheel_root(project, editor=False):
 
 
 def ready(project, editor=False):
-    """Consulta recibos sem iniciar processos ao abrir a janela Exportar."""
+    """Read receipts without starting processes when the Export window opens."""
     try:
         root = wheel_root(project, editor)
         receipt = json.loads((root / "receipt.json").read_text())
@@ -75,17 +82,17 @@ def ready(project, editor=False):
 
 
 def syntax_compatibility(source, minor=12):
-    """Verifica gramática do destino sem importar ou executar funções do projeto."""
+    """Check the target grammar without importing or running project functions."""
     from .compatibility import syntax_error
 
     return syntax_error(source, minor)
 
 
 def command(arguments, root, network=False, image=IMAGE):
-    """Monta apenas staging; sem home, sem projeto original e sem privilégios."""
+    """Mount only the staging folder; no home, no original project and no privileges."""
     podman = shutil.which("podman")
     if not podman:
-        raise ProjectError("Podman é necessário para o ambiente isolado de distribuição.")
+        raise ProjectError(tr("Podman is required for the isolated distribution environment."))
     root = Path(root).resolve()
     (root / ".tmp").mkdir(exist_ok=True)
     translated = [str(a).replace(str(root), "/work") for a in arguments]
@@ -119,16 +126,18 @@ def command(arguments, root, network=False, image=IMAGE):
 
 
 def prepare(project, progress=None, cancelled=None, editor=False):
-    """Baixa SDK/rodas fora do host e sem montar nenhum arquivo de projeto."""
+    """Download SDK/wheels outside the host, without mounting any project file."""
     if platform.machine() not in {"x86_64", "amd64"}:
-        raise ProjectError("Esta entrega valida construção x86_64.")
+        raise ProjectError(tr("This release validates x86_64 builds."))
     podman = shutil.which("podman")
     if not podman:
-        raise ProjectError("Podman é necessário. Nenhum pacote de build será instalado no sistema.")
+        raise ProjectError(
+            tr("Podman is required. No build package will be installed on the system.")
+        )
     directory = cache_root()
     directory.mkdir(parents=True, exist_ok=True)
     if progress:
-        progress(3, "Preparar runtime portátil Ubuntu 24.04 / Python 3.12")
+        progress(3, tr("Prepare the portable Ubuntu 24.04 / Python 3.12 runtime"))
     existing = subprocess.run(
         [
             podman,
@@ -197,13 +206,12 @@ def prepare(project, progress=None, cancelled=None, editor=False):
     if ready(project, editor):
         receipt = json.loads((root / "receipt.json").read_text())
         if all(
-            (root / name).is_file()
-            and hashlib.file_digest((root / name).open("rb"), "sha256").hexdigest() == digest
+            (root / name).is_file() and sha256_file(root / name) == digest
             for name, digest in receipt["files"].items()
         ):
             if progress:
-                progress(100, "Runtime e dependências portáteis prontos.")
-            return {"status": "Runtime e dependências portáteis prontos.", "image": IMAGE}
+                progress(100, tr("Portable runtime and dependencies ready."))
+            return {"status": tr("Portable runtime and dependencies ready."), "image": IMAGE}
     with tempfile.TemporaryDirectory(prefix="portable-wheels-", dir=root.parent) as temporary:
         target = Path(temporary)
         run_tool(
@@ -229,12 +237,9 @@ def prepare(project, progress=None, cancelled=None, editor=False):
             progress,
             cancelled,
         )
-        files = {
-            p.name: hashlib.file_digest(p.open("rb"), "sha256").hexdigest()
-            for p in target.glob("*.whl")
-        }
+        files = {p.name: sha256_file(p) for p in target.glob("*.whl")}
         if not files:
-            raise ProjectError("Nenhuma roda Python disponível para o destino.")
+            raise ProjectError(tr("No Python wheel is available for the target."))
         (target / "receipt.json").write_text(
             json.dumps({"requirements": requested, "files": files, "image_id": image_id}, indent=2)
         )
@@ -242,14 +247,14 @@ def prepare(project, progress=None, cancelled=None, editor=False):
             shutil.rmtree(root)
         target.rename(root)
     if progress:
-        progress(100, "Runtime e dependências portáteis prontos.")
-    return {"status": "Runtime e dependências portáteis prontos.", "image": IMAGE}
+        progress(100, tr("Portable runtime and dependencies ready."))
+    return {"status": tr("Portable runtime and dependencies ready."), "image": IMAGE}
 
 
 def assemble(project, appdir, progress=None, cancelled=None, editor=False):
-    """Monta runtime completo offline; código de projeto é apenas compilado, nunca importado."""
+    """Assemble the complete runtime offline; project code is only compiled, never imported."""
     if not ready(project, editor):
-        raise ProjectError("Prepare o runtime portátil e as dependências antes de construir.")
+        raise ProjectError(tr("Prepare the portable runtime and dependencies before building."))
     appdir = Path(appdir)
     stage = appdir.parent
     wheels = stage / "wheels"
@@ -258,15 +263,15 @@ def assemble(project, appdir, progress=None, cancelled=None, editor=False):
     receipt = json.loads((root / "receipt.json").read_text())
     for name, digest in receipt["files"].items():
         if Path(name).name != name or not name.endswith(".whl"):
-            raise ProjectError("Cache de rodas inválido.")
-        # Confere a cópia usada no staging, não o cache que pode mudar depois.
+            raise ProjectError(tr("Invalid wheel cache."))
+        # Check the copy used in staging, not the cache, which could change later.
         target = wheels / name
         shutil.copy2(root / name, target)
         with target.open("rb") as handle:
             matches = hashlib.file_digest(handle, "sha256").hexdigest() == digest
         if not matches:
             target.unlink(missing_ok=True)
-            raise ProjectError("Dependência alterada no cache; prepare novamente.")
+            raise ProjectError(tr("Dependency changed in the cache; prepare again."))
     helper = stage / "makebench-payload.py"
     shutil.copy2(Path(__file__).parents[1] / "portable/payload.py", helper)
     arguments = ["python3.12", str(helper), str(appdir), project.application.get("backend", "qt")]
@@ -295,7 +300,7 @@ exec "$HERE/usr/bin/python3.12" "$HERE/bootstrap.py" "$@"
 def build_native(
     project, source, read_asset, destination, format, progress=None, cancelled=None, editor=False
 ):
-    """Publica DEB/RPM/AppImage com runtime incluído, sem confundir build com instalação."""
+    """Publish DEB/RPM/AppImage with the runtime included, never confusing build with installation."""
     from .packages import write_recipe
     from .exporter import BuildCancelled
 
@@ -304,21 +309,21 @@ def build_native(
         raise ProjectError(error)
     if not ready(project, editor):
         raise ProjectError(
-            "Clique em Preparar ferramentas para obter o runtime portátil deste aplicativo."
+            tr("Click Prepare tools to get the portable runtime for this application.")
         )
     destination = Path(destination).resolve()
     if destination.exists():
-        raise ProjectError("O destino já existe; escolha outro nome.")
+        raise ProjectError(tr("The destination already exists; choose another name."))
 
     def step(number, text):
-        """Cancelamento é conferido antes de publicar o artefato completo."""
+        """Cancellation is checked before publishing the complete artifact."""
         if cancelled and cancelled():
-            raise BuildCancelled("Construção cancelada.")
+            raise BuildCancelled(tr("Build cancelled."))
         if progress:
             progress(number, text)
 
     def run(arguments, root):
-        """Todas as ferramentas recebem apenas o staging isolado e sem rede."""
+        """Every tool receives only the isolated staging folder, with no network."""
         return run_tool(command(arguments, root), root, progress, cancelled)
 
     with tempfile.TemporaryDirectory(
@@ -351,7 +356,7 @@ def build_native(
             appdir = root / "AppDir"
             if not appdir.exists():
                 shutil.copytree(root / "app", appdir / "app")
-        step(35, "Incluir Python 3.12, backend e dependências verificadas")
+        step(35, tr("Include Python 3.12, the backend and verified dependencies"))
         assemble(project, appdir, progress, cancelled, editor)
         identifier = project.application["id"]
         if format == "appimage":
@@ -360,7 +365,7 @@ def build_native(
             with result.open("rb") as binary:
                 signature = binary.read(4)
             if signature != b"\x7fELF":
-                raise ProjectError("O AppImage não é um executável ELF válido.")
+                raise ProjectError(tr("The AppImage is not a valid ELF executable."))
             result.chmod(0o755)
         else:
             location = root / "payload/opt" / identifier
@@ -406,21 +411,23 @@ def build_native(
                 )
                 results = list((root / "RPMS").rglob("*.rpm"))
                 if len(results) != 1:
-                    raise ProjectError("A construção não gerou exatamente um RPM.")
+                    raise ProjectError(tr("The build did not produce exactly one RPM."))
                 result = results[0]
-        step(95, "Finalizar pacote com runtime incluído")
+        step(95, tr("Finish package with the runtime included"))
         os.link(result, destination)
     return {
         "path": str(destination),
         "size": destination.stat().st_size,
-        "sha256": hashlib.file_digest(destination.open("rb"), "sha256").hexdigest(),
+        "sha256": sha256_file(destination),
         "format": format,
-        "status": "Construído com runtime incluído (instalação no destino ainda não validada)",
+        "status": tr(
+            "Built with the runtime included (installation on the target not validated yet)"
+        ),
     }
 
 
 def editor_project():
-    """Metadados internos do editor; não define a licença que pertence ao proprietário."""
+    """Internal editor metadata; does not set the license, which belongs to the owner."""
     from .project import Project
 
     project = Project.empty("Makebench")
@@ -435,7 +442,7 @@ def editor_project():
 
 
 def build_editor_appimage(destination, progress=None, cancelled=None):
-    """Constrói o próprio editor com QtWebEngine e GTK incluídos, sem publicar release."""
+    """Build the editor itself with QtWebEngine and GTK included, without publishing a release."""
     project = editor_project()
     icon = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><rect x="16" y="16" width="224" height="224" rx="20" fill="#31363b"/><path d="M56 188V68h32l40 64 40-64h32v120h-32v-65l-40 60-40-60v65z" fill="#3daee9"/></svg>'
     return build_native(

@@ -1,4 +1,4 @@
-"""Editor nativo de grafos livres, com portas de execução e valores distintas."""
+"""Native free-graph editor, with separate execution and value ports."""
 
 from __future__ import annotations
 from copy import deepcopy
@@ -41,24 +41,25 @@ from makebench.core.graph import (
     validate_graph,
 )
 from makebench.core.project import ProjectError, new_id
+from makebench.i18n import tr
 
 
 PORT_LABELS = {
-    "value": "Valor",
-    "count": "Quantidade",
-    "condition": "Condição",
-    "left": "Esquerda",
-    "right": "Direita",
-    "program": "Programa",
-    "arguments": "Argumentos",
-    "source": "Script",
-    "prompt": "Pergunta",
-    "options": "Opções",
+    "value": tr("Value"),
+    "count": tr("Count"),
+    "condition": tr("Condition"),
+    "left": tr("Left"),
+    "right": tr("Right"),
+    "program": tr("Program"),
+    "arguments": tr("Arguments"),
+    "source": tr("Script"),
+    "prompt": tr("Question"),
+    "options": tr("Options"),
 }
 
 
 def wire_path(first, last):
-    """Curva com controles horizontais; permite retornos sem ordenar o grafo por posição."""
+    """Curve with horizontal controls; allows loops without ordering the graph by position."""
     distance = max(70, abs(last.x() - first.x()) * 0.5)
     path = QPainterPath(first)
     path.cubicTo(first + QPointF(distance, 0), last - QPointF(distance, 0), last)
@@ -66,10 +67,10 @@ def wire_path(first, last):
 
 
 class Port(QGraphicsEllipseItem):
-    """Porta arrastável; tipo e direção são contratos, não apenas decoração."""
+    """Draggable port; type and direction are contracts, not just decoration."""
 
     def __init__(self, card, name, direction, kind, y):
-        """Associa um conector à identidade estável do nó e da entrada/saída."""
+        """Bind a connector to the stable identity of the node and input/output."""
         super().__init__(-6, -6, 12, 12, card)
         self.card = card
         self.name = name
@@ -81,14 +82,15 @@ class Port(QGraphicsEllipseItem):
         self.setBrush(palette.highlight() if kind == "value" else palette.windowText())
         self.setPen(QPen(palette.base(), 1))
         self.setToolTip(
-            ("Valor" if kind == "value" else "Execução")
+            (tr("Value") if kind == "value" else tr("Execution"))
             + " · "
             + PORT_LABELS.get(name, name)
-            + " · arraste para conectar; botão direito desconecta"
+            + " · "
+            + tr("drag to connect; right-click disconnects")
         )
 
     def mousePressEvent(self, event):
-        """Inicia fio temporário sem alterar o documento durante o gesto."""
+        """Start a temporary wire without changing the document during the gesture."""
         if event.button() == Qt.MouseButton.LeftButton:
             self.card.panel.view.begin_wire(self)
             event.accept()
@@ -96,34 +98,34 @@ class Port(QGraphicsEllipseItem):
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        """Atualiza somente a curva temporária durante o arraste."""
+        """Update only the temporary curve while dragging."""
         self.card.panel.view.move_wire(event.scenePos())
         event.accept()
 
     def mouseReleaseEvent(self, event):
-        """Confirma uma conexão válida ao soltar sobre uma porta compatível."""
+        """Confirm a valid connection when dropped on a compatible port."""
         self.card.panel.view.finish_wire(event.scenePos())
         event.accept()
 
     def contextMenuEvent(self, event):
-        """Desconecta sem apagar o nó; desfazer recupera fios e valores anteriores."""
+        """Disconnect without deleting the node; undo restores previous wires and values."""
         menu = QMenu()
-        menu.addAction("Desconectar", lambda: self.card.panel.disconnect(self))
+        menu.addAction(tr("Disconnect"), lambda: self.card.panel.disconnect(self))
         menu.exec(event.screenPos())
         event.accept()
 
 
 class GraphWire(QGraphicsPathItem):
-    """Fio com área de toque maior que o traço, sem caixa de seleção sobre o campo."""
+    """Wire with a hit area larger than the stroke, with no selection box over the field."""
 
     def shape(self):
-        """Facilita selecionar curvas finas mesmo com zoom reduzido."""
+        """Make thin curves easy to select even at low zoom."""
         stroker = QPainterPathStroker()
         stroker.setWidth(12)
         return stroker.createStroke(self.path())
 
     def paint(self, painter, option, widget=None):
-        """Destaca a própria curva quando selecionada."""
+        """Highlight the curve itself when selected."""
         pen = QPen(self.pen())
         if self.isSelected():
             pen = QPen(QApplication.palette().highlight(), 3)
@@ -133,12 +135,12 @@ class GraphWire(QGraphicsPathItem):
 
 
 class NodeCard(QGraphicsObject):
-    """Cartão nativo com portas nomeadas, seleção múltipla e marca de execução."""
+    """Native card with named ports, multi-selection and an execution mark."""
 
     width = 250
 
     def __init__(self, panel, node):
-        """Constrói a representação de um nó; propriedades continuam no documento."""
+        """Build a node's representation; properties stay in the document."""
         super().__init__()
         self.panel = panel
         self.node = node
@@ -154,7 +156,7 @@ class NodeCard(QGraphicsObject):
         self.setZValue(1)
         entries = []
         if node["op"] not in VALUE_OPS and node["op"] != "event":
-            entries.append(("exec", "in", "exec", "Entrada"))
+            entries.append(("exec", "in", "exec", tr("Input")))
         for name in VALUE_INPUTS[node["op"]]:
             entries.append((name, "in", "value", PORT_LABELS.get(name, name)))
         outputs = [
@@ -163,17 +165,17 @@ class NodeCard(QGraphicsObject):
                 "out",
                 "exec",
                 {
-                    "true": "Sim",
-                    "false": "Não",
-                    "body": "Repetir",
-                    "done": "Concluir",
-                    "next": "Próximo",
+                    "true": tr("Yes"),
+                    "false": tr("No"),
+                    "body": tr("Repeat"),
+                    "done": tr("Finish"),
+                    "next": tr("Next"),
                 }.get(name, name),
             )
             for name in execution_outputs(node)
         ]
         if output_type(node) is not None:
-            outputs.append(("value", "out", "value", "Valor"))
+            outputs.append(("value", "out", "value", tr("Value")))
         self.height = max(112, 66 + max(len(entries), len(outputs)) * 24)
         self.title = self.label(LABELS[node["op"]], 10, 8)
         parameters = node.get("parameters", {})
@@ -186,7 +188,7 @@ class NodeCard(QGraphicsObject):
         if "window" in parameters:
             target = panel.project.find(parameters["window"])
             description = (
-                target.properties.get("title", "Janela") if target else parameters["window"]
+                target.properties.get("title", tr("Window")) if target else parameters["window"]
             )
         if "component" in parameters:
             target = panel.project.find(parameters["component"])
@@ -210,11 +212,11 @@ class NodeCard(QGraphicsObject):
                 if direction == "out":
                     text.setX(self.width - text.boundingRect().width() - 12)
         self.setToolTip(
-            node.get("comment") or "Duplo clique configura · arraste conectores para criar fios"
+            node.get("comment") or tr("Double-click configures · drag connectors to create wires")
         )
 
     def label(self, text, x, y, muted=False):
-        """Texto com a paleta do desktop, sem tema próprio sobreposto ao Qt."""
+        """Text in the desktop palette, with no theme of our own layered over Qt."""
         item = QGraphicsSimpleTextItem(text, self)
         palette = QApplication.palette()
         item.setBrush(palette.placeholderText() if muted else palette.text())
@@ -222,11 +224,11 @@ class NodeCard(QGraphicsObject):
         return item
 
     def boundingRect(self):
-        """Inclui borda e conectores na área repintada."""
+        """Include the border and connectors in the repainted area."""
         return QRectF(-7, -2, self.width + 14, self.height + 4)
 
     def paint(self, painter, option, widget=None):
-        """Distingue seleção, ponto de parada e nó ativo com indicações pequenas."""
+        """Tell selection, breakpoint and active node apart with small marks."""
         palette = QApplication.palette()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(palette.button())
@@ -245,43 +247,43 @@ class NodeCard(QGraphicsObject):
             painter.drawEllipse(self.width - 17, 10, 8, 8)
 
     def itemChange(self, change, value):
-        """Fios acompanham o cartão sem confirmar um histórico a cada pixel."""
+        """Wires follow the card without committing history on every pixel."""
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self.scene():
             self.panel.update_wires()
         return super().itemChange(change, value)
 
     def mouseReleaseEvent(self, event):
-        """Um arraste de seleção múltipla vira uma única operação de desfazer."""
+        """A multi-selection drag becomes a single undo operation."""
         super().mouseReleaseEvent(event)
         self.panel.schedule_layout()
 
     def mouseDoubleClickEvent(self, event):
-        """Abre configuração sem executar o conteúdo do nó."""
+        """Open configuration without running the node's content."""
         QTimer.singleShot(0, lambda: self.panel.configure(self.node["id"]))
         event.accept()
 
     def contextMenuEvent(self, event):
-        """Ações locais preservam a seleção e a origem de depuração por ID."""
+        """Local actions keep the selection and the debug origin by ID."""
         identifier = self.node["id"]
         menu = QMenu()
         menu.addAction(
-            "Configurar…", lambda: QTimer.singleShot(0, lambda: self.panel.configure(identifier))
+            tr("Configure…"), lambda: QTimer.singleShot(0, lambda: self.panel.configure(identifier))
         )
         menu.addAction(
-            "Ponto de parada",
+            tr("Breakpoint"),
             lambda: self.panel.breakpoint_requested.emit(self.panel.flow["id"], identifier),
         )
         if self.node["op"] != "event":
-            menu.addAction("Excluir nó", lambda: self.panel.delete_ids({identifier}))
+            menu.addAction(tr("Delete node"), lambda: self.panel.delete_ids({identifier}))
         menu.exec(event.screenPos())
         event.accept()
 
 
 class GraphComment(QGraphicsTextItem):
-    """Anotação móvel e editável sem participar do fluxo executável."""
+    """Movable, editable note that never takes part in the runnable flow."""
 
     def __init__(self, panel, index, comment):
-        """Mantém índice da anotação para confirmar texto e posição no documento."""
+        """Keep the note's index to commit its text and position to the document."""
         super().__init__(comment["text"])
         self.panel = panel
         self.index = index
@@ -295,16 +297,16 @@ class GraphComment(QGraphicsTextItem):
         self.setData(1, index)
 
     def mouseDoubleClickEvent(self, event):
-        """Edita comentário completo, preservando quebras de linha."""
+        """Edit the full comment, keeping line breaks."""
 
         def edit():
-            """Abre diálogo fora do callback do item que será reconstruído."""
+            """Open the dialog outside the callback of the item that will be rebuilt."""
             if not self.panel.flow or self.index >= len(self.panel.flow.get("graph_comments", [])):
                 return
             text, ok = QInputDialog.getMultiLineText(
                 self.panel,
-                "Comentário",
-                "Texto",
+                tr("Comment"),
+                tr("Text"),
                 self.panel.flow["graph_comments"][self.index]["text"],
             )
             if ok:
@@ -315,10 +317,10 @@ class GraphComment(QGraphicsTextItem):
 
 
 class GraphView(QGraphicsView):
-    """Área livre com fios, zoom, enquadramento, seleção e menu de criação."""
+    """Free area with wires, zoom, framing, selection and a creation menu."""
 
     def __init__(self, panel):
-        """Mantém apenas geometria visual; o documento é confirmado pelo painel."""
+        """Keep only visual geometry; the panel commits the document."""
         super().__init__(QGraphicsScene(panel))
         self.panel = panel
         self.wire = None
@@ -327,10 +329,10 @@ class GraphView(QGraphicsView):
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setBackgroundBrush(QApplication.palette().base())
-        self.setAccessibleName("Grafo de comportamento")
+        self.setAccessibleName(tr("Behavior graph"))
 
     def begin_wire(self, port):
-        """Mostra ligação temporária e permite iniciar por qualquer extremidade."""
+        """Show a temporary link and allow starting from either end."""
         self.source = port
         self.wire = QGraphicsPathItem()
         self.wire.setPen(QPen(QApplication.palette().highlight(), 2))
@@ -338,12 +340,12 @@ class GraphView(QGraphicsView):
         self.scene().addItem(self.wire)
 
     def move_wire(self, point):
-        """Não altera nem valida o projeto enquanto o ponteiro se move."""
+        """Never change or validate the project while the pointer moves."""
         if self.wire:
             self.wire.setPath(wire_path(self.source.scenePos(), point))
 
     def finish_wire(self, point):
-        """Confirma somente pares entrada/saída de mesmo tipo de porta."""
+        """Confirm only input/output pairs of the same port type."""
         if self.wire:
             self.scene().removeItem(self.wire)
         self.wire = None
@@ -354,20 +356,20 @@ class GraphView(QGraphicsView):
             self.panel.connect_ports(source, target)
 
     def contextMenuEvent(self, event):
-        """Oferece criação e comentários no ponto clicado do campo vazio."""
+        """Offer creation and comments at the clicked point of the empty field."""
         item = self.itemAt(event.pos())
         if item is not None:
             super().contextMenuEvent(event)
             return
         menu = QMenu(self)
         point = self.mapToScene(event.pos())
-        menu.addAction("Adicionar nó…", lambda: self.panel.add_dialog(point))
-        menu.addAction("Comentário…", lambda: self.panel.add_comment(point))
-        menu.addAction("Enquadrar", self.panel.fit)
+        menu.addAction(tr("Add node…"), lambda: self.panel.add_dialog(point))
+        menu.addAction(tr("Comment…"), lambda: self.panel.add_comment(point))
+        menu.addAction(tr("Fit"), self.panel.fit)
         menu.exec(event.globalPos())
 
     def wheelEvent(self, event):
-        """Amplia sob o ponteiro com limites, sem mover posições do documento."""
+        """Zoom under the pointer within limits, without moving document positions."""
         scale = self.transform().m11()
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
         if 0.15 <= scale * factor <= 3:
@@ -375,7 +377,7 @@ class GraphView(QGraphicsView):
         event.accept()
 
     def mousePressEvent(self, event):
-        """Botão central desloca o campo sem arrastar os nós selecionados."""
+        """The middle button pans the field without dragging the selected nodes."""
         if event.button() == Qt.MouseButton.MiddleButton:
             self._pan = event.position()
             event.accept()
@@ -383,7 +385,7 @@ class GraphView(QGraphicsView):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        """Pan usa barras de rolagem; conexões permanecem em coordenadas da cena."""
+        """Panning uses the scroll bars; connections stay in scene coordinates."""
         if event.buttons() & Qt.MouseButton.MiddleButton and hasattr(self, "_pan"):
             delta = event.position() - self._pan
             self._pan = event.position()
@@ -394,12 +396,12 @@ class GraphView(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """Confirma também a posição de comentários livres."""
+        """Also confirm the position of free comments."""
         super().mouseReleaseEvent(event)
         self.panel.schedule_layout()
 
     def keyPressEvent(self, event):
-        """Excluir opera sobre seleção; buscar abre o catálogo sem executar ações."""
+        """Delete acts on the selection; search opens the catalog without running actions."""
         if event.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
             self.panel.delete_selected()
             event.accept()
@@ -416,14 +418,14 @@ class GraphView(QGraphicsView):
 
 
 class GraphPanel(QWidget):
-    """Representação transitória de um comportamento cujo modelo pertence ao projeto."""
+    """Transient representation of a behavior whose model belongs to the project."""
 
     changed = Signal(dict)
     breakpoint_requested = Signal(str, str)
     error = Signal(str)
 
     def __init__(self, get_source, parent=None):
-        """Cria ferramentas locais; callbacks enviam dados para validação e histórico da IDE."""
+        """Create local tools; callbacks send data to the IDE's validation and history."""
         super().__init__(parent)
         self.get_source = get_source
         self.project = None
@@ -436,23 +438,25 @@ class GraphPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         row = QHBoxLayout()
-        button = QPushButton("+ Nó…")
+        button = QPushButton(tr("+ Node…"))
         button.clicked.connect(lambda: self.add_dialog())
         row.addWidget(button)
-        comment = QPushButton("Comentário")
+        comment = QPushButton(tr("Comment"))
         comment.clicked.connect(lambda: self.add_comment())
         row.addWidget(comment)
-        for label, callback in [
-            ("−", lambda: self.view.scale(0.8, 0.8)),
-            ("+", lambda: self.view.scale(1.25, 1.25)),
-            ("Enquadrar", self.fit),
+        for label, accessible, callback in [
+            ("−", tr("Zoom out"), lambda: self.view.scale(0.8, 0.8)),
+            ("+", tr("Zoom in"), lambda: self.view.scale(1.25, 1.25)),
+            (tr("Fit"), tr("Fit"), self.fit),
         ]:
             button = QPushButton(label)
+            button.setAccessibleName(accessible)
+            button.setToolTip(accessible)
             button.clicked.connect(callback)
             row.addWidget(button)
         row.addStretch()
         self.hint = QLabel(
-            "Arraste conectores · duplo clique configura · botão central move o campo"
+            tr("Drag connectors · double-click configures · middle button moves the field")
         )
         row.addWidget(self.hint)
         layout.addLayout(row)
@@ -467,7 +471,7 @@ class GraphPanel(QWidget):
         self.layout_timer.timeout.connect(self.commit_layout)
 
     def sync(self, project, flow):
-        """Reconcilia apenas quando o grafo muda, preservando zoom e seleção ao atualizar código."""
+        """Reconcile only when the graph changes, keeping zoom and selection when code refreshes."""
         self.project = project
         self.flow = deepcopy(flow) if flow else None
         signature = (
@@ -507,7 +511,7 @@ class GraphPanel(QWidget):
         self.view.scene().setSceneRect(bounds.adjusted(-600, -400, 600, 400))
 
     def commit(self, mutate):
-        """Valida uma cópia antes de entregar uma transação, sem salvar documento inválido."""
+        """Validate a copy before handing over a transaction, never saving an invalid document."""
         if not self.flow:
             return
         candidate = deepcopy(self.flow)
@@ -529,7 +533,7 @@ class GraphPanel(QWidget):
         self.commit_timer.start(0)
 
     def flush(self):
-        """Confirma gestos pendentes antes de salvar/trocar/desfazer, sem debounce perdido."""
+        """Confirm pending gestures before saving/switching/undoing, with no lost debounce."""
         self.commit_timer.stop()
         payload = self.pending_payload
         self.pending_payload = None
@@ -538,7 +542,7 @@ class GraphPanel(QWidget):
         return True
 
     def rebuild_wires(self):
-        """Desenha portas reais e associa cada fio à ligação que será removida."""
+        """Draw real ports and bind each wire to the link that will be removed."""
         for item in self.wires:
             self.view.scene().removeItem(item)
         self.wires = []
@@ -558,7 +562,7 @@ class GraphPanel(QWidget):
                     )
 
     def add_wire(self, source, target, key):
-        """Armazena extremidades por objeto visual; dados da ligação continuam no modelo."""
+        """Store ends by visual object; link data stays in the model."""
         wire = GraphWire()
         wire.source = source
         wire.target = target
@@ -579,21 +583,21 @@ class GraphPanel(QWidget):
         wire.setPath(wire_path(source.scenePos(), target.scenePos()))
 
     def update_wires(self):
-        """Reposiciona curvas durante o gesto sem tocar no histórico do projeto."""
+        """Reposition curves during the gesture without touching the project history."""
         for wire in self.wires:
             wire.setPath(wire_path(wire.source.scenePos(), wire.target.scenePos()))
 
     def connect_ports(self, first, last):
-        """Rejeita tipos e ciclos de valor; aceita retornos entre portas de execução."""
+        """Reject types and value cycles; accept loops between execution ports."""
         if first.direction == "in":
             first, last = last, first
         if first.direction != "out" or last.direction != "in" or first.kind != last.kind:
-            self.error.emit("Conecte uma saída a uma entrada do mesmo tipo.")
+            self.error.emit(tr("Connect an output to an input of the same type."))
             return
         source, target, port = first.card.node["id"], last.card.node["id"], last.name
 
         def change(flow):
-            """Substitui uma ligação de entrada ou saída sem produzir duplicatas."""
+            """Replace an input or output link without producing duplicates."""
             if first.kind == "exec":
                 flow["graph"]["edges"] = [
                     e
@@ -610,11 +614,11 @@ class GraphPanel(QWidget):
         self.commit(change)
 
     def disconnect(self, port):
-        """Desliga portas; entradas de valor recuperam um literal editável e válido."""
+        """Disconnect ports; value inputs get back an editable, valid literal."""
         identifier = port.card.node["id"]
 
         def change(flow):
-            """Mantém o documento válido após remover fios de entrada ou saída."""
+            """Keep the document valid after removing input or output wires."""
             if port.kind == "exec":
                 flow["graph"]["edges"] = [
                     e
@@ -643,23 +647,23 @@ class GraphPanel(QWidget):
         self.commit(change)
 
     def default_input(self, kind):
-        """Literal compatível ao remover uma ligação; desfazer recupera o valor anterior."""
+        """A compatible literal when removing a link; undo restores the previous value."""
         return False if kind == "bool" else 1 if kind == "number" else [] if kind == "list" else ""
 
     def add_dialog(self, point=None):
-        """Pesquisa todos os tipos e cria o nó no local solicitado."""
+        """Search every type and create the node at the requested location."""
         if not self.flow:
             return
         names = sorted((label, op) for op, label in LABELS.items() if op != "event")
         choice, ok = QInputDialog.getItem(
-            self, "Adicionar nó", "Pesquisar tipo", [label for label, _ in names], 0, True
+            self, tr("Add node"), tr("Search type"), [label for label, _ in names], 0, True
         )
         if not ok:
             return
         matches = [(label, op) for label, op in names if choice.casefold() in label.casefold()]
         exact = next((op for label, op in names if label == choice), None)
         if exact is None and len(matches) != 1:
-            self.error.emit("Escolha um tipo da lista ou refine a pesquisa.")
+            self.error.emit(tr("Choose a type from the list or refine the search."))
             return
         try:
             node = default_node(exact or matches[0][1], self.project, self.flow)
@@ -677,8 +681,8 @@ class GraphPanel(QWidget):
         )
 
     def add_comment(self, point=None):
-        """Adiciona uma anotação livre que nunca participa do programa compilado."""
-        text, ok = QInputDialog.getMultiLineText(self, "Comentário", "Texto")
+        """Add a free note that never takes part in the compiled program."""
+        text, ok = QInputDialog.getMultiLineText(self, tr("Comment"), tr("Text"))
         if ok and text.strip():
             position = point or self.view.mapToScene(self.view.viewport().rect().center())
             self.commit(
@@ -692,12 +696,12 @@ class GraphPanel(QWidget):
             )
 
     def schedule_layout(self):
-        """Adia confirmação até o gesto terminar, evitando apagar itens em seu callback."""
+        """Defer confirmation until the gesture ends, avoiding deleting items in their callback."""
         if not self._loading:
             self.layout_timer.start(0)
 
     def commit_layout(self):
-        """Agrupa posições de cartões e comentários em uma operação de histórico."""
+        """Group card and comment positions into one history operation."""
         if not self.flow:
             return
         layout = {
@@ -714,10 +718,10 @@ class GraphPanel(QWidget):
         self.commit(lambda flow: flow.update(graph_layout=layout, graph_comments=comments))
 
     def delete_ids(self, identifiers):
-        """Remove nós e fios incidentes, preservando o nó do evento e valores restantes."""
+        """Remove nodes and incident wires, keeping the event node and remaining values."""
 
         def change(flow):
-            """Substitui referências removidas por literais compatíveis, sem órfãos."""
+            """Replace removed references with compatible literals, leaving no orphans."""
             identifiers.discard(flow["graph"]["entry"])
             flow["graph"]["nodes"] = [
                 n for n in flow["graph"]["nodes"] if n["id"] not in identifiers
@@ -739,7 +743,7 @@ class GraphPanel(QWidget):
         self.commit(change)
 
     def delete_selected(self):
-        """Excluir trata seleção múltipla de nós, fios e comentários sem perder os demais."""
+        """Delete handles a multi-selection of nodes, wires and comments without losing the rest."""
         selected = self.view.scene().selectedItems()
         identifiers = {item.data(1) for item in selected if item.data(0) == "node"}
         if identifiers:
@@ -749,7 +753,7 @@ class GraphPanel(QWidget):
         comments = {item.data(1) for item in selected if item.data(0) == "comment"}
 
         def change(flow):
-            """Remove somente as ligações ou anotações selecionadas."""
+            """Remove only the selected links or notes."""
             flow["graph_comments"] = [
                 c for index, c in enumerate(flow.get("graph_comments", [])) if index not in comments
             ]
@@ -765,7 +769,7 @@ class GraphPanel(QWidget):
         self.commit(change)
 
     def configure(self, identifier):
-        """Edita parâmetros por nomes de componentes e literais JSON, sem IDs digitados."""
+        """Edit parameters by component name and JSON literals, with no typed IDs."""
         if not self.flow:
             return
         original = next((n for n in self.flow["graph"]["nodes"] if n["id"] == identifier), None)
@@ -786,14 +790,20 @@ class GraphPanel(QWidget):
             if key == "component":
                 options = [(n.display_name, n.id) for n in self.project.walk()]
             elif key == "window":
-                options = [(r.properties.get("title", "Janela"), r.id) for r in self.project.roots]
+                options = [
+                    (r.properties.get("title", tr("Window")), r.id) for r in self.project.roots
+                ]
             elif key == "state":
                 options = [
-                    ("Padrão", "@default"),
+                    (tr("Default"), "@default"),
                     *[(s["name"], s["id"]) for s in self.project.states.get(owner.id, [])],
                 ]
             elif key == "scope":
-                options = [("Projeto", "project"), ("Janela", "window"), ("Local", "local")]
+                options = [
+                    (tr("Project"), "project"),
+                    (tr("Window"), "window"),
+                    (tr("Local"), "local"),
+                ]
             elif key == "function":
                 options = [(name, name) for name in function_names(self.get_source())[0]]
                 editable = True
@@ -805,7 +815,11 @@ class GraphPanel(QWidget):
                     )
                 ]
             elif key == "attribute":
-                options = [("Texto", "text"), ("Seleção", "checked"), ("Progresso", "value")]
+                options = [
+                    (tr("Text"), "text"),
+                    (tr("Selection"), "checked"),
+                    (tr("Progress"), "value"),
+                ]
             elif key == "kind":
                 options = [(v, v) for v in ("text", "choice", "file", "directory")]
             if options is not None:
@@ -830,19 +844,19 @@ class GraphPanel(QWidget):
             fields[key] = field
             form.addRow(
                 {
-                    "component": "Componente",
-                    "window": "Janela",
-                    "state": "Estado",
-                    "scope": "Escopo",
-                    "function": "Função",
-                    "operator": "Operador",
-                    "attribute": "Propriedade",
-                    "kind": "Pergunta",
-                    "name": "Nome",
-                    "value": "Constante JSON",
-                    "count": "Saídas",
-                    "admin": "Administrativa",
-                    "close_current": "Fechar janela atual",
+                    "component": tr("Component"),
+                    "window": tr("Window"),
+                    "state": tr("State"),
+                    "scope": tr("Scope"),
+                    "function": tr("Function"),
+                    "operator": tr("Operator"),
+                    "attribute": tr("Property"),
+                    "kind": tr("Question"),
+                    "name": tr("Name"),
+                    "value": tr("JSON constant"),
+                    "count": tr("Outputs"),
+                    "admin": tr("Administrative"),
+                    "close_current": tr("Close current window"),
                 }.get(key, key),
                 field,
             )
@@ -850,14 +864,14 @@ class GraphPanel(QWidget):
             field = QLineEdit(
                 json.dumps(binding["value"], ensure_ascii=False)
                 if "value" in binding
-                else "Conectado ao nó " + binding["node"]
+                else tr("Connected to node {node}").format(node=binding["node"])
             )
             field.setReadOnly("node" in binding)
             inputs[port] = field
             form.addRow(PORT_LABELS.get(port, port) + " (JSON)", field)
         comment = QPlainTextEdit(node.get("comment", ""))
         comment.setMaximumHeight(80)
-        form.addRow("Comentário", comment)
+        form.addRow(tr("Comment"), comment)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -883,7 +897,7 @@ class GraphPanel(QWidget):
                     node["inputs"][port] = {"value": json.loads(field.text())}
             node["comment"] = comment.toPlainText()
         except (ValueError, TypeError) as exc:
-            self.error.emit("Valor JSON inválido: " + str(exc))
+            self.error.emit(tr("Invalid JSON value: {error}").format(error=exc))
             return
         self.commit(
             lambda flow: flow["graph"]["nodes"].__setitem__(
@@ -892,7 +906,7 @@ class GraphPanel(QWidget):
         )
 
     def focus_node(self, identifier, active=True):
-        """Destaca origem de erro/parada e preserva a escala atual da cena."""
+        """Highlight the origin of an error/stop and keep the scene's current scale."""
         for key, card in self.cards.items():
             card.active = active and key == identifier
             card.update()
@@ -903,7 +917,7 @@ class GraphPanel(QWidget):
             card.setSelected(True)
 
     def fit(self):
-        """Enquadra o conteúdo real sem escrever coordenadas novas no projeto."""
+        """Frame the real content without writing new coordinates to the project."""
         if self.view.scene().items():
             self.view.fitInView(
                 self.view.scene().itemsBoundingRect().adjusted(-30, -30, 30, 30),

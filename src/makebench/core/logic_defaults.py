@@ -1,42 +1,44 @@
-"""Ações e valores iniciais do modelo, sem dependência gráfica."""
+"""Model actions and starting values, with no graphical dependency."""
 
 from .project import new_id
+from .source import default_names
+from makebench.i18n import tr
 
 OPS = [
-    ("terminal_start", "Iniciar terminal"),
-    ("terminal_send", "Enviar ao terminal"),
-    ("terminal_stop", "Encerrar terminal"),
-    ("log", "Registrar na saída"),
-    ("message", "Mostrar mensagem"),
-    ("set_text", "Alterar texto"),
-    ("set_enabled", "Habilitar componente"),
-    ("set_value", "Alterar progresso"),
-    ("assign", "Definir variável"),
-    ("call", "Chamar função Python"),
-    ("script", "Executar Bash"),
-    ("run", "Executar programa"),
-    ("ask", "Perguntar"),
-    ("confirm", "Confirmar"),
-    ("go_state", "Ir para estado"),
-    ("open_window", "Abrir janela"),
-    ("close_window", "Fechar janela"),
-    ("show_page", "Mostrar página"),
-    ("if", "Condição"),
-    ("repeat", "Repetição"),
+    ("terminal_start", tr("Start terminal")),
+    ("terminal_send", tr("Send to terminal")),
+    ("terminal_stop", tr("Stop terminal")),
+    ("log", tr("Write to output")),
+    ("message", tr("Show message")),
+    ("set_text", tr("Change text")),
+    ("set_enabled", tr("Enable component")),
+    ("set_value", tr("Change progress")),
+    ("assign", tr("Set variable")),
+    ("call", tr("Call Python function")),
+    ("script", tr("Run Bash")),
+    ("run", tr("Run program")),
+    ("ask", tr("Ask")),
+    ("confirm", tr("Confirm")),
+    ("go_state", tr("Go to state")),
+    ("open_window", tr("Open window")),
+    ("close_window", tr("Close window")),
+    ("show_page", tr("Show page")),
+    ("if", tr("Condition")),
+    ("repeat", tr("Repeat")),
 ]
 
 
 def literal(value=""):
-    """Cria expressão neutra com identificador próprio preservável em comentários."""
+    """Create a neutral expression with its own id, preservable in comments."""
     return {"id": new_id("value"), "op": "literal", "value": value}
 
 
 def default_block(op, project, window):
-    """Valores iniciais válidos quando há controles compatíveis; nunca executa nada."""
+    """Valid starting values when compatible controls exist; never runs anything."""
     node = {"id": new_id("block"), "op": op}
     components = list(project.find(window).walk())
     if op in {"log", "message", "set_text", "assign", "call"}:
-        node["value"] = literal("Olá!")
+        node["value"] = literal(tr("Hello!"))
     if op in {"set_text", "set_enabled", "set_value", "show_page"}:
         kinds = {
             "set_text": {"label", "button", "text_input", "checkbox", "output"},
@@ -45,12 +47,12 @@ def default_block(op, project, window):
         }.get(op)
         target = next((n for n in components if kinds is None or n.kind.value in kinds), None)
         if not target:
-            raise ValueError("Insira um componente compatível antes de criar esta ação.")
+            raise ValueError(tr("Insert a compatible component before creating this action."))
         node["component"] = target.id
     if op.startswith("terminal_"):
         target = next((n for n in components if n.kind.value == "terminal"), None)
         if target is None:
-            raise ValueError("Insira um componente Terminal nesta janela.")
+            raise ValueError(tr("Insert a Terminal component in this window."))
         node["component"] = target.id
         if op == "terminal_start":
             node.update(
@@ -63,23 +65,23 @@ def default_block(op, project, window):
     if op == "set_value":
         node["value"] = literal(50)
     if op == "assign":
-        node.update(name="valor", scope="project")
+        node.update(name=default_names()["variable"], scope="project")
     if op == "call":
-        node["function"] = "saudacao"
+        node["function"] = default_names()["function"]
     if op in {"run", "script"}:
         node.update(arguments={"id": new_id("value"), "op": "list", "items": []}, admin=False)
         node["program" if op == "run" else "source"] = literal(
-            "uname" if op == "run" else 'printf "Olá, Linux\\n"'
+            "uname" if op == "run" else tr('printf "Hello, Linux\\n"')
         )
     if op == "ask":
         node.update(
             kind="text",
-            prompt=literal("Qual é seu nome?"),
+            prompt=literal(tr("What is your name?")),
             options={"id": new_id("value"), "op": "list", "items": []},
-            name="resposta",
+            name=default_names()["answer"],
         )
     if op == "confirm":
-        node["prompt"] = literal("Deseja continuar?")
+        node["prompt"] = literal(tr("Do you want to continue?"))
     if op == "go_state":
         node["state"] = next(iter(project.states.get(window, [])), {"id": "@default"})["id"]
     if op == "open_window":

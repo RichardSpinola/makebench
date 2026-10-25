@@ -1,4 +1,4 @@
-"""Contratos de módulos, edição inerte, recuperação e depuração por arquivo."""
+"""Module contracts, inert editing, recovery and per-file debugging."""
 
 import json
 import os
@@ -15,7 +15,7 @@ from makebench.core.code_index import CodeIndex
 
 
 class SourceWorkspaceTests(unittest.TestCase):
-    """Persistência de vários arquivos preserva conteúdo e recusa conflitos reais."""
+    """Multi-file persistence keeps content and refuses real conflicts."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -52,7 +52,7 @@ class SourceWorkspaceTests(unittest.TestCase):
         before = entry.read_bytes()
         (self.root / "makebench_user/helpers.py").write_text("# outra edição\n")
         self.doc.source.text = "# entrada modificada\n"
-        with self.assertRaisesRegex(ProjectError, "fora do Makebench"):
+        with self.assertRaisesRegex(ProjectError, "outside Makebench"):
             self.doc.save()
         self.assertEqual(entry.read_bytes(), before)
         self.assertTrue(self.doc.dirty)
@@ -74,7 +74,7 @@ class SourceWorkspaceTests(unittest.TestCase):
         original = self.root / "makebench_user/helpers.py"
         self.doc.source.remove_module("makebench_user/helpers.py")
         with patch("makebench.core.storage.save_project", side_effect=OSError("Sem espaço")):
-            with self.assertRaisesRegex(StorageError, "Python.*já foram gravados.*não"):
+            with self.assertRaisesRegex(StorageError, "Python files.*already written.*was not"):
                 self.doc.save()
         self.assertTrue(original.exists())
         self.assertTrue(self.doc.dirty)
@@ -104,7 +104,7 @@ class SourceWorkspaceTests(unittest.TestCase):
         self.doc.save(self.path)
         path = self.root / "makebench_user/helpers.py"
         path.unlink()
-        with self.assertRaisesRegex(ProjectError, "ausente"):
+        with self.assertRaisesRegex(ProjectError, "Missing module"):
             SourceBuffer.load(self.path)
         path.write_bytes(b"\xff")
         with self.assertRaisesRegex(ProjectError, "UTF-8"):
@@ -138,7 +138,7 @@ class SourceWorkspaceTests(unittest.TestCase):
         self.doc.source.rename_module("makebench_user/helpers.py", "makebench_user/util.py")
         self.assertEqual(self.doc.source.text, before)
         (self.root / "makebench_user/util.py").write_text("# outro arquivo")
-        with self.assertRaisesRegex(ProjectError, "destino"):
+        with self.assertRaisesRegex(ProjectError, "destination"):
             self.doc.save()
         self.assertTrue((self.root / "makebench_user/helpers.py").exists())
 
@@ -184,7 +184,7 @@ class SourceWorkspaceTests(unittest.TestCase):
 
 
 class CodeIndexTests(unittest.TestCase):
-    """Índice não importa módulos e conserva definições durante erro de sintaxe."""
+    """The index never imports modules and keeps definitions during syntax errors."""
 
     def setUp(self):
         self.index = CodeIndex()
@@ -216,7 +216,7 @@ class CodeIndexTests(unittest.TestCase):
         self.source.modules["makebench_user/util.py"] = ""
         self.index.update(self.source)
         self.assertIsNone(self.index.resolve("@actions", "add"))
-        self.assertTrue(any("Referência local" in e["message"] for e in self.index.errors))
+        self.assertTrue(any("Local reference" in e["message"] for e in self.index.errors))
 
     def test_index_does_not_execute_top_level(self):
         source = SourceText(
@@ -230,7 +230,7 @@ class CodeIndexTests(unittest.TestCase):
 
 
 class ModuleWorkerTests(unittest.TestCase):
-    """Imports e breakpoints reais operam na cópia iniciada, inclusive imports tardios."""
+    """Real imports and breakpoints work on the started copy, including late imports."""
 
     def make_worker(self, text=None):
         from test_terminal_debug import WorkerHarness
@@ -289,7 +289,7 @@ class ModuleWorkerTests(unittest.TestCase):
 
 
 class ModuleExportTests(unittest.TestCase):
-    """Os dois exportadores incluem arquivos declarados e mantêm a fonte inerte."""
+    """Both exporters include the declared files and keep the source inert."""
 
     def test_both_source_backends_include_modules_and_no_top_level_execution(self):
         import zipfile

@@ -1,4 +1,4 @@
-"""Medição comparável do Designer com projeto grande, sem scripts de usuário."""
+"""Comparable Designer measurement with a large project, with no user scripts."""
 
 import argparse
 import json
@@ -11,7 +11,7 @@ import time
 
 
 def main():
-    """Mede seleção, texto e movimento; registra reconstruções, não só tempo total."""
+    """Measure selection, text and movement; record rebuilds, not only total time."""
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
@@ -25,7 +25,7 @@ def main():
     with tempfile.TemporaryDirectory() as directory:
         os.environ["XDG_CONFIG_HOME"] = directory
         os.environ["XDG_STATE_HOME"] = directory
-        project = Project.empty("Medição")
+        project = Project.empty("Measurement")
         project.root.layout = LayoutKind.FREE
         roots = [project.root] + [add_window(project, "Janela " + str(n)) for n in range(7)]
         for root in roots:
@@ -37,14 +37,14 @@ def main():
         window = MainWindow(project)
         window.recovery_timer.stop()
         window.show()
-        window.set_mode("Design")
+        window.set_mode("design")
         app.processEvents()
         opening = time.perf_counter() - start
         rebuild = [0]
         original = window._rebuild_views
 
         def track():
-            """Conta reconstruções sem interferir no resultado do comando original."""
+            """Count rebuilds without interfering with the original command's result."""
             rebuild[0] += 1
             return original()
 

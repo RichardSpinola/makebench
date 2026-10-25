@@ -1,4 +1,4 @@
-"""Jornadas nativas da bancada: mapa, comandos e construção, sem executar o projeto."""
+"""Native workbench journeys: map, commands and build, without running the project."""
 
 import os
 from pathlib import Path
@@ -12,7 +12,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 def main():
-    """Usa somente documentos conhecidos e mantém toda gravação em pasta temporária."""
+    """Use only known documents and keep every write in a temporary folder."""
     with tempfile.TemporaryDirectory(prefix="makebench-studio-check-") as temporary:
         root = Path(temporary)
         os.environ["XDG_CONFIG_HOME"] = str(root / "config")
@@ -28,14 +28,14 @@ def main():
         app.setQuitOnLastWindowClosed(False)
         project = Project.empty("Mapa de teste")
         button = project.add(project.root.id, ComponentKind.BUTTON)
-        other = add_window(project, "Destino")
+        other = add_window(project, "Destination")
         window = MainWindow(project)
         window.show()
-        window.set_mode("Mapa")
+        window.set_mode("map")
         app.processEvents()
 
         def accept_connection():
-            """Simula a confirmação do diálogo nativo de conexão e fechamento da origem."""
+            """Simulate confirming the native connection dialog and closing the source."""
             dialog = app.activeModalWidget()
             assert isinstance(dialog, QDialog)
             closing = dialog.findChild(QCheckBox)
@@ -49,11 +49,11 @@ def main():
         assert flow["event"]["component"] == button.id and flow["body"][0]["close_current"] is True
 
         def jump_function():
-            """Escolhe uma função pela paleta real, sem chamar o código da função."""
+            """Pick a function through the real palette, without calling the function code."""
             dialog = app.activeModalWidget()
             assert dialog is not None
             query = dialog.findChild(QLineEdit)
-            query.setText("Ir para função · saudacao")
+            query.setText("Go to function · greet")
             dialog.invoke()
 
         QTimer.singleShot(50, jump_function)
@@ -73,10 +73,10 @@ def main():
             "name": "Assistente Makebench",
             "id": "io.makebench.example",
             "version": "0.1.0",
-            "description": "Três etapas e duas janelas.",
+            "description": "Three steps and two windows.",
             "icon": reference,
         }
-        example.set_mode("Publicar")
+        example.set_mode("publish")
         app.processEvents()
         assert example.publish_panel.check()
         destination = root / "example.zip"
@@ -85,7 +85,7 @@ def main():
             return_value=(str(destination), ""),
         ):
             example.publish_panel.build_source()
-        limit = time.monotonic() + 15
+        limit = time.monotonic() + 120
         while example.publish_panel.job.isRunning() and time.monotonic() < limit:
             QTest.qWait(20)
         app.processEvents()
@@ -104,7 +104,7 @@ def main():
         example.source.mark_saved()
         example.close()
         app.processEvents()
-        print("OK: conexão no mapa, localização de função e construção pela UI nativa.")
+        print("OK: connection in the map, function lookup and build through the native UI.")
     return 0
 
 

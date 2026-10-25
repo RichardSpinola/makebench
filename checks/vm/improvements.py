@@ -1,4 +1,4 @@
-"""Valida a entrega de módulos/Designer nas VMs descartáveis já preparadas."""
+"""Validate the modules/Designer delivery on the already prepared disposable VMs."""
 
 import argparse
 import json
@@ -10,7 +10,7 @@ from machine import Machine
 
 
 def main():
-    """Uma VM por vez; aguarda publicação atômica dos artefatos e desliga no final."""
+    """One VM at a time; wait for the atomic publication of artifacts and shut down at the end."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--system", choices=("ubuntu", "fedora"), required=True)
     parser.add_argument("--root", type=Path, required=True)
@@ -25,13 +25,13 @@ def main():
     validate = Path(__file__).with_name("validate.py")
 
     def run(backend, format, artifact, project=None, quick=False):
-        """Só lê artefatos completos; preserva logs e resultados de cada instalação."""
+        """Read only complete artifacts; keep logs and results of each installation."""
         deadline = time.monotonic() + 600
         if not artifact.exists():
-            print("Aguardando construção:", artifact.name, flush=True)
+            print("Waiting for build:", artifact.name, flush=True)
         while not artifact.exists():
             if time.monotonic() > deadline:
-                raise RuntimeError("Artefato não ficou pronto: " + str(artifact))
+                raise RuntimeError("Artifact did not become ready: " + str(artifact))
             time.sleep(1)
         target = args.output / (args.system + "-" + backend + "-" + format)
         command = [
