@@ -74,6 +74,13 @@ def main():
                     app.processEvents()
                     if mode == "map":
                         window.map_panel.fit()
+                        # Thumbnails render progressively; wait so screenshots show them.
+                        deadline = time.monotonic() + 10
+                        while time.monotonic() < deadline and any(
+                            node.thumbnail.isNull() and not getattr(node, "preview_error", "")
+                            for node in window.map_panel.nodes.values()
+                        ):
+                            QTest.qWait(50)
                     QTest.qWait(400 if mode == "logic" else 100)
                     filename = args.output / f"{theme}-{size}-{mode}.png"
                     if (

@@ -156,7 +156,7 @@ def main():
             assert not marker.exists()
 
         def select_open():
-            """Clique inspeciona e duplo clique abre exatamente a janela e estado escolhidos."""
+            """A click inspects and a double click opens exactly the chosen window and state."""
             node = window.map_panel.nodes[project.root.id + "|" + state["id"]]
             point = window.map_panel.view.mapFromScene(node.sceneBoundingRect().center())
             QTest.mouseClick(window.map_panel.view.viewport(), Qt.MouseButton.LeftButton, pos=point)

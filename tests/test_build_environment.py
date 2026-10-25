@@ -89,7 +89,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertIn("requests>=2.32,<3", flatpak_requirements(p))
 
     def test_cancel_stops_tool_and_returns_no_success(self):
-        """Cancelamento interrompe a ferramenta em vez de aguardar ou publicar sucesso."""
+        """Cancelling stops the tool instead of waiting or reporting success."""
         start = time.monotonic()
         with self.assertRaises(BuildCancelled):
             run_tool(

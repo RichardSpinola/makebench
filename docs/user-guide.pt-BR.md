@@ -1,0 +1,145 @@
+# Guia de uso do Makebench
+
+[Read in English](user-guide.md)
+
+Este guia percorre as quatro áreas da bancada na ordem em que um aplicativo
+costuma ser construído e depois mostra como testar, depurar e exportar. Os
+nomes de menus abaixo são os da interface em português (escolha o idioma em
+**Exibir › Preferências…**). Pressione **F1** no editor para abrir o guia
+rápido de primeiros passos, e **Ajuda › Atalhos de teclado** para ver todos os
+atalhos.
+
+## Tela inicial
+
+- **Novo projeto…** cria um projeto a partir de um modelo, em Qt ou GTK 4. Os
+  projetos novos seguem o idioma da interface: textos de exemplo e nomes de
+  funções saem em português ou em inglês.
+- **Abrir projeto…** abre um arquivo `.makebench.json` existente.
+- **Abrir exemplo…** copia um dos exemplos incluídos para a pasta de projetos e
+  abre a cópia. Os exemplos originais nunca são alterados.
+
+Abrir um projeto nunca o executa. Um projeto é um arquivo `.makebench.json`, com
+um arquivo `.actions.py` ao lado para o seu Python, um pacote opcional de
+módulos `makebench_user/` e uma pasta `assets/` para imagens.
+
+## 1 · Mapa
+
+O Mapa mostra cada janela e estado do aplicativo como cartões, com linhas para
+as transições entre eles.
+
+- Crie janelas e estados pela barra de ferramentas ou pelo menu de contexto.
+- Arraste da porta de um cartão até outro para criar uma transição. A ligação é
+  uma ação real de "mostrar janela" ou "mudar estado" dentro da lógica, não um
+  desenho.
+- Selecione uma linha para ver e mudar o evento que a dispara.
+- As miniaturas dos cartões são desenhadas a partir do design, sem executar nada.
+
+![Mapa](images/map.png)
+
+## 2 · Design
+
+No Design você monta cada janela com controles nativos.
+
+- Arraste componentes de **Inserir** para a tela ou para a árvore de componentes.
+- Organize-os em linhas, colunas, grades, páginas ou posicionamento livre. A
+  seleção pode ser movida, redimensionada, duplicada e alinhada; com vários
+  componentes selecionados, **Propriedades** mostra o que eles têm em comum.
+- A prévia Qt usa o estilo do seu desktop. A prévia GTK é desenhada pelo próprio
+  GTK num processo privado, então o que você vê é o que o GTK vai mostrar.
+- Imagens são copiadas para a pasta `assets/` do projeto quando adicionadas.
+
+![Design](images/design.png)
+
+## 3 · Lógica
+
+A Lógica diz o que acontece quando uma janela inicia ou um botão é clicado. Cada
+comportamento pode ser escrito com **blocos** ou com **nós**.
+
+- **Blocos** (Blockly) funcionam como no Scratch: encaixe instruções, valores e
+  condições. Campos de texto livre são sempre tratados como texto, nunca como
+  Python.
+- **Nós** formam um grafo com portas de execução e de valor, fios, repetições e
+  condições. A posição dos nós não muda o que o grafo faz.
+- Você pode trocar um comportamento entre blocos e nós; o Makebench guarda uma
+  cópia recuperável da versão anterior.
+- O Python gerado aparece sempre ao lado do editor. Selecionar um bloco destaca
+  a linha correspondente.
+
+As ações disponíveis incluem mostrar janelas e páginas, ler e alterar
+componentes, mensagens e perguntas, registro de saída, chamar suas funções
+Python e executar programas ou scripts Bash como tarefas supervisionadas. Uma
+tarefa pode pedir permissão de administrador; nesse caso o Makebench usa o
+Polkit e o diálogo de autenticação do próprio sistema. Ele nunca pede nem guarda
+senhas.
+
+![Lógica](images/logic.png)
+
+## 4 · Código
+
+O Código guarda o seu Python: o arquivo `.actions.py` do projeto e os módulos em
+`makebench_user/`. Uma função é chamada pelos blocos como `funcao(ctx, valor)`,
+em que `ctx` dá acesso ao aplicativo (ler e alterar componentes, mostrar
+páginas, registrar saída, fazer perguntas, executar tarefas).
+
+- Sugestões, **F12** para ir à definição e diagnósticos enquanto você digita. A
+  análise é estática: o código é lido, nunca importado ou executado.
+- **Ctrl+Shift+F** busca em todos os arquivos Python do projeto, usando o que
+  está aberto no editor, e não o que está no disco.
+- **Ctrl+Z** numa aba de código desfaz dentro daquele arquivo; nas outras áreas,
+  desfaz a última alteração do projeto. O menu Editar mostra o que será desfeito.
+
+![Código](images/code-dark.png)
+
+## Testar e depurar
+
+- **F5** inicia o aplicativo num processo separado e supervisionado.
+  **Shift+F5** para o aplicativo junto com as tarefas que ele iniciou.
+- A gaveta inferior (**Ctrl+J**) mostra saída, problemas, tarefas com stdout e
+  stderr, um terminal interativo e os resultados da busca.
+- Quando algo falha, **Ir ao erro** abre o bloco, o nó ou a linha que causou o erro.
+- **F9** inicia a depuração. Coloque pontos de parada em blocos, nós ou linhas de
+  Python (clique na margem do código ou use o menu do bloco). Enquanto pausado,
+  você vê a pilha e uma cópia somente leitura das variáveis, e pode continuar,
+  ir ao próximo passo, entrar ou sair de uma função.
+
+O processo de teste mantém o editor responsivo, mas não é uma sandbox: o projeto
+roda com as permissões do seu usuário. Revise projetos de terceiros antes de
+testá-los.
+
+## Exportar
+
+**Projeto › Exportar aplicativo…** (**Ctrl+Shift+E**) abre a janela de exportação.
+
+- **Fonte Python** gera um ZIP que roda com Python e o toolkit instalados.
+- **DEB**, **RPM** e **AppImage** incluem o Python e o toolkit escolhido, então o
+  resultado roda sem instalar mais nada. **Flatpak** usa o runtime do GNOME para
+  GTK e o do KDE para Qt, e mantém o isolamento do Flatpak.
+- **Construir com** escolhe entre ferramentas que o Makebench prepara em
+  contêineres Podman sem root (guardadas em `~/.cache/makebench/builders`), as
+  ferramentas instaladas no sistema ou a escolha automática. Preparar as
+  ferramentas é sempre um passo explícito, com saída visível e botão Cancelar.
+- **Exportar somente a receita** gera os arquivos de construção num ZIP, sem
+  construir o pacote.
+- **Editor Makebench (AppImage)** no campo **Exportar** constrói o próprio editor
+  como AppImage, já com os exemplos.
+
+Construir nunca executa o seu projeto. Edite nome, identificador, versão, ícone
+e idioma do aplicativo em **Aplicativo…**.
+
+## Preferências
+
+**Exibir › Preferências…** (**Ctrl+,**) reúne as configurações do editor: idioma
+da interface, tema, tamanho do texto, fonte do código, pasta para novos projetos
+e mais. O idioma da interface vale a partir da próxima vez que o Makebench abrir.
+A página **Sobre** tem um botão que abre este guia.
+
+## Arquivos e salvamento
+
+- **Ctrl+S** salva o projeto, seus arquivos Python e as imagens. Cada arquivo é
+  gravado de forma atômica, mas o conjunto não é salvo como uma única transação;
+  se o salvamento falhar no meio, o Makebench diz quais arquivos foram gravados.
+- Quando o formato do projeto é atualizado, o arquivo anterior fica guardado como
+  `.bak-vN` ao lado dele.
+- Se o seu Python mudou fora do Makebench enquanto estava aberto, o Makebench
+  oferece **Recarregar arquivo** ou **Manter minha versão**, em vez de
+  sobrescrever sem avisar.

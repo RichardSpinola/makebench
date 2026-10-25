@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Executa o checkout local; usa a .venv do projeto quando disponível."""
+"""Run the local checkout, using the project .venv when available."""
 
 import os
 import sys

@@ -26,7 +26,7 @@ class Machine:
         )
 
     def start(self, image, target, port):
-        """Cria overlay, chave exclusiva e seed cloud-init; inicia QEMU sem compartilhar home."""
+        """Creates the overlay, a dedicated key and the cloud-init seed; starts QEMU without sharing home."""
         self.root.mkdir(parents=True, exist_ok=True)
         if self.receipt:
             raise RuntimeError(
@@ -181,7 +181,7 @@ class Machine:
         )
 
     def copy_to(self, source, destination):
-        """Copia somente artefatos/rotinas de QA explicitamente indicados para o convidado."""
+        """Copies to the guest only the QA artifacts and routines explicitly listed."""
         subprocess.run(
             [
                 "scp",
@@ -211,7 +211,7 @@ class Machine:
         self.ssh("cat /etc/os-release; uname -m; python3 --version")
 
     def stop(self):
-        """Desliga somente o QEMU cujo argv ainda referencia o overlay registrado."""
+        """Shuts down only the QEMU whose argv still references the recorded overlay."""
         pid = self.receipt["pid"]
         try:
             command = Path(f"/proc/{pid}/cmdline").read_bytes()

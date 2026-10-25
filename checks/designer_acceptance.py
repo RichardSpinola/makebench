@@ -203,7 +203,7 @@ def main():
             assert window.winId() == native
 
         def save_reopen():
-            """Roundtrip de um projeto maior preserva os elementos e as propriedades."""
+            """A round trip of a larger project keeps its elements and properties."""
             destination = root / "project.makebench.json"
             assert window.save_to(destination)
             from makebench.core.storage import load_project

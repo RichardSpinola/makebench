@@ -1,8 +1,9 @@
-# Teste descartável de Polkit real
+# Disposable real-Polkit test
 
-Não executar smoke.py ou cancel_agent.py diretamente no host. Estes arquivos
-só pertencem ao contêiner de teste: criam uma regra local e um agente que sempre
-cancela, exclusivos do usuário descartável tester e do programa /usr/bin/id.
+Do not run `smoke.py` or `cancel_agent.py` directly on the host. These files
+belong only in the test container: they create a local rule and an agent that
+always cancels, limited to the disposable `tester` user and the `/usr/bin/id`
+program.
 
 ```bash
 podman build -t localhost/makebench-polkit-test:local -f checks/polkit/Containerfile checks/polkit
@@ -10,11 +11,11 @@ podman run --rm --network none --pids-limit 256 localhost/makebench-polkit-test:
 podman image rm localhost/makebench-polkit-test:local
 ```
 
-Usar Podman rootless, sem --privileged e sem montar diretórios do host. O build
-instala dependências apenas na imagem. O teste não usa senha nem altera regras,
-pacotes ou serviços do host. id -u comprova privilégio somente no namespace do
-contêiner. Resultados esperados: autorizado 0/uid 0; recusado 127; agente cancela
-126. O agente gráfico real do usuário não faz parte deste teste.
+Use rootless Podman, without `--privileged` and without mounting host
+directories. The build installs dependencies only in the image. The test uses no
+password and does not change the host's rules, packages or services; `id -u`
+proves privilege only inside the container's namespace. Expected results:
+authorised 0/uid 0; refused 127; agent cancels 126. The user's real graphical
+agent is not part of this test.
 
-Resultado local: três casos passaram em Fedora 44 com Polkit 127, Python 3.14.8.
-Testes do supervisor Qt, sem elevação, ficam em tests/test_runtime.py.
+Tests of the Qt supervisor, without elevation, are in `tests/test_runtime.py`.

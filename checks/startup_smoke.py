@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Inicializador real: WebEngine preparado, bancada oculta e X interno encerra."""
+"""Real launcher: WebEngine is ready, the workbench stays hidden and the internal X server exits."""
 
 import os
 import tempfile

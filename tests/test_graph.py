@@ -220,7 +220,7 @@ class GraphModelTests(unittest.TestCase):
             self.assertEqual(load_project(path).workflows[0]["graph"], flow["graph"])
 
     def test_worker_can_pause_and_cancel_a_free_execution_cycle(self):
-        """O transporte atende Pausar/Parar durante um ciclo livre no worker real."""
+        """The transport handles Pause/Stop during a free-running loop in the real worker."""
         import time
         from test_terminal_debug import WorkerHarness
 

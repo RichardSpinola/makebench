@@ -22,7 +22,7 @@ from makebench.terminal.session import TerminalSession, key_input
 
 
 class TerminalTests(unittest.TestCase):
-    """Um processo real precisa perceber TTY, tamanho, entrada e sinais."""
+    """A real process must see the TTY, its size, input and signals."""
 
     def wait(self, terminal, predicate, timeout=5):
         """Drain the PTY until the result is observed, with a time limit per scenario."""
@@ -170,11 +170,11 @@ class WorkerHarness:
         raise AssertionError("Sem resposta do worker")
 
     def command(self, action, **values):
-        """Usa o mesmo protocolo limitado exposto pela IDE."""
+        """Uses the same bounded protocol the IDE exposes."""
         self.send({"type": "debug", "action": action, **values})
 
     def close(self):
-        """Recolhe o worker mesmo quando um teste falha durante pausa."""
+        """Reaps the worker even when a test fails while paused."""
         if self.process.poll() is None:
             self.command("stop")
         try:
@@ -187,7 +187,7 @@ class WorkerHarness:
 
 
 class DebugTests(unittest.TestCase):
-    """Pontos, pilha, passos e pausa durante resposta precisam funcionar no processo real."""
+    """Breakpoints, stack, stepping and pausing while answering must work in the real process."""
 
     def make_worker(self, body, source):
         """Create a snapshot with one event; breakpoints always belong to the own file or the block."""

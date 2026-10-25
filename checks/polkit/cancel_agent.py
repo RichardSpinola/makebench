@@ -20,7 +20,7 @@ bus = dbus.SystemBus()
 
 
 class Agent(dbus.service.Object):
-    """Implementa somente as duas chamadas do protocolo de agente Polkit."""
+    """Implements only the two calls of the Polkit agent protocol."""
 
     @dbus.service.method(
         "org.freedesktop.PolicyKit1.AuthenticationAgent",
@@ -37,7 +37,7 @@ class Agent(dbus.service.Object):
         "org.freedesktop.PolicyKit1.AuthenticationAgent", in_signature="s", out_signature=""
     )
     def CancelAuthentication(self, cookie):
-        """Aceita encerramento solicitado pela autoridade."""
+        """Accepts cancellation requested by the authority."""
 
 
 agent = Agent(bus, "/org/makebench/TestAgent")

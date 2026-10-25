@@ -620,7 +620,7 @@ class BlocklyTests(unittest.TestCase):
             self.assertEqual(saved.workflows[0]["body"][0]["value"]["id"], "text_1")
 
     def test_20_terminal_operations_and_breakpoints_roundtrip(self):
-        """Terminais preservam ID/argv/entrada; o menu marca a origem sem executar."""
+        """Terminals keep their ID/argv/input; the menu marks the origin without running anything."""
         from makebench.core.logic_defaults import default_block
 
         self.install_log("Antes")
