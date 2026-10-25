@@ -1,0 +1,113 @@
+{
+  "format": "makebench.project",
+  "format_version": 6,
+  "id": "project_d85f0dbe0a5a",
+  "name": "Terminal and debugging",
+  "ui": {
+    "id": "window_9cca86babcd3",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Terminal and debugging",
+      "width": 760,
+      "height": 480
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_7720ba10ab06",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Interactive terminal · click Start or press F9 to debug in the editor"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "terminal_7b1f01c015ec",
+        "kind": "terminal",
+        "layout": "vertical",
+        "properties": {
+          "terminal_program": "",
+          "terminal_arguments": [],
+          "terminal_autostart": false,
+          "code_name": "terminal",
+          "size_mode": {
+            "width": "fill",
+            "height": "fill"
+          }
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "button_bd81d72521ed",
+        "kind": "button",
+        "layout": "vertical",
+        "properties": {
+          "text": "Start Python"
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_470898e24394",
+      "name": "Click: Start Python",
+      "event": {
+        "kind": "click",
+        "component": "button_bd81d72521ed"
+      },
+      "body": [
+        {
+          "id": "call_demo",
+          "op": "call",
+          "function": "start_python",
+          "value": {
+            "id": "value_14a6ba203074",
+            "op": "literal",
+            "value": "Terminal ready"
+          }
+        }
+      ],
+      "workspace": {}
+    }
+  ],
+  "metadata": {
+    "logic_version": 1
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_9cca86babcd3",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.TerminalDemo",
+    "name": "Terminal and debugging",
+    "version": "0.1.0",
+    "backend": "gtk"
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "format": "makebench.project",
+  "format_version": 1,
+  "id": "project_script_center",
+  "name": "Script center",
+  "ui": {
+    "id": "window_main",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Script center"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_welcome",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Your Linux, your way."
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_description",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Organize your tasks in a simple interface."
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_tasks",
+        "kind": "container",
+        "layout": "vertical",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_setup",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Set up my environment"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_install",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Install an application"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_check",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Check the system"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "progress_task",
+        "kind": "progress",
+        "layout": "vertical",
+        "properties": {
+          "value": 0
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "output_task",
+        "kind": "output",
+        "layout": "vertical",
+        "properties": {
+          "text": "Select a component to edit its appearance.\nRunning tasks is shown in the Task center example."
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [],
+  "metadata": {
+    "example": "Script center interface; actions are not implemented in this example."
+  }
+}

@@ -1,0 +1,318 @@
+{
+  "format": "makebench.project",
+  "format_version": 4,
+  "id": "project_welcome",
+  "name": "Welcome",
+  "ui": {
+    "id": "window_welcome",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Welcome to your Linux"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "pages_welcome",
+        "kind": "pages",
+        "layout": "vertical",
+        "properties": {
+          "initial_page": "page_start"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "page_start",
+            "kind": "page",
+            "layout": "free",
+            "properties": {
+              "title": "First steps"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "image_desktop",
+                "kind": "image",
+                "layout": "vertical",
+                "properties": {
+                  "source": "assets/53f6cb465cbe81595cdd9b3de6ba7dd75d85af5841f029601fea6da169bc7c3b.png",
+                  "alt_text": "Computer",
+                  "image_name": "desktop.png"
+                },
+                "geometry": {
+                  "x": 24,
+                  "y": 24,
+                  "width": 112,
+                  "height": 112
+                },
+                "children": []
+              },
+              {
+                "id": "label_title",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Your system starts here."
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 24,
+                  "width": 360,
+                  "height": 48
+                },
+                "children": []
+              },
+              {
+                "id": "label_intro",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Organize your applications, customize the environment and discover what you can build."
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 80,
+                  "width": 360,
+                  "height": 72
+                },
+                "children": []
+              },
+              {
+                "id": "button_start",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Let's start"
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 176,
+                  "width": 216,
+                  "height": 48
+                },
+                "children": []
+              },
+              {
+                "id": "check_show_again",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Show this screen at startup",
+                  "checked": true
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 240,
+                  "width": 360,
+                  "height": 48
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_options",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Preferences"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_options",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Make the environment your own."
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "field_name",
+                "kind": "text_input",
+                "layout": "vertical",
+                "properties": {
+                  "text": "",
+                  "placeholder": "What should we call you?"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "check_updates",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Receive update reminders",
+                  "checked": true
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_finish",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Finish setup"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_e249ec392f46",
+      "name": "Click: Let's start",
+      "event": {
+        "kind": "click",
+        "component": "button_start"
+      },
+      "body": [
+        {
+          "id": "go_preferences",
+          "op": "show_page",
+          "component": "page_options",
+          "comment": "On click, open the preferences page."
+        }
+      ],
+      "workspace": {}
+    },
+    {
+      "id": "flow_5777d5d08711",
+      "name": "Click: Finish setup",
+      "event": {
+        "kind": "click",
+        "component": "button_finish"
+      },
+      "body": [
+        {
+          "id": "remember_if",
+          "op": "if",
+          "condition": {
+            "id": "read_reminders",
+            "op": "read",
+            "component": "check_updates",
+            "attribute": "checked"
+          },
+          "then": [
+            {
+              "id": "log_reminders",
+              "op": "log",
+              "value": {
+                "id": "reminders_text",
+                "op": "literal",
+                "value": "Update reminders selected."
+              }
+            }
+          ],
+          "else": [
+            {
+              "id": "log_no_reminders",
+              "op": "log",
+              "value": {
+                "id": "no_reminders_text",
+                "op": "literal",
+                "value": "Reminders not selected."
+              }
+            }
+          ],
+          "comment": "This step builds the flow; it does not write preferences to the system."
+        },
+        {
+          "id": "greet",
+          "op": "call",
+          "function": "introduce",
+          "value": {
+            "id": "read_name",
+            "op": "read",
+            "component": "field_name",
+            "attribute": "text"
+          },
+          "comment": "The function lives in project.actions.py, editable in the Code tab."
+        },
+        {
+          "id": "finish_message",
+          "op": "message",
+          "value": {
+            "id": "finish_text",
+            "op": "literal",
+            "value": "Your welcome application is taking shape!"
+          }
+        }
+      ],
+      "workspace": {}
+    },
+    {
+      "id": "flow_592f560aa6bd",
+      "name": "On start",
+      "event": {
+        "kind": "start",
+        "component": "window_welcome"
+      },
+      "body": [
+        {
+          "id": "start_log",
+          "op": "log",
+          "value": {
+            "id": "start_text",
+            "op": "literal",
+            "value": "Application started."
+          }
+        }
+      ],
+      "workspace": {}
+    }
+  ],
+  "metadata": {
+    "example": "Pages and free editing; buttons do not run actions in this example.",
+    "logic_version": 1
+  }
+}

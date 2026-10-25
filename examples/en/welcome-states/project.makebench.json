@@ -1,0 +1,271 @@
+{
+  "format": "makebench.project",
+  "format_version": 5,
+  "id": "project_5e7e3c0296d5",
+  "name": "Welcome in steps",
+  "ui": {
+    "id": "window_ed50f920cdee",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Welcome in steps"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_86240ca4e6f6",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Welcome to your Linux"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_408bfda1bdcd",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Discover the tools that come with your system."
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_2fd3f95d0f8d",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_95ed1c9f4624",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Back",
+              "enabled": false
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_5ae736edec8c",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Next"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_14c6e33cc222",
+      "name": "Click: Next",
+      "event": {
+        "kind": "click",
+        "component": "button_5ae736edec8c"
+      },
+      "body": [
+        {
+          "id": "block_5b65d244a14f",
+          "op": "go_state",
+          "state": "state_c29addc4d0f0"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "@default"
+      ]
+    },
+    {
+      "id": "flow_0e2924ea77e9",
+      "name": "Click: Next",
+      "event": {
+        "kind": "click",
+        "component": "button_5ae736edec8c"
+      },
+      "body": [
+        {
+          "id": "block_6c2718c18aad",
+          "op": "go_state",
+          "state": "state_df013261401d"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_c29addc4d0f0"
+      ]
+    },
+    {
+      "id": "flow_c61af72157be",
+      "name": "Click: Back",
+      "event": {
+        "kind": "click",
+        "component": "button_95ed1c9f4624"
+      },
+      "body": [
+        {
+          "id": "block_260c4d0e0c5d",
+          "op": "go_state",
+          "state": "@default"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_c29addc4d0f0"
+      ]
+    },
+    {
+      "id": "flow_270eaa26b1cf",
+      "name": "Click: Next",
+      "event": {
+        "kind": "click",
+        "component": "button_5ae736edec8c"
+      },
+      "body": [
+        {
+          "id": "block_93a07578795e",
+          "op": "open_window",
+          "window": "window_7622f4b4ade8",
+          "close_current": true
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_df013261401d"
+      ]
+    },
+    {
+      "id": "flow_0010ab3402e6",
+      "name": "Click: Back",
+      "event": {
+        "kind": "click",
+        "component": "button_95ed1c9f4624"
+      },
+      "body": [
+        {
+          "id": "block_5a30de705078",
+          "op": "go_state",
+          "state": "state_c29addc4d0f0"
+        }
+      ],
+      "workspace": {},
+      "states": [
+        "state_df013261401d"
+      ]
+    }
+  ],
+  "metadata": {
+    "logic_version": 1
+  },
+  "windows": [
+    {
+      "id": "window_7622f4b4ade8",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Main dashboard"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_c9609cff0d32",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Welcome! Your dashboard is ready."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {
+    "window_ed50f920cdee": [
+      {
+        "id": "state_c29addc4d0f0",
+        "name": "Discover the system",
+        "overrides": {
+          "label_86240ca4e6f6": {
+            "text": "Your system, your way"
+          },
+          "label_408bfda1bdcd": {
+            "text": "Customize tools and preferences whenever you like."
+          },
+          "button_95ed1c9f4624": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "id": "state_df013261401d",
+        "name": "All set",
+        "overrides": {
+          "label_86240ca4e6f6": {
+            "text": "All set to start"
+          },
+          "label_408bfda1bdcd": {
+            "text": "Finish the wizard to open your dashboard."
+          },
+          "button_95ed1c9f4624": {
+            "enabled": true
+          },
+          "button_5ae736edec8c": {
+            "text": "Finish"
+          }
+        }
+      }
+    ]
+  },
+  "entry_window": "window_ed50f920cdee",
+  "variables": [],
+  "map_layout": {}
+}
