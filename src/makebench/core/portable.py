@@ -453,7 +453,7 @@ def editor_project():
 def build_editor_appimage(destination, progress=None, cancelled=None):
     """Build the editor itself with QtWebEngine and GTK included, without publishing a release."""
     project = editor_project()
-    icon = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><rect x="16" y="16" width="224" height="224" rx="20" fill="#31363b"/><path d="M56 188V68h32l40 64 40-64h32v120h-32v-65l-40 60-40-60v65z" fill="#3daee9"/></svg>'
+    icon = (Path(__file__).resolve().parent.parent / "editor/makebench.svg").read_bytes()
     return build_native(
         project, "", lambda _: icon, destination, "appimage", progress, cancelled, editor=True
     )

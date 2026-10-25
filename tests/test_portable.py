@@ -328,5 +328,18 @@ class PayloadLibraryTests(unittest.TestCase):
         self.assertEqual(bundled, ["libpng16.so.16"])
 
 
+class ApplicationIconTests(unittest.TestCase):
+    """The editor ships one icon, used by its window and by the editor AppImage."""
+
+    def test_icon_file_is_a_valid_svg_and_loads(self):
+        from makebench.editor.window import application_icon
+
+        path = Path(__file__).resolve().parents[1] / "src/makebench/editor/makebench.svg"
+        self.assertTrue(path.read_text().lstrip().startswith("<svg"))
+        icon = application_icon()
+        self.assertIsNotNone(icon)
+        self.assertFalse(icon.isNull())
+
+
 if __name__ == "__main__":
     unittest.main()

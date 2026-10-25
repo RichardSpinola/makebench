@@ -7,7 +7,7 @@ from pathlib import Path
 from collections.abc import Callable
 
 from PySide6.QtCore import Qt, QTimer, QEvent
-from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
+from PySide6.QtGui import QAction, QCloseEvent, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -48,6 +48,12 @@ from makebench import __version__
 
 from .studio import StudioMixin
 from makebench.i18n import ntr, tr
+
+
+def application_icon():
+    """The Makebench application icon, or None when the file is missing."""
+    path = Path(__file__).with_name("makebench.svg")
+    return QIcon(str(path)) if path.is_file() else None
 
 
 def undo_labels():
@@ -112,7 +118,7 @@ class MainWindow(StudioMixin, QMainWindow):
         manager()
         from .theme import icon
 
-        self.setWindowIcon(icon("window"))
+        self.setWindowIcon(application_icon() or icon("window"))
         if not hasattr(QApplication.instance(), "_makebench_dialog_filter"):
             install_translation(QApplication.instance())
         self.project = project or Project.empty()
