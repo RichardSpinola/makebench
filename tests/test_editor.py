@@ -124,6 +124,17 @@ class EditorTests(unittest.TestCase):
         self.assertGreaterEqual(surface.minimumWidth(), 1200 + button.geometry["width"])
         self.assertGreaterEqual(surface.minimumHeight(), 900 + button.geometry["height"])
 
+    def test_format_upgrade_message_names_the_real_backup(self):
+        """Salvar um formato 1 avisa o formato novo e a cópia .bak-v1 criada."""
+        example = Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        self.path.write_bytes(example.read_bytes())
+        self.window._replace_project(load_project(self.path), self.path)
+        self.window.project.application["name"] = "Atualizado"
+        self.assertTrue(self.window.save_to(self.path))
+        message = self.window.statusBar().currentMessage()
+        self.assertIn("formato 5", message)
+        self.assertIn(self.path.name + ".bak-v1", message)
+
     def test_blank_project_name_is_reverted_before_saving(self):
         original_name = self.window.project.name
         field = self.window.inspector.findChild(QLineEdit, "property_name")

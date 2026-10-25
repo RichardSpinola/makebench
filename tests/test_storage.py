@@ -46,6 +46,22 @@ class StorageTests(unittest.TestCase):
             save_project(project, self.path)
         self.assertEqual(self.path.read_bytes(), original)
 
+    def test_format_upgrade_reports_the_backup_actually_created(self):
+        """O aviso de atualização usa o nome real da cópia, de qualquer formato anterior."""
+        example = Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        self.path.write_bytes(example.read_bytes())
+        project = load_project(self.path)
+        project.application["name"] = "Atualizado"
+        backup = save_project(project, self.path)
+        self.assertEqual(backup, self.path.with_name(self.path.name + ".bak-v1"))
+        self.assertEqual(backup.read_bytes(), example.read_bytes())
+        self.assertIsNone(save_project(load_project(self.path), self.path))
+        project = load_project(self.path)
+        project.python_files = ["makebench_user/__init__.py"]
+        backup = save_project(project, self.path)
+        self.assertEqual(backup.name, self.path.name + ".bak-v5")
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8"))["format_version"], 8)
+
     def test_missing_corrupt_and_wrong_format_files_have_actionable_errors(self):
         with self.assertRaises(StorageError):
             load_project(self.path)

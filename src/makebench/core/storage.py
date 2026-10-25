@@ -24,13 +24,15 @@ def load_project(path: str | Path) -> Project:
     return Project.from_dict(data)
 
 
-def save_project(project: Project, path: str | Path) -> None:
+def save_project(project: Project, path: str | Path) -> Path | None:
     """Valida antes de escrever e substitui o arquivo somente após a gravação.
 
     Se a escrita ou a substituição falhar, o documento anterior permanece
     intacto. O arquivo temporário é criado no mesmo diretório do destino.
+    Retorna a cópia `.bak-vN` criada nesta atualização de formato, ou None.
     """
     destination = Path(path)
+    created: Path | None = None
     data = project.to_dict()
     Project.from_dict(data)
     try:
@@ -44,8 +46,9 @@ def save_project(project: Project, path: str | Path) -> None:
             if isinstance(previous.get('format_version'),int) and previous['format_version'] < data['format_version'] and not backup.exists():
                 with backup.open('xb') as handle:
                     handle.write(destination.read_bytes());handle.flush();os.fsync(handle.fileno())
+                created=backup
         except (OSError,ValueError) as exc:raise StorageError(f'Não foi possível preservar a cópia anterior: {exc}') from exc
-    if destination.is_file() and destination.read_text(encoding='utf-8')==text:return
+    if destination.is_file() and destination.read_text(encoding='utf-8')==text:return created
     temporary: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(
@@ -64,3 +67,4 @@ def save_project(project: Project, path: str | Path) -> None:
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
+    return created

@@ -931,17 +931,12 @@ class MainWindow(StudioMixin, QMainWindow):
         if not self._finish_field_edit():
             return False
         path = path.resolve()
-        upgraded=False
-        if self.project.uses_v5() and path.is_file():
-            import json
-            try:upgraded=json.loads(path.read_text(encoding='utf-8')).get('format_version') in (1,2,3,4)
-            except (OSError,ValueError):pass
         try:
             self.project.python_files=sorted(self.source.modules)
             Project.from_dict(self.project.to_dict())
             self.assets.write_referenced(path.parent, self.project.asset_paths())
             self.source.write(path)
-            save_project(self.project, path)
+            backup=save_project(self.project, path)
         except (ProjectError, OSError) as exc:
             self._show_error(str(exc))
             return False
@@ -954,7 +949,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.remember_project()
         self.canvas.close_native_preview()
         self.clear_recovery()
-        if upgraded:self.statusBar().showMessage('Projeto atualizado para formato 5. A cópia .bak-v4 preserva a versão anterior; editores antigos não abrem os recursos novos.',12000)
+        if backup:self.statusBar().showMessage(f'Projeto atualizado para formato {self.project.to_dict()["format_version"]}. A cópia {backup.name} preserva a versão anterior; editores antigos não abrem os recursos novos.',12000)
         return True
 
     def _confirm_discard(self) -> bool:
