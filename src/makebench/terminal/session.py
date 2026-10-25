@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Shared PTY and VT emulation, with no graphical interface dependency.
 
 Emulation uses pyte 0.8.2 (LGPL-3.0-or-later); see THIRD_PARTY.md.

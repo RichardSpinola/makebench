@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Sharing documents and assets, always as inert data."""
 
 import json

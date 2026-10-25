@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Module contracts, inert editing, recovery and per-file debugging."""
 
 import json

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Main window: visual interface, blocks and Python functions."""
 
 from __future__ import annotations

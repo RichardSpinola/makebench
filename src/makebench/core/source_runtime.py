@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Importing frozen modules, used only in the running worker."""
 
 import importlib.abc

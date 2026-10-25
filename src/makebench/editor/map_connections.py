@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Single editor for real transitions, shared by dragging, keyboard and inspection."""
 
 from PySide6.QtCore import Qt

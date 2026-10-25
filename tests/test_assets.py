@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Asset preservation and confinement of images referenced by projects."""
 
 import tempfile

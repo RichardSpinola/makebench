@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Comparable Designer measurement with a large project, with no user scripts."""
 
 import argparse

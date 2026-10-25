@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """QProcess tasks with explicit argv, incremental output and Polkit authentication."""
 
 from __future__ import annotations

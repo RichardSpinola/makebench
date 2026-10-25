@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Visual QA of export and keyboard in a private compositor, without building or running a project."""
 
 import argparse

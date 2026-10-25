@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """QA project whose source exposes any improper execution when the editor opens."""
 
 from pathlib import Path

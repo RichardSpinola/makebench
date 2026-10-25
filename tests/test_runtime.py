@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real execution of local fixtures, with no authentication or system changes."""
 
 import os

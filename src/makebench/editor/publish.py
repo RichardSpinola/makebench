@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Distribution with explicit tool preparation and verifiable artifacts."""
 
 from pathlib import Path

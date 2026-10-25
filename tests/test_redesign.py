@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Compatibility, recovery, navigation and export of the real workbench."""
 
 import json

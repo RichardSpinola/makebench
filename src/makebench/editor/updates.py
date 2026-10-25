@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Presentation transactions: one edit never shows empty intermediate panels."""
 
 from contextlib import contextmanager

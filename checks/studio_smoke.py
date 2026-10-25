@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Native workbench journeys: map, commands and build, without running the project."""
 
 import os

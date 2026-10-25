@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Validated reading and atomic writing of Makebench documents."""
 
 from __future__ import annotations

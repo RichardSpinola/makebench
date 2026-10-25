@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Text editing over the component, with explicit confirmation and cancellation."""
 
 from PySide6.QtCore import Qt, Signal

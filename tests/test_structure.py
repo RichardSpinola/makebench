@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Safe reorganization of subtrees, pages and format compatibility."""
 
 import unittest

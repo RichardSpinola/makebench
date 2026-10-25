@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Qt acceptance: native theme, navigation, start page, fields and preferences."""
 
 import os

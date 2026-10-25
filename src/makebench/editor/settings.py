@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Qt settings centers: the global editor and the project's application."""
 
 import json

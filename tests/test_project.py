@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Document integrity, compatibility and change history."""
 
 import unittest

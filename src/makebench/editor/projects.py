@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Start page, local projects, recents, recovery and portable sharing."""
 
 import hashlib

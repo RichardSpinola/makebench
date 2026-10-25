@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Application entry point and support for opening a project from the terminal."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """First-release acceptance: palette, templates, GTK and inert packages."""
 
 import os

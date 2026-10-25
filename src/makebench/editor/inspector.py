@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Contextual inspector by scope, with collapsible sections and accessible fields."""
 
 from PySide6.QtCore import Qt, Signal, QEvent, QTimer

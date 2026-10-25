@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Regressions of real redesign flows: references, assets and text editing."""
 
 import os

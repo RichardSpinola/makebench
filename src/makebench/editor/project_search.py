@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Search across every Python file of the project, using the in-memory buffers only."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Headless document (tools and tests), history and recovery, with no implicit execution."""
 
 import base64

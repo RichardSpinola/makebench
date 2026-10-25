@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Build examples with modules in an isolated environment and record the real hashes."""
 
 import argparse

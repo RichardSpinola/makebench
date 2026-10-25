@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Python syntax compatibility without importing project files."""
 
 import ast

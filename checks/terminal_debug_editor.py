@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Acceptance of the workbench and the GTK bridge with real debug actions."""
 
 import argparse

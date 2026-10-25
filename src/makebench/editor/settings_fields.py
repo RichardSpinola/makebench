@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Native controls for dependencies and icons, never installing or importing packages."""
 
 import importlib.metadata

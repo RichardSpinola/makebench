@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real task center: output in the drawer and in the Qt application panel."""
 
 from pathlib import Path

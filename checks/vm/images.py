@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Official images for disposable VMs; explicit download with SHA-256 checked."""
 
 import hashlib

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Inert compatibility of the GTK editor and content of the five exporters."""
 
 import json

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Lightweight editing tools: literal replacement and delimiters, with no execution."""
 
 import io

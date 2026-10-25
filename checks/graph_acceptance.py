@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real journey: wires, history, file, debugging, two windows and Qt/GTK export."""
 
 import argparse

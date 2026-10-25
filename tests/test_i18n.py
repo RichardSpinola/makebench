@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Interface language: English source strings, complete pt-BR catalog and switching."""
 
 import ast

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """GTK4 terminal with the same PTY and emulation used in the Qt editor."""
 
 from .session import TerminalSession, color, key_input

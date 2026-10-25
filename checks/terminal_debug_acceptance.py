@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real Qt/GTK acceptance: inert preview, terminal, stack, keys and shutdown."""
 
 import argparse

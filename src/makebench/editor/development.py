@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Code and data tools: static inspection, never importing the user's functions."""
 
 import ast

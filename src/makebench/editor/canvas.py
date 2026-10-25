@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Editable Qt preview with dragging, handles and pages, never running application actions."""
 
 from __future__ import annotations

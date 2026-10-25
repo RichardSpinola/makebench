@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real GTK preview over the Qt canvas; selection and editing never fire app events."""
 
 import base64

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Free-graph semantics, compatibility and real transactions of the native editor."""
 
 from copy import deepcopy

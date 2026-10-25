@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Getting-started guide and keyboard reference, both reachable from the Help menu."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real matrix in a private Wayland compositor; never changes the owner's scale."""
 
 import argparse

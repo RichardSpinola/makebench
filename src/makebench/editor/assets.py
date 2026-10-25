@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Portable images: explicit import and project-relative assets."""
 
 from __future__ import annotations

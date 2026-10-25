@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Readable Python from the neutral model, never running project content."""
 
 from dataclasses import dataclass, field

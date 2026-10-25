@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Disposable agent that simulates the user closing the authentication."""
 
 import os

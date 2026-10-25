@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Runnable Qt interface, using the same controls/layouts as the designer."""
 
 from PySide6.QtCore import Signal

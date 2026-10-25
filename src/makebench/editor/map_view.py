@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Map gestures: selection, panning, ports, zoom and keyboard."""
 
 from PySide6.QtCore import Qt, QPointF, Signal, QTimer

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Qt editing decoration drawn by the native style, with no theme of our own."""
 
 from PySide6.QtCore import Qt

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Native component dragging and tree reordering, without moving Qt data."""
 
 from __future__ import annotations

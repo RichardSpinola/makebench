@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Structure templates: pure data, never loading or running user functions."""
 
 from .project import Project, ComponentKind, LayoutKind, new_id

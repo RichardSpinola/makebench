@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Package recipes and builds in staging, never running project code."""
 
 import hashlib

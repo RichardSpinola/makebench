@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Install, open, run, capture and remove an artifact inside the disposable VM."""
 
 from __future__ import annotations

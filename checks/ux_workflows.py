@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Redesign acceptance with real widgets, native thumbnails and the Blockly workspace."""
 
 import argparse

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Qt adapter for the GTK test: supervision only, no Qt controls in the application."""
 
 import json

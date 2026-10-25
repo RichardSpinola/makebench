@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Controls and layouts shared by editing and running Qt applications."""
 
 from PySide6.QtCore import QPoint, QRect, Qt

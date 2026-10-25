@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Native free-graph editor, with separate execution and value ports."""
 
 from __future__ import annotations

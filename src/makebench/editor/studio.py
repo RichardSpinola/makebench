@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Workbench: modes, persistent context and navigable diagnostics."""
 
 from PySide6.QtCore import Qt, QSettings, QTimer, QSize

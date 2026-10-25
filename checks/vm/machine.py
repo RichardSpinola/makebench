@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Disposable KVM VM with an overlay disk and SSH restricted to the host loopback."""
 
 from __future__ import annotations

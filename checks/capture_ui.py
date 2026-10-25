@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real editor screenshots for QA; never runs project scripts."""
 
 import argparse

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Static Python index: suggestions, signatures and targets without running imports."""
 
 import ast

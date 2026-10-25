@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Readable error dialogs: what failed, why in plain words, and technical details on demand."""
 
 from __future__ import annotations

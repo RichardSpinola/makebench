@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Visual journey of the Designer, modules and Qt/GTK debugging in a private compositor."""
 
 import argparse

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Trusted entry point of the relocatable package; never reads or imports projects while preparing."""
 
 from pathlib import Path

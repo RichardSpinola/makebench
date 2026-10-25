@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Your own Python files: editing, static index and integration with the document."""
 
 import hashlib

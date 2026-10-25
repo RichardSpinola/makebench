@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Usability guarantees: unique shortcuts, named controls and readable errors."""
 
 import errno

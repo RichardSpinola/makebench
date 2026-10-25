@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Gestures through the Designer's real viewport; disposable projects and no script run."""
 
 import argparse

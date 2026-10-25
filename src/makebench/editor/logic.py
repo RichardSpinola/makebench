@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Native event panel with offline Blockly and a bridge limited to data."""
 
 from __future__ import annotations

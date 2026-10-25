@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Independent GTK entry point and optional transport for the workbench."""
 
 import json

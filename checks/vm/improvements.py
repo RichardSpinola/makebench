@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Validate the modules/Designer delivery on the already prepared disposable VMs."""
 
 import argparse

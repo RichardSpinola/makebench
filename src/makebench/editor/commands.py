@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Single QAction registry and keyboard-accessible command search."""
 
 from PySide6.QtCore import Qt

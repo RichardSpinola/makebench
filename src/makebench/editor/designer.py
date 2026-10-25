@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Composition tools, reversible conversion and canvas framing."""
 
 from PySide6.QtCore import Qt, QRectF, Signal

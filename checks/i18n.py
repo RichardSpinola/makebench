@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Keep translation catalogs in sync with the source.
 
 Usage:

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Isolated preparation: wheel integrity, command limits and cancellation."""
 
 import hashlib

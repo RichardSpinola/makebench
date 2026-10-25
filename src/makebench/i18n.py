@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Interface language: English source strings with optional catalogs.
 
 The editor, the shared runtime and generated applications call `tr()` for every

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Trusted probe of the editor runtime; never imports user projects."""
 
 import json

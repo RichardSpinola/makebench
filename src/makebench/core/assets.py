@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Asset storage with no graphical toolkit dependency."""
 
 import hashlib

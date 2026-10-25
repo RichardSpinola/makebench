@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Independent, fixed-size launcher; the workbench appears when a project opens."""
 
 from pathlib import Path

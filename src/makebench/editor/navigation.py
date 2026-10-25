@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Editing windows/states and the map derived from the neutral logic."""
 
 from PySide6.QtWidgets import (

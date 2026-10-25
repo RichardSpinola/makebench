@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Local control updates without clearing selection, popup or focus."""
 
 from makebench.i18n import tr

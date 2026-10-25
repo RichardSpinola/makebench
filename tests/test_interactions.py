@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real Qt interactions: dragging, resizing, pages and portable images."""
 
 import os

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real GTK in the Designer: selection and visual changes never run project actions."""
 
 import os, tempfile, time

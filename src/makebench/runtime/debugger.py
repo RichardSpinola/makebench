@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Debugging the Python snapshot, with concurrent commands and inspection without eval."""
 
 from __future__ import annotations

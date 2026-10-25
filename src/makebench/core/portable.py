@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Portable SDK and dependencies; explicit online preparation and isolated offline assembly."""
 
 from __future__ import annotations
@@ -433,7 +434,7 @@ def build_native(
 
 
 def editor_project():
-    """Internal editor metadata; does not set the license, which belongs to the owner."""
+    """Metadata of the editor itself, used when building the editor AppImage."""
     from .project import Project
 
     project = Project.empty("Makebench")
@@ -443,6 +444,8 @@ def editor_project():
         "version": "0.7.0",
         "backend": "qt",
         "icon": "assets/editor.svg",
+        "license": "GPL-3.0-or-later",
+        "description": "Visual editor for Linux applications with Qt, GTK and Python",
     }
     return project
 

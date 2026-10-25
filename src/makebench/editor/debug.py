@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Debug controls and read-only inspection of the started snapshot."""
 
 import json

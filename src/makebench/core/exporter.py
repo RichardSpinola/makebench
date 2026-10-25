@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real export of portable Python source, never running project functions."""
 
 import ast
@@ -295,7 +296,7 @@ def export_source(project, source, read_asset, destination, progress=None, cance
         (stage / "requirements.txt").write_text("\n".join(dependencies) + "\n", encoding="utf-8")
         (stage / "README.txt").write_text(
             tr(
-                "Application exported by Makebench.\nRequires Linux, Python 3.{minor}+ and the dependencies in requirements.txt. GTK also requires the system's GTK4 and PyGObject; libadwaita is optional.\nCreate a Python environment, install requirements.txt and run python3 run.py.\nStarting it runs the project's functions and scripts with your permissions.\nThe runtime ships with the application; the editor's supervision does not appear.\nExternal programs and Polkit must be available on the target system.\nChoose a license for your application before distributing it publicly.\n"
+                "Application exported by Makebench.\nRequires Linux, Python 3.{minor}+ and the dependencies in requirements.txt. GTK also requires the system's GTK4 and PyGObject; libadwaita is optional.\nCreate a Python environment, install requirements.txt and run python3 run.py.\nStarting it runs the project's functions and scripts with your permissions.\nThe runtime ships with the application; the editor's supervision does not appear.\nExternal programs and Polkit must be available on the target system.\nThe bundled Makebench runtime is GPL-3.0-or-later with the Makebench Runtime Exception (see makebench/notices), so you may choose the license of your application. Choose it before distributing the application publicly.\n"
             ).format(minor=python_minor),
             encoding="utf-8",
         )

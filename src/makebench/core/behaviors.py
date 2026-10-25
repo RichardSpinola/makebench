@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Behavior templates: real neutral data, with no execution or Qt dependency."""
 
 from .project import ComponentKind, ProjectError, new_id

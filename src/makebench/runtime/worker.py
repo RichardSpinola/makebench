@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Python execution process. Started only by an explicit user action.
 
 The JSON protocol uses its own descriptor; the code's stdout/stderr are user

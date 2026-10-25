@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Qt editing journeys for Python files and common properties."""
 
 import os

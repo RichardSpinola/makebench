@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Regressions on isolated Python 3.12/3.13, using only already prepared wheels."""
 
 import argparse

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Map of real interfaces and inspection of transitions derived from the same blocks."""
 
 import json

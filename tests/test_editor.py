@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real Qt editor flows in a headless environment, with no interface mocks."""
 
 import os

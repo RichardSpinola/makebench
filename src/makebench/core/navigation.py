@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Windows, states and transitions as data, independent of the toolkit."""
 
 from copy import deepcopy

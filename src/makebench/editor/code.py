@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Code editors with line numbers and Python syntax highlighting."""
 
 import keyword

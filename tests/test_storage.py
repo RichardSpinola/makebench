@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real persistence and failure recovery without losing the previous file."""
 
 import json

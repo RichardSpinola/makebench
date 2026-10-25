@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Window for testing applications, collecting input and following tasks."""
 
 from __future__ import annotations

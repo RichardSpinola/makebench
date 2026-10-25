@@ -5,10 +5,35 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "makebench"
 version = "0.7.0.dev1"
-description = "Editor visual de aplicativos Linux com Qt e Python"
+description = "Visual editor for Linux applications with Qt, GTK and Python"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE", "RUNTIME-EXCEPTION.txt"]
+authors = [{ name = "Richard Spinola" }]
+keywords = ["visual editor", "gui builder", "qt", "gtk", "pyside6", "blockly", "linux", "ide"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Natural Language :: English",
+    "Natural Language :: Portuguese (Brazilian)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = ["PySide6==6.11.2", "pyte==0.8.2"]
+
+[project.urls]
+Homepage = "https://github.com/RichardSpinola/makebench"
+Source = "https://github.com/RichardSpinola/makebench"
+Issues = "https://github.com/RichardSpinola/makebench/issues"
 
 [project.scripts]
 makebench = "makebench.__main__:main"

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Environment for external processes of relocatable packages, shared by Qt/GTK."""
 
 import json

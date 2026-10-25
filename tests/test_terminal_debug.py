@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Observable contracts for PTY, migration and debugging without arbitrary evaluation."""
 
 import json

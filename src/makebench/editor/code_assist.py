@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Explicit suggestions and static navigation in your own Python editors."""
 
 import re

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """QA helper: publish the private bus address and start a virtual KWin."""
 
 import json

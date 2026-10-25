@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Local image library with usage, replacement and preservation for undo."""
 
 from pathlib import Path

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Disposable application to validate real installation and execution of the packages."""
 
 from copy import deepcopy

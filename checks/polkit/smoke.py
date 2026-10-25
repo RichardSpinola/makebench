@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real Polkit exclusively inside a disposable container, with no host mounts."""
 
 import os

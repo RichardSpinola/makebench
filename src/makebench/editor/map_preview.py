@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Inert native thumbnails, with a bounded cache and serialized GTK rendering."""
 
 from collections import OrderedDict

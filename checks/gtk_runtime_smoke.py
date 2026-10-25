@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Real GTK validation: wizard, ctx API, tasks, error and exported source."""
 
 import json

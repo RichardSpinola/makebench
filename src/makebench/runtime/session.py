@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Qt coordination of the Python worker, tasks and interface calls."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Test supervision in the editor's drawer, using the real runtime's signals."""
 
 from datetime import datetime

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Map graphics items: real composition, ports and easy-to-select lines."""
 
 from PySide6.QtCore import Qt, QPointF, QRectF, QTimer

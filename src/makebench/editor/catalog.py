@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Component catalog for insertion; every listed type has a Qt/GTK renderer."""
 
 from PySide6.QtCore import Qt

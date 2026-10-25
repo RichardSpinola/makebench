@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Read-only detection of optional libraries and tools."""
 
 import importlib.util
