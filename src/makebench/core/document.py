@@ -1,13 +1,12 @@
-"""Documento, histórico e recuperação do editor GTK, sem execução implícita."""
+"""Documento sem interface (ferramentas e testes), histórico e recuperação, sem execução implícita."""
 import base64
-from copy import deepcopy
 import json
 import os
 from pathlib import Path
 from makebench.core.project import Project
 from makebench.core.history import History
 from makebench.core.source import SourceBuffer
-from makebench.core.storage import load_project,save_project
+from makebench.core.storage import load_project,save_workspace
 from makebench.core.assets import AssetStore
 
 
@@ -32,12 +31,10 @@ class Document:
         except Exception:self.project=Project.from_dict(before);raise
 
     def save(self,path=None):
-        """Preserva bytes/mtime do JSON sem edição, inclusive formatos antigos."""
-        target=Path(path or self.path).resolve();self.assets.write_referenced(target.parent,self.project.asset_paths())
-        self.project.python_files=sorted(self.source.modules)
-        self.source.write(target)
-        if self.path!=target or self.project.to_dict()!=self.saved:save_project(self.project,target)
-        self.path=target;self.assets.root=target.parent;self.saved=deepcopy(self.project.to_dict());self.source.mark_saved();self.history.mark_saved()
+        """Usa o mesmo caminho do editor; preserva bytes/mtime do JSON sem edição."""
+        target=Path(path or self.path).resolve()
+        self.saved,backup=save_workspace(self.project,self.source,self.assets,target,self.saved if target==self.path else None)
+        self.path=target;self.history.mark_saved();return backup
 
     def recovery(self,path):
         """Grava snapshot inerte, incluindo texto ainda com erro de sintaxe e imagens."""

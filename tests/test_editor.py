@@ -135,6 +135,28 @@ class EditorTests(unittest.TestCase):
         self.assertIn("formato 5", message)
         self.assertIn(self.path.name + ".bak-v1", message)
 
+    def test_editor_save_keeps_untouched_json_and_commits_modules_last(self):
+        """Salvar pela janela usa o caminho comum: JSON intacto sem edição e módulos no manifesto."""
+        example = Path(__file__).resolve().parents[1] / "examples/script-center/project.makebench.json"
+        self.path.write_bytes(example.read_bytes())
+        self.window._replace_project(load_project(self.path), self.path)
+        self.window.source_editor.setPlainText("def ola(ctx):\n    return 1\n")
+        self.assertTrue(self.window.save())
+        self.assertEqual(self.path.read_bytes(), example.read_bytes())
+        actions = self.path.with_name("interface.actions.py")
+        self.assertEqual(actions.read_text(encoding="utf-8"), "def ola(ctx):\n    return 1\n")
+        self.window.source.add_module("makebench_user/ajuda.py", "VALOR = 1\n")
+        self.assertTrue(self.window.save())
+        module = self.path.parent / "makebench_user/ajuda.py"
+        self.assertEqual(module.read_text(encoding="utf-8"), "VALOR = 1\n")
+        self.assertIn("makebench_user/ajuda.py", load_project(self.path).python_files)
+        self.window.source.remove_module("makebench_user/ajuda.py")
+        self.assertTrue(module.exists())
+        self.assertTrue(self.window.save())
+        self.assertFalse(module.exists())
+        self.assertNotIn("makebench_user/ajuda.py", load_project(self.path).python_files)
+        self.assertFalse(self.window.source.dirty or self.window.history.dirty)
+
     def test_blank_project_name_is_reverted_before_saving(self):
         original_name = self.window.project.name
         field = self.window.inspector.findChild(QLineEdit, "property_name")

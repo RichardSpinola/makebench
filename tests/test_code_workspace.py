@@ -41,7 +41,7 @@ class SourceWorkspaceTests(unittest.TestCase):
 
     def test_failed_json_preserves_deleted_file_and_retry(self):
         self.doc.save(self.path);original=self.root/'makebench_user/helpers.py';self.doc.source.remove_module('makebench_user/helpers.py')
-        with patch('makebench.core.document.save_project',side_effect=OSError('Sem espaço')):
+        with patch('makebench.core.storage.save_project',side_effect=OSError('Sem espaço')):
             with self.assertRaises(OSError):self.doc.save()
         self.assertTrue(original.exists());self.assertTrue(self.doc.dirty)
         self.doc.save();self.assertFalse(original.exists());self.assertFalse(self.doc.dirty)

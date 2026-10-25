@@ -22,7 +22,7 @@ from makebench.core.history import History
 from makebench.core.project import (
     Component, ComponentKind, LayoutKind, Project, ProjectError,
 )
-from makebench.core.storage import load_project, save_project
+from makebench.core.storage import load_project, save_workspace
 from makebench.editor.assets import AssetStore
 from makebench.editor.canvas import PreviewCanvas
 from makebench.editor.drag import ComponentPalette, ComponentTree
@@ -54,6 +54,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.path = path.resolve() if path else None
         self.source = SourceBuffer.load(self.path)
         self.history = History(self.project)
+        self._saved_document = self.project.to_dict() if self.path else None
         self.assets = AssetStore(path.parent if path else None)
         self.selected_id = self.project.root.id
         self._tree_items: dict[str, QTreeWidgetItem] = {}
@@ -909,6 +910,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.logic._target_component=None
         self.assets = AssetStore(path.parent if path else None)
         self.history = History(project)
+        self._saved_document = project.to_dict() if path else None
         self.selected_id = project.root.id
         self._refresh()
         self.remember_project()
@@ -932,18 +934,13 @@ class MainWindow(StudioMixin, QMainWindow):
             return False
         path = path.resolve()
         try:
-            self.project.python_files=sorted(self.source.modules)
-            Project.from_dict(self.project.to_dict())
-            self.assets.write_referenced(path.parent, self.project.asset_paths())
-            self.source.write(path)
-            backup=save_project(self.project, path)
+            saved = self._saved_document if path == self.path else None
+            self._saved_document, backup = save_workspace(self.project, self.source, self.assets, path, saved)
         except (ProjectError, OSError) as exc:
             self._show_error(str(exc))
             return False
         self.path = path
-        self.assets.root = path.parent.resolve()
         self.history.mark_saved()
-        self.source.mark_saved()
         self._update_code()
         self._update_actions()
         self.remember_project()

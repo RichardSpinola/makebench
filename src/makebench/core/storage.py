@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from copy import deepcopy
 from pathlib import Path
 
 from makebench.core.project import Project, ProjectError
@@ -68,3 +69,28 @@ def save_project(project: Project, path: str | Path) -> Path | None:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
     return created
+
+
+def save_workspace(project: Project, source, assets, path: str | Path, saved: dict | None = None) -> tuple[dict, Path | None]:
+    """Caminho único de salvamento do editor e de `Document`: recursos, fontes e JSON.
+
+    Valida o documento antes de tocar no disco. Recursos e arquivos Python são
+    gravados antes do JSON, que confirma o salvamento; só então módulos excluídos
+    são removidos. `saved` é o dicionário do último salvamento no mesmo caminho:
+    se for igual ao atual, o JSON não é regravado e formatos antigos mantêm seus
+    bytes. Não é uma transação única: falha no JSON deixa as fontes já gravadas e
+    o documento continua não salvo. Retorna o dicionário salvo e a cópia
+    `.bak-vN` criada, ou None.
+    """
+    target = Path(path).resolve()
+    project.python_files = sorted(source.modules)
+    data = project.to_dict()
+    Project.from_dict(data)
+    assets.write_referenced(target.parent, project.asset_paths())
+    source.write(target)
+    backup = None
+    if saved is None or data != saved or not target.is_file():
+        backup = save_project(project, target)
+    source.mark_saved()
+    assets.root = target.parent
+    return deepcopy(data), backup
