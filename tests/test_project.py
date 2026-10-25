@@ -103,5 +103,33 @@ class ProjectTests(unittest.TestCase):
         self.assertIsNotNone(project.find(button.id))
 
 
+class HistoryLabelTests(unittest.TestCase):
+    def test_labels_follow_undo_and_redo(self):
+        project = Project.empty("Labels")
+        history = History(project)
+        self.assertEqual((history.undo_label, history.redo_label), ("", ""))
+        project.add(project.root.id, ComponentKind.BUTTON)
+        history.push(project, "Add button")
+        project.name = "Renamed"
+        history.push(project, "Rename project")
+        self.assertEqual(history.undo_label, "Rename project")
+        history.undo()
+        self.assertEqual((history.undo_label, history.redo_label), ("Add button", "Rename project"))
+
+    def test_limit_drops_oldest_changes_without_touching_saved_state(self):
+        project = Project.empty("Limit")
+        history = History(project, limit=3)
+        for number in range(6):
+            project.name = f"Name {number}"
+            history.push(project, f"Change {number}")
+        undone = 0
+        while history.can_undo:
+            history.undo()
+            undone += 1
+        self.assertEqual(undone, 3)
+        self.assertEqual(history.redo_label, "Change 3")
+        self.assertTrue(history.dirty)
+
+
 if __name__ == "__main__":
     unittest.main()

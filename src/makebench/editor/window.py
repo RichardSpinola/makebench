@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 
 from copy import deepcopy
 from makebench.core.logic import create_flow, editable, validate
-from makebench.core.source import SourceBuffer
+from makebench.core.source import ENTRY_FILE, SourceBuffer
 from makebench.editor.code import CodeEditor
 from makebench.editor.logic import LogicPanel
 from makebench.core.history import History
@@ -47,6 +47,52 @@ from makebench import __version__
 
 from .studio import StudioMixin
 from makebench.i18n import ntr, tr
+
+
+def undo_labels():
+    """Names shown by Undo/Redo, keyed by the editor command that made the change."""
+    return {
+        "edit_resource": tr("Replace image"),
+        "mouseReleaseEvent": tr("Move in the map"),
+        "contextMenuEvent": tr("Create interface"),
+        "new_window_dialog": tr("Create interface"),
+        "new_state_dialog": tr("Create state"),
+        "make_entry_window": tr("Set start window"),
+        "make_initial_state": tr("Set initial state"),
+        "rename_state_dialog": tr("Rename state"),
+        "restore_default_properties": tr("Restore from Default"),
+        "remove_state": tr("Remove state"),
+        "remove_window": tr("Remove window"),
+        "duplicate_interface": tr("Duplicate interface"),
+        "set_initial": tr("Set as initial"),
+        "connect_nodes": tr("Connect interfaces"),
+        "edit_edge": tr("Edit transition"),
+        "remove_edge": tr("Remove transition"),
+        "organize": tr("Arrange map"),
+        "selection_command": tr("Align selection"),
+        "restore_state_property": tr("Restore property"),
+        "import_image_drop": tr("Insert image"),
+        "add_component": tr("Add component"),
+        "_on_drop": tr("Drop component"),
+        "_commit_geometry": tr("Move or resize"),
+        "duplicate_component": tr("Duplicate"),
+        "reorder_component": tr("Reorder"),
+        "add_page": tr("Add page"),
+        "choose_image": tr("Choose image"),
+        "clear_image": tr("Remove image"),
+        "remove_component": tr("Remove component"),
+        "remove_flow": tr("Remove flow"),
+        "change_flow_filter": tr("Change state filter"),
+        "variable_dialog": tr("Edit variable"),
+        "remove_variable": tr("Remove variable"),
+        "change_behavior_editor": tr("Switch behavior editor"),
+        "restore_behavior_dialog": tr("Recover behavior"),
+        "receive_graph": tr("Edit nodes"),
+        "duplicate_flow_dialog": tr("Duplicate flow"),
+        "insert_behavior": tr("Insert behavior"),
+        "_toggle_breakpoint": tr("Toggle breakpoint"),
+        "choose_window_icon": tr("Choose window icon"),
+    }
 
 
 class MainWindow(StudioMixin, QMainWindow):
@@ -85,6 +131,15 @@ class MainWindow(StudioMixin, QMainWindow):
         self._create_actions()
         self._create_workspace()
         self.install_studio()
+        from .project_search import install_project_search
+
+        search = install_project_search(self)
+        edit_menu = next(
+            (a.menu() for a in self.menuBar().actions() if a.text() == tr("&Edit")), None
+        )
+        if edit_menu is not None:
+            edit_menu.addSeparator()
+            edit_menu.addAction(search)
         self._refresh()
         self.remember_project()
 
@@ -92,6 +147,9 @@ class MainWindow(StudioMixin, QMainWindow):
         """Wait for the style to polish the bars before checking the native palette."""
         super().showEvent(event)
         QTimer.singleShot(0, self, self._sync_native_bars)
+        from .controls import name_unlabeled_buttons
+
+        name_unlabeled_buttons(self)
 
     def changeEvent(self, event):
         """Theme and activation can change the special colors of KDE headers."""
@@ -150,7 +208,17 @@ class MainWindow(StudioMixin, QMainWindow):
         quit_action = QAction(tr("Quit"), self)
         quit_action.setShortcut(QKeySequence.StandardKey.Quit)
         quit_action.triggered.connect(self.close)
-        file_menu.addActions([self.new_action, self.open_action, self.save_action, save_as_action])
+        self.example_action = QAction(tr("Open example…"), self)
+        self.example_action.triggered.connect(self.open_example_dialog)
+        file_menu.addActions(
+            [
+                self.new_action,
+                self.open_action,
+                self.example_action,
+                self.save_action,
+                save_as_action,
+            ]
+        )
         file_menu.addSeparator()
         file_menu.addAction(quit_action)
         self.undo_action = QAction(tr("Undo"), self)
@@ -604,6 +672,26 @@ class MainWindow(StudioMixin, QMainWindow):
             if source_active
             else self.history.can_redo
         )
+        # Say what Undo/Redo will act on: the open code file or a named project change.
+        if source_active:
+            current = self.current_code_file() if hasattr(self, "code_files") else ENTRY_FILE
+            name = (
+                (self.source.path.name if self.source.path else "project.actions.py")
+                if current == ENTRY_FILE
+                else Path(current).name
+            )
+            self.undo_action.setText(tr("Undo in {file}").format(file=name))
+            self.redo_action.setText(tr("Redo in {file}").format(file=name))
+        else:
+            undo, redo = self.history.undo_label, self.history.redo_label
+            self.undo_action.setText(
+                tr("Undo: {action}").format(action=undo) if undo else tr("Undo")
+            )
+            self.redo_action.setText(
+                tr("Redo: {action}").format(action=redo) if redo else tr("Redo")
+            )
+        for action in (self.undo_action, self.redo_action):
+            action.setToolTip(action.text() + " · " + action.shortcut().toString())
         self.remove_action.setEnabled(
             interface_active
             and (self.selected_id != self.project.root.id or len(self.project.roots) > 1)
@@ -671,7 +759,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 self._refresh()
                 self.statusBar().showMessage(str(exc), 7000)
                 return
-            self.history.push(self.project)
+            self.history.push(self.project, tr("Change property"))
             self._refresh_property(component_id, key)
             return
         if component_id == "@project":
@@ -699,7 +787,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 try:
                     self.convert_layout(node, value)
                 except ProjectError as exc:
-                    self._show_error(str(exc))
+                    self._show_error(exc, tr("Could not change the property"))
                     self._refresh()
                     return
             elif key == "alignment_preset":
@@ -729,7 +817,7 @@ class MainWindow(StudioMixin, QMainWindow):
             self._refresh()
             self.statusBar().showMessage(str(exc), 7000)
             return
-        self.history.push(self.project)
+        self.history.push(self.project, tr("Change property"))
         self._refresh_property(component_id, key)
 
     def _refresh_property(self, identifier, key, finish=True):
@@ -885,7 +973,7 @@ class MainWindow(StudioMixin, QMainWindow):
             try:
                 self._change_property(identifier, "icon", self.assets.import_image(Path(filename)))
             except (OSError, ProjectError) as exc:
-                self._show_error(str(exc))
+                self._show_error(exc, tr("Could not use this icon"))
 
     def reveal_navigation(self, edge):
         """The Designer's inspector opens the exact connection in the Map."""
@@ -952,8 +1040,16 @@ class MainWindow(StudioMixin, QMainWindow):
             node = self.project.parent_of(node.id)
         return None
 
-    def _edit(self, change: Callable[[], None], refresh=True) -> None:
-        """Group a command into one change and restore the document if it fails."""
+    def _edit(self, change: Callable[[], None], refresh=True, label: str | None = None) -> None:
+        """Group a command into one change and restore the document if it fails.
+
+        `label` names the change for Undo/Redo; when omitted it comes from
+        UNDO_LABELS, keyed by the name of the command that called this method.
+        """
+        if label is None:
+            import sys
+
+            label = undo_labels().get(sys._getframe(1).f_code.co_name, tr("Edit"))
         if not self._finish_field_edit():
             return
         before = self.project.to_dict()
@@ -965,9 +1061,9 @@ class MainWindow(StudioMixin, QMainWindow):
             self.project = Project.from_dict(before)
             self.selected_id = selection
             self._refresh()
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not apply the change"))
             return
-        self.history.push(self.project)
+        self.history.push(self.project, label)
         if refresh:
             self._refresh()
         else:
@@ -983,9 +1079,9 @@ class MainWindow(StudioMixin, QMainWindow):
             Project.from_dict(self.project.to_dict())
         except ProjectError as exc:
             self.project.application = before
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not change the application settings"))
             return
-        self.history.push(self.project)
+        self.history.push(self.project, tr("Change application settings"))
         if key == "backend":
             self._refresh()
         else:
@@ -1217,9 +1313,9 @@ class MainWindow(StudioMixin, QMainWindow):
         try:
             self.selected_id = self.project.remove(self.selected_id)
         except ProjectError as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not remove the component"))
             return
-        self.history.push(self.project)
+        self.history.push(self.project, tr("Remove component"))
         self._refresh()
 
     def undo(self) -> None:
@@ -1275,17 +1371,17 @@ class MainWindow(StudioMixin, QMainWindow):
             try:
                 filename = str(read_bundle(filename, Path(destination)))
             except (ProjectError, OSError) as exc:
-                self._show_error(str(exc))
+                self._show_error(exc, tr("Could not open the project"))
                 return
         try:
             project = load_project(filename)
         except ProjectError as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not open the project"))
             return
         try:
             self._replace_project(project, Path(filename))
         except (ProjectError, OSError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not open the project"))
 
     def _replace_project(self, project: Project, path: Path | None) -> None:
         """Swap the document and start an independent history."""
@@ -1336,7 +1432,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 self.project, self.source, self.assets, path, saved
             )
         except (ProjectError, OSError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not save the project"))
             return False
         self.path = path
         self.history.mark_saved()
@@ -1446,9 +1542,9 @@ class MainWindow(StudioMixin, QMainWindow):
             if flow is None:
                 flow = create_flow(self.project, component_id, states=states)
         except ProjectError as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not open the logic"))
             return
-        self.history.push(self.project)
+        self.history.push(self.project, tr("Create event"))
         self.logic.sync(flow["id"])
         self.tabs.setCurrentIndex(1)
         self._update_code()
@@ -1467,7 +1563,7 @@ class MainWindow(StudioMixin, QMainWindow):
         flow = next((f for f in self.project.workflows if f["id"] == flow_id), None)
         if flow and name.strip() and flow["name"] != name.strip():
             flow["name"] = name.strip()
-            self.history.push(self.project)
+            self.history.push(self.project, tr("Rename flow"))
             self.logic.sync()
             self._update_code()
             self._update_actions()
@@ -1501,7 +1597,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 flow.clear()
                 flow.update(previous)
                 return
-        self.history.push(self.project)
+        self.history.push(self.project, tr("Edit blocks"))
         self._update_code()
         self._update_actions()
 
@@ -1554,7 +1650,7 @@ class MainWindow(StudioMixin, QMainWindow):
             )
         except (ProjectError, OSError) as exc:
             if self.project.application.get("backend", "qt") == "gtk":
-                self._show_error(str(exc))
+                self._show_error(exc, tr("Could not start the test"))
             self.sync_problems()
             self.drawer.show()
             self.drawer.setCurrentIndex(1)
@@ -1613,9 +1709,15 @@ class MainWindow(StudioMixin, QMainWindow):
         self.raise_()
         self.activateWindow()
 
-    def _show_error(self, message: str) -> None:
-        """Show recoverable failures without closing the editor."""
-        QMessageBox.critical(self.project_dialog_parent(), "Makebench", message)
+    def _show_error(self, error, action: str | None = None) -> None:
+        """Show recoverable failures without closing the editor.
+
+        `error` is a message or an exception; `action` names what failed and becomes
+        the title, while technical details stay collapsed.
+        """
+        from .errors import show_error
+
+        show_error(self.project_dialog_parent(), error, action)
 
     def show_about(self) -> None:
         """Show the version and what this release does."""

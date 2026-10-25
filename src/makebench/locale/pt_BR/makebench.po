@@ -40,6 +40,10 @@ msgstr "(cópia)"
 msgid "(ctx, value)"
 msgstr "(ctx, valor)"
 
+#: 
+msgid "+ Add the first node…"
+msgstr "+ Adicionar o primeiro nó…"
+
 #: src/makebench/editor/logic.py
 msgid "+ Event…"
 msgstr "+ Evento…"
@@ -76,13 +80,29 @@ msgstr "arquivo .actions.py criado ao salvar"
 msgid ".makebench.json project to open"
 msgstr "Projeto .makebench.json para abrir"
 
+#: 
+msgid "1 · Map"
+msgstr "1 · Mapa"
+
 #: src/makebench/editor/settings.py
 msgid "15 seconds"
 msgstr "15 segundos"
 
+#: 
+msgid "2 · Design"
+msgstr "2 · Design"
+
+#: 
+msgid "3 · Logic"
+msgstr "3 · Lógica"
+
 #: src/makebench/editor/settings.py
 msgid "30 seconds"
 msgstr "30 segundos"
+
+#: 
+msgid "4 · Code"
+msgstr "4 · Código"
 
 #: src/makebench/editor/settings.py
 msgid "60 seconds"
@@ -296,6 +316,10 @@ msgstr "Alinhar e distribuir"
 msgid "Align in the free area"
 msgstr "Alinhar na área livre"
 
+#: 
+msgid "Align selection"
+msgstr "Alinhar seleção"
+
 #: src/makebench/editor/inspector.py
 msgid "Alignment"
 msgstr "Alinhamento"
@@ -462,6 +486,10 @@ msgstr "Organizar"
 msgid "Arrange as {layout}"
 msgstr "Organizar em {layout}"
 
+#: 
+msgid "Arrange map"
+msgstr "Organizar mapa"
+
 #: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
 msgid "Ask"
 msgstr "Perguntar"
@@ -582,6 +610,10 @@ msgstr "Construção"
 msgid "Build cancelled."
 msgstr "Construção cancelada."
 
+#: 
+msgid "Build each window with native Qt or GTK controls. Drag components from Insert, then adjust them in Properties."
+msgstr "Monte cada janela com controles nativos Qt ou GTK. Arraste componentes de Inserir e ajuste-os em Propriedades."
+
 #: src/makebench/editor/settings.py
 msgid "Build from the Export window"
 msgstr "Construção pela janela Exportar"
@@ -670,6 +702,10 @@ msgstr "Centralizar horizontalmente"
 msgid "Center vertically"
 msgstr "Centralizar verticalmente"
 
+#: 
+msgid "Change application settings"
+msgstr "Alterar configurações do aplicativo"
+
 #: src/makebench/editor/development.py
 msgid "Change component text"
 msgstr "Alterar texto de componente"
@@ -682,9 +718,21 @@ msgstr "Trocar ícone…"
 msgid "Change progress"
 msgstr "Alterar progresso"
 
+#: 
+msgid "Change properties"
+msgstr "Alterar propriedades"
+
+#: 
+msgid "Change property"
+msgstr "Alterar propriedade"
+
 #: src/makebench/core/behaviors.py
 msgid "Change state"
 msgstr "Mudar estado"
+
+#: 
+msgid "Change state filter"
+msgstr "Alterar filtro de estado"
 
 #: src/makebench/core/behaviors.py src/makebench/core/graph.py src/makebench/core/logic_defaults.py
 msgid "Change text"
@@ -790,6 +838,10 @@ msgstr "Escolher vários estados…"
 msgid "Choose the application icon."
 msgstr "Escolha o ícone do aplicativo."
 
+#: 
+msgid "Choose window icon"
+msgstr "Escolher ícone da janela"
+
 #: src/makebench/editor/projects.py
 msgid "Choose…"
 msgstr "Escolher…"
@@ -798,7 +850,7 @@ msgstr "Escolher…"
 msgid "class"
 msgstr "classe"
 
-#: src/makebench/editor/execution.py
+#: src/makebench/editor/controls.py src/makebench/editor/execution.py
 msgid "Clear"
 msgstr "Limpar"
 
@@ -902,6 +954,10 @@ msgstr "Coluna"
 msgid "Columns"
 msgstr "Colunas"
 
+#: 
+msgid "Command"
+msgstr "Comando"
+
 #: src/makebench/editor/commands.py src/makebench/editor/studio.py
 msgid "Command palette"
 msgstr "Paleta de comandos"
@@ -909,6 +965,10 @@ msgstr "Paleta de comandos"
 #: src/makebench/editor/studio.py
 msgid "Command palette…"
 msgstr "Paleta de comandos…"
+
+#: 
+msgid "Commands"
+msgstr "Comandos"
 
 #: src/makebench/editor/graph.py
 msgid "Comment"
@@ -1074,6 +1134,22 @@ msgstr "Copiar caminho"
 msgid "Copy report"
 msgstr "Copiar relatório"
 
+#: 
+msgid "Could not apply the change"
+msgstr "Não foi possível aplicar a alteração"
+
+#: 
+msgid "Could not change the application settings"
+msgstr "Não foi possível alterar as configurações do aplicativo"
+
+#: 
+msgid "Could not change the property"
+msgstr "Não foi possível alterar a propriedade"
+
+#: 
+msgid "Could not complete the action"
+msgstr "Não foi possível concluir a ação"
+
 #: src/makebench/runtime/window.py
 msgid "Could not complete the operation"
 msgstr "Não foi possível concluir a operação"
@@ -1086,13 +1162,33 @@ msgstr "Não foi possível copiar a imagem {source}: {error}"
 msgid "Could not create recovery: {error}"
 msgstr "Não foi possível criar recuperação: {error}"
 
+#: 
+msgid "Could not create the module"
+msgstr "Não foi possível criar o módulo"
+
+#: 
+msgid "Could not delete the module"
+msgstr "Não foi possível excluir o módulo"
+
+#: 
+msgid "Could not insert the behavior"
+msgstr "Não foi possível inserir o comportamento"
+
 #: src/makebench/core/storage.py
 msgid "Could not keep the previous copy: {error}"
 msgstr "Não foi possível preservar a cópia anterior: {error}"
 
+#: 
+msgid "Could not keep your version"
+msgstr "Não foi possível manter sua versão"
+
 #: src/makebench/editor/logic.py
 msgid "Could not load Blockly. Reopen Makebench; the interface and the saved files remain available."
 msgstr "Não foi possível carregar Blockly. Reabra o Makebench; a interface e os arquivos salvos continuam disponíveis."
+
+#: 
+msgid "Could not locate the project"
+msgstr "Não foi possível localizar o projeto"
 
 #: src/makebench/editor/projects.py
 msgid "Could not move to trash: {path}"
@@ -1102,9 +1198,17 @@ msgstr "Não foi possível mover para a lixeira: {path}"
 msgid "Could not open GTK4: no graphical display is available."
 msgstr "Não foi possível abrir GTK4: nenhum display gráfico está disponível."
 
+#: 
+msgid "Could not open the example"
+msgstr "Não foi possível abrir o exemplo"
+
 #: src/makebench/__main__.py
 msgid "Could not open the functions"
 msgstr "Não foi possível abrir as funções"
+
+#: 
+msgid "Could not open the logic"
+msgstr "Não foi possível abrir a lógica"
 
 #: src/makebench/__main__.py
 msgid "Could not open the project"
@@ -1118,9 +1222,49 @@ msgstr "Não foi possível abrir {name}: {error}"
 msgid "Could not read the image: {error}"
 msgstr "Não foi possível ler a imagem: {error}"
 
+#: 
+msgid "Could not recover the session"
+msgstr "Não foi possível recuperar a sessão"
+
+#: 
+msgid "Could not reload the file"
+msgstr "Não foi possível recarregar o arquivo"
+
+#: 
+msgid "Could not remove the asset"
+msgstr "Não foi possível remover o recurso"
+
+#: 
+msgid "Could not remove the component"
+msgstr "Não foi possível remover o componente"
+
+#: 
+msgid "Could not rename the module"
+msgstr "Não foi possível renomear o módulo"
+
+#: 
+msgid "Could not replace the image"
+msgstr "Não foi possível substituir a imagem"
+
+#: 
+msgid "Could not save the project"
+msgstr "Não foi possível salvar o projeto"
+
 #: src/makebench/core/storage.py
 msgid "Could not save {name}: {error}"
 msgstr "Não foi possível salvar {name}: {error}"
+
+#: 
+msgid "Could not share the project"
+msgstr "Não foi possível compartilhar o projeto"
+
+#: 
+msgid "Could not start the test"
+msgstr "Não foi possível iniciar o teste"
+
+#: 
+msgid "Could not use this icon"
+msgstr "Não foi possível usar este ícone"
 
 #: src/makebench/editor/graph.py
 msgid "Count"
@@ -1141,6 +1285,10 @@ msgstr "Crie um estado no Mapa antes de usar este modelo."
 #: src/makebench/core/behaviors.py
 msgid "Create another interface in the Map before opening a window."
 msgstr "Crie outra interface no Mapa antes de abrir uma janela."
+
+#: 
+msgid "Create event"
+msgstr "Criar evento"
 
 #: src/makebench/editor/navigation.py
 msgid "Create interface"
@@ -1386,6 +1534,10 @@ msgstr "arraste para conectar; botão direito desconecta"
 msgid "Drag to resize. Esc cancels the gesture."
 msgstr "Arraste para redimensionar. Esc cancela o gesto."
 
+#: 
+msgid "Drop component"
+msgstr "Soltar componente"
+
 #: src/makebench/editor/window.py
 msgid "Duplicate"
 msgstr "Duplicar"
@@ -1438,6 +1590,10 @@ msgstr "Cada saída de execução aceita uma conexão. Use Sequência para ramif
 msgid "Edit"
 msgstr "Editar"
 
+#: 
+msgid "Edit blocks"
+msgstr "Editar blocos"
+
 #: src/makebench/editor/designer.py
 msgid "Edit component text"
 msgstr "Editar texto do componente"
@@ -1449,6 +1605,10 @@ msgstr "Editar lógica"
 #: src/makebench/editor/designer.py
 msgid "Edit logic…"
 msgstr "Editar lógica…"
+
+#: 
+msgid "Edit nodes"
+msgstr "Editar nós"
 
 #: src/makebench/editor/map_panel.py
 msgid "Edit on start"
@@ -1477,6 +1637,10 @@ msgstr "Editar transição"
 #: src/makebench/editor/map_panel.py
 msgid "Edit transition…"
 msgstr "Editar transição…"
+
+#: 
+msgid "Edit variable"
+msgstr "Editar variável"
 
 #: src/makebench/editor/window.py
 msgid "Edit your functions on the right. The Python on the left follows the blocks and never replaces your functions. Press F5 to test the application in a separate window."
@@ -1618,6 +1782,14 @@ msgstr "Evento: {kind} em {component}"
 msgid "Everything"
 msgstr "Tudo"
 
+#: 
+msgid "Example"
+msgstr "Exemplo"
+
+#: 
+msgid "Example copied to {path}. Press F5 to test it."
+msgstr "Exemplo copiado para {path}. Pressione F5 para testá-lo."
+
 #: src/makebench/editor/execution.py src/makebench/editor/graph.py
 msgid "Execution"
 msgstr "Execução"
@@ -1661,6 +1833,10 @@ msgstr "Exportar {format}"
 #: src/makebench/editor/publish.py
 msgid "Exported"
 msgstr "Exportado"
+
+#: 
+msgid "Exporters"
+msgstr "Exportadores"
 
 #: src/makebench/editor/window.py
 msgid "Extract into an empty folder"
@@ -1889,6 +2065,10 @@ msgstr "Gerado, não construído ({reason})"
 #: src/makebench/editor/publish.py
 msgid "Generates a ZIP with the build files. Does not produce an installable package."
 msgstr "Gera um ZIP com os arquivos de construção. Não produz um pacote instalável."
+
+#: 
+msgid "Getting started"
+msgstr "Primeiros passos"
 
 #: src/makebench/core/navigation.py
 msgid "Give the window a name."
@@ -2186,9 +2366,17 @@ msgstr "Insira um componente compatível nesta janela antes de criar este nó."
 msgid "Insert a Terminal component in this window."
 msgstr "Insira um componente Terminal nesta janela."
 
+#: 
+msgid "Insert behavior"
+msgstr "Inserir comportamento"
+
 #: src/makebench/editor/designer.py
 msgid "Insert element"
 msgstr "Inserir elemento"
+
+#: 
+msgid "Insert image"
+msgstr "Inserir imagem"
 
 #: src/makebench/editor/studio.py
 msgid "Insert the selected element"
@@ -2494,6 +2682,10 @@ msgstr "Mantenha pelo menos uma janela no aplicativo."
 msgid "Keep my version"
 msgstr "Manter minha versão"
 
+#: 
+msgid "Keyboard shortcuts"
+msgstr "Atalhos de teclado"
+
 #: src/makebench/editor/settings.py
 msgid "Language of the messages and dialogs that Makebench adds to your application."
 msgstr "Idioma das mensagens e diálogos que o Makebench acrescenta ao seu aplicativo."
@@ -2590,6 +2782,10 @@ msgstr "Painel principal"
 msgid "Main screen"
 msgstr "Tela principal"
 
+#: 
+msgid "Makebench builds Linux applications in four areas. Nothing in your project runs until you press F5."
+msgstr "O Makebench cria aplicativos Linux em quatro áreas. Nada do seu projeto é executado até você pressionar F5."
+
 #: src/makebench/editor/publish.py
 msgid "Makebench editor (AppImage)"
 msgstr "Editor Makebench (AppImage)"
@@ -2637,6 +2833,10 @@ msgstr "Mapa"
 #: src/makebench/editor/map_panel.py
 msgid "Map of the application's windows and states"
 msgstr "Mapa das janelas e estados do aplicativo"
+
+#: 
+msgid "Match case"
+msgstr "Diferenciar maiúsculas"
 
 #: src/makebench/core/graph.py
 msgid "Message"
@@ -2706,6 +2906,10 @@ msgstr "Módulos e suas pastas não podem ser links simbólicos."
 msgid "Modules must be inside makebench_user and end in .py."
 msgstr "Módulos devem estar em makebench_user e terminar em .py."
 
+#: src/makebench/editor/controls.py
+msgid "More options"
+msgstr "Mais opções"
+
 #: src/makebench/editor/window.py
 msgid "Move after"
 msgstr "Mover para depois"
@@ -2713,6 +2917,14 @@ msgstr "Mover para depois"
 #: src/makebench/editor/window.py
 msgid "Move before"
 msgstr "Mover para antes"
+
+#: 
+msgid "Move in the map"
+msgstr "Mover no mapa"
+
+#: 
+msgid "Move or resize"
+msgstr "Mover ou redimensionar"
 
 #: src/makebench/editor/projects.py
 msgid "Move project to trash"
@@ -2878,6 +3090,10 @@ msgstr "Nenhum bloco corresponde à busca."
 msgid "No description."
 msgstr "Sem descrição."
 
+#: 
+msgid "No examples available"
+msgstr "Nenhum exemplo disponível"
+
 #: src/makebench/editor/inspector.py
 msgid "No image"
 msgstr "Nenhuma imagem"
@@ -2922,6 +3138,10 @@ msgstr "Nenhum projeto recente."
 msgid "No results"
 msgstr "Nenhum resultado"
 
+#: 
+msgid "No results for “{query}”."
+msgstr "Nenhum resultado para “{query}”."
+
 #: src/makebench/editor/settings.py
 msgid "No setting matches the search."
 msgstr "Nenhuma configuração corresponde à busca."
@@ -2941,6 +3161,10 @@ msgstr "Nenhum teste iniciado"
 #: src/makebench/editor/publish.py
 msgid "No version"
 msgstr "Sem versão"
+
+#: 
+msgid "Node graph — wires, loops and a terminal"
+msgstr "Grafo de nós — fios, repetições e terminal"
 
 #: src/makebench/core/graph.py
 msgid "Node state does not exist."
@@ -3030,6 +3254,10 @@ msgstr "só em {state}"
 msgid "Open"
 msgstr "Abrir"
 
+#: 
+msgid "Open a copy of an example project; nothing runs until you press F5."
+msgstr "Abre uma cópia de um projeto de exemplo; nada é executado até você pressionar F5."
+
 #: src/makebench/editor/map_connections.py
 msgid "Open another real system window in its initial state."
 msgstr "Abrir outra janela real do sistema em seu estado inicial."
@@ -3037,6 +3265,14 @@ msgstr "Abrir outra janela real do sistema em seu estado inicial."
 #: src/makebench/editor/map_panel.py
 msgid "Open Designer"
 msgstr "Abrir Designer"
+
+#: 
+msgid "Open example"
+msgstr "Abrir exemplo"
+
+#: 
+msgid "Open example…"
+msgstr "Abrir exemplo…"
 
 #: src/makebench/editor/projects.py src/makebench/editor/publish.py
 msgid "Open folder"
@@ -3057,6 +3293,10 @@ msgstr "Abrir o guia de uso"
 #: src/makebench/core/behaviors.py src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
 msgid "Open window"
 msgstr "Abrir janela"
+
+#: 
+msgid "Open {area}"
+msgstr "Abrir {area}"
 
 #: src/makebench/editor/window.py
 msgid "Open…"
@@ -3085,6 +3325,10 @@ msgstr "Operador"
 #: src/makebench/editor/graph.py
 msgid "Options"
 msgstr "Opções"
+
+#: 
+msgid "Or right-click the empty area to add nodes and comments"
+msgstr "Ou clique com o botão direito na área vazia para adicionar nós e comentários"
 
 #: src/makebench/editor/execution.py
 msgid "Ordinary"
@@ -3141,6 +3385,10 @@ msgstr "Páginas devem ficar dentro de um conjunto de páginas."
 #: src/makebench/editor/studio.py
 msgid "Pan the view"
 msgstr "Mover a visão"
+
+#: 
+msgid "Part of the path {path} is not a folder."
+msgstr "Parte do caminho {path} não é uma pasta."
 
 #: src/makebench/terminal/qt.py
 msgid "Paste"
@@ -3470,6 +3718,10 @@ msgstr "Funções Python: {error}"
 msgid "Python modules require format 8 or later."
 msgstr "Módulos Python requerem formato 8 ou posterior."
 
+#: 
+msgid "Python modules — several files"
+msgstr "Módulos Python — vários arquivos"
+
 #: src/makebench/editor/development.py
 msgid "Python name"
 msgstr "Nome Python"
@@ -3578,6 +3830,14 @@ msgstr "Recuperar o comportamento anterior à troca de editor"
 msgid "Redo"
 msgstr "Refazer"
 
+#: 
+msgid "Redo in {file}"
+msgstr "Refazer em {file}"
+
+#: 
+msgid "Redo: {action}"
+msgstr "Refazer: {action}"
+
 #: src/makebench/editor/settings.py
 msgid "Reduce motion"
 msgstr "Reduzir movimento"
@@ -3642,9 +3902,17 @@ msgstr "Remover transição"
 msgid "Remove unused asset"
 msgstr "Remover recurso sem uso"
 
+#: 
+msgid "Remove variable"
+msgstr "Remover variável"
+
 #: src/makebench/editor/navigation.py
 msgid "Remove window"
 msgstr "Remover janela"
+
+#: 
+msgid "Rename flow"
+msgstr "Renomear fluxo"
 
 #: src/makebench/editor/code_workspace.py
 msgid "Rename module"
@@ -3661,6 +3929,10 @@ msgstr "Renomear estado"
 #: src/makebench/editor/navigation.py
 msgid "Rename state…"
 msgstr "Renomear estado…"
+
+#: 
+msgid "Reorder"
+msgstr "Reordenar"
 
 #: src/makebench/core/logic_defaults.py
 msgid "Repeat"
@@ -3741,6 +4013,10 @@ msgstr "Restaurar padrões"
 #: src/makebench/editor/inspector.py
 msgid "Restore from Default"
 msgstr "Restaurar do Padrão"
+
+#: 
+msgid "Restore property"
+msgstr "Restaurar propriedade"
 
 #: src/makebench/editor/navigation.py
 msgid "Restore selection from Default"
@@ -3830,6 +4106,10 @@ msgstr "Executar programa"
 msgid "Run task"
 msgstr "Executar tarefa"
 
+#: 
+msgid "Run the application in a separate test window"
+msgstr "Executa o aplicativo em uma janela de teste separada"
+
 #: src/makebench/runtime/worker.py
 msgid "Run the producer node before reading its result: {node}"
 msgstr "Execute o nó produtor antes de ler seu resultado: {node}"
@@ -3902,6 +4182,10 @@ msgstr "Salvar projeto como"
 msgid "Save the project or select the image again."
 msgstr "Salve o projeto ou selecione a imagem novamente."
 
+#: 
+msgid "Say what happens on start or on a click, with blocks or nodes. The generated Python is always visible."
+msgstr "Diga o que acontece ao iniciar ou ao clicar, com blocos ou nós. O Python gerado fica sempre visível."
+
 #: src/makebench/editor/development.py src/makebench/editor/graph.py
 msgid "Scope"
 msgstr "Escopo"
@@ -3917,6 +4201,10 @@ msgstr "Script"
 #: src/makebench/core/templates.py
 msgid "Scripts, progress and output."
 msgstr "Scripts, progresso e saída."
+
+#: 
+msgid "Search"
+msgstr "Buscar"
 
 #: src/makebench/editor/development.py
 msgid "Search block"
@@ -3954,6 +4242,18 @@ msgstr "Buscar no código"
 msgid "Search in code…"
 msgstr "Buscar no código…"
 
+#: 
+msgid "Search in every Python file of the project…"
+msgstr "Buscar em todos os arquivos Python do projeto…"
+
+#: 
+msgid "Search in project"
+msgstr "Buscar no projeto"
+
+#: 
+msgid "Search in project…"
+msgstr "Buscar no projeto…"
+
 #: src/makebench/editor/map_panel.py
 msgid "Search interfaces…"
 msgstr "Buscar interface…"
@@ -3962,9 +4262,21 @@ msgstr "Buscar interface…"
 msgid "Search projects…"
 msgstr "Buscar projeto…"
 
+#: 
+msgid "Search results"
+msgstr "Resultados da busca"
+
 #: src/makebench/editor/settings.py
 msgid "Search settings…"
 msgstr "Buscar configurações…"
+
+#: 
+msgid "Search shortcuts"
+msgstr "Buscar atalhos"
+
+#: 
+msgid "Search shortcuts…"
+msgstr "Buscar atalhos…"
 
 #: src/makebench/editor/graph.py
 msgid "Search type"
@@ -3973,6 +4285,10 @@ msgstr "Pesquisar tipo"
 #: src/makebench/editor/settings.py
 msgid "See docs/user-guide.md in the Makebench folder."
 msgstr "Consulte docs/user-guide.pt-BR.md na pasta do Makebench."
+
+#: 
+msgid "See every window and state of your application and how they connect. Create windows here and drag a port to link them."
+msgstr "Veja todas as janelas e estados do aplicativo e como se conectam. Crie janelas aqui e arraste uma porta para ligá-las."
 
 #: src/makebench/editor/studio.py src/makebench/gtk_runtime/application.py
 msgid "Select"
@@ -4058,6 +4374,14 @@ msgstr "Sequência"
 msgid "Set as initial"
 msgstr "Definir como inicial"
 
+#: 
+msgid "Set initial state"
+msgstr "Definir estado inicial"
+
+#: 
+msgid "Set start window"
+msgstr "Definir janela inicial"
+
 #: src/makebench/editor/navigation.py
 msgid "Set state as initial"
 msgstr "Definir estado como inicial"
@@ -4085,6 +4409,10 @@ msgstr "Compartilhar projeto…"
 #: src/makebench/editor/projects.py
 msgid "Shared project (*.zip)"
 msgstr "Projeto compartilhado (*.zip)"
+
+#: 
+msgid "Shortcut"
+msgstr "Atalho"
 
 #: src/makebench/editor/settings.py
 msgid "Shortcuts"
@@ -4141,6 +4469,10 @@ msgstr "Ver arquivo completo"
 #: src/makebench/editor/settings.py
 msgid "Show the start window on launch"
 msgstr "Mostrar a janela inicial ao abrir"
+
+#: 
+msgid "Show this guide when I open a project"
+msgstr "Mostrar este guia ao abrir um projeto"
 
 #: src/makebench/editor/catalog.py
 msgid "Shows a value between 0 and 100."
@@ -4350,6 +4682,10 @@ msgstr "Estrutura"
 msgid "Support planned for a future release."
 msgstr "Suporte planejado para uma próxima etapa."
 
+#: 
+msgid "Switch behavior editor"
+msgstr "Trocar editor do comportamento"
+
 #: src/makebench/editor/development.py
 msgid "Switch this behavior's editor?"
 msgstr "Trocar editor deste comportamento?"
@@ -4406,6 +4742,10 @@ msgstr "Tarefa"
 msgid "Task center / utility"
 msgstr "Central de tarefas / utilitário"
 
+#: 
+msgid "Task center — tasks, questions and live output"
+msgstr "Central de tarefas — tarefas, perguntas e saída ao vivo"
+
 #: src/makebench/runtime/worker.py
 msgid "Task ended with code {code}."
 msgstr "Tarefa terminou com código {code}."
@@ -4438,6 +4778,10 @@ msgstr "Modelo"
 msgid "Terminal"
 msgstr "Terminal"
 
+#: 
+msgid "Terminal and debugging"
+msgstr "Terminal e depuração"
+
 #: src/makebench/core/project.py
 msgid "Terminal arguments must be a list of texts."
 msgstr "Argumentos do terminal precisam ser uma lista de textos."
@@ -4457,6 +4801,10 @@ msgstr "Testar aplicativo"
 #: src/makebench/editor/window.py
 msgid "Test blocked: resolve the items in Problems."
 msgstr "Teste impedido: resolva os itens em Problemas."
+
+#: 
+msgid "Test now · F5"
+msgstr "Testar agora · F5"
 
 #: src/makebench/editor/execution.py
 msgid "Test running · {seconds} s"
@@ -4618,6 +4966,10 @@ msgstr "O erro pertence a outro projeto aberto na execução."
 msgid "The event must point to the window or an existing button."
 msgstr "O evento precisa apontar para a janela ou um botão existente."
 
+#: 
+msgid "The examples are not included in this installation. They are in the examples folder of the source code."
+msgstr "Os exemplos não acompanham esta instalação. Eles estão na pasta examples do código-fonte."
+
 #: src/makebench/editor/map_connections.py
 msgid "The existing event runs in any state."
 msgstr "O evento existente é executado em qualquer estado."
@@ -4625,6 +4977,10 @@ msgstr "O evento existente é executado em qualquer estado."
 #: src/makebench/editor/native_preview.py
 msgid "The faithful GTK preview needs gtk4-broadwayd and PyGObject/GTK4."
 msgstr "A prévia fiel GTK precisa de gtk4-broadwayd e PyGObject/GTK4."
+
+#: 
+msgid "the file"
+msgstr "o arquivo"
 
 #: src/makebench/core/source.py
 msgid "The file changed outside Makebench: {path}. Save to another folder or reopen to review."
@@ -4850,6 +5206,10 @@ msgstr "A janela inicial não pertence ao projeto."
 msgid "The state does not belong to this window."
 msgstr "O estado não pertence a esta janela."
 
+#: 
+msgid "The system reported an error: {error}"
+msgstr "O sistema informou um erro: {error}"
+
 #: src/makebench/core/exporter.py
 msgid "The target needs the program {program}."
 msgstr "O destino precisa do programa {program}."
@@ -4922,6 +5282,10 @@ msgstr "Há um comportamento incompleto nesta interface."
 msgid "There is more than one flow for the same event."
 msgstr "Há mais de um fluxo para o mesmo evento."
 
+#: 
+msgid "There is no free space left on the disk."
+msgstr "Não há espaço livre no disco."
+
 #: src/makebench/core/graph.py
 msgid "There is no previous behavior to restore."
 msgstr "Não há comportamento anterior para restaurar."
@@ -4990,6 +5354,10 @@ msgstr "Três etapas com Voltar, Próximo e Concluir."
 msgid "Title"
 msgstr "Título"
 
+#: 
+msgid "Toggle breakpoint"
+msgstr "Alternar ponto de parada"
+
 #: src/makebench/editor/publish.py
 msgid "Tools prepared by Makebench"
 msgstr "Ferramentas preparadas pelo Makebench"
@@ -5034,6 +5402,10 @@ msgstr "Digite aqui"
 msgid "Type to search"
 msgstr "Digite para buscar"
 
+#: 
+msgid "Type to search your own functions and modules."
+msgstr "Digite para buscar em suas funções e módulos."
+
 #: src/makebench/core/templates.py
 msgid "Type your name"
 msgstr "Digite seu nome"
@@ -5053,6 +5425,18 @@ msgstr "Blocos não confirmados"
 #: src/makebench/editor/window.py
 msgid "Undo"
 msgstr "Desfazer"
+
+#: 
+msgid "Undo in {file}"
+msgstr "Desfazer em {file}"
+
+#: 
+msgid "Undo: {action}"
+msgstr "Desfazer: {action}"
+
+#: 
+msgid "Unexpected error: {error}"
+msgstr "Erro inesperado: {error}"
 
 #: src/makebench/runtime/worker.py
 msgid "Unexpected reply from the application."
@@ -5308,6 +5692,10 @@ msgstr "Boas-vindas"
 msgid "Welcome to your Linux"
 msgstr "Bem-vindo ao seu Linux"
 
+#: 
+msgid "Welcome wizard — states and two windows"
+msgstr "Assistente de boas-vindas — estados e duas janelas"
+
 #: src/makebench/core/navigation.py
 msgid "Welcome! Your dashboard is ready."
 msgstr "Bem-vindo! Seu painel está pronto."
@@ -5388,6 +5776,10 @@ msgstr "Quebrar linhas"
 msgid "Write to output"
 msgstr "Registrar na saída"
 
+#: 
+msgid "Write your own Python functions and call them from blocks. Press F5 to test the application and F9 to debug it."
+msgstr "Escreva suas funções Python e chame-as pelos blocos. Pressione F5 para testar o aplicativo e F9 para depurá-lo."
+
 #: src/makebench/editor/code.py
 msgid "Write your Python functions here."
 msgstr "Escreva suas funções Python aqui."
@@ -5396,9 +5788,17 @@ msgstr "Escreva suas funções Python aqui."
 msgid "Yes"
 msgstr "Sim"
 
+#: 
+msgid "You do not have permission to use {path}."
+msgstr "Você não tem permissão para usar {path}."
+
 #: src/makebench/core/templates.py
 msgid "Your application starts here"
 msgstr "Seu aplicativo começa aqui"
+
+#: 
+msgid "Your disk quota is full."
+msgstr "Sua cota de disco está cheia."
 
 #: src/makebench/editor/development.py src/makebench/editor/window.py
 msgid "Your functions"
@@ -5496,6 +5896,14 @@ msgstr "{count} substituição"
 msgid "{count} replacements"
 msgstr "{count} substituições"
 
+#: 
+msgid "{count} result"
+msgstr "{count} resultado"
+
+#: 
+msgid "{count} results"
+msgstr "{count} resultados"
+
 #: src/makebench/editor/projects.py
 msgid "{count} script"
 msgstr "{count} script"
@@ -5551,3 +5959,19 @@ msgstr "{name} será removido ao salvar o projeto."
 #: src/makebench/core/compatibility.py
 msgid "{name}: your Python is incompatible with the target Python 3.{minor}: {error}"
 msgstr "{name}: Python próprio incompatível com Python 3.{minor} do destino: {error}"
+
+#: 
+msgid "{path} already exists."
+msgstr "{path} já existe."
+
+#: 
+msgid "{path} does not exist or was moved."
+msgstr "{path} não existe ou foi movido."
+
+#: 
+msgid "{path} is a folder, not a file."
+msgstr "{path} é uma pasta, não um arquivo."
+
+#: 
+msgid "{path} is on a read-only disk."
+msgstr "{path} está em um disco somente leitura."

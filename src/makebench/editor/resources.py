@@ -88,7 +88,7 @@ class ResourceMixin:
         try:
             new_path = self.assets.import_image(Path(filename))
         except (OSError, ProjectError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not replace the image"))
             return
 
         def replace():
@@ -124,4 +124,4 @@ class ResourceMixin:
             self._data_signature = None
             self.sync_studio()
         except (OSError, ProjectError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not remove the asset"))

@@ -403,7 +403,7 @@ class DesignerMixin:
             return
         if before == self.project.to_dict():
             return
-        self.history.push(self.project)
+        self.history.push(self.project, tr("Change properties"))
         from .updates import hold_updates
 
         with hold_updates(self.canvas):

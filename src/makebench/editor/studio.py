@@ -407,6 +407,11 @@ class StudioMixin(
         help_menu = next(
             a.menu() for a in self.menuBar().actions() if a.text().replace("&", "") == tr("Help")
         )
+        from .guide import ShortcutReference, show_guide
+
+        guide = help_menu.addAction(tr("Getting started"), lambda: show_guide(self))
+        guide.setShortcut(QKeySequence("F1"))
+        help_menu.addAction(tr("Keyboard shortcuts"), lambda: ShortcutReference(self).exec())
         help_menu.addAction(tr("Environment diagnostics…"), lambda: show_diagnostic(self))
         help_menu.addAction(tr("User guide"), lambda: open_checklist(self))
         gear = QToolButton()
@@ -463,6 +468,9 @@ class StudioMixin(
             self.logic.select_component_event(self.selected_id, self.active_state)
         self.tabs.setCurrentIndex(index)
         self.sync_mode_button(self.tabs.currentIndex())
+        from .controls import name_unlabeled_buttons
+
+        name_unlabeled_buttons(self)
 
     def sync_mode_button(self, index):
         """Follow shortcuts and automatic navigation to the origin of errors."""

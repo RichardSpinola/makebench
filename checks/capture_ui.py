@@ -21,6 +21,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix="makebench-captures-") as temporary:
         os.environ["XDG_CONFIG_HOME"] = str(Path(temporary) / "config")
         os.environ["XDG_STATE_HOME"] = str(Path(temporary) / "state")
+        from makebench.__main__ import configure_language
+
+        configure_language()
+        from makebench.i18n import tr
         from PySide6.QtCore import Qt, QTimer
         from PySide6.QtTest import QTest
         from PySide6.QtWidgets import QApplication
@@ -62,7 +66,7 @@ def main():
                             button = next(
                                 node
                                 for node in window.project.root.walk()
-                                if node.properties.get("text") == "Next"
+                                if node.properties.get("text") == tr("Next")
                             )
                             window._select(button.id)
                         window.set_mode(mode)
@@ -81,7 +85,7 @@ def main():
                 window.set_mode("design")
                 window.left_tabs.setCurrentIndex(1)
                 QTest.qWait(80)
-                window.grab().save(str(args.output / f"{theme}-{size}-inserir.png"))
+                window.grab().save(str(args.output / f"{theme}-{size}-insert.png"))
                 window.left_tabs.setCurrentIndex(0)
                 window.show_test_error(
                     {
@@ -90,19 +94,19 @@ def main():
                     }
                 )
                 QTest.qWait(80)
-                window.grab().save(str(args.output / f"{theme}-{size}-gaveta-erro.png"))
+                window.grab().save(str(args.output / f"{theme}-{size}-drawer-error.png"))
                 window.drawer.hide()
                 window.test_status.setText("Stopped")
                 window.preferences()
                 QTest.qWait(80)
                 window.preferences_dialog.grab().save(
-                    str(args.output / f"{theme}-{size}-preferencias.png")
+                    str(args.output / f"{theme}-{size}-preferences.png")
                 )
                 window.preferences_dialog.close()
                 window.application_settings()
                 QTest.qWait(80)
                 window.app_settings_dialog.grab().save(
-                    str(args.output / f"{theme}-{size}-configuracoes.png")
+                    str(args.output / f"{theme}-{size}-app-settings.png")
                 )
                 window.app_settings_dialog.close()
 
@@ -110,7 +114,7 @@ def main():
                 def capture_dialog():
                     dialog = app.activeModalWidget()
                     if dialog:
-                        dialog.grab().save(str(args.output / f"{theme}-{size}-novo-projeto.png"))
+                        dialog.grab().save(str(args.output / f"{theme}-{size}-new-project.png"))
                         dialog.reject()
 
                 QTimer.singleShot(100, capture_dialog)
@@ -125,7 +129,7 @@ def main():
             QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         window.deleteLater()
         app.processEvents()
-    print("Capturas gravadas em", args.output)
+    print("Screenshots written to", args.output)
 
 
 if __name__ == "__main__":

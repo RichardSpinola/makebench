@@ -203,7 +203,7 @@ class CodeToolsTests(unittest.TestCase):
         try:
             self.assertEqual(
                 [window.drawer.tabText(i) for i in range(window.drawer.count())],
-                ["Output", "Problems", "Script", "Tasks", "Error", "Terminal", "Debug"],
+                ["Output", "Problems", "Script", "Tasks", "Error", "Terminal", "Debug", "Search"],
             )
             window.add_output("stdout", "saída real\n")
             window.add_output("stderr", "aviso real\n")

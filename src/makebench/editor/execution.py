@@ -48,9 +48,14 @@ class ExecutionMixin:
         row.addWidget(self.output_filter)
         self.process_info = QLabel(tr("No test started"))
         row.addWidget(self.process_info, 1)
+        # Empty state with a direct action; hidden once the first test starts.
+        self.test_now = QPushButton(tr("Test now · F5"))
+        self.test_now.setToolTip(tr("Run the application in a separate test window"))
+        self.test_now.clicked.connect(lambda: self.run_action.trigger())
+        row.addWidget(self.test_now)
         for label, callback in [
             (
-                "Copiar",
+                tr("Copy"),
                 lambda: (
                     __import__("PySide6.QtWidgets", fromlist=["QApplication"])
                     .QApplication.clipboard()
@@ -148,6 +153,7 @@ class ExecutionMixin:
         if preference("test/clear"):
             self.clear_output()
         self.run_number += 1
+        self.test_now.hide()
         self.test_started = time.monotonic()
         self._runtime_project_fingerprint = self.execution_fingerprint()
         self.process_info.setText(

@@ -268,7 +268,7 @@ class CodeWorkspaceMixin:
                     name if name.startswith("makebench_user/") else "makebench_user/" + name
                 )
             except ProjectError as exc:
-                self._show_error(str(exc))
+                self._show_error(exc, tr("Could not create the module"))
 
     def rename_module_dialog(self):
         """Keep texts; old imports are diagnosed, never implicitly rewritten."""
@@ -287,7 +287,7 @@ class CodeWorkspaceMixin:
                 self.update_module_manifest()
                 self.open_code_file(name)
             except ProjectError as exc:
-                self._show_error(str(exc))
+                self._show_error(exc, tr("Could not rename the module"))
 
     def delete_module_dialog(self):
         """Ask for concrete confirmation and keep the deletion pending until saved."""
@@ -312,7 +312,7 @@ class CodeWorkspaceMixin:
             self.source.remove_module(name)
             self.update_module_manifest()
         except ProjectError as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not delete the module"))
 
     def fingerprint(self):
         """Trust includes the modules that will actually run."""
@@ -387,7 +387,7 @@ class CodeWorkspaceMixin:
                         module_path(buffer.path.parents[len(Path(name).parts) - 1], name)
                     buffer.original = _read(buffer.path)
         except (OSError, ProjectError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not keep your version"))
             return
         self.external_change_row.hide()
         self.watch_source()

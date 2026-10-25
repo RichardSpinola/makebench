@@ -731,7 +731,7 @@ class DevelopmentMixin:
                 kind, self.project, self.project.window_of(flow["event"]["component"]).id
             )
         except ProjectError as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not insert the behavior"))
             return
         self._edit(lambda: append_behavior(flow, blocks))
 

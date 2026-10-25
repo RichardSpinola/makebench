@@ -90,6 +90,13 @@ def preference(key, settings=None):
 class SettingsShell(QDialog):
     """Window with navigation, option search and Qt card groups."""
 
+    def showEvent(self, event):
+        """Name the search fields' clear buttons once every page exists."""
+        super().showEvent(event)
+        from .controls import name_unlabeled_buttons
+
+        name_unlabeled_buttons(self)
+
     def __init__(self, parent, title):
         """The search filters rows across all pages and keeps keyboard focus."""
         super().__init__(parent)
@@ -236,7 +243,7 @@ class EditorPreferences(SettingsShell):
         page = self.add_page(tr("Shortcuts"))
         group = self.group(
             page,
-            "Comandos",
+            tr("Commands"),
             tr("Shortcuts are read-only in this version. The search also finds command names."),
         )
         from .commands import register
@@ -688,7 +695,7 @@ class ApplicationSettings(SettingsShell):
         page = self.add_page(tr("Targets"))
         group = self.group(
             page,
-            "Exportadores",
+            tr("Exporters"),
             tr(
                 "A result is marked as built only after passing through the tool and the verification."
             ),
@@ -739,7 +746,7 @@ class ApplicationSettings(SettingsShell):
                 self.change("icon", self.window.assets.import_image(Path(path)))
                 self.update_icon()
             except Exception as exc:
-                self.window._show_error(str(exc))
+                self.window._show_error(exc, tr("Could not use this icon"))
 
     def choose_window_icon(self, identifier):
         """Each window can have its own icon without depending on the original path."""
@@ -753,7 +760,7 @@ class ApplicationSettings(SettingsShell):
                     lambda: self.window.project.find(identifier).properties.update(icon=name)
                 )
             except Exception as exc:
-                self.window._show_error(str(exc))
+                self.window._show_error(exc, tr("Could not use this icon"))
 
     def update_icon(self):
         """The image uses the same asset that will ship with the exported application."""

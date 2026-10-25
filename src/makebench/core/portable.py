@@ -339,6 +339,12 @@ def build_native(
             shutil.copytree(
                 package, app / "makebench", ignore=shutil.ignore_patterns("__pycache__", "*.pyc")
             )
+            # The editor's "Open example" looks for examples next to the package.
+            examples = package.parents[1] / "examples"
+            if examples.is_dir():
+                shutil.copytree(
+                    examples, app / "examples", ignore=shutil.ignore_patterns("__pycache__")
+                )
             (appdir / "editor-entry").touch()
             identifier = project.application["id"]
             icon = project.application["icon"]

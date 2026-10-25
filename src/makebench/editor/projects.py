@@ -77,6 +77,7 @@ class ProjectMixin:
         for symbol, label, callback in [
             ("new", tr("New…"), lambda: self.new_project_dialog("blank")),
             ("open", tr("Open project…"), self.open_project),
+            ("document", tr("Open example…"), self.open_example_dialog),
         ]:
             button = QPushButton(icon(symbol), label)
             button.clicked.connect(callback)
@@ -202,7 +203,7 @@ class ProjectMixin:
             self._update_actions()
             self.watch_source()
         except (OSError, ProjectError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not reload the file"))
 
     def keep_source(self):
         """Allow keeping the current buffer; the next write stays explicit."""
@@ -212,7 +213,7 @@ class ProjectMixin:
                     self.source.path.read_bytes() if self.source.path.exists() else None
                 )
             except OSError as exc:
-                self._show_error(str(exc))
+                self._show_error(exc, tr("Could not keep your version"))
                 return
         self.external_change_row.hide()
         self.watch_source()
@@ -423,7 +424,7 @@ class ProjectMixin:
             self.pages.setCurrentWidget(self.editor_page)
             self.workspace_toolbar.show()
         except (OSError, ProjectError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not open the project"))
 
     def locate_recent(self):
         """Replace only the selected entry; never moves the user's files."""
@@ -438,7 +439,7 @@ class ProjectMixin:
         try:
             load_project(filename)
         except ProjectError as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not locate the project"))
             return
         paths = self.settings.value("projects/recent", [], type=list)
         old = item.data(Qt.ItemDataRole.UserRole)
@@ -620,6 +621,9 @@ class ProjectMixin:
                 self.trust_project()
                 self.set_mode("map")
                 dialog.accept()
+                from .guide import show_guide
+
+                show_guide(self, automatic=True)
             except (OSError, ProjectError) as exc:
                 error.setText(str(exc))
 
@@ -657,6 +661,93 @@ class ProjectMixin:
         project.root.properties["title"] = name
         return project, SourceBuffer.load(root / "app.makebench.json").text, AssetStore(root)
 
+    def available_examples(self):
+        """Examples shipped with the source tree or the editor AppImage, in the interface language.
+
+        Returns [(title, folder, project file name)]; empty when the editor was installed
+        without the examples (for example from a wheel).
+        """
+        package = Path(__file__).resolve().parents[1]
+        for base in (package.parents[1] / "examples", package.parent / "examples"):
+            if base.is_dir():
+                break
+        else:
+            return []
+        if language() != "pt_BR" and (base / "en").is_dir():
+            base = base / "en"
+        catalog = [
+            (
+                tr("Welcome wizard — states and two windows"),
+                "welcome-states",
+                "project.makebench.json",
+            ),
+            (
+                tr("Task center — tasks, questions and live output"),
+                "script-center",
+                "app.makebench.json",
+            ),
+            (tr("Node graph — wires, loops and a terminal"), "free-graph", "qt.makebench.json"),
+            (tr("Terminal and debugging"), "terminal-debug", "qt.makebench.json"),
+            (tr("Python modules — several files"), "python-modules/qt", "project.makebench.json"),
+        ]
+        return [
+            (title, base / folder, name)
+            for title, folder, name in catalog
+            if (base / folder / name).is_file()
+        ]
+
+    def open_example_dialog(self):
+        """Open a copy of an example in a new folder; the original stays untouched and nothing runs."""
+        examples = self.available_examples()
+        if not examples:
+            self._show_error(
+                tr(
+                    "The examples are not included in this installation. They are in the examples folder of the source code."
+                ),
+                tr("No examples available"),
+            )
+            return
+        from PySide6.QtWidgets import QInputDialog
+
+        titles = [title for title, _, _ in examples]
+        choice, ok = QInputDialog.getItem(
+            self.project_dialog_parent(), tr("Open example"), tr("Example"), titles, 0, False
+        )
+        if not ok or not self._confirm_discard():
+            return
+        title, folder, name = examples[titles.index(choice)]
+        projects = Path(
+            self.settings.value("v1/projects/folder", str(Path.home() / "Makebench" / "Projects"))
+        ).expanduser()
+        destination = projects / slug(
+            folder.name if folder.name not in {"qt", "gtk"} else folder.parent.name
+        )
+        number = 2
+        while destination.exists():
+            destination = destination.with_name(
+                destination.name.rsplit("-copy", 1)[0] + f"-copy{number}"
+            )
+            number += 1
+        try:
+            projects.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(folder, destination, ignore=shutil.ignore_patterns("__pycache__"))
+            path = destination / name
+            self._replace_project(load_project(path), path)
+        except (OSError, ProjectError) as exc:
+            self._show_error(exc, tr("Could not open the example"))
+            return
+        # A copy made here is the user's own; trusting it avoids a warning about code they just chose.
+        self._created_here = True
+        self.trust_project()
+        self.pages.setCurrentWidget(self.editor_page)
+        self.workspace_toolbar.show()
+        self.statusBar().showMessage(
+            tr("Example copied to {path}. Press F5 to test it.").format(path=destination), 10000
+        )
+        from .guide import show_guide
+
+        show_guide(self, automatic=True)
+
     def share_project(self):
         """Export the editable document and assets; this is not the application exporter."""
         if not self._finish_field_edit():
@@ -673,7 +764,7 @@ class ProjectMixin:
             write_bundle(self.project, self.source.text, self.assets.read, filename)
             self.statusBar().showMessage(tr("Project shared at {path}").format(path=filename), 7000)
         except (OSError, ProjectError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not share the project"))
 
     def recovery_root(self):
         """Resolve the XDG state folder; never uses the project's original folder for snapshots."""
@@ -772,7 +863,7 @@ class ProjectMixin:
                 tr("Changes recovered. Save to a folder to continue."), 10000
             )
         except (OSError, ProjectError, ValueError) as exc:
-            self._show_error(str(exc))
+            self._show_error(exc, tr("Could not recover the session"))
 
     def discard_recovery(self):
         """Discard only the selected recovery, keeping the original project."""

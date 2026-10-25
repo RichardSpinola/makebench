@@ -462,6 +462,11 @@ class GraphPanel(QWidget):
         layout.addLayout(row)
         self.view = GraphView(self)
         layout.addWidget(self.view, 1)
+        # Empty state: an event with no action yet gets a direct way to add the first node.
+        self.empty_state = QPushButton(tr("+ Add the first node…"), self.view.viewport())
+        self.empty_state.setToolTip(tr("Or right-click the empty area to add nodes and comments"))
+        self.empty_state.clicked.connect(lambda: self.add_dialog())
+        self.empty_state.hide()
         self.pending_payload = None
         self.commit_timer = QTimer(self)
         self.commit_timer.setSingleShot(True)
@@ -509,6 +514,11 @@ class GraphPanel(QWidget):
         self._loading = False
         bounds = self.view.scene().itemsBoundingRect()
         self.view.scene().setSceneRect(bounds.adjusted(-600, -400, 600, 400))
+        empty = bool(flow) and len(flow["graph"]["nodes"]) <= 1
+        self.empty_state.setVisible(empty)
+        if empty:
+            self.empty_state.adjustSize()
+            self.empty_state.move(24, 24)
 
     def commit(self, mutate):
         """Validate a copy before handing over a transaction, never saving an invalid document."""

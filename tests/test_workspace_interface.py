@@ -37,7 +37,7 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         self.window = MainWindow(Project.empty())
         self.window.recovery_timer.stop()
         self.window._created_here = True
-        self.window._show_error = lambda message: self.fail(message)
+        self.window._show_error = lambda message, *_: self.fail(str(message))
 
     def tearDown(self):
         self.window.history.mark_saved()

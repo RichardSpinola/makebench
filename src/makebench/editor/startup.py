@@ -128,6 +128,16 @@ class StartupDialog(QDialog):
         new_column.addWidget(self.new_button)
         new_column.addStretch()
         commands.addLayout(new_column, 1)
+        self.example_button = QPushButton(icon("document"), tr("Open example…"))
+        self.example_button.setFixedSize(155, 32)
+        self.example_button.setToolTip(
+            tr("Open a copy of an example project; nothing runs until you press F5.")
+        )
+        self.example_button.clicked.connect(self.open_example)
+        example_column = QHBoxLayout()
+        example_column.addWidget(self.example_button)
+        example_column.addStretch()
+        commands.addLayout(example_column, 1)
         layout.addLayout(commands)
         if getattr(window, "recoveries", []):
             recovery = QHBoxLayout()
@@ -242,6 +252,10 @@ class StartupDialog(QDialog):
     def open_project(self):
         """The selector reads data and never runs the document's scripts or functions."""
         self.choose_project(self.window.open_project)
+
+    def open_example(self):
+        """Copy an example into a new folder and open it in the workbench."""
+        self.choose_project(self.window.open_example_dialog)
 
     def open_recent(self, item):
         """Use the workbench's same validated, inert loading."""

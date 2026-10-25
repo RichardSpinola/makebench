@@ -34,6 +34,7 @@ from makebench.core.portable import (
     build_editor_appimage,
 )
 from makebench.i18n import tr
+from .errors import describe
 
 
 class BuildJob(QThread):
@@ -86,7 +87,9 @@ class BuildJob(QThread):
                 )
             )
         except Exception as exc:
-            self.failed.emit(str(exc))
+            # The first line is shown in the window; the rest goes to the details log.
+            summary, details = describe(exc)
+            self.failed.emit(summary + ("\n" + details if details else ""))
 
 
 class PrepareJob(QThread):
@@ -115,7 +118,9 @@ class PrepareJob(QThread):
                 )
             )
         except Exception as exc:
-            self.failed.emit(str(exc))
+            # The first line is shown in the window; the rest goes to the details log.
+            summary, details = describe(exc)
+            self.failed.emit(summary + ("\n" + details if details else ""))
 
 
 def stage_text(active=None):

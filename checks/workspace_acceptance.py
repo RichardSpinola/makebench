@@ -52,7 +52,7 @@ def main():
         window.resize(1440, 950)
         window.show()
         window.set_mode("design")
-        window._show_error = lambda error: errors.append(error)
+        window._show_error = lambda error, *_: errors.append(error)
         native = window.winId()
 
         def wait(predicate, seconds=25):
