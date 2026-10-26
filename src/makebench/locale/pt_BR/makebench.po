@@ -6355,3 +6355,167 @@ msgstr "Este símbolo não pode ser renomeado."
 #: src/makebench/editor/code_assist.py
 msgid "snippet"
 msgstr "trecho"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "&Plugins"
+msgstr "&Plugins"
+
+#: src/makebench/editor/plugins.py
+msgid "A plugin with this id is already installed."
+msgstr "Já existe um plugin instalado com este id."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Choose the plugin folder"
+msgstr "Escolha a pasta do plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Install from a folder…"
+msgstr "Instalar de uma pasta…"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Install plugin"
+msgstr "Instalar plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Manage plugins…"
+msgstr "Gerenciar plugins…"
+
+#: src/makebench/editor/plugins.py
+msgid "Needs plugin API {api}; this editor offers API {have}."
+msgstr "Precisa da API de plugins {api}; este editor oferece a API {have}."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Open plugins folder"
+msgstr "Abrir a pasta de plugins"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Plugin command"
+msgstr "Comando do plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Problem:"
+msgstr "Problema:"
+
+#: src/makebench/editor/plugins.py
+msgid "That folder has no valid plugin.json."
+msgstr "Essa pasta não tem um plugin.json válido."
+
+#: src/makebench/editor/plugins.py
+msgid "That folder is not a valid plugin."
+msgstr "Essa pasta não é um plugin válido."
+
+#: src/makebench/editor/plugins.py
+msgid "The id must match the folder name."
+msgstr "O id precisa ser igual ao nome da pasta."
+
+#: src/makebench/editor/plugins.py
+msgid "The plugin {name} failed and was turned off: {error}"
+msgstr "O plugin {name} falhou e foi desligado: {error}"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "This plugin runs code on your computer with your permissions. Turn it on only if you trust where it came from."
+msgstr "Este plugin executa código no seu computador, com as suas permissões. Ligue só se confiar em quem o fez."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Turn off"
+msgstr "Desligar"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Turn on"
+msgstr "Ligar"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Turn on plugin"
+msgstr "Ligar plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "off"
+msgstr "desligado"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "on"
+msgstr "ligado"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "&Plugins"
+msgstr "&Plugins"
+
+#: src/makebench/editor/plugins.py
+msgid "A plugin with this id is already installed."
+msgstr "Já existe um plugin instalado com este id."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Choose the plugin folder"
+msgstr "Escolha a pasta do plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Install from a folder…"
+msgstr "Instalar de uma pasta…"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Install plugin"
+msgstr "Instalar plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Manage plugins…"
+msgstr "Gerenciar plugins…"
+
+#: src/makebench/editor/plugins.py
+msgid "Needs plugin API {api}; this editor offers API {have}."
+msgstr "Precisa da API de plugins {api}; este editor oferece a API {have}."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Open plugins folder"
+msgstr "Abrir a pasta de plugins"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Plugin command"
+msgstr "Comando do plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Plugins are off until you turn them on."
+msgstr "Os plugins ficam desligados até você ligá-los."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Problem:"
+msgstr "Problema:"
+
+#: src/makebench/editor/plugins.py
+msgid "That folder has no valid plugin.json."
+msgstr "Essa pasta não tem um plugin.json válido."
+
+#: src/makebench/editor/plugins.py
+msgid "That folder is not a valid plugin."
+msgstr "Essa pasta não é um plugin válido."
+
+#: src/makebench/editor/plugins.py
+msgid "The id must match the folder name."
+msgstr "O id precisa ser igual ao nome da pasta."
+
+#: src/makebench/editor/plugins.py
+msgid "The plugin {name} failed and was turned off: {error}"
+msgstr "O plugin {name} falhou e foi desligado: {error}"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "This plugin runs code on your computer with your permissions. Turn it on only if you trust where it came from."
+msgstr "Este plugin executa código no seu computador, com as suas permissões. Ligue só se confiar em quem o fez."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Turn off"
+msgstr "Desligar"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Turn on"
+msgstr "Ligar"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Turn on plugin"
+msgstr "Ligar plugin"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "off"
+msgstr "desligado"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "on"
+msgstr "ligado"

@@ -150,6 +150,14 @@ class MainWindow(StudioMixin, QMainWindow):
             from .pieces import install_pieces
 
             install_pieces(self, edit_menu)
+        from .plugins_ui import install_plugins
+
+        help_entry = next((a for a in self.menuBar().actions() if a.text() == tr("&Help")), None)
+        install_plugins(self, help_entry)
+        if hasattr(self, "pieces_menu"):
+            from .pieces import rebuild_menu as rebuild_pieces
+
+            rebuild_pieces(self)
         from .history_panel import install_history
 
         history_action = install_history(self)

@@ -155,6 +155,11 @@ def rebuild_menu(window) -> None:
     menu.clear()
     for piece in pieces.builtin_pieces():
         menu.addAction(piece["name"], lambda p=piece: insert(window, p))
+    manager = getattr(window, "plugin_manager", None)
+    if manager and manager.pieces():
+        menu.addSeparator()
+        for piece in manager.pieces():
+            menu.addAction(piece.get("name", "?"), lambda p=piece: insert(window, p))
     saved = pieces.list_pieces()
     if saved:
         menu.addSeparator()

@@ -64,7 +64,10 @@ class CodeAssist(QObject):
         source, path, line, column = self._position()
         found = jedi_assist.completions(source, self.window.jedi_workspace.root, path, line, column)
         items = {f"{item.name} · {item.detail}": item.name for item in found}
-        for name, text in jedi_assist.snippets(self.prefix.split(".")[-1]).items():
+        for name, text in jedi_assist.snippets(
+            self.prefix.split(".")[-1],
+            getattr(self.window, "plugin_manager", None) and self.window.plugin_manager.snippets(),
+        ).items():
             items[f"{name} · " + tr("snippet")] = text
         return items
 
