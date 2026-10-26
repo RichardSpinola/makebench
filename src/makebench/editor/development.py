@@ -134,6 +134,7 @@ class DevelopmentMixin:
         commands = QToolBar(tr("Blocks"))
         commands.setIconSize(QSize(16, 16))
         commands.setMovable(False)
+        commands.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         commands.addAction(icon("search"), tr("Search block…"), self.search_block)
         templates = QToolButton()
         templates.setText(tr("Behavior"))

@@ -191,6 +191,13 @@ class HistoryDialog(QDialog):
         self.enable.setVisible(available and not enabled)
         self.cloud.setVisible(enabled)
         self.filler.setVisible(not enabled)
+        if enabled != getattr(self, "_sized_for", None):
+            # A short window while history is off; room for the list once it is on.
+            self._sized_for = enabled
+            if enabled:
+                self.resize(640, 640)
+            else:
+                self.resize(520, self.sizeHint().height())
         for widget in (self.versions, self.detail, self.name_button, self.restore_button):
             widget.setVisible(enabled)
         if not available:

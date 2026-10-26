@@ -3,35 +3,37 @@
 
 from __future__ import annotations
 
-import json
 import ast
+import json
 from pathlib import Path
 from uuid import uuid4
 
-from PySide6.QtCore import QObject, Signal, Slot, QUrl, QEventLoop, QTimer, Qt
-from PySide6.QtGui import QKeySequence, QColor
+from PySide6.QtCore import QEventLoop, QObject, Qt, QTimer, QUrl, Signal, Slot
+from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDialog,
+    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QSplitter,
-    QDialog,
-    QDialogButtonBox,
-    QPlainTextEdit,
+    QStackedWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
-    QToolButton,
-    QStackedWidget,
 )
 
 from makebench.core.codegen import generate
 from makebench.core.logic import editable, function_names
 from makebench.core.project import ComponentKind
-from .code import CodeEditor
 from makebench.i18n import language, tr
+
+from .code import CodeEditor
+from .look import make_muted
 
 
 class LogicBridge(QObject):
@@ -129,8 +131,15 @@ class LogicPanel(QWidget):
         row.addWidget(QLabel(tr("When")))
         self.events = QComboBox()
         self.events.setMinimumWidth(210)
+        self.events.setMaximumWidth(460)
         self.events.currentIndexChanged.connect(self._switch_flow)
         row.addWidget(self.events, 1)
+        # The way to add an event sits next to the list it adds to.
+        self.add_event = QPushButton(tr("+ Event…"))
+        self.add_event.setToolTip(tr("Connect a click or a window opening to the logic."))
+        self.add_event.clicked.connect(self.new_event_dialog)
+        row.addWidget(self.add_event)
+        row.addStretch(1)
         self.editor_kind = QComboBox()
         self.editor_kind.addItem(tr("Blocks"), "blocks")
         self.editor_kind.addItem(tr("Nodes"), "nodes")
@@ -162,15 +171,6 @@ class LogicPanel(QWidget):
         row.addWidget(self.state_filter)
         from .theme import icon
 
-        self.remove = QToolButton()
-        self.remove.setIcon(icon("remove"))
-        self.remove.setToolTip(tr("Remove flow"))
-        self.remove.setAccessibleName(tr("Remove flow"))
-        self.remove.setAutoRaise(True)
-        self.remove.clicked.connect(
-            lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None
-        )
-        row.addWidget(self.remove)
         duplicate = QToolButton()
         duplicate.setIcon(icon("duplicate"))
         duplicate.setToolTip(tr("Duplicate flow…"))
@@ -180,27 +180,34 @@ class LogicPanel(QWidget):
             lambda: self.duplicate_requested.emit(self.flow_id) if self.flow_id else None
         )
         row.addWidget(duplicate)
+        self.remove = QToolButton()
+        self.remove.setIcon(icon("remove"))
+        self.remove.setToolTip(tr("Remove flow"))
+        self.remove.setAccessibleName(tr("Remove flow"))
+        self.remove.setAutoRaise(True)
+        self.remove.clicked.connect(
+            lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None
+        )
+        row.addWidget(self.remove)
         layout.addLayout(row)
         self.context_widget = QWidget()
         context_row = QHBoxLayout(self.context_widget)
         context_row.setContentsMargins(0, 0, 0, 0)
-        self.context_label = QLabel()
-        self.context_label.setWordWrap(True)
+        self.context_label = make_muted(QLabel())
         context_row.addWidget(self.context_label, 1)
         back = QToolButton()
         back.setIcon(icon("design"))
         back.setText(tr("Show in Design"))
+        back.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        back.setAutoRaise(True)
         back.setToolTip(tr("Select this event's origin in the Designer"))
         back.setAccessibleName(tr("Show origin in the Designer"))
         back.clicked.connect(self.show_origin)
         context_row.addWidget(back)
+        self.show_origin_button = back
         layout.addWidget(self.context_widget)
         self.targets = QComboBox(self)
         self.targets.hide()
-        self.add_event = QPushButton(tr("+ Event…"))
-        self.add_event.setToolTip(tr("Connect a click or a window opening to the logic."))
-        self.add_event.clicked.connect(self.new_event_dialog)
-        row.addWidget(self.add_event)
         hint = QLabel(
             tr(
                 "Snap blocks into “do”. Right-click adds comments. Select a block to find its Python line."
@@ -297,6 +304,7 @@ class LogicPanel(QWidget):
         """Open only local resources, with a temporary profile and no network."""
         if self.view is not None:
             return
+        from PySide6.QtWebChannel import QWebChannel
         from PySide6.QtWebEngineCore import (
             QWebEnginePage,
             QWebEngineProfile,
@@ -304,7 +312,6 @@ class LogicPanel(QWidget):
             QWebEngineUrlRequestInterceptor,
         )
         from PySide6.QtWebEngineWidgets import QWebEngineView
-        from PySide6.QtWebChannel import QWebChannel
 
         root = Path(__file__).resolve().parent.parent / "web"
         # Each interface language has its own static entry with the matching Blockly locale.
@@ -606,6 +613,7 @@ class LogicPanel(QWidget):
             self.pending_changed.emit()
             payload["token"] = self.token
             self.bridge.documentChanged.emit(json.dumps(payload, ensure_ascii=False))
+        self.show_origin_button.setVisible(bool(flow))
         if flow:
             component = project.find(flow["event"]["component"])
             verb = (
