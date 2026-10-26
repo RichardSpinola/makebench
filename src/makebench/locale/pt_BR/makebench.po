@@ -1783,10 +1783,6 @@ msgid "Everything"
 msgstr "Tudo"
 
 #: 
-msgid "Example"
-msgstr "Exemplo"
-
-#: 
 msgid "Example copied to {path}. Press F5 to test it."
 msgstr "Exemplo copiado para {path}. Pressione F5 para testá-lo."
 
@@ -4678,10 +4674,6 @@ msgstr "Guardar valor em variável"
 msgid "Structure"
 msgstr "Estrutura"
 
-#: src/makebench/editor/settings.py
-msgid "Support planned for a future release."
-msgstr "Suporte planejado para uma próxima etapa."
-
 #: 
 msgid "Switch behavior editor"
 msgstr "Trocar editor do comportamento"
@@ -4779,8 +4771,8 @@ msgid "Terminal"
 msgstr "Terminal"
 
 #: 
-msgid "Terminal and debugging"
-msgstr "Terminal e depuração"
+msgid "Terminal and debugging — breakpoints, step by step"
+msgstr "Terminal e depuração — pontos de parada, passo a passo"
 
 #: src/makebench/core/project.py
 msgid "Terminal arguments must be a list of texts."
@@ -5337,10 +5329,6 @@ msgstr "Este projeto contém fluxos de outra versão. Eles foram preservados; a 
 #: src/makebench/core/portable.py
 msgid "This release validates x86_64 builds."
 msgstr "Esta entrega valida construção x86_64."
-
-#: src/makebench/editor/settings.py
-msgid "This space will be used to manage Makebench extensions. Installing and running plugins is not available yet."
-msgstr "Este espaço será usado para gerenciar extensões do Makebench. A instalação e a execução de plugins ainda não estão disponíveis."
 
 #: src/makebench/editor/development.py
 msgid "This window"
@@ -6539,3 +6527,35 @@ msgstr "Use claro, escuro ou sistema e um destaque #rrggbb."
 #: src/makebench/editor/inspector.py
 msgid "Window look"
 msgstr "Aparência da janela"
+
+#: src/makebench/editor/guide.py
+msgid "A copy opens in your projects folder; the example itself stays untouched."
+msgstr "Uma cópia abre na sua pasta de projetos; o exemplo original fica intacto."
+
+#: src/makebench/editor/projects.py
+msgid "Complete workshop — every component, logic in blocks"
+msgstr "Oficina completa — todos os componentes, lógica em blocos"
+
+#: src/makebench/editor/projects.py
+msgid "Complete workshop — every component, logic in nodes"
+msgstr "Oficina completa — todos os componentes, lógica em nós"
+
+#: src/makebench/editor/projects.py
+msgid "Create a new one or open an example to get started."
+msgstr "Crie um novo ou abra um exemplo para começar."
+
+#: src/makebench/editor/pieces.py
+msgid "No pieces yet. Select components and use Edit › Save as reusable piece…"
+msgstr "Nenhuma peça ainda. Selecione componentes e use Editar › Salvar como peça reutilizável…"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "No plugins installed. Use Install from a folder… to add one."
+msgstr "Nenhum plugin instalado. Use Instalar de uma pasta… para adicionar um."
+
+#: src/makebench/editor/settings.py
+msgid "Plugins add menu commands, pieces and code snippets. They are off until you turn them on."
+msgstr "Plugins adicionam comandos de menu, peças e trechos de código. Ficam desligados até você ligar."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Select a plugin to see what it does."
+msgstr "Selecione um plugin para ver o que ele faz."

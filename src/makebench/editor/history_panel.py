@@ -19,13 +19,16 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QVBoxLayout,
+    QWidget,
 )
 
 from makebench.core import vcs
 from makebench.core.project import ProjectError
 from makebench.core.storage import load_project
-from makebench.i18n import tr, ntr
+from makebench.i18n import ntr, tr
+
 from .errors import show_error
+from .look import make_title
 
 
 class _Signals(QObject):
@@ -108,12 +111,14 @@ class HistoryDialog(QDialog):
         self.setWindowTitle(tr("Version history"))
         self.resize(640, 640)
         layout = QVBoxLayout(self)
+        layout.addWidget(make_title(QLabel(tr("Version history"))))
         self.status = QLabel()
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
         self.enable = QPushButton(tr("Turn on version history"))
+        self.enable.setDefault(True)
         self.enable.clicked.connect(self.turn_on)
-        layout.addWidget(self.enable)
+        layout.addWidget(self.enable, 0, Qt.AlignmentFlag.AlignLeft)
         self.versions = QListWidget()
         self.versions.setAccessibleName(tr("Versions"))
         self.versions.currentItemChanged.connect(self._selected)
@@ -130,6 +135,9 @@ class HistoryDialog(QDialog):
         row.addWidget(self.restore_button)
         row.addStretch(1)
         layout.addLayout(row)
+        # Takes the free space while the list is hidden, so the text stays at the top.
+        self.filler = QWidget()
+        layout.addWidget(self.filler, 1)
         self.cloud = QGroupBox(tr("Online copy"))
         form = QFormLayout(self.cloud)
         self.account = QLabel()
@@ -182,6 +190,7 @@ class HistoryDialog(QDialog):
         available = vcs.available()
         self.enable.setVisible(available and not enabled)
         self.cloud.setVisible(enabled)
+        self.filler.setVisible(not enabled)
         for widget in (self.versions, self.detail, self.name_button, self.restore_button):
             widget.setVisible(enabled)
         if not available:

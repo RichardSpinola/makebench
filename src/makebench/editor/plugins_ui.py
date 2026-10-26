@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QUrl
-from PySide6.QtGui import QAction, QDesktopServices
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -16,15 +16,15 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMenu,
     QMessageBox,
-    QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
 )
 
-from makebench.core.project import Project, ProjectError
+from makebench.core.project import ProjectError
 from makebench.i18n import tr
 
 from .errors import show_error
+from .look import button_row, empty_hint, header, make_muted
 from .plugins import PluginManager
 
 
@@ -85,26 +85,30 @@ class PluginsDialog(QDialog):
         self.window_ref = window
         self.manager = window.plugin_manager
         self.setWindowTitle(tr("Plugins"))
-        self.resize(520, 460)
+        self.resize(600, 460)
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel(tr("Plugins are off until you turn them on.") + " " + warning()))
+        layout.addWidget(
+            header(tr("Plugins"), tr("Plugins are off until you turn them on.") + " " + warning())
+        )
         self.list = QListWidget()
         self.list.currentItemChanged.connect(self._show_details)
-        layout.addWidget(self.list)
-        self.details = QPlainTextEdit()
-        self.details.setReadOnly(True)
-        self.details.setMaximumHeight(110)
+        empty_hint(
+            self.list,
+            tr("No plugins installed. Use Install from a folder… to add one."),
+        )
+        layout.addWidget(self.list, 2)
+        self.details = make_muted(QLabel())
+        self.details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.details.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.details.setMinimumHeight(48)
         layout.addWidget(self.details)
         self.toggle = QPushButton()
         self.toggle.clicked.connect(self._toggle)
-        layout.addWidget(self.toggle)
-        for text, slot in (
-            (tr("Install from a folder…"), self._install),
-            (tr("Open plugins folder"), self._open_folder),
-        ):
-            button = QPushButton(text)
-            button.clicked.connect(slot)
-            layout.addWidget(button)
+        install = QPushButton(tr("Install from a folder…"))
+        install.clicked.connect(self._install)
+        folder = QPushButton(tr("Open plugins folder"))
+        folder.clicked.connect(self._open_folder)
+        layout.addLayout(button_row(self.toggle, trailing=[install, folder]))
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -129,13 +133,13 @@ class PluginsDialog(QDialog):
         self.toggle.setEnabled(bool(plugin) and not plugin.incompatible)
         if plugin is None:
             self.toggle.setText(tr("Turn on"))
-            self.details.setPlainText("")
+            self.details.setText(tr("Select a plugin to see what it does."))
             return
         self.toggle.setText(tr("Turn off") if plugin.enabled else tr("Turn on"))
         lines = [plugin.description, plugin.author]
         if plugin.error:
             lines.append(tr("Problem:") + " " + plugin.error)
-        self.details.setPlainText("\n".join(line for line in lines if line))
+        self.details.setText("\n".join(line for line in lines if line))
 
     def _toggle(self):
         plugin = self._current()

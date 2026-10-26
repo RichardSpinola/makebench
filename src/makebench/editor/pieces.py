@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QInputDialog,
-    QLabel,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
@@ -24,6 +23,7 @@ from makebench.core.project import ProjectError
 from makebench.i18n import tr
 
 from .errors import show_error
+from .look import button_row, empty_hint, header
 
 
 def save_selection_as_piece(window) -> None:
@@ -85,29 +85,38 @@ class PiecesDialog(QDialog):
         super().__init__(window)
         self.window_ref = window
         self.setWindowTitle(tr("My pieces"))
-        self.resize(420, 380)
+        self.resize(520, 400)
         layout = QVBoxLayout(self)
         layout.addWidget(
-            QLabel(
+            header(
+                tr("My pieces"),
                 tr(
                     "Pieces are copies: changing a piece does not change copies you already inserted."
-                )
+                ),
             )
         )
         self.list = QListWidget()
+        empty_hint(
+            self.list,
+            tr("No pieces yet. Select components and use Edit › Save as reusable piece…"),
+        )
         layout.addWidget(self.list)
+        buttons = []
         for text, slot in (
             (tr("Insert in the selected container"), self._insert),
             (tr("Export…"), self._export),
             (tr("Delete…"), self._delete),
-            (tr("Import…"), self._import),
         ):
             button = QPushButton(text)
             button.clicked.connect(slot)
-            layout.addWidget(button)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+            buttons.append(button)
+        buttons[0].setDefault(True)
+        importing = QPushButton(tr("Import…"))
+        importing.clicked.connect(self._import)
+        layout.addLayout(button_row(*buttons, trailing=[importing]))
+        close = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close.rejected.connect(self.reject)
+        layout.addWidget(close)
         self._fill()
 
     def _fill(self):

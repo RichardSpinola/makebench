@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -19,6 +21,8 @@ from PySide6.QtWidgets import (
 )
 
 from makebench.i18n import tr
+
+from .look import DETAIL_ROLE, TwoLineDelegate, header
 
 GUIDE_SEEN = "v1/help/guide_seen"
 
@@ -157,3 +161,41 @@ class ShortcutReference(QDialog):
         for row in range(self.table.rowCount()):
             values = " ".join(self.table.item(row, column).text() for column in (0, 1))
             self.table.setRowHidden(row, query not in values.casefold())
+
+
+class ExampleChooser(QDialog):
+    """Pick an example from a list that shows what each one teaches."""
+
+    def __init__(self, titles, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(tr("Open example"))
+        self.resize(560, 420)
+        layout = QVBoxLayout(self)
+        layout.addWidget(
+            header(
+                tr("Open example"),
+                tr("A copy opens in your projects folder; the example itself stays untouched."),
+            )
+        )
+        self.list = QListWidget()
+        self.list.setSpacing(2)
+        self.list.setItemDelegate(TwoLineDelegate(self.list))
+        for title in titles:
+            name, _, about = title.partition(" — ")
+            item = QListWidgetItem(name)
+            item.setData(DETAIL_ROLE, about)
+            item.setData(Qt.ItemDataRole.AccessibleTextRole, title)
+            item.setToolTip(title)
+            self.list.addItem(item)
+        self.list.setCurrentRow(0)
+        self.list.itemActivated.connect(lambda _: self.accept())
+        layout.addWidget(self.list, 1)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Open | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def choice(self) -> int:
+        return max(self.list.currentRow(), 0)

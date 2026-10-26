@@ -30,6 +30,7 @@ from makebench.core.diagnostics import environment_report
 from makebench.core.exporter import effects
 from makebench import __version__
 from .theme import manager, icon
+from .look import make_muted, make_title
 from makebench.i18n import language, tr
 
 DEFAULTS = {
@@ -114,6 +115,7 @@ class SettingsShell(QDialog):
         body = QHBoxLayout()
         self.sections = QListWidget()
         self.sections.setMaximumWidth(200)
+        self.sections.setSpacing(3)
         self.sections.setMinimumWidth(170)
         body.addWidget(self.sections)
         self.pages = QStackedWidget()
@@ -150,12 +152,11 @@ class SettingsShell(QDialog):
 
     def group(self, page, title, description=""):
         """The title sits outside the card and the description explains the option's effect."""
-        heading = QLabel(title)
+        heading = make_title(QLabel(title), 1.15)
         heading.setProperty("section", True)
         page.addWidget(heading)
         if description:
-            label = QLabel(description)
-            label.setWordWrap(True)
+            label = make_muted(QLabel(description))
             label.setProperty("muted", True)
             page.addWidget(label)
         from PySide6.QtWidgets import QFrame
@@ -184,7 +185,7 @@ class SettingsShell(QDialog):
         if description:
             subtitle = QLabel(description)
             subtitle.setTextFormat(Qt.TextFormat.PlainText)
-            subtitle.setWordWrap(True)
+            make_muted(subtitle)
             subtitle.setProperty("muted", True)
             text.addWidget(subtitle)
         layout.addWidget(text_holder)
@@ -237,7 +238,7 @@ class EditorPreferences(SettingsShell):
                 clear.clicked.connect(
                     lambda: (self.settings.remove("projects/recent"), window.refresh_recents())
                 )
-                group.addWidget(clear)
+                group.addWidget(clear, 0, Qt.AlignmentFlag.AlignLeft)
             reset = QPushButton(tr("Restore this page's defaults"))
             reset.clicked.connect(lambda _, prefix=prefix: self.reset_page(prefix))
             page.addWidget(reset, 0, Qt.AlignmentFlag.AlignRight)
@@ -261,16 +262,18 @@ class EditorPreferences(SettingsShell):
         group.addWidget(self.report)
         copy = QPushButton(tr("Copy report"))
         copy.clicked.connect(lambda: QApplication.clipboard().setText(self.report.toPlainText()))
-        group.addWidget(copy)
+        group.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
         page = self.add_page(tr("Plugins"))
-        group = self.group(page, tr("Plugins"), tr("Support planned for a future release."))
-        label = QLabel(
+        group = self.group(
+            page,
+            tr("Plugins"),
             tr(
-                "This space will be used to manage Makebench extensions. Installing and running plugins is not available yet."
-            )
+                "Plugins add menu commands, pieces and code snippets. They are off until you turn them on."
+            ),
         )
-        label.setWordWrap(True)
-        group.addWidget(label)
+        manage = QPushButton(tr("Manage plugins…"))
+        manage.clicked.connect(lambda: self._manage_plugins(window))
+        group.addWidget(manage, 0, Qt.AlignmentFlag.AlignLeft)
         page = self.add_page(tr("About"))
         group = self.group(page, "Makebench " + __version__)
         label = QLabel(
@@ -282,7 +285,14 @@ class EditorPreferences(SettingsShell):
         group.addWidget(label)
         documentation = QPushButton(tr("Open the user guide"))
         documentation.clicked.connect(lambda: open_checklist(window))
-        group.addWidget(documentation)
+        group.addWidget(documentation, 0, Qt.AlignmentFlag.AlignLeft)
+
+    def _manage_plugins(self, window):
+        """Open the same plugin manager as Plugins › Manage plugins…."""
+        from .plugins_ui import PluginsDialog
+
+        if getattr(window, "plugin_manager", None) is not None:
+            PluginsDialog(window).exec()
 
     def populate(self, group, prefix):
         """Create controls bound to versioned keys and validated options."""
@@ -338,7 +348,9 @@ class EditorPreferences(SettingsShell):
                 field.valueChanged.connect(lambda value, key=key: self.changed(key, value))
             else:
                 field = QLineEdit(value)
-                field.setMinimumWidth(180)
+                field.setMinimumWidth(320 if key == "projects/folder" else 180)
+                field.setCursorPosition(0)
+                field.setToolTip(value)
                 field.textChanged.connect(lambda value, key=key: self.changed(key, value))
             self.controls[key] = field
             self.row(
@@ -521,7 +533,7 @@ class ApplicationSettings(SettingsShell):
         group.addLayout(preview_row)
         choose = QPushButton(tr("Choose icon…"))
         choose.clicked.connect(self.choose_icon)
-        group.addWidget(choose)
+        group.addWidget(choose, 0, Qt.AlignmentFlag.AlignLeft)
         self.update_icon()
         page = self.add_page(tr("Appearance"))
         group = self.group(
@@ -671,7 +683,7 @@ class ApplicationSettings(SettingsShell):
             choose.clicked.connect(
                 lambda _, identifier=root.id: self.choose_window_icon(identifier)
             )
-            group.addWidget(choose)
+            group.addWidget(choose, 0, Qt.AlignmentFlag.AlignLeft)
         page = self.add_page(tr("Data"))
         group = self.group(
             page,

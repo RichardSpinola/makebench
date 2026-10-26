@@ -34,6 +34,7 @@ from makebench.core.storage import load_project, save_project
 from makebench.core.source import SourceBuffer
 from makebench.core.bundle import read_bundle, write_bundle
 from .assets import AssetStore
+from .look import make_muted, make_title
 from makebench.i18n import language, tr
 from makebench.i18n import ntr
 
@@ -99,7 +100,7 @@ class ProjectMixin:
         rr.addWidget(discard)
         body.addWidget(self.recovery_row)
         recent_header = QHBoxLayout()
-        recent_header.addWidget(QLabel(tr("Recent")))
+        recent_header.addWidget(make_title(QLabel(tr("Recent")), 1.15))
         recent_header.addStretch()
         self.recent_search = QLineEdit()
         self.recent_search.setPlaceholderText(tr("Search projects…"))
@@ -116,10 +117,18 @@ class ProjectMixin:
         self.recent_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.recent_list.customContextMenuRequested.connect(self.recent_context)
         body.addWidget(self.recent_list)
-        self.no_recents = QLabel(tr("No recent projects."))
+        self.no_recents = make_muted(
+            QLabel(
+                tr("No recent projects.")
+                + " "
+                + tr("Create a new one or open an example to get started.")
+            )
+        )
         self.no_recents.setAlignment(Qt.AlignmentFlag.AlignCenter)
         body.addWidget(self.no_recents)
-        actions = QHBoxLayout()
+        self.recent_actions = QWidget()
+        actions = QHBoxLayout(self.recent_actions)
+        actions.setContentsMargins(0, 0, 0, 0)
         actions.addStretch()
         for symbol, label, callback in [
             ("open", tr("Open"), lambda: self.open_recent(self.recent_list.currentItem())),
@@ -135,7 +144,7 @@ class ProjectMixin:
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             button.clicked.connect(callback)
             actions.addWidget(button)
-        body.addLayout(actions)
+        body.addWidget(self.recent_actions)
         center = QHBoxLayout()
         center.addStretch()
         center.addWidget(content, 1)
@@ -263,6 +272,7 @@ class ProjectMixin:
         self.recent_list.setFixedHeight(max(58, min(360, 58 * count + 4)))
         if hasattr(self, "no_recents"):
             self.no_recents.setVisible(count == 0)
+            self.recent_actions.setVisible(count > 0)
         self.filter_recents()
 
     def filter_recents(self):
@@ -715,8 +725,22 @@ class ProjectMixin:
                 "app.makebench.json",
             ),
             (tr("Node graph — wires, loops and a terminal"), "free-graph", "qt.makebench.json"),
-            (tr("Terminal and debugging"), "terminal-debug", "qt.makebench.json"),
+            (
+                tr("Terminal and debugging — breakpoints, step by step"),
+                "terminal-debug",
+                "qt.makebench.json",
+            ),
             (tr("Python modules — several files"), "python-modules/qt", "project.makebench.json"),
+            (
+                tr("Complete workshop — every component, logic in nodes"),
+                "full-nodes",
+                "project.makebench.json",
+            ),
+            (
+                tr("Complete workshop — every component, logic in blocks"),
+                "full-blocks",
+                "project.makebench.json",
+            ),
         ]
         return [
             (title, base / folder, name)
@@ -735,15 +759,12 @@ class ProjectMixin:
                 tr("No examples available"),
             )
             return
-        from PySide6.QtWidgets import QInputDialog
+        from .guide import ExampleChooser
 
-        titles = [title for title, _, _ in examples]
-        choice, ok = QInputDialog.getItem(
-            self.project_dialog_parent(), tr("Open example"), tr("Example"), titles, 0, False
-        )
-        if not ok or not self._confirm_discard():
+        chooser = ExampleChooser([title for title, _, _ in examples], self.project_dialog_parent())
+        if not chooser.exec() or not self._confirm_discard():
             return
-        title, folder, name = examples[titles.index(choice)]
+        title, folder, name = examples[chooser.choice()]
         projects = Path(
             self.settings.value("v1/projects/folder", str(Path.home() / "Makebench" / "Projects"))
         ).expanduser()
