@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QComboBox,
 )
-from .commands import CommandPalette, register
+from .commands import CommandPalette, register, tidy_menus
 from .theme import icon, manager
 
 
@@ -422,6 +422,7 @@ class StudioMixin(
         sl.insertWidget(0, gear, 0, Qt.AlignmentFlag.AlignRight)
         gear.setProperty("makebenchIcon", "settings")
         apply_preferences(self)
+        tidy_menus(self)
         register(self)
 
     def export_application(self):

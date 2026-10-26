@@ -140,9 +140,13 @@ class DesignerMixin:
                 }[key]
                 button.setToolTip(label)
                 button.setAccessibleName(label)
-                symbol = {"out": "zoom-out", "in": "zoom-in", "fit": "fit"}.get(key, "actual")
-                button.setIcon(__import__("makebench.editor.theme", fromlist=["icon"]).icon(symbol))
-                button.setProperty("makebenchIcon", symbol)
+                # The scale button shows only its percentage; an icon there read as "11".
+                symbol = {"out": "zoom-out", "in": "zoom-in", "fit": "fit"}.get(key)
+                if symbol:
+                    button.setIcon(
+                        __import__("makebench.editor.theme", fromlist=["icon"]).icon(symbol)
+                    )
+                    button.setProperty("makebenchIcon", symbol)
                 button.clicked.connect(callback)
                 self.zoom_actions.append(self.context_bar.addWidget(button))
                 if key == "actual":
