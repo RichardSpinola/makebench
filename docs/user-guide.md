@@ -122,6 +122,28 @@ testing them.
 Building never runs your project. Edit the application's name, identifier,
 version, icon and language with **Application…**.
 
+## Version history, cloud and pieces
+
+- **Version history** (Project › Version history): turn it on once and every save
+  becomes a version kept with Git in the project folder. Open the window to see
+  versions by day, name one, or restore it. Restoring never deletes anything: the
+  current state is saved first and the old files come back as a new version.
+- **In the cloud:** in the same window connect any Git address (GitHub, GitLab,
+  Codeberg…) or create a private GitHub repository when `gh` is signed in.
+  **Send** and **Fetch updates** only run when you click. Makebench never asks for
+  or stores a password: it uses the login your computer already has (`gh`, SSH or
+  the credential helper).
+- **Reusable pieces:** right-click a component › *Save as reusable piece*. Your
+  pieces appear under *My pieces* in Insert and can be inserted as independent
+  copies, renamed, exported and imported.
+- **Plugins:** see [plugins.md](plugins.md). They are off until you turn each one on.
+- **Window look:** select a window and choose its theme (System, Light, Dark),
+  accent colour and background colour. From the logic use `ctx.set_theme(...)` and
+  `ctx.set_background(...)`.
+- **Complete examples:** *Complete workshop — Nodes* and *— Blocks* use every
+  component kind, several windows with different looks, a state, a task, a terminal,
+  an own module and a breakpoint. Open the *Guide* window inside them for a short tour.
+
 ## Preferences
 
 **View › Preferences…** (**Ctrl+,**) holds the editor settings: interface

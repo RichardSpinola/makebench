@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.0 (unreleased)
+
+- **Version history:** every save can become a Git version; browse by day, name,
+  restore without losing anything, and send to GitHub/GitLab/Codeberg with the
+  login your computer already has.
+- **Reusable pieces:** save any component as a piece, insert copies, share as files.
+- **Plugins (API v1):** folder-based, off by default, see `docs/plugins.md`.
+- **Better Python help:** Jedi-powered suggestions, signatures, definitions and rename;
+  `ctx` is fully described for completion.
+- **Window look:** per-window theme, accent and background (Qt and GTK) and
+  `ctx.set_theme` / `ctx.set_background`.
+- **New project dialog:** advanced options only on request.
+- **Complete examples:** *Complete workshop* with nodes and with blocks, in English
+  and Portuguese, with an in-app guide window.
+
 ## 0.7.0 — first public release
 
 Makebench is a visual editor for native Linux applications (Qt or GTK 4). This is

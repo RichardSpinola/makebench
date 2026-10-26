@@ -126,6 +126,30 @@ testá-los.
 Construir nunca executa o seu projeto. Edite nome, identificador, versão, ícone
 e idioma do aplicativo em **Aplicativo…**.
 
+## Histórico de versões, nuvem e peças
+
+- **Histórico de versões** (Projeto › Histórico de versões): ative uma vez e cada
+  salvamento vira uma versão guardada com Git na pasta do projeto. Na janela você vê
+  as versões por dia, dá nome a uma ou restaura. Restaurar nunca apaga nada: o estado
+  atual é salvo antes e os arquivos antigos voltam como uma versão nova.
+- **Na nuvem:** na mesma janela conecte qualquer endereço Git (GitHub, GitLab,
+  Codeberg…) ou crie um repositório privado no GitHub quando o `gh` estiver logado.
+  **Enviar** e **Buscar atualizações** só rodam quando você clica. O Makebench nunca
+  pede nem guarda senha: usa o login que o computador já tem (`gh`, SSH ou o
+  chaveiro de credenciais).
+- **Peças reutilizáveis:** botão direito num componente › *Salvar como peça
+  reutilizável*. Suas peças aparecem em *Minhas peças* na aba Inserir e entram como
+  cópias independentes; dá para renomear, exportar e importar.
+- **Plugins:** veja [plugins.md](plugins.md) (em inglês). Todos vêm desligados até
+  você ligar cada um.
+- **Aparência da janela:** selecione uma janela e escolha tema (Sistema, Claro,
+  Escuro), cor de destaque e cor de fundo. Na lógica use `ctx.set_theme(...)` e
+  `ctx.set_background(...)`.
+- **Exemplos completos:** *Oficina completa — Nós* e *— Blocos* usam todos os tipos
+  de componente, várias janelas com aparências diferentes, um estado, uma tarefa, um
+  terminal, um módulo próprio e um ponto de parada. Abra a janela *Roteiro* dentro
+  deles para um passeio curto.
+
 ## Preferências
 
 **Exibir › Preferências…** (**Ctrl+,**) reúne as configurações do editor: idioma
