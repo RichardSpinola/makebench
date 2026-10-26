@@ -1327,8 +1327,8 @@ msgid "Creation tools"
 msgstr "Ferramentas de criação"
 
 #: src/makebench/editor/code_assist.py
-msgid "Ctrl+Space: suggestions · Ctrl+Shift+Space: parameters · F12: local definition"
-msgstr "Ctrl+Espaço: sugestões · Ctrl+Shift+Espaço: parâmetros · F12: definição local"
+msgid "Ctrl+Space: suggestions · Ctrl+Shift+Space: parameters · F12: definition · F2: rename"
+msgstr "Ctrl+Espaço: sugestões · Ctrl+Shift+Espaço: parâmetros · F12: definição · F2: renomear"
 
 #: src/makebench/core/navigation.py
 msgid "Customize tools and preferences whenever you like."
@@ -6339,3 +6339,19 @@ msgstr "Usuário"
 #: src/makebench/core/pieces.py
 msgid "{name} is not a valid Makebench piece."
 msgstr "{name} não é uma peça válida do Makebench."
+
+#: src/makebench/editor/code_assist.py
+msgid "New name"
+msgstr "Novo nome"
+
+#: src/makebench/editor/code_assist.py
+msgid "Rename symbol"
+msgstr "Renomear símbolo"
+
+#: src/makebench/editor/code_assist.py
+msgid "This symbol cannot be renamed."
+msgstr "Este símbolo não pode ser renomeado."
+
+#: src/makebench/editor/code_assist.py
+msgid "snippet"
+msgstr "trecho"

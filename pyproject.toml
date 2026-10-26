@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Software Development :: User Interfaces",
     "Topic :: Software Development :: Code Generators",
 ]
-dependencies = ["PySide6==6.11.2", "pyte==0.8.2"]
+dependencies = ["PySide6==6.11.2", "pyte==0.8.2", "jedi==0.20.1", "parso==0.8.7"]
 
 [project.urls]
 Homepage = "https://github.com/RichardSpinola/makebench"
@@ -42,7 +42,7 @@ makebench = "makebench.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "notices/*", "templates/*/*.json", "templates/*/*.py", "locale/*/*.po", "editor/*.svg"]
+makebench = ["web/*.html", "web/*.js", "web/*.css", "web/vendor/blockly/*", "web/vendor/blockly/media/*", "notices/*", "templates/*/*.json", "templates/*/*.py", "locale/*/*.po", "editor/*.svg", "editor/stubs/*.pyi"]
 
 [tool.ruff]
 line-length = 100

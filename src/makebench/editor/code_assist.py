@@ -4,8 +4,11 @@
 import re
 from PySide6.QtCore import QObject, Qt, QEvent
 from PySide6.QtGui import QTextCursor
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QFrame
+from PySide6.QtWidgets import QFrame, QInputDialog, QListWidget, QListWidgetItem
+from makebench.core.source import ENTRY_FILE, source_files
 from makebench.i18n import tr
+
+from . import jedi_assist
 
 
 class CodeAssist(QObject):
@@ -26,7 +29,9 @@ class CodeAssist(QObject):
         self.prefix = ""
         editor.installEventFilter(self)
         editor.setToolTip(
-            tr("Ctrl+Space: suggestions · Ctrl+Shift+Space: parameters · F12: local definition")
+            tr(
+                "Ctrl+Space: suggestions · Ctrl+Shift+Space: parameters · F12: definition · F2: rename"
+            )
         )
         editor.cursorPositionChanged.connect(self.parameters)
 
@@ -35,6 +40,33 @@ class CodeAssist(QObject):
         cursor = self.editor.textCursor()
         cursor.setPosition(0, QTextCursor.MoveMode.KeepAnchor)
         return cursor.selectedText().replace("\u2029", "\n")
+
+    def _position(self):
+        """Mirror the project's files for Jedi and return (source, path, line, column)."""
+        window = self.window
+        if not hasattr(window, "jedi_workspace"):
+            window.jedi_workspace = jedi_assist.Workspace()
+        texts = source_files(window.source.text)
+        source = self.editor.toPlainText()
+        texts[self.filename] = source
+        window.jedi_workspace.sync(ENTRY_FILE, texts)
+        cursor = self.editor.textCursor()
+        text = cursor.block().text()
+        units = cursor.positionInBlock()
+        column = len(text.encode("utf-16-le")[: units * 2].decode("utf-16-le"))
+        path = window.jedi_workspace.path_of(self.filename, ENTRY_FILE)
+        return source, path, cursor.blockNumber() + 1, column
+
+    def _jedi_items(self):
+        """Suggestions from Jedi with the matching snippets, as {label: text to insert}."""
+        if not jedi_assist.available():
+            return {}
+        source, path, line, column = self._position()
+        found = jedi_assist.completions(source, self.window.jedi_workspace.root, path, line, column)
+        items = {f"{item.name} · {item.detail}": item.name for item in found}
+        for name, text in jedi_assist.snippets(self.prefix.split(".")[-1]).items():
+            items[f"{name} · " + tr("snippet")] = text
+        return items
 
     def complete(self):
         """Open suggestions with Ctrl+Space, including components in ctx calls."""
@@ -57,7 +89,12 @@ class CodeAssist(QObject):
                     self.inserts[node.id + " · " + label] = node.id
             items = list(self.inserts)
         else:
-            items = [
+            full_prefix = self.prefix
+            self.prefix = full_prefix.split(".")[-1]
+            self.inserts = self._jedi_items()
+            if not self.inserts:
+                self.prefix = full_prefix
+            items = list(self.inserts) or [
                 name for name, _ in self.window.code_index.complete(self.filename, self.prefix)
             ]
         self.popup.clear()
@@ -120,14 +157,54 @@ class CodeAssist(QObject):
         target = self.window.code_index.resolve(self.filename, token)
         if target and target.file:
             self.window.open_code_file(target.file, target.line, target.column)
+        elif self._jedi_definition():
+            return
         else:
             self.window.statusBar().showMessage(tr("Local definition not found."), 3000)
+
+    def _jedi_definition(self):
+        """F12 through Jedi, for names the built-in index does not know."""
+        if not jedi_assist.available():
+            return False
+        source, path, line, column = self._position()
+        workspace = self.window.jedi_workspace
+        found = jedi_assist.definition(source, workspace.root, path, line, column)
+        name = workspace.name_of(found.path) if found else None
+        if name is None:
+            return False
+        self.window.open_code_file(name, found.line + 1, found.column + 1)
+        return True
+
+    def rename(self):
+        """F2: rename the symbol under the caret inside this file."""
+        if not jedi_assist.available():
+            return
+        source, path, line, column = self._position()
+        new_name, ok = QInputDialog.getText(self.editor, tr("Rename symbol"), tr("New name"))
+        if not ok or not new_name.strip():
+            return
+        result = jedi_assist.rename(
+            source, self.window.jedi_workspace.root, path, line, column, new_name.strip()
+        )
+        if result is None or result == source:
+            self.window.statusBar().showMessage(tr("This symbol cannot be renamed."), 3000)
+            return
+        cursor = self.editor.textCursor()
+        cursor.beginEditBlock()
+        cursor.select(QTextCursor.SelectionType.Document)
+        cursor.insertText(result)
+        cursor.endEditBlock()
 
     def parameters(self):
         """Show the contextual signature discreetly in the Code area's footer."""
         if not self.editor.hasFocus():
             return
         signature = self.window.code_index.call_signature(self.filename, self.before())
+        if not signature and jedi_assist.available():
+            source, path, line, column = self._position()
+            signature = jedi_assist.signature(
+                source, self.window.jedi_workspace.root, path, line, column
+            )
         self.window.code_signature.setText(signature)
         self.window.code_signature.setToolTip(signature)
 
@@ -139,7 +216,9 @@ class CodeAssist(QObject):
             else False
         )
         assisted = event.type() in {QEvent.Type.KeyPress, QEvent.Type.ShortcutOverride} and (
-            event.key() == Qt.Key.Key_F12 or controls and event.key() == Qt.Key.Key_Space
+            event.key() in {Qt.Key.Key_F12, Qt.Key.Key_F2}
+            or controls
+            and event.key() == Qt.Key.Key_Space
         )
         if assisted:
             if event.type() == QEvent.Type.ShortcutOverride:
@@ -147,6 +226,8 @@ class CodeAssist(QObject):
                 return True
             if event.key() == Qt.Key.Key_F12:
                 self.definition()
+            elif event.key() == Qt.Key.Key_F2:
+                self.rename()
             elif event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
                 self.parameters()
             else:

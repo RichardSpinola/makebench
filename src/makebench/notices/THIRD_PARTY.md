@@ -34,6 +34,13 @@ https://files.pythonhosted.org/packages/source/p/pyte/pyte-0.8.2.tar.gz
 pyte depends on wcwidth (MIT license); distributed packages must keep its
 metadata and license notice too.
 
+## Jedi 0.20.1 and parso 0.8.7 — MIT
+
+Copyright (c) 2013 David Halter and contributors. Python code suggestions and
+navigation in the editor only; they are not included in exported applications.
+Both are separate, unmodified dependencies. Source: https://github.com/davidhalter/jedi
+and https://github.com/davidhalter/parso.
+
 ## Optional system components
 
 The GTK backend uses GTK 4, PyGObject and, optionally, libadwaita (LGPL-2.1-or-later)
