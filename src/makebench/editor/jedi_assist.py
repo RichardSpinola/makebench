@@ -139,11 +139,12 @@ def rename(source, root, path, line, column, new_name) -> str | None:
     return None
 
 
-def snippets(prefix: str) -> dict[str, str]:
-    """Ready-made pieces of code whose name starts with what was typed."""
-    return (
-        {name: text for name, text in SNIPPETS.items() if name.startswith(prefix)} if prefix else {}
-    )
+def snippets(prefix: str, extra: dict[str, str] | None = None) -> dict[str, str]:
+    """Ready-made pieces of code (plus the plugins') whose name starts with what was typed."""
+    if not prefix:
+        return {}
+    every = {**SNIPPETS, **(extra or {})}
+    return {name: text for name, text in every.items() if name.startswith(prefix)}
 
 
 class Workspace:
