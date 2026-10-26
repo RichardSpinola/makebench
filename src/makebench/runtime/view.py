@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: MIT
 """Runnable Qt interface, using the same controls/layouts as the designer."""
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QPlainTextEdit, QPushButton, QTabWidget, QVBoxLayout
 from makebench.core.project import ComponentKind
+from makebench.core.style import qt_stylesheet, window_style
 from makebench.ui.renderer import create_control, place_children
 from makebench.i18n import tr
 
@@ -19,6 +20,7 @@ class RuntimeView(QFrame):
         self.project = project
         self.read_asset = read_asset
         self.window_root = window_root or project.root
+        self.style_changes = {}
         self.widgets = {}
         self.frames = {}
         self.tabs = {}
@@ -30,6 +32,18 @@ class RuntimeView(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
         layout.addWidget(self._render(window_root or project.root))
+        self.apply_style(window_style(self.window_root.properties))
+
+    def apply_style(self, style):
+        """Scope the look to this window; other windows and the editor are untouched."""
+        self.setObjectName("mbWindow")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setStyleSheet(qt_stylesheet(style, "mbWindow"))
+
+    def change_style(self, **changes):
+        """Used by ctx.set_theme/set_background while the application runs."""
+        self.style_changes.update(changes)
+        self.apply_style(window_style({**self.window_root.properties, **self.style_changes}))
 
     def reset(self):
         """Re-create the controls of a closed window when it opens again."""
@@ -44,7 +58,9 @@ class RuntimeView(QFrame):
         self.tabs = {}
         self.enabled = {}
         self.busy = False
+        self.style_changes = {}
         layout.addWidget(self._render(self.window_root))
+        self.apply_style(window_style(self.window_root.properties))
 
     def _render(self, node):
         """Build containers/pages and connect clicks only in the running instance."""

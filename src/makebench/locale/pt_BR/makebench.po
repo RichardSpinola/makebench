@@ -6523,3 +6523,19 @@ msgstr "ligado"
 #: src/makebench/editor/projects.py
 msgid "Show advanced options (identifier, version, icon)"
 msgstr "Mostrar opções avançadas (identificador, versão, ícone)"
+
+#: src/makebench/editor/inspector.py
+msgid "Background color"
+msgstr "Cor de fundo"
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/window.py
+msgid "Use a color such as #336699."
+msgstr "Use uma cor como #336699."
+
+#: src/makebench/gtk_runtime/application.py src/makebench/runtime/window.py
+msgid "Use light, dark or system and a #rrggbb accent."
+msgstr "Use claro, escuro ou sistema e um destaque #rrggbb."
+
+#: src/makebench/editor/inspector.py
+msgid "Window look"
+msgstr "Aparência da janela"

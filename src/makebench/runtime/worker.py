@@ -107,6 +107,14 @@ class Context:
         """Enable/disable a control of the running instance."""
         return self.request("set_enabled", component=component, value=bool(value))
 
+    def set_theme(self, theme, accent=""):
+        """Switch the current window between system, light and dark, with an optional accent."""
+        return self.request("set_theme", theme=str(theme), accent=str(accent))
+
+    def set_background(self, color):
+        """Paint the current window's background with a #rrggbb color ("" restores it)."""
+        return self.request("set_background", color=str(color))
+
     def set_value(self, component, value):
         """Update integer progress in the 0–100 range."""
         return self.request("set_value", component=component, value=int(value))

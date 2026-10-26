@@ -411,6 +411,18 @@ class GtkRuntime:
                 result = {"reset": self.open_window(r["window"], r.get("close_current", False))}
             elif method == "close_window":
                 self.close_window(self.current)
+            elif method in {"set_theme", "set_background"}:
+                from makebench.core.style import THEMES, valid_color
+
+                view = self.views[self.current]
+                if method == "set_theme":
+                    if r["theme"] not in THEMES or (r["accent"] and not valid_color(r["accent"])):
+                        raise ValueError(tr("Use light, dark or system and a #rrggbb accent."))
+                    view.change_style(theme=r["theme"], accent=r["accent"])
+                else:
+                    if r["color"] and not valid_color(r["color"]):
+                        raise ValueError(tr("Use a color such as #336699."))
+                    view.change_style(background=r["color"])
             else:
                 view, key = self.locate(r.get("component"))
                 widget = view.widgets[key]

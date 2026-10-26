@@ -2,6 +2,7 @@
 """Contextual inspector by scope, with collapsible sections and accessible fields."""
 
 from PySide6.QtCore import Qt, Signal, QEvent, QTimer
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -340,6 +341,16 @@ class Inspector(QWidget):
             self._boolean_field(
                 tr("Resizable"), node.id, "resizable", node.properties.get("resizable", True)
             )
+            self.section(tr("Window look"))
+            self._choice_field(
+                tr("Theme"),
+                node.id,
+                "theme",
+                node.properties.get("theme", "system"),
+                [(tr("System"), "system"), (tr("Light"), "light"), (tr("Dark"), "dark")],
+            )
+            self._color_field(tr("Accent color"), node.id, "accent", node.properties)
+            self._color_field(tr("Background color"), node.id, "background", node.properties)
         elif parent:
             for axis, label in (
                 []
@@ -533,6 +544,37 @@ class Inspector(QWidget):
         field.toggled.connect(lambda value: self.property_changed.emit(node_id, key, value))
         self._restore_menu(field, node_id, key)
         self.fields.addRow(field)
+
+    def _color_field(self, label, node_id, key, properties):
+        """Pick a #rrggbb color; Clear goes back to the theme's own value."""
+        from PySide6.QtGui import QColor
+        from PySide6.QtWidgets import QColorDialog
+
+        value = properties.get(key, "")
+        row = QWidget()
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        pick = QPushButton(value or tr("Default"))
+        pick.setObjectName("property_" + key)
+        pick.setAccessibleName(label)
+        if value:
+            swatch = QPixmap(14, 14)
+            swatch.fill(QColor(value))
+            pick.setIcon(QIcon(swatch))
+        clear = QPushButton(tr("Clear"))
+        clear.setEnabled(bool(value) and not self.state_mode)
+        pick.setEnabled(not self.state_mode)
+
+        def choose():
+            color = QColorDialog.getColor(QColor(value or "#3584e4"), self, label)
+            if color.isValid():
+                self.property_changed.emit(node_id, key, color.name())
+
+        pick.clicked.connect(choose)
+        clear.clicked.connect(lambda: self.property_changed.emit(node_id, key, ""))
+        layout.addWidget(pick, 1)
+        layout.addWidget(clear)
+        self.fields.addRow(label, row)
 
     def _choice_field(self, label, node_id, key, value, options):
         """Use stable internal values, independent of translated labels."""

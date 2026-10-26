@@ -280,6 +280,13 @@ class PreviewCanvas(QFrame):
         self._watch(self.title_bar, project.root.id)
         self._layout.addWidget(self.title_bar)
         surface = self._render(project.root)
+        from makebench.core.style import qt_stylesheet, window_style
+
+        surface.setObjectName("mbWindowPreview")
+        surface.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        surface.setStyleSheet(
+            qt_stylesheet(window_style(project.root.properties), "mbWindowPreview")
+        )
         surface.setMinimumSize(surface.minimumSize().expandedTo(QSize(360, 320)))
         surface.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._layout.addWidget(surface, 1)

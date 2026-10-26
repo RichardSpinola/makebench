@@ -337,6 +337,21 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     widget, QPlainTextEdit
                 ) else widget.setText(request["value"])
                 self.session.reply(identifier)
+            elif method in {"set_theme", "set_background"}:
+                from makebench.core.style import THEMES, valid_color
+
+                view = self.views.get(self.current_window)
+                if method == "set_theme":
+                    if request["theme"] not in THEMES or (
+                        request["accent"] and not valid_color(request["accent"])
+                    ):
+                        raise ValueError(tr("Use light, dark or system and a #rrggbb accent."))
+                    view.change_style(theme=request["theme"], accent=request["accent"])
+                else:
+                    if request["color"] and not valid_color(request["color"]):
+                        raise ValueError(tr("Use a color such as #336699."))
+                    view.change_style(background=request["color"])
+                self.session.reply(identifier)
             elif method == "set_enabled":
                 if widget is None:
                     raise ValueError(tr("The component does not exist."))

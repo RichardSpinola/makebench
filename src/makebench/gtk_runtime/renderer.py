@@ -41,6 +41,36 @@ class GtkView:
         self.tabs = {}
         self.enabled = {}
         self.widget = self.render(root)
+        self.style_changes = {}
+        self.provider = None
+        self.css_class = "mb-window-" + str(id(self))
+        self.widget.add_css_class(self.css_class)
+        self.apply_style()
+
+    def apply_style(self):
+        """One CssProvider per window, scoped by a class so other windows keep their look."""
+        from makebench.core.style import gtk_css, window_style
+
+        Gtk, Gdk = self.Gtk, self.Gdk
+        css = gtk_css(window_style({**self.root.properties, **self.style_changes}), self.css_class)
+        display = Gdk.Display.get_default()
+        if self.provider is not None and display is not None:
+            Gtk.StyleContext.remove_provider_for_display(display, self.provider)
+            self.provider = None
+        if css and display is not None:
+            self.provider = Gtk.CssProvider()
+            if hasattr(self.provider, "load_from_string"):
+                self.provider.load_from_string(css)
+            else:
+                self.provider.load_from_data(css.encode())
+            Gtk.StyleContext.add_provider_for_display(
+                display, self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
+
+    def change_style(self, **changes):
+        """Used by ctx.set_theme/set_background while the application runs."""
+        self.style_changes.update(changes)
+        self.apply_style()
 
     def render(self, node):
         """Map every basic type, layout and initial value to GTK."""

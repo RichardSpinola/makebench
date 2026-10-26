@@ -858,7 +858,7 @@ class MainWindow(StudioMixin, QMainWindow):
         }
         if (
             key in structural
-            or key in {"width", "height", "resizable"}
+            or key in {"width", "height", "resizable", "theme", "accent", "background"}
             or key == "icon"
             and self.project.find(identifier).kind == ComponentKind.WINDOW
         ):

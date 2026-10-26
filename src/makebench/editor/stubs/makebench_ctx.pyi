@@ -15,6 +15,10 @@ class Context:
         """Change the text of a control in the running window."""
     def set_enabled(self, component: str, value: bool) -> None:
         """Enable or disable a control."""
+    def set_theme(self, theme: str, accent: str = "") -> None:
+        """Switch the current window to "system", "light" or "dark", with an optional #rrggbb accent."""
+    def set_background(self, color: str) -> None:
+        """Paint the current window's background with a #rrggbb color; "" restores the theme's."""
     def set_value(self, component: str, value: int) -> None:
         """Set a progress bar from 0 to 100."""
     def show_page(self, component: str) -> None:
