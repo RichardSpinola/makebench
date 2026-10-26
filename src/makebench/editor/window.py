@@ -147,6 +147,9 @@ class MainWindow(StudioMixin, QMainWindow):
         if edit_menu is not None:
             edit_menu.addSeparator()
             edit_menu.addAction(search)
+            from .pieces import install_pieces
+
+            install_pieces(self, edit_menu)
         from .history_panel import install_history
 
         history_action = install_history(self)

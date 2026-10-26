@@ -6203,3 +6203,139 @@ msgstr "{count} versão guardada."
 #: src/makebench/editor/history_panel.py
 msgid "{count} versions kept."
 msgstr "{count} versões guardadas."
+
+#: src/makebench/core/pieces.py
+msgid "A short line that explains this screen."
+msgstr "Uma linha curta que explica esta tela."
+
+#: src/makebench/editor/pieces.py
+msgid "Could not import the piece"
+msgstr "Não foi possível importar a peça"
+
+#: src/makebench/editor/pieces.py
+msgid "Could not insert the piece"
+msgstr "Não foi possível inserir a peça"
+
+#: src/makebench/editor/pieces.py
+msgid "Could not save the piece"
+msgstr "Não foi possível salvar a peça"
+
+#: src/makebench/editor/pieces.py
+msgid "Delete piece"
+msgstr "Apagar peça"
+
+#: src/makebench/editor/pieces.py
+msgid "Delete this piece?"
+msgstr "Apagar esta peça?"
+
+#: src/makebench/editor/pieces.py
+msgid "Delete…"
+msgstr "Apagar…"
+
+#: src/makebench/core/pieces.py
+msgid "Enter"
+msgstr "Entrar"
+
+#: src/makebench/core/pieces.py
+msgid "Enter a name for the piece."
+msgstr "Digite um nome para a peça."
+
+#: src/makebench/editor/pieces.py
+msgid "Export a piece"
+msgstr "Exportar uma peça"
+
+#: src/makebench/editor/pieces.py
+msgid "Export…"
+msgstr "Exportar…"
+
+#: src/makebench/editor/pieces.py
+msgid "Import a piece"
+msgstr "Importar uma peça"
+
+#: src/makebench/editor/pieces.py
+msgid "Import…"
+msgstr "Importar…"
+
+#: src/makebench/editor/pieces.py
+msgid "Insert in the selected container"
+msgstr "Inserir no contêiner selecionado"
+
+#: src/makebench/editor/pieces.py
+msgid "Insert piece"
+msgstr "Inserir peça"
+
+#: src/makebench/core/pieces.py
+msgid "Login form"
+msgstr "Formulário de login"
+
+#: src/makebench/editor/pieces.py
+msgid "Makebench pieces (*.json)"
+msgstr "Peças do Makebench (*.json)"
+
+#: src/makebench/editor/pieces.py
+msgid "Manage pieces…"
+msgstr "Gerenciar peças…"
+
+#: src/makebench/editor/pieces.py
+msgid "My pieces"
+msgstr "Minhas peças"
+
+#: src/makebench/editor/pieces.py
+msgid "Name of the piece"
+msgstr "Nome da peça"
+
+#: src/makebench/core/pieces.py
+msgid "OK / Cancel bar"
+msgstr "Barra OK / Cancelar"
+
+#: src/makebench/core/pieces.py
+msgid "Password"
+msgstr "Senha"
+
+#: src/makebench/editor/pieces.py
+msgid "Piece saved: {name}"
+msgstr "Peça salva: {name}"
+
+#: src/makebench/editor/pieces.py
+msgid "Pieces are copies: changing a piece does not change copies you already inserted."
+msgstr "Peças são cópias: mudar uma peça não muda as cópias que você já inseriu."
+
+#: src/makebench/editor/pieces.py
+msgid "Save as reusable piece"
+msgstr "Salvar como peça reutilizável"
+
+#: src/makebench/editor/pieces.py
+msgid "Save as reusable piece…"
+msgstr "Salvar como peça reutilizável…"
+
+#: src/makebench/core/pieces.py
+msgid "Screen header"
+msgstr "Cabeçalho de tela"
+
+#: src/makebench/core/pieces.py
+msgid "Select a control or a container to save as a piece."
+msgstr "Selecione um controle ou um contêiner para salvar como peça."
+
+#: src/makebench/core/pieces.py
+msgid "Select a window or a container to insert the piece."
+msgstr "Selecione uma janela ou um contêiner para inserir a peça."
+
+#: src/makebench/core/pieces.py
+msgid "Sign in"
+msgstr "Entrar na conta"
+
+#: src/makebench/core/pieces.py
+msgid "The piece file is too large."
+msgstr "O arquivo da peça é grande demais."
+
+#: src/makebench/core/pieces.py
+msgid "This piece cannot go inside the selected component."
+msgstr "Esta peça não pode ir dentro do componente selecionado."
+
+#: src/makebench/core/pieces.py
+msgid "User"
+msgstr "Usuário"
+
+#: src/makebench/core/pieces.py
+msgid "{name} is not a valid Makebench piece."
+msgstr "{name} não é uma peça válida do Makebench."
