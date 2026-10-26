@@ -147,6 +147,14 @@ class MainWindow(StudioMixin, QMainWindow):
         if edit_menu is not None:
             edit_menu.addSeparator()
             edit_menu.addAction(search)
+        from .history_panel import install_history
+
+        history_action = install_history(self)
+        file_menu = next(
+            (a.menu() for a in self.menuBar().actions() if a.text() == tr("&File")), None
+        )
+        if file_menu is not None:
+            file_menu.insertAction(file_menu.actions()[-2], history_action)
         self._refresh()
         self.remember_project()
 
@@ -1448,6 +1456,9 @@ class MainWindow(StudioMixin, QMainWindow):
         self.remember_project()
         self.canvas.close_native_preview()
         self.clear_recovery()
+        from .history_panel import record_version
+
+        record_version(self)
         if backup:
             self.statusBar().showMessage(
                 tr(

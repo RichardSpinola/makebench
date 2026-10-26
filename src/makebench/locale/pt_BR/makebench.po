@@ -5975,3 +5975,231 @@ msgstr "{path} é uma pasta, não um arquivo."
 #: 
 msgid "{path} is on a read-only disk."
 msgstr "{path} está em um disco somente leitura."
+
+#: src/makebench/editor/history_panel.py
+msgid "Address"
+msgstr "Endereço"
+
+#: src/makebench/core/vcs.py
+msgid "Before restoring"
+msgstr "Antes de restaurar"
+
+#: src/makebench/editor/history_panel.py
+msgid "Changes: {summary}"
+msgstr "Mudanças: {summary}"
+
+#: src/makebench/editor/history_panel.py
+msgid "Connected. Press Send to upload your versions."
+msgstr "Conectado. Use Enviar para subir suas versões."
+
+#: src/makebench/core/vcs.py
+msgid "Could not reach the service. Check your connection and the address."
+msgstr "Não foi possível acessar o serviço. Confira a conexão e o endereço."
+
+#: src/makebench/editor/history_panel.py
+msgid "Create on GitHub"
+msgstr "Criar no GitHub"
+
+#: src/makebench/editor/history_panel.py
+msgid "E-mail shown on versions"
+msgstr "E-mail mostrado nas versões"
+
+#: src/makebench/core/vcs.py
+msgid "Enter a name and a valid e-mail."
+msgstr "Informe um nome e um e-mail válido."
+
+#: src/makebench/core/vcs.py
+msgid "Enter a name for this version."
+msgstr "Informe um nome para esta versão."
+
+#: src/makebench/core/vcs.py
+msgid "Enter the repository address, for example https://github.com/you/app.git"
+msgstr "Informe o endereço do repositório, por exemplo https://github.com/voce/app.git"
+
+#: src/makebench/editor/history_panel.py
+msgid "Get updates"
+msgstr "Buscar atualizações"
+
+#: src/makebench/editor/history_panel.py
+msgid "Git is not installed on this computer, so history is unavailable."
+msgstr "O Git não está instalado neste computador, então o histórico não está disponível."
+
+#: src/makebench/core/vcs.py
+msgid "Git is not installed on this computer."
+msgstr "O Git não está instalado neste computador."
+
+#: src/makebench/core/vcs.py
+msgid "Git reported an error."
+msgstr "O Git informou um erro."
+
+#: src/makebench/core/vcs.py
+msgid "Git took too long and was stopped."
+msgstr "O Git demorou demais e foi interrompido."
+
+#: src/makebench/editor/history_panel.py
+msgid "Go back to the version from {moment}? What you have now is kept as a version, so you can return to it."
+msgstr "Voltar para a versão de {moment}? O que você tem agora fica guardado como uma versão, e você pode voltar a ele."
+
+#: src/makebench/editor/history_panel.py
+msgid "History is off. When it is on, every time you save, Makebench keeps that version so you can come back to it."
+msgstr "O histórico está desligado. Quando ligado, a cada salvamento o Makebench guarda aquela versão para você poder voltar a ela."
+
+#: src/makebench/editor/history_panel.py
+msgid "History turned on"
+msgstr "Histórico ligado"
+
+#: src/makebench/editor/history_panel.py
+msgid "Name shown on versions"
+msgstr "Nome mostrado nas versões"
+
+#: src/makebench/editor/history_panel.py
+msgid "Name this version"
+msgstr "Dar nome a esta versão"
+
+#: src/makebench/editor/history_panel.py
+msgid "Name this version…"
+msgstr "Dar nome a esta versão…"
+
+#: src/makebench/core/vcs.py
+msgid "No visible changes"
+msgstr "Sem mudanças visíveis"
+
+#: src/makebench/editor/history_panel.py
+msgid "Not connected"
+msgstr "Não conectado"
+
+#: src/makebench/editor/history_panel.py
+msgid "Nothing is sent unless you press Send. Makebench uses the sign-in your computer already has (gh, SSH key or keyring) and never stores passwords."
+msgstr "Nada é enviado se você não pressionar Enviar. O Makebench usa o login que o seu computador já tem (gh, chave SSH ou chaveiro) e nunca guarda senhas."
+
+#: src/makebench/editor/history_panel.py
+msgid "Online copy"
+msgstr "Cópia online"
+
+#: src/makebench/core/vcs.py
+msgid "Project created"
+msgstr "Projeto criado"
+
+#: src/makebench/editor/history_panel.py
+msgid "Repository address"
+msgstr "Endereço do repositório"
+
+#: src/makebench/editor/history_panel.py
+msgid "Repository name"
+msgstr "Nome do repositório"
+
+#: src/makebench/editor/history_panel.py
+msgid "Restore this version"
+msgstr "Restaurar esta versão"
+
+#: src/makebench/core/vcs.py
+msgid "Restored version {short}"
+msgstr "Versão {short} restaurada"
+
+#: src/makebench/editor/history_panel.py
+msgid "Save the project once to be able to turn on its history."
+msgstr "Salve o projeto uma vez para poder ligar o histórico dele."
+
+#: src/makebench/editor/history_panel.py
+msgid "Saved at {time}"
+msgstr "Salvo às {time}"
+
+#: src/makebench/editor/history_panel.py
+msgid "Send"
+msgstr "Enviar"
+
+#: src/makebench/core/vcs.py
+msgid "Sign in with the GitHub command line first: `gh auth login`."
+msgstr "Entre antes pela linha de comando do GitHub: `gh auth login`."
+
+#: src/makebench/editor/history_panel.py
+msgid "Signed in as"
+msgstr "Conectado como"
+
+#: src/makebench/editor/history_panel.py
+msgid "The file was saved, but the version could not be recorded: {error}"
+msgstr "O arquivo foi salvo, mas a versão não pôde ser registrada: {error}"
+
+#: src/makebench/core/vcs.py
+msgid "The online copy and this one both have new versions, so they cannot be joined automatically."
+msgstr "A cópia online e esta têm versões novas, então não dá para juntá-las automaticamente."
+
+#: src/makebench/core/vcs.py
+msgid "The online copy has newer versions. Fetch them first, then send again."
+msgstr "A cópia online tem versões mais novas. Busque-as primeiro e envie de novo."
+
+#: src/makebench/core/vcs.py
+msgid "The service did not accept your SSH key. Add the key to your account and try again."
+msgstr "O serviço não aceitou a sua chave SSH. Adicione a chave à sua conta e tente de novo."
+
+#: src/makebench/core/vcs.py
+msgid "The service refused the login. Sign in with the system first (for example `gh auth login`, or add an SSH key), then try again."
+msgstr "O serviço recusou o login. Entre primeiro pelo sistema (por exemplo `gh auth login`, ou adicione uma chave SSH) e tente de novo."
+
+#: src/makebench/editor/history_panel.py
+msgid "Turn on version history"
+msgstr "Ligar o histórico de versões"
+
+#: src/makebench/core/vcs.py
+msgid "Use letters, numbers, dots, dashes or underscores in the repository name."
+msgstr "Use letras, números, pontos, hífens ou sublinhados no nome do repositório."
+
+#: src/makebench/editor/history_panel.py
+msgid "Version history"
+msgstr "Histórico de versões"
+
+#: src/makebench/editor/history_panel.py
+msgid "Version history…"
+msgstr "Histórico de versões…"
+
+#: src/makebench/editor/history_panel.py
+msgid "Versions"
+msgstr "Versões"
+
+#: src/makebench/editor/history_panel.py
+msgid "Working…"
+msgstr "Trabalhando…"
+
+#: src/makebench/editor/history_panel.py
+msgid "Your e-mail"
+msgstr "Seu e-mail"
+
+#: src/makebench/editor/history_panel.py
+msgid "Your name"
+msgstr "Seu nome"
+
+#: src/makebench/editor/history_panel.py
+msgid "checking…"
+msgstr "verificando…"
+
+#: src/makebench/core/vcs.py
+msgid "components"
+msgstr "componentes"
+
+#: src/makebench/core/vcs.py
+msgid "logic flows"
+msgstr "fluxos de lógica"
+
+#: src/makebench/editor/history_panel.py
+msgid "not signed in (for GitHub: run `gh auth login`; for others, use an SSH key)"
+msgstr "sem login (no GitHub: rode `gh auth login`; em outros, use uma chave SSH)"
+
+#: src/makebench/core/vcs.py
+msgid "windows"
+msgstr "janelas"
+
+#: src/makebench/editor/history_panel.py
+msgid "{ahead} not sent yet · {behind} to get"
+msgstr "{ahead} ainda não enviadas · {behind} para buscar"
+
+#: src/makebench/core/vcs.py
+msgid "{count} other files"
+msgstr "{count} outros arquivos"
+
+#: src/makebench/editor/history_panel.py
+msgid "{count} version kept."
+msgstr "{count} versão guardada."
+
+#: src/makebench/editor/history_panel.py
+msgid "{count} versions kept."
+msgstr "{count} versões guardadas."
