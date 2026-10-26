@@ -6519,3 +6519,7 @@ msgstr "desligado"
 #: src/makebench/editor/plugins_ui.py
 msgid "on"
 msgstr "ligado"
+
+#: src/makebench/editor/projects.py
+msgid "Show advanced options (identifier, version, icon)"
+msgstr "Mostrar opções avançadas (identificador, versão, ícone)"

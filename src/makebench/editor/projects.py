@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QCheckBox,
     QComboBox,
 )
 from makebench.core.project import Project, ProjectError
@@ -478,6 +479,15 @@ class ProjectMixin:
             model.addItem(label, key)
         model.setCurrentIndex(max(0, model.findData(template)))
         form.addRow(tr("Template"), model)
+        about = QLabel()
+        about.setWordWrap(True)
+        about.setEnabled(False)
+        descriptions = {key: description for key, _, description in MODELS}
+        model.currentIndexChanged.connect(
+            lambda _: about.setText(descriptions.get(model.currentData(), ""))
+        )
+        about.setText(descriptions.get(model.currentData(), ""))
+        form.addRow(about)
         backend = QComboBox()
         backend.addItem(tr("GTK — Adwaita look"), "gtk")
         backend.addItem(tr("Qt — desktop controls"), "qt")
@@ -558,6 +568,21 @@ class ProjectMixin:
 
         choose_icon.clicked.connect(select_icon)
         form.addRow(tr("Icon"), icon_row)
+        advanced_rows = [identifier, version, icon_row]
+        more = QCheckBox(tr("Show advanced options (identifier, version, icon)"))
+        more.setObjectName("new_project_advanced")
+
+        def show_advanced(on):
+            """Keep the first steps short: name, template and look come first."""
+            for widget in advanced_rows:
+                form.setRowVisible(widget, on)
+            dialog.setMinimumHeight(0)
+            dialog.setMaximumHeight(16777215)
+            dialog.setFixedHeight(dialog.sizeHint().height())
+
+        more.toggled.connect(show_advanced)
+        form.insertRow(form.getWidgetPosition(identifier)[0], more)
+        show_advanced(False)
         name.setObjectName("new_application_name")
         folder.setObjectName("new_project_folder")
         backend.setObjectName("new_application_backend")
@@ -582,9 +607,11 @@ class ProjectMixin:
             if not re.fullmatch(
                 r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_-]*){2,}", identifier.text().strip()
             ):
+                more.setChecked(True)
                 error.setText(tr("Use an identifier such as com.example.myapp."))
                 return
             if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version.text().strip()):
+                more.setChecked(True)
                 error.setText(tr("Enter the version, for example 0.1.0."))
                 return
             if destination.exists() and any(destination.iterdir()):
