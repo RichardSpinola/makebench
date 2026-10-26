@@ -1,0 +1,1444 @@
+{
+  "format": "makebench.project",
+  "format_version": 8,
+  "id": "project_d11c8cd69973",
+  "name": "Complete workshop — Blocks",
+  "ui": {
+    "id": "window_7667f071de36",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Complete workshop",
+      "width": 720,
+      "height": 560,
+      "padding": 16,
+      "spacing": 10
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "container_2e4cc4c7bf71",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "label_4ddf2c4069fc",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Complete workshop",
+              "code_name": "title_label"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_985d378a8a7e",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_5a907cb1f894",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "About",
+              "code_name": "about_button"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_1bcb2f25920e",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Look",
+              "code_name": "look_button"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_cfc6792d2e17",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Guide",
+              "code_name": "guide_button"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "label_1621e2198503",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "An example that uses every Makebench feature.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "separator_033939d5ef17",
+        "kind": "separator",
+        "layout": "vertical",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "pages_ba9b3a483338",
+        "kind": "pages",
+        "layout": "vertical",
+        "properties": {
+          "initial_page": "page_9c78451dcd8d"
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "page_9c78451dcd8d",
+            "kind": "page",
+            "layout": "grid",
+            "properties": {
+              "title": "Home",
+              "columns": 2
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_4afccb115dd9",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Your name"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "text_input_aae6f799e4a8",
+                "kind": "text_input",
+                "layout": "vertical",
+                "properties": {
+                  "text": "",
+                  "placeholder": "Your name",
+                  "code_name": "name_input"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "checkbox_61d81aa5a02e",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Greet out loud",
+                  "checked": false,
+                  "code_name": "loud_box"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_f866d6a26e4c",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Greet",
+                  "code_name": "greet_button"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "image_312891f472b0",
+                "kind": "image",
+                "layout": "vertical",
+                "properties": {
+                  "source": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+                  "alt_text": "Complete workshop",
+                  "code_name": "logo"
+                },
+                "geometry": {
+                  "x": 80,
+                  "y": 80,
+                  "width": 240,
+                  "height": 160
+                },
+                "children": []
+              },
+              {
+                "id": "progress_4f81279c6c07",
+                "kind": "progress",
+                "layout": "vertical",
+                "properties": {
+                  "value": 0,
+                  "code_name": "progress"
+                },
+                "geometry": {
+                  "x": 96,
+                  "y": 96,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_c7bda9792570",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Get busy",
+                  "code_name": "busy_button"
+                },
+                "geometry": {
+                  "x": 112,
+                  "y": 112,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_51a73002b926",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Get ready",
+                  "code_name": "ready_button"
+                },
+                "geometry": {
+                  "x": 128,
+                  "y": 128,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_ce821a8d75ec",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Count to 3",
+                  "code_name": "count_button"
+                },
+                "geometry": {
+                  "x": 144,
+                  "y": 144,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_92b76530e2d9",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Go to the terminal",
+                  "code_name": "terminal_page_button"
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 160,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_e83bb07dc512",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Tasks"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "button_2a9415b902e0",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "System information",
+                  "code_name": "info_button"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_c464d307e335",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Run a script",
+                  "code_name": "script_button"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_b16283037387",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ask and confirm",
+                  "code_name": "ask_button"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "output_2cf423041f60",
+                "kind": "output",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Task output will appear here.",
+                  "code_name": "log_output"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_89cfd6df8b9a",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Terminal"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "terminal_0626168f06ea",
+                "kind": "terminal",
+                "layout": "vertical",
+                "properties": {
+                  "terminal_program": "",
+                  "terminal_arguments": [],
+                  "terminal_autostart": false,
+                  "code_name": "terminal"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              },
+              {
+                "id": "container_70528eb42a5c",
+                "kind": "container",
+                "layout": "horizontal",
+                "properties": {},
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 360,
+                  "height": 240
+                },
+                "children": [
+                  {
+                    "id": "button_79e7328bb0ee",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Start",
+                      "code_name": "terminal_start"
+                    },
+                    "geometry": {
+                      "x": 16,
+                      "y": 16,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_403ceb8f0e44",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Send command",
+                      "code_name": "terminal_send"
+                    },
+                    "geometry": {
+                      "x": 32,
+                      "y": 32,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_59d4932dbda4",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Stop",
+                      "code_name": "terminal_stop"
+                    },
+                    "geometry": {
+                      "x": 48,
+                      "y": 48,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "page_26949496ce25",
+            "kind": "page",
+            "layout": "free",
+            "properties": {
+              "title": "Free"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_6860071a980d",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Free positions"
+                },
+                "geometry": {
+                  "x": 24,
+                  "y": 24,
+                  "width": 200,
+                  "height": 32
+                },
+                "children": []
+              },
+              {
+                "id": "button_3d40d6b3721d",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Loose button"
+                },
+                "geometry": {
+                  "x": 260,
+                  "y": 70,
+                  "width": 160,
+                  "height": 36
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spacer_4c2da93ae9c0",
+        "kind": "spacer",
+        "layout": "vertical",
+        "properties": {
+          "size_mode": {
+            "width": "fill",
+            "height": "fill"
+          }
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_9b430efda460",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Ready.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "On start",
+      "event": {
+        "kind": "start",
+        "component": "window_7667f071de36"
+      },
+      "body": [
+        {
+          "op": "assign",
+          "name": "visits",
+          "scope": "project",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": 0
+          },
+          "id": "block_002"
+        },
+        {
+          "op": "assign",
+          "name": "step",
+          "scope": "project",
+          "value": {
+            "id": "block_003",
+            "op": "literal",
+            "value": 0
+          },
+          "id": "block_004"
+        },
+        {
+          "op": "log",
+          "value": {
+            "id": "block_005",
+            "op": "literal",
+            "value": "Workshop ready."
+          },
+          "id": "block_006"
+        },
+        {
+          "op": "set_text",
+          "component": "label_9b430efda460",
+          "value": {
+            "id": "block_007",
+            "op": "literal",
+            "value": "Ready."
+          },
+          "id": "block_008"
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Click: Greet",
+      "event": {
+        "kind": "click",
+        "component": "button_f866d6a26e4c"
+      },
+      "body": [
+        {
+          "op": "assign",
+          "name": "visits",
+          "scope": "project",
+          "value": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "+",
+            "left": {
+              "id": "block_002",
+              "op": "variable",
+              "name": "visits",
+              "scope": "project"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "literal",
+              "value": 1
+            }
+          },
+          "id": "block_004"
+        },
+        {
+          "op": "call",
+          "function": "register",
+          "value": {
+            "id": "block_005",
+            "op": "variable",
+            "name": "visits",
+            "scope": "project"
+          },
+          "id": "block_006"
+        },
+        {
+          "op": "set_text",
+          "component": "label_9b430efda460",
+          "value": {
+            "id": "block_007",
+            "op": "join",
+            "left": {
+              "id": "block_008",
+              "op": "literal",
+              "value": "Hello, "
+            },
+            "right": {
+              "id": "block_009",
+              "op": "read",
+              "component": "text_input_aae6f799e4a8",
+              "attribute": "text"
+            }
+          },
+          "id": "block_010"
+        },
+        {
+          "op": "set_value",
+          "component": "progress_4f81279c6c07",
+          "value": {
+            "id": "block_011",
+            "op": "binary",
+            "operator": "*",
+            "left": {
+              "id": "block_012",
+              "op": "variable",
+              "name": "visits",
+              "scope": "project"
+            },
+            "right": {
+              "id": "block_013",
+              "op": "literal",
+              "value": 20
+            }
+          },
+          "id": "block_014"
+        },
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_015",
+            "op": "read",
+            "component": "checkbox_61d81aa5a02e",
+            "attribute": "checked"
+          },
+          "then": [
+            {
+              "op": "message",
+              "value": {
+                "id": "block_016",
+                "op": "literal",
+                "value": "HELLO OUT LOUD!"
+              },
+              "id": "block_017"
+            }
+          ],
+          "else": [
+            {
+              "op": "log",
+              "value": {
+                "id": "block_018",
+                "op": "literal",
+                "value": "Hello, quietly."
+              },
+              "id": "block_019"
+            }
+          ],
+          "id": "block_020"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Click: Get busy",
+      "event": {
+        "kind": "click",
+        "component": "button_c7bda9792570"
+      },
+      "body": [
+        {
+          "op": "go_state",
+          "state": "state_cd66799043e4",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_03_click",
+      "name": "Click: Get ready",
+      "event": {
+        "kind": "click",
+        "component": "button_51a73002b926"
+      },
+      "body": [
+        {
+          "op": "go_state",
+          "state": "@default",
+          "id": "block_001"
+        },
+        {
+          "op": "set_enabled",
+          "component": "button_f866d6a26e4c",
+          "value": {
+            "id": "block_002",
+            "op": "literal",
+            "value": true
+          },
+          "id": "block_003"
+        }
+      ]
+    },
+    {
+      "id": "flow_04_click",
+      "name": "Click: Count to 3",
+      "event": {
+        "kind": "click",
+        "component": "button_ce821a8d75ec"
+      },
+      "body": [
+        {
+          "op": "repeat",
+          "count": {
+            "id": "block_001",
+            "op": "literal",
+            "value": 3
+          },
+          "body": [
+            {
+              "op": "assign",
+              "name": "step",
+              "scope": "project",
+              "value": {
+                "id": "block_002",
+                "op": "binary",
+                "operator": "+",
+                "left": {
+                  "id": "block_003",
+                  "op": "variable",
+                  "name": "step",
+                  "scope": "project"
+                },
+                "right": {
+                  "id": "block_004",
+                  "op": "literal",
+                  "value": 1
+                }
+              },
+              "id": "block_005"
+            },
+            {
+              "op": "log",
+              "value": {
+                "id": "block_006",
+                "op": "join",
+                "left": {
+                  "id": "block_007",
+                  "op": "literal",
+                  "value": "Step "
+                },
+                "right": {
+                  "id": "block_008",
+                  "op": "variable",
+                  "name": "step",
+                  "scope": "project"
+                }
+              },
+              "id": "block_009"
+            }
+          ],
+          "id": "block_010"
+        }
+      ]
+    },
+    {
+      "id": "flow_05_click",
+      "name": "Click: Go to the terminal",
+      "event": {
+        "kind": "click",
+        "component": "button_92b76530e2d9"
+      },
+      "body": [
+        {
+          "op": "show_page",
+          "component": "page_89cfd6df8b9a",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_06_click",
+      "name": "Click: System information",
+      "event": {
+        "kind": "click",
+        "component": "button_2a9415b902e0"
+      },
+      "body": [
+        {
+          "op": "run",
+          "admin": false,
+          "arguments": {
+            "id": "block_001",
+            "op": "list",
+            "items": [
+              {
+                "id": "block_002",
+                "op": "literal",
+                "value": "-a"
+              }
+            ]
+          },
+          "program": {
+            "id": "block_003",
+            "op": "literal",
+            "value": "uname"
+          },
+          "id": "block_004"
+        }
+      ]
+    },
+    {
+      "id": "flow_07_click",
+      "name": "Click: Run a script",
+      "event": {
+        "kind": "click",
+        "component": "button_c464d307e335"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "text",
+          "name": "argument",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "What text should the script receive?"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "script",
+          "admin": false,
+          "arguments": {
+            "id": "block_004",
+            "op": "list",
+            "items": [
+              {
+                "id": "block_005",
+                "op": "literal",
+                "value": "demo"
+              }
+            ]
+          },
+          "source": {
+            "id": "block_006",
+            "op": "literal",
+            "value": "printf \"Argument: %s\\n\" \"$1\""
+          },
+          "id": "block_007"
+        }
+      ]
+    },
+    {
+      "id": "flow_08_click",
+      "name": "Click: Ask and confirm",
+      "event": {
+        "kind": "click",
+        "component": "button_b16283037387"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "text",
+          "name": "answer",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "What text should the script receive?"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "confirm",
+          "prompt": {
+            "id": "block_004",
+            "op": "literal",
+            "value": "Continue with the given text?"
+          },
+          "id": "block_005"
+        },
+        {
+          "op": "log",
+          "value": {
+            "id": "block_006",
+            "op": "literal",
+            "value": "Confirmed."
+          },
+          "id": "block_007"
+        }
+      ]
+    },
+    {
+      "id": "flow_09_click",
+      "name": "Click: Start",
+      "event": {
+        "kind": "click",
+        "component": "button_79e7328bb0ee"
+      },
+      "body": [
+        {
+          "op": "terminal_start",
+          "component": "terminal_0626168f06ea",
+          "program": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "/bin/sh"
+          },
+          "arguments": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        }
+      ]
+    },
+    {
+      "id": "flow_10_click",
+      "name": "Click: Send command",
+      "event": {
+        "kind": "click",
+        "component": "button_403ceb8f0e44"
+      },
+      "body": [
+        {
+          "op": "terminal_send",
+          "component": "terminal_0626168f06ea",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "echo hello from the terminal\n"
+          },
+          "id": "block_002"
+        }
+      ]
+    },
+    {
+      "id": "flow_11_click",
+      "name": "Click: Stop",
+      "event": {
+        "kind": "click",
+        "component": "button_59d4932dbda4"
+      },
+      "body": [
+        {
+          "op": "terminal_stop",
+          "component": "terminal_0626168f06ea",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_12_click",
+      "name": "Click: About",
+      "event": {
+        "kind": "click",
+        "component": "button_5a907cb1f894"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_60b93341239f",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_13_click",
+      "name": "Click: Guide",
+      "event": {
+        "kind": "click",
+        "component": "button_cfc6792d2e17"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_7d1c19173d6a",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_14_click",
+      "name": "Click: Look",
+      "event": {
+        "kind": "click",
+        "component": "button_1bcb2f25920e"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_3fd1067c5a35",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_15_click",
+      "name": "Click: Close",
+      "event": {
+        "kind": "click",
+        "component": "button_37c9fabb4e01"
+      },
+      "body": [
+        {
+          "op": "close_window",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_16_click",
+      "name": "Click: Dark",
+      "event": {
+        "kind": "click",
+        "component": "button_2e19c3912701"
+      },
+      "body": [
+        {
+          "op": "call",
+          "function": "change_theme",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "dark"
+          },
+          "id": "block_002"
+        }
+      ]
+    },
+    {
+      "id": "flow_17_click",
+      "name": "Click: Light",
+      "event": {
+        "kind": "click",
+        "component": "button_3a65ab6c9ab2"
+      },
+      "body": [
+        {
+          "op": "call",
+          "function": "change_theme",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "light"
+          },
+          "id": "block_002"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "logic_version": 1,
+    "example": "An example that uses every Makebench feature.",
+    "debug_breakpoints": [
+      {
+        "file": "block",
+        "flow": "flow_01_click",
+        "block": "block_004"
+      }
+    ]
+  },
+  "windows": [
+    {
+      "id": "window_60b93341239f",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "About the workshop",
+        "width": 420,
+        "height": 240,
+        "theme": "dark",
+        "accent": "#e5a50a"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_09090dfcd259",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "A dark window made only with window properties."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_37c9fabb4e01",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Close",
+            "code_name": "close_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_3fd1067c5a35",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Look",
+        "width": 420,
+        "height": 240,
+        "background": "#e8f0fe",
+        "accent": "#26a269"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_f370cab8d169",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Change this window's look with an own function."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_2e19c3912701",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Dark",
+            "code_name": "dark_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_3a65ab6c9ab2",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Light",
+            "code_name": "light_button"
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_7d1c19173d6a",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Test guide",
+        "width": 560,
+        "height": 360
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_2de92ec126a0",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "1. Type a name, tick the box and click Greet (watch the status line and progress)."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_58146de566b2",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "2. Click Get busy: the Busy state changes the text and disables the button."
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_bdf5af4e2bb0",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "3. On the Tasks tab, run the tasks and read the output."
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_45dc57e674db",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "4. On the Terminal tab, start it, send a command and stop it."
+          },
+          "geometry": {
+            "x": 64,
+            "y": 64,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_7ef225da7ccd",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "5. Open Look and switch between Light and Dark; open About for the dark window."
+          },
+          "geometry": {
+            "x": 80,
+            "y": 80,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_39d832c99bdd",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "6. In the editor press F9 to debug: a breakpoint sits on the first block of Greet."
+          },
+          "geometry": {
+            "x": 96,
+            "y": 96,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {
+    "window_7667f071de36": [
+      {
+        "id": "state_cd66799043e4",
+        "name": "Busy",
+        "overrides": {
+          "label_9b430efda460": {
+            "text": "Busy…"
+          },
+          "button_f866d6a26e4c": {
+            "enabled": false
+          }
+        }
+      }
+    ]
+  },
+  "entry_window": "window_7667f071de36",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.workshop.blocks",
+    "name": "Complete workshop — Blocks",
+    "version": "0.1.0",
+    "backend": "qt",
+    "icon": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+    "language": "en"
+  },
+  "python_files": [
+    "makebench_user/__init__.py",
+    "makebench_user/tools.py"
+  ]
+}

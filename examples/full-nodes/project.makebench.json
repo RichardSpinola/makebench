@@ -1,0 +1,2309 @@
+{
+  "format": "makebench.project",
+  "format_version": 8,
+  "id": "project_daa52b1226f6",
+  "name": "Oficina completa — Nós",
+  "ui": {
+    "id": "window_1959241c0e08",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Oficina completa",
+      "width": 720,
+      "height": 560,
+      "padding": 16,
+      "spacing": 10
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "container_ce962d18c250",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "label_e588a69142b1",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Oficina completa",
+              "code_name": "title_label"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_440d006740c2",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_3980e5ce469d",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Sobre",
+              "code_name": "about_button"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_217a31434f9b",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Aparência",
+              "code_name": "look_button"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_fc3a0610b617",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Roteiro",
+              "code_name": "guide_button"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "label_1bfc4b7ad90b",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Um exemplo que usa cada recurso do Makebench.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "separator_f1c82d6bdcc3",
+        "kind": "separator",
+        "layout": "vertical",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "pages_250b9d764d0e",
+        "kind": "pages",
+        "layout": "vertical",
+        "properties": {
+          "initial_page": "page_ca104346654c"
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "page_ca104346654c",
+            "kind": "page",
+            "layout": "grid",
+            "properties": {
+              "title": "Início",
+              "columns": 2
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_731100f34f37",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Seu nome"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "text_input_75da0098ff00",
+                "kind": "text_input",
+                "layout": "vertical",
+                "properties": {
+                  "text": "",
+                  "placeholder": "Seu nome",
+                  "code_name": "name_input"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "checkbox_3a8453166fb1",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Cumprimentar em voz alta",
+                  "checked": false,
+                  "code_name": "loud_box"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_51143f6ce54f",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Cumprimentar",
+                  "code_name": "greet_button"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "image_3f71f866aebd",
+                "kind": "image",
+                "layout": "vertical",
+                "properties": {
+                  "source": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+                  "alt_text": "Oficina completa",
+                  "code_name": "logo"
+                },
+                "geometry": {
+                  "x": 80,
+                  "y": 80,
+                  "width": 240,
+                  "height": 160
+                },
+                "children": []
+              },
+              {
+                "id": "progress_c170c36822e9",
+                "kind": "progress",
+                "layout": "vertical",
+                "properties": {
+                  "value": 0,
+                  "code_name": "progress"
+                },
+                "geometry": {
+                  "x": 96,
+                  "y": 96,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_2b986c834a6b",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ficar ocupado",
+                  "code_name": "busy_button"
+                },
+                "geometry": {
+                  "x": 112,
+                  "y": 112,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_149c82aaccf3",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ficar pronto",
+                  "code_name": "ready_button"
+                },
+                "geometry": {
+                  "x": 128,
+                  "y": 128,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_578d4502b8a6",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Contar até 3",
+                  "code_name": "count_button"
+                },
+                "geometry": {
+                  "x": 144,
+                  "y": 144,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_1c415b48deaf",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ir ao terminal",
+                  "code_name": "terminal_page_button"
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 160,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_ff85f5dec220",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Tarefas"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "button_c13c83eeaafa",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Informações do sistema",
+                  "code_name": "info_button"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_ff3e96231e1e",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Rodar um script",
+                  "code_name": "script_button"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_7e0bf293511e",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Perguntar e confirmar",
+                  "code_name": "ask_button"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "output_57b41b4fa60f",
+                "kind": "output",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Task output will appear here.",
+                  "code_name": "log_output"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_4b1bd299cf65",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Terminal"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "terminal_e1cc95bd26da",
+                "kind": "terminal",
+                "layout": "vertical",
+                "properties": {
+                  "terminal_program": "",
+                  "terminal_arguments": [],
+                  "terminal_autostart": false,
+                  "code_name": "terminal"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              },
+              {
+                "id": "container_816c28aa47a6",
+                "kind": "container",
+                "layout": "horizontal",
+                "properties": {},
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 360,
+                  "height": 240
+                },
+                "children": [
+                  {
+                    "id": "button_f5aafdf322e7",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Iniciar",
+                      "code_name": "terminal_start"
+                    },
+                    "geometry": {
+                      "x": 16,
+                      "y": 16,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_df87e015adf0",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Enviar comando",
+                      "code_name": "terminal_send"
+                    },
+                    "geometry": {
+                      "x": 32,
+                      "y": 32,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_3e29b12c9d65",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Parar",
+                      "code_name": "terminal_stop"
+                    },
+                    "geometry": {
+                      "x": 48,
+                      "y": 48,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "page_95fc3021a6af",
+            "kind": "page",
+            "layout": "free",
+            "properties": {
+              "title": "Livre"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_18ed32ff79d7",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Posições livres"
+                },
+                "geometry": {
+                  "x": 24,
+                  "y": 24,
+                  "width": 200,
+                  "height": 32
+                },
+                "children": []
+              },
+              {
+                "id": "button_0e4cecd9cf14",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Botão solto"
+                },
+                "geometry": {
+                  "x": 260,
+                  "y": 70,
+                  "width": 160,
+                  "height": 36
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spacer_f4946bbe19f1",
+        "kind": "spacer",
+        "layout": "vertical",
+        "properties": {
+          "size_mode": {
+            "width": "fill",
+            "height": "fill"
+          }
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_76b9865ee407",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Pronto.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_1959241c0e08"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_window_1959241c0e08",
+        "nodes": [
+          {
+            "id": "event_window_1959241c0e08",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "assign",
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "value": 0
+              }
+            }
+          },
+          {
+            "id": "node_002",
+            "op": "assign",
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "value": 0
+              }
+            }
+          },
+          {
+            "id": "node_003",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Oficina pronta."
+              }
+            }
+          },
+          {
+            "id": "node_004",
+            "op": "set_text",
+            "parameters": {
+              "component": "label_76b9865ee407"
+            },
+            "inputs": {
+              "value": {
+                "value": "Pronto."
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_window_1959241c0e08",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          },
+          {
+            "from": "node_002",
+            "out": "next",
+            "to": "node_003"
+          },
+          {
+            "from": "node_003",
+            "out": "next",
+            "to": "node_004"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_window_1959241c0e08": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ],
+        "node_003": [
+          950,
+          40
+        ],
+        "node_004": [
+          1260,
+          40
+        ]
+      },
+      "graph_comments": [
+        {
+          "id": "comment-main",
+          "text": "A ordem vem dos fios, não da posição.",
+          "position": [
+            20,
+            -140
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Clique: Cumprimentar",
+      "event": {
+        "kind": "click",
+        "component": "button_51143f6ce54f"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_51143f6ce54f",
+        "nodes": [
+          {
+            "id": "event_button_51143f6ce54f",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_003",
+            "inputs": {},
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_002",
+            "inputs": {
+              "left": {
+                "node": "node_003",
+                "port": "value"
+              },
+              "right": {
+                "value": 1
+              }
+            },
+            "parameters": {
+              "operator": "+"
+            },
+            "op": "binary"
+          },
+          {
+            "id": "node_001",
+            "op": "assign",
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_002",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_005",
+            "inputs": {},
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_004",
+            "op": "call",
+            "parameters": {
+              "function": "register"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_005",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_008",
+            "inputs": {},
+            "parameters": {
+              "component": "text_input_75da0098ff00",
+              "attribute": "text"
+            },
+            "op": "read"
+          },
+          {
+            "id": "node_007",
+            "inputs": {
+              "left": {
+                "value": "Olá, "
+              },
+              "right": {
+                "node": "node_008",
+                "port": "value"
+              }
+            },
+            "parameters": {},
+            "op": "join"
+          },
+          {
+            "id": "node_006",
+            "op": "set_text",
+            "parameters": {
+              "component": "label_76b9865ee407"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_007",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_011",
+            "inputs": {},
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_010",
+            "inputs": {
+              "left": {
+                "node": "node_011",
+                "port": "value"
+              },
+              "right": {
+                "value": 20
+              }
+            },
+            "parameters": {
+              "operator": "*"
+            },
+            "op": "binary"
+          },
+          {
+            "id": "node_009",
+            "op": "set_value",
+            "parameters": {
+              "component": "progress_c170c36822e9"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_010",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_013",
+            "inputs": {},
+            "parameters": {
+              "component": "checkbox_3a8453166fb1",
+              "attribute": "checked"
+            },
+            "op": "read"
+          },
+          {
+            "id": "node_012",
+            "op": "if",
+            "parameters": {},
+            "inputs": {
+              "condition": {
+                "node": "node_013",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_014",
+            "op": "message",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "OLÁ EM VOZ ALTA!"
+              }
+            }
+          },
+          {
+            "id": "node_015",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Olá em voz baixa."
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_51143f6ce54f",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_004"
+          },
+          {
+            "from": "node_004",
+            "out": "next",
+            "to": "node_006"
+          },
+          {
+            "from": "node_006",
+            "out": "next",
+            "to": "node_009"
+          },
+          {
+            "from": "node_012",
+            "out": "true",
+            "to": "node_014"
+          },
+          {
+            "from": "node_012",
+            "out": "false",
+            "to": "node_015"
+          },
+          {
+            "from": "node_009",
+            "out": "next",
+            "to": "node_012"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_51143f6ce54f": [
+          20,
+          40
+        ],
+        "node_003": [
+          640,
+          40
+        ],
+        "node_002": [
+          330,
+          40
+        ],
+        "node_001": [
+          330,
+          230
+        ],
+        "node_005": [
+          640,
+          230
+        ],
+        "node_004": [
+          640,
+          420
+        ],
+        "node_008": [
+          1260,
+          40
+        ],
+        "node_007": [
+          950,
+          40
+        ],
+        "node_006": [
+          950,
+          230
+        ],
+        "node_011": [
+          1570,
+          40
+        ],
+        "node_010": [
+          1260,
+          230
+        ],
+        "node_009": [
+          1260,
+          420
+        ],
+        "node_013": [
+          1570,
+          230
+        ],
+        "node_012": [
+          1570,
+          420
+        ],
+        "node_014": [
+          1880,
+          40
+        ],
+        "node_015": [
+          1880,
+          230
+        ]
+      }
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Clique: Ficar ocupado",
+      "event": {
+        "kind": "click",
+        "component": "button_2b986c834a6b"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_2b986c834a6b",
+        "nodes": [
+          {
+            "id": "event_button_2b986c834a6b",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "go_state",
+            "parameters": {
+              "state": "state_f000388901aa"
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_2b986c834a6b",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_2b986c834a6b": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_03_click",
+      "name": "Clique: Ficar pronto",
+      "event": {
+        "kind": "click",
+        "component": "button_149c82aaccf3"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_149c82aaccf3",
+        "nodes": [
+          {
+            "id": "event_button_149c82aaccf3",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "go_state",
+            "parameters": {
+              "state": "@default"
+            },
+            "inputs": {}
+          },
+          {
+            "id": "node_002",
+            "op": "set_enabled",
+            "parameters": {
+              "component": "button_51143f6ce54f"
+            },
+            "inputs": {
+              "value": {
+                "value": true
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_149c82aaccf3",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_149c82aaccf3": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_04_click",
+      "name": "Clique: Contar até 3",
+      "event": {
+        "kind": "click",
+        "component": "button_578d4502b8a6"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_578d4502b8a6",
+        "nodes": [
+          {
+            "id": "event_button_578d4502b8a6",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "repeat",
+            "parameters": {},
+            "inputs": {
+              "count": {
+                "value": 3
+              }
+            }
+          },
+          {
+            "id": "node_004",
+            "inputs": {},
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_003",
+            "inputs": {
+              "left": {
+                "node": "node_004",
+                "port": "value"
+              },
+              "right": {
+                "value": 1
+              }
+            },
+            "parameters": {
+              "operator": "+"
+            },
+            "op": "binary"
+          },
+          {
+            "id": "node_002",
+            "op": "assign",
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_003",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_007",
+            "inputs": {},
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_006",
+            "inputs": {
+              "left": {
+                "value": "Passo "
+              },
+              "right": {
+                "node": "node_007",
+                "port": "value"
+              }
+            },
+            "parameters": {},
+            "op": "join"
+          },
+          {
+            "id": "node_005",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "node": "node_006",
+                "port": "value"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "node_001",
+            "out": "body",
+            "to": "node_002"
+          },
+          {
+            "from": "node_002",
+            "out": "next",
+            "to": "node_005"
+          },
+          {
+            "from": "event_button_578d4502b8a6",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_578d4502b8a6": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_004": [
+          950,
+          40
+        ],
+        "node_003": [
+          640,
+          40
+        ],
+        "node_002": [
+          640,
+          230
+        ],
+        "node_007": [
+          1260,
+          40
+        ],
+        "node_006": [
+          950,
+          230
+        ],
+        "node_005": [
+          950,
+          420
+        ]
+      }
+    },
+    {
+      "id": "flow_05_click",
+      "name": "Clique: Ir ao terminal",
+      "event": {
+        "kind": "click",
+        "component": "button_1c415b48deaf"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_1c415b48deaf",
+        "nodes": [
+          {
+            "id": "event_button_1c415b48deaf",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "show_page",
+            "parameters": {
+              "component": "page_4b1bd299cf65"
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_1c415b48deaf",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_1c415b48deaf": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_06_click",
+      "name": "Clique: Informações do sistema",
+      "event": {
+        "kind": "click",
+        "component": "button_c13c83eeaafa"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_c13c83eeaafa",
+        "nodes": [
+          {
+            "id": "event_button_c13c83eeaafa",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "run",
+            "parameters": {
+              "admin": false
+            },
+            "inputs": {
+              "program": {
+                "value": "uname"
+              },
+              "arguments": {
+                "value": [
+                  "-a"
+                ]
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_c13c83eeaafa",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_c13c83eeaafa": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_07_click",
+      "name": "Clique: Rodar um script",
+      "event": {
+        "kind": "click",
+        "component": "button_ff3e96231e1e"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_ff3e96231e1e",
+        "nodes": [
+          {
+            "id": "event_button_ff3e96231e1e",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "ask",
+            "parameters": {
+              "kind": "text",
+              "name": "argument",
+              "scope": "project"
+            },
+            "inputs": {
+              "prompt": {
+                "value": "Que texto o script deve receber?"
+              },
+              "options": {
+                "value": []
+              }
+            }
+          },
+          {
+            "id": "node_002",
+            "op": "script",
+            "parameters": {
+              "admin": false
+            },
+            "inputs": {
+              "source": {
+                "value": "printf \"Argumento: %s\\n\" \"$1\""
+              },
+              "arguments": {
+                "value": [
+                  "demo"
+                ]
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_ff3e96231e1e",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_ff3e96231e1e": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_08_click",
+      "name": "Clique: Perguntar e confirmar",
+      "event": {
+        "kind": "click",
+        "component": "button_7e0bf293511e"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_7e0bf293511e",
+        "nodes": [
+          {
+            "id": "event_button_7e0bf293511e",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "ask",
+            "parameters": {
+              "kind": "text",
+              "name": "answer",
+              "scope": "project"
+            },
+            "inputs": {
+              "prompt": {
+                "value": "Que texto o script deve receber?"
+              },
+              "options": {
+                "value": []
+              }
+            }
+          },
+          {
+            "id": "node_002",
+            "op": "confirm",
+            "parameters": {},
+            "inputs": {
+              "prompt": {
+                "value": "Continuar com o texto informado?"
+              }
+            }
+          },
+          {
+            "id": "node_003",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Confirmado."
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_7e0bf293511e",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          },
+          {
+            "from": "node_002",
+            "out": "next",
+            "to": "node_003"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_7e0bf293511e": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ],
+        "node_003": [
+          950,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_09_click",
+      "name": "Clique: Iniciar",
+      "event": {
+        "kind": "click",
+        "component": "button_f5aafdf322e7"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_f5aafdf322e7",
+        "nodes": [
+          {
+            "id": "event_button_f5aafdf322e7",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "terminal_start",
+            "parameters": {
+              "component": "terminal_e1cc95bd26da"
+            },
+            "inputs": {
+              "program": {
+                "value": "/bin/sh"
+              },
+              "arguments": {
+                "value": []
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_f5aafdf322e7",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_f5aafdf322e7": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_10_click",
+      "name": "Clique: Enviar comando",
+      "event": {
+        "kind": "click",
+        "component": "button_df87e015adf0"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_df87e015adf0",
+        "nodes": [
+          {
+            "id": "event_button_df87e015adf0",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "terminal_send",
+            "parameters": {
+              "component": "terminal_e1cc95bd26da"
+            },
+            "inputs": {
+              "value": {
+                "value": "echo olá do terminal\n"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_df87e015adf0",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_df87e015adf0": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_11_click",
+      "name": "Clique: Parar",
+      "event": {
+        "kind": "click",
+        "component": "button_3e29b12c9d65"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_3e29b12c9d65",
+        "nodes": [
+          {
+            "id": "event_button_3e29b12c9d65",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "terminal_stop",
+            "parameters": {
+              "component": "terminal_e1cc95bd26da"
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_3e29b12c9d65",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_3e29b12c9d65": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_12_click",
+      "name": "Clique: Sobre",
+      "event": {
+        "kind": "click",
+        "component": "button_3980e5ce469d"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_3980e5ce469d",
+        "nodes": [
+          {
+            "id": "event_button_3980e5ce469d",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_6922f4f43500",
+              "close_current": false
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_3980e5ce469d",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_3980e5ce469d": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_13_click",
+      "name": "Clique: Roteiro",
+      "event": {
+        "kind": "click",
+        "component": "button_fc3a0610b617"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_fc3a0610b617",
+        "nodes": [
+          {
+            "id": "event_button_fc3a0610b617",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_226e2e591d4e",
+              "close_current": false
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_fc3a0610b617",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_fc3a0610b617": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_14_click",
+      "name": "Clique: Aparência",
+      "event": {
+        "kind": "click",
+        "component": "button_217a31434f9b"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_217a31434f9b",
+        "nodes": [
+          {
+            "id": "event_button_217a31434f9b",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_0c95485e19ba",
+              "close_current": false
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_217a31434f9b",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_217a31434f9b": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_15_click",
+      "name": "Clique: Fechar",
+      "event": {
+        "kind": "click",
+        "component": "button_8961a5b15309"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_8961a5b15309",
+        "nodes": [
+          {
+            "id": "event_button_8961a5b15309",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "close_window",
+            "parameters": {},
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_8961a5b15309",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_8961a5b15309": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_16_click",
+      "name": "Clique: Escuro",
+      "event": {
+        "kind": "click",
+        "component": "button_ff02a26363ca"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_ff02a26363ca",
+        "nodes": [
+          {
+            "id": "event_button_ff02a26363ca",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "call",
+            "parameters": {
+              "function": "change_theme"
+            },
+            "inputs": {
+              "value": {
+                "value": "dark"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_ff02a26363ca",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_ff02a26363ca": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_17_click",
+      "name": "Clique: Claro",
+      "event": {
+        "kind": "click",
+        "component": "button_a5e7dfc2981e"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_a5e7dfc2981e",
+        "nodes": [
+          {
+            "id": "event_button_a5e7dfc2981e",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "call",
+            "parameters": {
+              "function": "change_theme"
+            },
+            "inputs": {
+              "value": {
+                "value": "light"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_a5e7dfc2981e",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_a5e7dfc2981e": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "logic_version": 1,
+    "example": "Um exemplo que usa cada recurso do Makebench.",
+    "debug_breakpoints": [
+      {
+        "file": "block",
+        "flow": "flow_01_click",
+        "block": "node_003"
+      }
+    ]
+  },
+  "windows": [
+    {
+      "id": "window_6922f4f43500",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Sobre a Oficina",
+        "width": 420,
+        "height": 240,
+        "theme": "dark",
+        "accent": "#e5a50a"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_f8c408b78825",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Janela escura criada só com propriedades da janela."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_8961a5b15309",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Fechar",
+            "code_name": "close_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_0c95485e19ba",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Aparência",
+        "width": 420,
+        "height": 240,
+        "background": "#e8f0fe",
+        "accent": "#26a269"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_fa8089b338c1",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Troque a aparência desta janela com uma função própria."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_ff02a26363ca",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Escuro",
+            "code_name": "dark_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_a5e7dfc2981e",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Claro",
+            "code_name": "light_button"
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_226e2e591d4e",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Roteiro de testes",
+        "width": 560,
+        "height": 360
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_8d22f04594a6",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "1. Escreva um nome, marque a caixa e clique em Cumprimentar (veja a barra e o progresso)."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_a0927e3e55ff",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "2. Clique em Ficar ocupado: o estado Ocupado muda o texto e desliga o botão."
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_840c15ec109a",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "3. Na aba Tarefas, rode as tarefas e veja a saída."
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_c20084846328",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "4. Na aba Terminal, inicie, envie um comando e pare."
+          },
+          "geometry": {
+            "x": 64,
+            "y": 64,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_08c01a3a2d8f",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "5. Abra Aparência e troque entre Claro e Escuro; abra Sobre para ver a janela escura."
+          },
+          "geometry": {
+            "x": 80,
+            "y": 80,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_5eaff55480d4",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "6. No editor, use F9 para depurar: há um ponto de parada no primeiro bloco do Cumprimentar."
+          },
+          "geometry": {
+            "x": 96,
+            "y": 96,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {
+    "window_1959241c0e08": [
+      {
+        "id": "state_f000388901aa",
+        "name": "Ocupado",
+        "overrides": {
+          "label_76b9865ee407": {
+            "text": "Ocupado…"
+          },
+          "button_51143f6ce54f": {
+            "enabled": false
+          }
+        }
+      }
+    ]
+  },
+  "entry_window": "window_1959241c0e08",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.workshop.nodes",
+    "name": "Oficina completa — Nós",
+    "version": "0.1.0",
+    "backend": "qt",
+    "icon": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+    "language": "pt_BR"
+  },
+  "python_files": [
+    "makebench_user/__init__.py",
+    "makebench_user/tools.py"
+  ]
+}

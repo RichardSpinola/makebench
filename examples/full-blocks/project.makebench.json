@@ -1,0 +1,1444 @@
+{
+  "format": "makebench.project",
+  "format_version": 8,
+  "id": "project_e5f071c4c1b9",
+  "name": "Oficina completa — Blocos",
+  "ui": {
+    "id": "window_1f171eadda77",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Oficina completa",
+      "width": 720,
+      "height": 560,
+      "padding": 16,
+      "spacing": 10
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "container_812fcaa77b2d",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "label_87fddea64181",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Oficina completa",
+              "code_name": "title_label"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_8f1269af3df5",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_f66de75b4e55",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Sobre",
+              "code_name": "about_button"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_f4e13e8273cf",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Aparência",
+              "code_name": "look_button"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_3382a931ae63",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Roteiro",
+              "code_name": "guide_button"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "label_6cb4b972131e",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Um exemplo que usa cada recurso do Makebench.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "separator_8dfc59fd8f47",
+        "kind": "separator",
+        "layout": "vertical",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "pages_674de924b761",
+        "kind": "pages",
+        "layout": "vertical",
+        "properties": {
+          "initial_page": "page_87f89c2fadac"
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "page_87f89c2fadac",
+            "kind": "page",
+            "layout": "grid",
+            "properties": {
+              "title": "Início",
+              "columns": 2
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_8280053cc2ae",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Seu nome"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "text_input_07d3eddd33ab",
+                "kind": "text_input",
+                "layout": "vertical",
+                "properties": {
+                  "text": "",
+                  "placeholder": "Seu nome",
+                  "code_name": "name_input"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "checkbox_4a2bb53161f7",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Cumprimentar em voz alta",
+                  "checked": false,
+                  "code_name": "loud_box"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_a9113242ece1",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Cumprimentar",
+                  "code_name": "greet_button"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "image_3fc1b1c094e7",
+                "kind": "image",
+                "layout": "vertical",
+                "properties": {
+                  "source": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+                  "alt_text": "Oficina completa",
+                  "code_name": "logo"
+                },
+                "geometry": {
+                  "x": 80,
+                  "y": 80,
+                  "width": 240,
+                  "height": 160
+                },
+                "children": []
+              },
+              {
+                "id": "progress_8aa5f8569711",
+                "kind": "progress",
+                "layout": "vertical",
+                "properties": {
+                  "value": 0,
+                  "code_name": "progress"
+                },
+                "geometry": {
+                  "x": 96,
+                  "y": 96,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_2c90fc86534c",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ficar ocupado",
+                  "code_name": "busy_button"
+                },
+                "geometry": {
+                  "x": 112,
+                  "y": 112,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_a498d5a32a25",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ficar pronto",
+                  "code_name": "ready_button"
+                },
+                "geometry": {
+                  "x": 128,
+                  "y": 128,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_ca356e69ffed",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Contar até 3",
+                  "code_name": "count_button"
+                },
+                "geometry": {
+                  "x": 144,
+                  "y": 144,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_78ca715f559d",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ir ao terminal",
+                  "code_name": "terminal_page_button"
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 160,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_18837df02341",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Tarefas"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "button_e99079170b04",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Informações do sistema",
+                  "code_name": "info_button"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_726658dd8ae8",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Rodar um script",
+                  "code_name": "script_button"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_43d06551f30d",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Perguntar e confirmar",
+                  "code_name": "ask_button"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "output_9be0aa6198ee",
+                "kind": "output",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Task output will appear here.",
+                  "code_name": "log_output"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_b042c7a16d6e",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Terminal"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "terminal_ea4f6086a410",
+                "kind": "terminal",
+                "layout": "vertical",
+                "properties": {
+                  "terminal_program": "",
+                  "terminal_arguments": [],
+                  "terminal_autostart": false,
+                  "code_name": "terminal"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              },
+              {
+                "id": "container_682a299ff6e1",
+                "kind": "container",
+                "layout": "horizontal",
+                "properties": {},
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 360,
+                  "height": 240
+                },
+                "children": [
+                  {
+                    "id": "button_8475663aca5c",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Iniciar",
+                      "code_name": "terminal_start"
+                    },
+                    "geometry": {
+                      "x": 16,
+                      "y": 16,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_7d5891983ac7",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Enviar comando",
+                      "code_name": "terminal_send"
+                    },
+                    "geometry": {
+                      "x": 32,
+                      "y": 32,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_e7e6aec7d477",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Parar",
+                      "code_name": "terminal_stop"
+                    },
+                    "geometry": {
+                      "x": 48,
+                      "y": 48,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "page_662ed13732c4",
+            "kind": "page",
+            "layout": "free",
+            "properties": {
+              "title": "Livre"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_59ef97bb28a8",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Posições livres"
+                },
+                "geometry": {
+                  "x": 24,
+                  "y": 24,
+                  "width": 200,
+                  "height": 32
+                },
+                "children": []
+              },
+              {
+                "id": "button_ad1b98855fc5",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Botão solto"
+                },
+                "geometry": {
+                  "x": 260,
+                  "y": 70,
+                  "width": 160,
+                  "height": 36
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spacer_f6f29342a8d2",
+        "kind": "spacer",
+        "layout": "vertical",
+        "properties": {
+          "size_mode": {
+            "width": "fill",
+            "height": "fill"
+          }
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_71110331236b",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Pronto.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_1f171eadda77"
+      },
+      "body": [
+        {
+          "op": "assign",
+          "name": "visits",
+          "scope": "project",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": 0
+          },
+          "id": "block_002"
+        },
+        {
+          "op": "assign",
+          "name": "step",
+          "scope": "project",
+          "value": {
+            "id": "block_003",
+            "op": "literal",
+            "value": 0
+          },
+          "id": "block_004"
+        },
+        {
+          "op": "log",
+          "value": {
+            "id": "block_005",
+            "op": "literal",
+            "value": "Oficina pronta."
+          },
+          "id": "block_006"
+        },
+        {
+          "op": "set_text",
+          "component": "label_71110331236b",
+          "value": {
+            "id": "block_007",
+            "op": "literal",
+            "value": "Pronto."
+          },
+          "id": "block_008"
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Clique: Cumprimentar",
+      "event": {
+        "kind": "click",
+        "component": "button_a9113242ece1"
+      },
+      "body": [
+        {
+          "op": "assign",
+          "name": "visits",
+          "scope": "project",
+          "value": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "+",
+            "left": {
+              "id": "block_002",
+              "op": "variable",
+              "name": "visits",
+              "scope": "project"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "literal",
+              "value": 1
+            }
+          },
+          "id": "block_004"
+        },
+        {
+          "op": "call",
+          "function": "register",
+          "value": {
+            "id": "block_005",
+            "op": "variable",
+            "name": "visits",
+            "scope": "project"
+          },
+          "id": "block_006"
+        },
+        {
+          "op": "set_text",
+          "component": "label_71110331236b",
+          "value": {
+            "id": "block_007",
+            "op": "join",
+            "left": {
+              "id": "block_008",
+              "op": "literal",
+              "value": "Olá, "
+            },
+            "right": {
+              "id": "block_009",
+              "op": "read",
+              "component": "text_input_07d3eddd33ab",
+              "attribute": "text"
+            }
+          },
+          "id": "block_010"
+        },
+        {
+          "op": "set_value",
+          "component": "progress_8aa5f8569711",
+          "value": {
+            "id": "block_011",
+            "op": "binary",
+            "operator": "*",
+            "left": {
+              "id": "block_012",
+              "op": "variable",
+              "name": "visits",
+              "scope": "project"
+            },
+            "right": {
+              "id": "block_013",
+              "op": "literal",
+              "value": 20
+            }
+          },
+          "id": "block_014"
+        },
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_015",
+            "op": "read",
+            "component": "checkbox_4a2bb53161f7",
+            "attribute": "checked"
+          },
+          "then": [
+            {
+              "op": "message",
+              "value": {
+                "id": "block_016",
+                "op": "literal",
+                "value": "OLÁ EM VOZ ALTA!"
+              },
+              "id": "block_017"
+            }
+          ],
+          "else": [
+            {
+              "op": "log",
+              "value": {
+                "id": "block_018",
+                "op": "literal",
+                "value": "Olá em voz baixa."
+              },
+              "id": "block_019"
+            }
+          ],
+          "id": "block_020"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Clique: Ficar ocupado",
+      "event": {
+        "kind": "click",
+        "component": "button_2c90fc86534c"
+      },
+      "body": [
+        {
+          "op": "go_state",
+          "state": "state_3ae8d6bb7441",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_03_click",
+      "name": "Clique: Ficar pronto",
+      "event": {
+        "kind": "click",
+        "component": "button_a498d5a32a25"
+      },
+      "body": [
+        {
+          "op": "go_state",
+          "state": "@default",
+          "id": "block_001"
+        },
+        {
+          "op": "set_enabled",
+          "component": "button_a9113242ece1",
+          "value": {
+            "id": "block_002",
+            "op": "literal",
+            "value": true
+          },
+          "id": "block_003"
+        }
+      ]
+    },
+    {
+      "id": "flow_04_click",
+      "name": "Clique: Contar até 3",
+      "event": {
+        "kind": "click",
+        "component": "button_ca356e69ffed"
+      },
+      "body": [
+        {
+          "op": "repeat",
+          "count": {
+            "id": "block_001",
+            "op": "literal",
+            "value": 3
+          },
+          "body": [
+            {
+              "op": "assign",
+              "name": "step",
+              "scope": "project",
+              "value": {
+                "id": "block_002",
+                "op": "binary",
+                "operator": "+",
+                "left": {
+                  "id": "block_003",
+                  "op": "variable",
+                  "name": "step",
+                  "scope": "project"
+                },
+                "right": {
+                  "id": "block_004",
+                  "op": "literal",
+                  "value": 1
+                }
+              },
+              "id": "block_005"
+            },
+            {
+              "op": "log",
+              "value": {
+                "id": "block_006",
+                "op": "join",
+                "left": {
+                  "id": "block_007",
+                  "op": "literal",
+                  "value": "Passo "
+                },
+                "right": {
+                  "id": "block_008",
+                  "op": "variable",
+                  "name": "step",
+                  "scope": "project"
+                }
+              },
+              "id": "block_009"
+            }
+          ],
+          "id": "block_010"
+        }
+      ]
+    },
+    {
+      "id": "flow_05_click",
+      "name": "Clique: Ir ao terminal",
+      "event": {
+        "kind": "click",
+        "component": "button_78ca715f559d"
+      },
+      "body": [
+        {
+          "op": "show_page",
+          "component": "page_b042c7a16d6e",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_06_click",
+      "name": "Clique: Informações do sistema",
+      "event": {
+        "kind": "click",
+        "component": "button_e99079170b04"
+      },
+      "body": [
+        {
+          "op": "run",
+          "admin": false,
+          "arguments": {
+            "id": "block_001",
+            "op": "list",
+            "items": [
+              {
+                "id": "block_002",
+                "op": "literal",
+                "value": "-a"
+              }
+            ]
+          },
+          "program": {
+            "id": "block_003",
+            "op": "literal",
+            "value": "uname"
+          },
+          "id": "block_004"
+        }
+      ]
+    },
+    {
+      "id": "flow_07_click",
+      "name": "Clique: Rodar um script",
+      "event": {
+        "kind": "click",
+        "component": "button_726658dd8ae8"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "text",
+          "name": "argument",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "Que texto o script deve receber?"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "script",
+          "admin": false,
+          "arguments": {
+            "id": "block_004",
+            "op": "list",
+            "items": [
+              {
+                "id": "block_005",
+                "op": "literal",
+                "value": "demo"
+              }
+            ]
+          },
+          "source": {
+            "id": "block_006",
+            "op": "literal",
+            "value": "printf \"Argumento: %s\\n\" \"$1\""
+          },
+          "id": "block_007"
+        }
+      ]
+    },
+    {
+      "id": "flow_08_click",
+      "name": "Clique: Perguntar e confirmar",
+      "event": {
+        "kind": "click",
+        "component": "button_43d06551f30d"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "text",
+          "name": "answer",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "Que texto o script deve receber?"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "confirm",
+          "prompt": {
+            "id": "block_004",
+            "op": "literal",
+            "value": "Continuar com o texto informado?"
+          },
+          "id": "block_005"
+        },
+        {
+          "op": "log",
+          "value": {
+            "id": "block_006",
+            "op": "literal",
+            "value": "Confirmado."
+          },
+          "id": "block_007"
+        }
+      ]
+    },
+    {
+      "id": "flow_09_click",
+      "name": "Clique: Iniciar",
+      "event": {
+        "kind": "click",
+        "component": "button_8475663aca5c"
+      },
+      "body": [
+        {
+          "op": "terminal_start",
+          "component": "terminal_ea4f6086a410",
+          "program": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "/bin/sh"
+          },
+          "arguments": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        }
+      ]
+    },
+    {
+      "id": "flow_10_click",
+      "name": "Clique: Enviar comando",
+      "event": {
+        "kind": "click",
+        "component": "button_7d5891983ac7"
+      },
+      "body": [
+        {
+          "op": "terminal_send",
+          "component": "terminal_ea4f6086a410",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "echo olá do terminal\n"
+          },
+          "id": "block_002"
+        }
+      ]
+    },
+    {
+      "id": "flow_11_click",
+      "name": "Clique: Parar",
+      "event": {
+        "kind": "click",
+        "component": "button_e7e6aec7d477"
+      },
+      "body": [
+        {
+          "op": "terminal_stop",
+          "component": "terminal_ea4f6086a410",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_12_click",
+      "name": "Clique: Sobre",
+      "event": {
+        "kind": "click",
+        "component": "button_f66de75b4e55"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_8ab4e993e68b",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_13_click",
+      "name": "Clique: Roteiro",
+      "event": {
+        "kind": "click",
+        "component": "button_3382a931ae63"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_9db46ab07aee",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_14_click",
+      "name": "Clique: Aparência",
+      "event": {
+        "kind": "click",
+        "component": "button_f4e13e8273cf"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_2bf67377af88",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_15_click",
+      "name": "Clique: Fechar",
+      "event": {
+        "kind": "click",
+        "component": "button_1fd09c2c6f46"
+      },
+      "body": [
+        {
+          "op": "close_window",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_16_click",
+      "name": "Clique: Escuro",
+      "event": {
+        "kind": "click",
+        "component": "button_cc41a1b956b9"
+      },
+      "body": [
+        {
+          "op": "call",
+          "function": "change_theme",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "dark"
+          },
+          "id": "block_002"
+        }
+      ]
+    },
+    {
+      "id": "flow_17_click",
+      "name": "Clique: Claro",
+      "event": {
+        "kind": "click",
+        "component": "button_52e98cdbc2b0"
+      },
+      "body": [
+        {
+          "op": "call",
+          "function": "change_theme",
+          "value": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "light"
+          },
+          "id": "block_002"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "logic_version": 1,
+    "example": "Um exemplo que usa cada recurso do Makebench.",
+    "debug_breakpoints": [
+      {
+        "file": "block",
+        "flow": "flow_01_click",
+        "block": "block_004"
+      }
+    ]
+  },
+  "windows": [
+    {
+      "id": "window_8ab4e993e68b",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Sobre a Oficina",
+        "width": 420,
+        "height": 240,
+        "theme": "dark",
+        "accent": "#e5a50a"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_737c551a6faa",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Janela escura criada só com propriedades da janela."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_1fd09c2c6f46",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Fechar",
+            "code_name": "close_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_2bf67377af88",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Aparência",
+        "width": 420,
+        "height": 240,
+        "background": "#e8f0fe",
+        "accent": "#26a269"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_61f7285424a3",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Troque a aparência desta janela com uma função própria."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_cc41a1b956b9",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Escuro",
+            "code_name": "dark_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_52e98cdbc2b0",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Claro",
+            "code_name": "light_button"
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_9db46ab07aee",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Roteiro de testes",
+        "width": 560,
+        "height": 360
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_a8645ae5f038",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "1. Escreva um nome, marque a caixa e clique em Cumprimentar (veja a barra e o progresso)."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_3be7b326805a",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "2. Clique em Ficar ocupado: o estado Ocupado muda o texto e desliga o botão."
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_53e0c1327300",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "3. Na aba Tarefas, rode as tarefas e veja a saída."
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_aafbcb824be2",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "4. Na aba Terminal, inicie, envie um comando e pare."
+          },
+          "geometry": {
+            "x": 64,
+            "y": 64,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_f868305609a3",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "5. Abra Aparência e troque entre Claro e Escuro; abra Sobre para ver a janela escura."
+          },
+          "geometry": {
+            "x": 80,
+            "y": 80,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_d32ca6c61219",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "6. No editor, use F9 para depurar: há um ponto de parada no primeiro bloco do Cumprimentar."
+          },
+          "geometry": {
+            "x": 96,
+            "y": 96,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {
+    "window_1f171eadda77": [
+      {
+        "id": "state_3ae8d6bb7441",
+        "name": "Ocupado",
+        "overrides": {
+          "label_71110331236b": {
+            "text": "Ocupado…"
+          },
+          "button_a9113242ece1": {
+            "enabled": false
+          }
+        }
+      }
+    ]
+  },
+  "entry_window": "window_1f171eadda77",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.workshop.blocks",
+    "name": "Oficina completa — Blocos",
+    "version": "0.1.0",
+    "backend": "qt",
+    "icon": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+    "language": "pt_BR"
+  },
+  "python_files": [
+    "makebench_user/__init__.py",
+    "makebench_user/tools.py"
+  ]
+}

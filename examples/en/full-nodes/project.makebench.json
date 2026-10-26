@@ -1,0 +1,2309 @@
+{
+  "format": "makebench.project",
+  "format_version": 8,
+  "id": "project_9692a5c48241",
+  "name": "Complete workshop — Nodes",
+  "ui": {
+    "id": "window_fdfcb9162c84",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Complete workshop",
+      "width": 720,
+      "height": 560,
+      "padding": 16,
+      "spacing": 10
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "container_f16732e36f9d",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "label_b1f07b3e5941",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Complete workshop",
+              "code_name": "title_label"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_1280ffa44386",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_274aad31328a",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "About",
+              "code_name": "about_button"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_ea137a753da6",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Look",
+              "code_name": "look_button"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_d730ebf9b030",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Guide",
+              "code_name": "guide_button"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "label_1ce4cc1b3854",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "An example that uses every Makebench feature.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "separator_a1076f219753",
+        "kind": "separator",
+        "layout": "vertical",
+        "properties": {},
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "pages_11125764e7d9",
+        "kind": "pages",
+        "layout": "vertical",
+        "properties": {
+          "initial_page": "page_2ef647cf196b"
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "page_2ef647cf196b",
+            "kind": "page",
+            "layout": "grid",
+            "properties": {
+              "title": "Home",
+              "columns": 2
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_7a55d2cb947e",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Your name"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "text_input_6e959a2a42b8",
+                "kind": "text_input",
+                "layout": "vertical",
+                "properties": {
+                  "text": "",
+                  "placeholder": "Your name",
+                  "code_name": "name_input"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "checkbox_a37f9685f194",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Greet out loud",
+                  "checked": false,
+                  "code_name": "loud_box"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_faeb7810e37e",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Greet",
+                  "code_name": "greet_button"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "image_830bd110e8ae",
+                "kind": "image",
+                "layout": "vertical",
+                "properties": {
+                  "source": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+                  "alt_text": "Complete workshop",
+                  "code_name": "logo"
+                },
+                "geometry": {
+                  "x": 80,
+                  "y": 80,
+                  "width": 240,
+                  "height": 160
+                },
+                "children": []
+              },
+              {
+                "id": "progress_8339ca4d0450",
+                "kind": "progress",
+                "layout": "vertical",
+                "properties": {
+                  "value": 0,
+                  "code_name": "progress"
+                },
+                "geometry": {
+                  "x": 96,
+                  "y": 96,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_76e73aa97567",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Get busy",
+                  "code_name": "busy_button"
+                },
+                "geometry": {
+                  "x": 112,
+                  "y": 112,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_b9b4b955a206",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Get ready",
+                  "code_name": "ready_button"
+                },
+                "geometry": {
+                  "x": 128,
+                  "y": 128,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_e2a94b1ce140",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Count to 3",
+                  "code_name": "count_button"
+                },
+                "geometry": {
+                  "x": 144,
+                  "y": 144,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_a10a153b029c",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Go to the terminal",
+                  "code_name": "terminal_page_button"
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 160,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_0918e0a1f64e",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Tasks"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "button_81f34afdf025",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "System information",
+                  "code_name": "info_button"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_695f1d752aee",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Run a script",
+                  "code_name": "script_button"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_ffe6b1fa24f3",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Ask and confirm",
+                  "code_name": "ask_button"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "output_97aa9c875bc9",
+                "kind": "output",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Task output will appear here.",
+                  "code_name": "log_output"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_b3d1ba82af34",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Terminal"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "terminal_7165b898654e",
+                "kind": "terminal",
+                "layout": "vertical",
+                "properties": {
+                  "terminal_program": "",
+                  "terminal_arguments": [],
+                  "terminal_autostart": false,
+                  "code_name": "terminal"
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              },
+              {
+                "id": "container_6e545b802f38",
+                "kind": "container",
+                "layout": "horizontal",
+                "properties": {},
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 360,
+                  "height": 240
+                },
+                "children": [
+                  {
+                    "id": "button_9de7de5bf41a",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Start",
+                      "code_name": "terminal_start"
+                    },
+                    "geometry": {
+                      "x": 16,
+                      "y": 16,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_7c5e6aa02a47",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Send command",
+                      "code_name": "terminal_send"
+                    },
+                    "geometry": {
+                      "x": 32,
+                      "y": 32,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_3389ce3267d7",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Stop",
+                      "code_name": "terminal_stop"
+                    },
+                    "geometry": {
+                      "x": 48,
+                      "y": 48,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "page_801c4ffc3e74",
+            "kind": "page",
+            "layout": "free",
+            "properties": {
+              "title": "Free"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_927c48d22e3c",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Free positions"
+                },
+                "geometry": {
+                  "x": 24,
+                  "y": 24,
+                  "width": 200,
+                  "height": 32
+                },
+                "children": []
+              },
+              {
+                "id": "button_47501d7a70ea",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Loose button"
+                },
+                "geometry": {
+                  "x": 260,
+                  "y": 70,
+                  "width": 160,
+                  "height": 36
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "spacer_50a200c8ef7a",
+        "kind": "spacer",
+        "layout": "vertical",
+        "properties": {
+          "size_mode": {
+            "width": "fill",
+            "height": "fill"
+          }
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_8852fcfb64b2",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Ready.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "On start",
+      "event": {
+        "kind": "start",
+        "component": "window_fdfcb9162c84"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_window_fdfcb9162c84",
+        "nodes": [
+          {
+            "id": "event_window_fdfcb9162c84",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "assign",
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "value": 0
+              }
+            }
+          },
+          {
+            "id": "node_002",
+            "op": "assign",
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "value": 0
+              }
+            }
+          },
+          {
+            "id": "node_003",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Workshop ready."
+              }
+            }
+          },
+          {
+            "id": "node_004",
+            "op": "set_text",
+            "parameters": {
+              "component": "label_8852fcfb64b2"
+            },
+            "inputs": {
+              "value": {
+                "value": "Ready."
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_window_fdfcb9162c84",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          },
+          {
+            "from": "node_002",
+            "out": "next",
+            "to": "node_003"
+          },
+          {
+            "from": "node_003",
+            "out": "next",
+            "to": "node_004"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_window_fdfcb9162c84": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ],
+        "node_003": [
+          950,
+          40
+        ],
+        "node_004": [
+          1260,
+          40
+        ]
+      },
+      "graph_comments": [
+        {
+          "id": "comment-main",
+          "text": "Order comes from the wires, not from the position.",
+          "position": [
+            20,
+            -140
+          ]
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Click: Greet",
+      "event": {
+        "kind": "click",
+        "component": "button_faeb7810e37e"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_faeb7810e37e",
+        "nodes": [
+          {
+            "id": "event_button_faeb7810e37e",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_003",
+            "inputs": {},
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_002",
+            "inputs": {
+              "left": {
+                "node": "node_003",
+                "port": "value"
+              },
+              "right": {
+                "value": 1
+              }
+            },
+            "parameters": {
+              "operator": "+"
+            },
+            "op": "binary"
+          },
+          {
+            "id": "node_001",
+            "op": "assign",
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_002",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_005",
+            "inputs": {},
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_004",
+            "op": "call",
+            "parameters": {
+              "function": "register"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_005",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_008",
+            "inputs": {},
+            "parameters": {
+              "component": "text_input_6e959a2a42b8",
+              "attribute": "text"
+            },
+            "op": "read"
+          },
+          {
+            "id": "node_007",
+            "inputs": {
+              "left": {
+                "value": "Hello, "
+              },
+              "right": {
+                "node": "node_008",
+                "port": "value"
+              }
+            },
+            "parameters": {},
+            "op": "join"
+          },
+          {
+            "id": "node_006",
+            "op": "set_text",
+            "parameters": {
+              "component": "label_8852fcfb64b2"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_007",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_011",
+            "inputs": {},
+            "parameters": {
+              "name": "visits",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_010",
+            "inputs": {
+              "left": {
+                "node": "node_011",
+                "port": "value"
+              },
+              "right": {
+                "value": 20
+              }
+            },
+            "parameters": {
+              "operator": "*"
+            },
+            "op": "binary"
+          },
+          {
+            "id": "node_009",
+            "op": "set_value",
+            "parameters": {
+              "component": "progress_8339ca4d0450"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_010",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_013",
+            "inputs": {},
+            "parameters": {
+              "component": "checkbox_a37f9685f194",
+              "attribute": "checked"
+            },
+            "op": "read"
+          },
+          {
+            "id": "node_012",
+            "op": "if",
+            "parameters": {},
+            "inputs": {
+              "condition": {
+                "node": "node_013",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_014",
+            "op": "message",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "HELLO OUT LOUD!"
+              }
+            }
+          },
+          {
+            "id": "node_015",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Hello, quietly."
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_faeb7810e37e",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_004"
+          },
+          {
+            "from": "node_004",
+            "out": "next",
+            "to": "node_006"
+          },
+          {
+            "from": "node_006",
+            "out": "next",
+            "to": "node_009"
+          },
+          {
+            "from": "node_012",
+            "out": "true",
+            "to": "node_014"
+          },
+          {
+            "from": "node_012",
+            "out": "false",
+            "to": "node_015"
+          },
+          {
+            "from": "node_009",
+            "out": "next",
+            "to": "node_012"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_faeb7810e37e": [
+          20,
+          40
+        ],
+        "node_003": [
+          640,
+          40
+        ],
+        "node_002": [
+          330,
+          40
+        ],
+        "node_001": [
+          330,
+          230
+        ],
+        "node_005": [
+          640,
+          230
+        ],
+        "node_004": [
+          640,
+          420
+        ],
+        "node_008": [
+          1260,
+          40
+        ],
+        "node_007": [
+          950,
+          40
+        ],
+        "node_006": [
+          950,
+          230
+        ],
+        "node_011": [
+          1570,
+          40
+        ],
+        "node_010": [
+          1260,
+          230
+        ],
+        "node_009": [
+          1260,
+          420
+        ],
+        "node_013": [
+          1570,
+          230
+        ],
+        "node_012": [
+          1570,
+          420
+        ],
+        "node_014": [
+          1880,
+          40
+        ],
+        "node_015": [
+          1880,
+          230
+        ]
+      }
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Click: Get busy",
+      "event": {
+        "kind": "click",
+        "component": "button_76e73aa97567"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_76e73aa97567",
+        "nodes": [
+          {
+            "id": "event_button_76e73aa97567",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "go_state",
+            "parameters": {
+              "state": "state_d09d2e9e0aeb"
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_76e73aa97567",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_76e73aa97567": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_03_click",
+      "name": "Click: Get ready",
+      "event": {
+        "kind": "click",
+        "component": "button_b9b4b955a206"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_b9b4b955a206",
+        "nodes": [
+          {
+            "id": "event_button_b9b4b955a206",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "go_state",
+            "parameters": {
+              "state": "@default"
+            },
+            "inputs": {}
+          },
+          {
+            "id": "node_002",
+            "op": "set_enabled",
+            "parameters": {
+              "component": "button_faeb7810e37e"
+            },
+            "inputs": {
+              "value": {
+                "value": true
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_b9b4b955a206",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_b9b4b955a206": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_04_click",
+      "name": "Click: Count to 3",
+      "event": {
+        "kind": "click",
+        "component": "button_e2a94b1ce140"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_e2a94b1ce140",
+        "nodes": [
+          {
+            "id": "event_button_e2a94b1ce140",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "repeat",
+            "parameters": {},
+            "inputs": {
+              "count": {
+                "value": 3
+              }
+            }
+          },
+          {
+            "id": "node_004",
+            "inputs": {},
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_003",
+            "inputs": {
+              "left": {
+                "node": "node_004",
+                "port": "value"
+              },
+              "right": {
+                "value": 1
+              }
+            },
+            "parameters": {
+              "operator": "+"
+            },
+            "op": "binary"
+          },
+          {
+            "id": "node_002",
+            "op": "assign",
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "inputs": {
+              "value": {
+                "node": "node_003",
+                "port": "value"
+              }
+            }
+          },
+          {
+            "id": "node_007",
+            "inputs": {},
+            "parameters": {
+              "name": "step",
+              "scope": "project"
+            },
+            "op": "variable"
+          },
+          {
+            "id": "node_006",
+            "inputs": {
+              "left": {
+                "value": "Step "
+              },
+              "right": {
+                "node": "node_007",
+                "port": "value"
+              }
+            },
+            "parameters": {},
+            "op": "join"
+          },
+          {
+            "id": "node_005",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "node": "node_006",
+                "port": "value"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "node_001",
+            "out": "body",
+            "to": "node_002"
+          },
+          {
+            "from": "node_002",
+            "out": "next",
+            "to": "node_005"
+          },
+          {
+            "from": "event_button_e2a94b1ce140",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_e2a94b1ce140": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_004": [
+          950,
+          40
+        ],
+        "node_003": [
+          640,
+          40
+        ],
+        "node_002": [
+          640,
+          230
+        ],
+        "node_007": [
+          1260,
+          40
+        ],
+        "node_006": [
+          950,
+          230
+        ],
+        "node_005": [
+          950,
+          420
+        ]
+      }
+    },
+    {
+      "id": "flow_05_click",
+      "name": "Click: Go to the terminal",
+      "event": {
+        "kind": "click",
+        "component": "button_a10a153b029c"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_a10a153b029c",
+        "nodes": [
+          {
+            "id": "event_button_a10a153b029c",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "show_page",
+            "parameters": {
+              "component": "page_b3d1ba82af34"
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_a10a153b029c",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_a10a153b029c": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_06_click",
+      "name": "Click: System information",
+      "event": {
+        "kind": "click",
+        "component": "button_81f34afdf025"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_81f34afdf025",
+        "nodes": [
+          {
+            "id": "event_button_81f34afdf025",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "run",
+            "parameters": {
+              "admin": false
+            },
+            "inputs": {
+              "program": {
+                "value": "uname"
+              },
+              "arguments": {
+                "value": [
+                  "-a"
+                ]
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_81f34afdf025",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_81f34afdf025": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_07_click",
+      "name": "Click: Run a script",
+      "event": {
+        "kind": "click",
+        "component": "button_695f1d752aee"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_695f1d752aee",
+        "nodes": [
+          {
+            "id": "event_button_695f1d752aee",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "ask",
+            "parameters": {
+              "kind": "text",
+              "name": "argument",
+              "scope": "project"
+            },
+            "inputs": {
+              "prompt": {
+                "value": "What text should the script receive?"
+              },
+              "options": {
+                "value": []
+              }
+            }
+          },
+          {
+            "id": "node_002",
+            "op": "script",
+            "parameters": {
+              "admin": false
+            },
+            "inputs": {
+              "source": {
+                "value": "printf \"Argument: %s\\n\" \"$1\""
+              },
+              "arguments": {
+                "value": [
+                  "demo"
+                ]
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_695f1d752aee",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_695f1d752aee": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_08_click",
+      "name": "Click: Ask and confirm",
+      "event": {
+        "kind": "click",
+        "component": "button_ffe6b1fa24f3"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_ffe6b1fa24f3",
+        "nodes": [
+          {
+            "id": "event_button_ffe6b1fa24f3",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "ask",
+            "parameters": {
+              "kind": "text",
+              "name": "answer",
+              "scope": "project"
+            },
+            "inputs": {
+              "prompt": {
+                "value": "What text should the script receive?"
+              },
+              "options": {
+                "value": []
+              }
+            }
+          },
+          {
+            "id": "node_002",
+            "op": "confirm",
+            "parameters": {},
+            "inputs": {
+              "prompt": {
+                "value": "Continue with the given text?"
+              }
+            }
+          },
+          {
+            "id": "node_003",
+            "op": "log",
+            "parameters": {},
+            "inputs": {
+              "value": {
+                "value": "Confirmed."
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_ffe6b1fa24f3",
+            "out": "next",
+            "to": "node_001"
+          },
+          {
+            "from": "node_001",
+            "out": "next",
+            "to": "node_002"
+          },
+          {
+            "from": "node_002",
+            "out": "next",
+            "to": "node_003"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_ffe6b1fa24f3": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ],
+        "node_002": [
+          640,
+          40
+        ],
+        "node_003": [
+          950,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_09_click",
+      "name": "Click: Start",
+      "event": {
+        "kind": "click",
+        "component": "button_9de7de5bf41a"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_9de7de5bf41a",
+        "nodes": [
+          {
+            "id": "event_button_9de7de5bf41a",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "terminal_start",
+            "parameters": {
+              "component": "terminal_7165b898654e"
+            },
+            "inputs": {
+              "program": {
+                "value": "/bin/sh"
+              },
+              "arguments": {
+                "value": []
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_9de7de5bf41a",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_9de7de5bf41a": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_10_click",
+      "name": "Click: Send command",
+      "event": {
+        "kind": "click",
+        "component": "button_7c5e6aa02a47"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_7c5e6aa02a47",
+        "nodes": [
+          {
+            "id": "event_button_7c5e6aa02a47",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "terminal_send",
+            "parameters": {
+              "component": "terminal_7165b898654e"
+            },
+            "inputs": {
+              "value": {
+                "value": "echo hello from the terminal\n"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_7c5e6aa02a47",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_7c5e6aa02a47": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_11_click",
+      "name": "Click: Stop",
+      "event": {
+        "kind": "click",
+        "component": "button_3389ce3267d7"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_3389ce3267d7",
+        "nodes": [
+          {
+            "id": "event_button_3389ce3267d7",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "terminal_stop",
+            "parameters": {
+              "component": "terminal_7165b898654e"
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_3389ce3267d7",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_3389ce3267d7": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_12_click",
+      "name": "Click: About",
+      "event": {
+        "kind": "click",
+        "component": "button_274aad31328a"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_274aad31328a",
+        "nodes": [
+          {
+            "id": "event_button_274aad31328a",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_698c0d5b7a51",
+              "close_current": false
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_274aad31328a",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_274aad31328a": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_13_click",
+      "name": "Click: Guide",
+      "event": {
+        "kind": "click",
+        "component": "button_d730ebf9b030"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_d730ebf9b030",
+        "nodes": [
+          {
+            "id": "event_button_d730ebf9b030",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_aa8417f1c4de",
+              "close_current": false
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_d730ebf9b030",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_d730ebf9b030": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_14_click",
+      "name": "Click: Look",
+      "event": {
+        "kind": "click",
+        "component": "button_ea137a753da6"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_ea137a753da6",
+        "nodes": [
+          {
+            "id": "event_button_ea137a753da6",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "open_window",
+            "parameters": {
+              "window": "window_6663c83d10d6",
+              "close_current": false
+            },
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_ea137a753da6",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_ea137a753da6": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_15_click",
+      "name": "Click: Close",
+      "event": {
+        "kind": "click",
+        "component": "button_d03ccefb8b82"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_d03ccefb8b82",
+        "nodes": [
+          {
+            "id": "event_button_d03ccefb8b82",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "close_window",
+            "parameters": {},
+            "inputs": {}
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_d03ccefb8b82",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_d03ccefb8b82": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_16_click",
+      "name": "Click: Dark",
+      "event": {
+        "kind": "click",
+        "component": "button_8a42c0ce93d3"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_8a42c0ce93d3",
+        "nodes": [
+          {
+            "id": "event_button_8a42c0ce93d3",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "call",
+            "parameters": {
+              "function": "change_theme"
+            },
+            "inputs": {
+              "value": {
+                "value": "dark"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_8a42c0ce93d3",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_8a42c0ce93d3": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    },
+    {
+      "id": "flow_17_click",
+      "name": "Click: Light",
+      "event": {
+        "kind": "click",
+        "component": "button_33e674a68df5"
+      },
+      "body": [],
+      "workspace": {},
+      "editor": "nodes",
+      "graph": {
+        "graph_version": 1,
+        "entry": "event_button_33e674a68df5",
+        "nodes": [
+          {
+            "id": "event_button_33e674a68df5",
+            "op": "event",
+            "parameters": {},
+            "inputs": {}
+          },
+          {
+            "id": "node_001",
+            "op": "call",
+            "parameters": {
+              "function": "change_theme"
+            },
+            "inputs": {
+              "value": {
+                "value": "light"
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "event_button_33e674a68df5",
+            "out": "next",
+            "to": "node_001"
+          }
+        ]
+      },
+      "graph_layout": {
+        "event_button_33e674a68df5": [
+          20,
+          40
+        ],
+        "node_001": [
+          330,
+          40
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "logic_version": 1,
+    "example": "An example that uses every Makebench feature.",
+    "debug_breakpoints": [
+      {
+        "file": "block",
+        "flow": "flow_01_click",
+        "block": "node_003"
+      }
+    ]
+  },
+  "windows": [
+    {
+      "id": "window_698c0d5b7a51",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "About the workshop",
+        "width": 420,
+        "height": 240,
+        "theme": "dark",
+        "accent": "#e5a50a"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_1b26a5276dde",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "A dark window made only with window properties."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_d03ccefb8b82",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Close",
+            "code_name": "close_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_6663c83d10d6",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Look",
+        "width": 420,
+        "height": 240,
+        "background": "#e8f0fe",
+        "accent": "#26a269"
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_da9a8df34989",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "Change this window's look with an own function."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_8a42c0ce93d3",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Dark",
+            "code_name": "dark_button"
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "button_33e674a68df5",
+          "kind": "button",
+          "layout": "vertical",
+          "properties": {
+            "text": "Light",
+            "code_name": "light_button"
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "window_aa8417f1c4de",
+      "kind": "window",
+      "layout": "vertical",
+      "properties": {
+        "title": "Test guide",
+        "width": 560,
+        "height": 360
+      },
+      "geometry": {
+        "x": 16,
+        "y": 16,
+        "width": 360,
+        "height": 240
+      },
+      "children": [
+        {
+          "id": "label_f56cafbea622",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "1. Type a name, tick the box and click Greet (watch the status line and progress)."
+          },
+          "geometry": {
+            "x": 16,
+            "y": 16,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_834c59713f49",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "2. Click Get busy: the Busy state changes the text and disables the button."
+          },
+          "geometry": {
+            "x": 32,
+            "y": 32,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_43958329e314",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "3. On the Tasks tab, run the tasks and read the output."
+          },
+          "geometry": {
+            "x": 48,
+            "y": 48,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_7be1f460c39c",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "4. On the Terminal tab, start it, send a command and stop it."
+          },
+          "geometry": {
+            "x": 64,
+            "y": 64,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_12b9c248ff56",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "5. Open Look and switch between Light and Dark; open About for the dark window."
+          },
+          "geometry": {
+            "x": 80,
+            "y": 80,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        },
+        {
+          "id": "label_f242e5d757bc",
+          "kind": "label",
+          "layout": "vertical",
+          "properties": {
+            "text": "6. In the editor press F9 to debug: a breakpoint sits on the first block of Greet."
+          },
+          "geometry": {
+            "x": 96,
+            "y": 96,
+            "width": 220,
+            "height": 44
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "states": {
+    "window_fdfcb9162c84": [
+      {
+        "id": "state_d09d2e9e0aeb",
+        "name": "Busy",
+        "overrides": {
+          "label_8852fcfb64b2": {
+            "text": "Busy…"
+          },
+          "button_faeb7810e37e": {
+            "enabled": false
+          }
+        }
+      }
+    ]
+  },
+  "entry_window": "window_fdfcb9162c84",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.workshop.nodes",
+    "name": "Complete workshop — Nodes",
+    "version": "0.1.0",
+    "backend": "qt",
+    "icon": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
+    "language": "en"
+  },
+  "python_files": [
+    "makebench_user/__init__.py",
+    "makebench_user/tools.py"
+  ]
+}
