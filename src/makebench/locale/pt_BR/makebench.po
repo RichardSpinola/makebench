@@ -3794,10 +3794,6 @@ msgstr "Recentes"
 msgid "Recent projects"
 msgstr "Projetos recentes"
 
-#: src/makebench/editor/startup.py
-msgid "Recent templates"
-msgstr "Modelos recentes"
-
 #: src/makebench/core/packages.py
 msgid "Recipe generated"
 msgstr "Receita gerada"
@@ -6883,3 +6879,139 @@ msgstr "Toolkit usado na prévia (Projeto › Configurações)"
 #: src/makebench/editor/shell.py
 msgid "Windows of the project"
 msgstr "Janelas do projeto"
+
+#: src/makebench/editor/startup.py
+msgid "Any panel becomes a floating window with the button in its title. To put it back, use View › Panels › Restore layout."
+msgstr "Qualquer painel vira janela solta pelo botão no título. Para voltar, use Exibir › Painéis › Restaurar layout."
+
+#: src/makebench/editor/clone.py
+msgid "Choose the folder to download into."
+msgstr "Escolha a pasta para onde baixar."
+
+#: src/makebench/editor/clone.py
+msgid "Download"
+msgstr "Baixar"
+
+#: src/makebench/editor/startup.py
+msgid "Download a project from a Git repository address"
+msgstr "Baixar um projeto pelo endereço de um repositório Git"
+
+#: src/makebench/editor/clone.py
+msgid "Download from Git"
+msgstr "Baixar do Git"
+
+#: src/makebench/editor/startup.py
+msgid "Download from Git brings the project together with its history."
+msgstr "Baixar do Git traz o projeto junto com o histórico."
+
+#: src/makebench/editor/projects.py src/makebench/editor/startup.py
+msgid "Download from Git…"
+msgstr "Baixar do Git…"
+
+#: src/makebench/editor/clone.py
+msgid "Download into"
+msgstr "Baixar em"
+
+#: src/makebench/editor/clone.py
+msgid "Downloaded to {folder}, but there is no Makebench project in it."
+msgstr "Baixado em {folder}, mas não há projeto do Makebench nele."
+
+#: src/makebench/editor/clone.py
+msgid "Downloading…"
+msgstr "Baixando…"
+
+#: src/makebench/editor/settings.py
+msgid "Emblem behind the start page"
+msgstr "Emblema no fundo da página inicial"
+
+#: src/makebench/editor/settings.py
+msgid "Emblem style"
+msgstr "Estilo do emblema"
+
+#: src/makebench/editor/startup.py
+msgid "Examples open as a copy, so you can change them freely."
+msgstr "Os exemplos abrem como cópia, então você pode mudá-los à vontade."
+
+#: src/makebench/editor/startup.py
+msgid "Filter recent projects"
+msgstr "Filtrar projetos recentes"
+
+#: src/makebench/editor/startup.py
+msgid "Filter…"
+msgstr "Filtrar…"
+
+#: src/makebench/editor/clone.py
+msgid "Folder name"
+msgstr "Nome da pasta"
+
+#: src/makebench/editor/clone.py
+msgid "Into"
+msgstr "Em"
+
+#: src/makebench/editor/startup.py
+msgid "Next ›"
+msgstr "Próxima ›"
+
+#: src/makebench/editor/clone.py
+msgid "Nothing in the project runs until you open it and press F5."
+msgstr "Nada do projeto roda até você abri-lo e apertar F5."
+
+#: src/makebench/editor/startup.py
+msgid "Nothing in your project runs until you press F5 (Run)."
+msgstr "Nada do seu projeto roda até você apertar F5 (Executar)."
+
+#: src/makebench/editor/startup.py
+msgid "Previous session available"
+msgstr "Sessão anterior disponível"
+
+#: src/makebench/editor/settings.py
+msgid "Retro"
+msgstr "Retrô"
+
+#: src/makebench/editor/startup.py
+msgid "Right-click a recent project to remove it from the list or move it to the trash."
+msgstr "Clique com o botão direito num projeto recente para tirá-lo da lista ou mandá-lo para a lixeira."
+
+#: src/makebench/editor/projects.py
+msgid "Show the start window"
+msgstr "Mostrar a janela de abertura"
+
+#: src/makebench/editor/settings.py
+msgid "Standard"
+msgstr "Padrão"
+
+#: src/makebench/editor/projects.py
+msgid "Start window…"
+msgstr "Janela de abertura…"
+
+#: src/makebench/editor/startup.py
+msgid "Templates"
+msgstr "Modelos"
+
+#: src/makebench/editor/clone.py
+msgid "The download stopped."
+msgstr "O download parou."
+
+#: src/makebench/editor/startup.py
+msgid "Tip:"
+msgstr "Dica:"
+
+#: src/makebench/editor/startup.py
+msgid "Untitled"
+msgstr "Sem nome"
+
+#: src/makebench/editor/startup.py
+msgid "Your first app in 5 minutes"
+msgstr "Seu primeiro app em 5 minutos"
+
+#: src/makebench/editor/startup.py
+msgid "today"
+msgstr "hoje"
+
+#: src/makebench/editor/startup.py
+msgid "yesterday"
+msgstr "ontem"
+
+#: src/makebench/editor/startup.py
+msgid "{name}, {day} at {time}"
+msgstr "{name}, {day} às {time}"

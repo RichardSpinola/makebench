@@ -40,6 +40,8 @@ DEFAULTS = {
     "appearance/scale": 100,
     "appearance/reduce_motion": False,
     "appearance/language": "en",
+    "appearance/watermark": True,
+    "appearance/logo": "standard",
     "projects/folder": str(Path.home() / "Makebench" / "Projects"),
     "projects/trust": True,
     "projects/backend": "gtk",
@@ -59,6 +61,7 @@ CHOICES = {
     "appearance/accent": ["system"],
     "appearance/scale": [90, 100, 115, 125, 130, 150],
     "appearance/language": ["en", "pt_BR"],
+    "appearance/logo": ["standard", "retro"],
     "projects/backend": ["gtk", "qt"],
     "editor/recovery": [0, 15, 30, 60],
 }
@@ -305,6 +308,8 @@ class EditorPreferences(SettingsShell):
             "appearance/scale": tr("Text size"),
             "appearance/reduce_motion": tr("Reduce motion"),
             "appearance/language": tr("Interface language"),
+            "appearance/watermark": tr("Emblem behind the start page"),
+            "appearance/logo": tr("Emblem style"),
             "projects/folder": tr("Folder for new projects"),
             "projects/trust": tr("Warn about untrusted projects"),
             "projects/backend": tr("Default backend"),
@@ -324,6 +329,7 @@ class EditorPreferences(SettingsShell):
             "appearance/accent": [tr("From the system")],
             "appearance/scale": ["90%", "100%", "115%", "125%", "130%", "150%"],
             "appearance/language": ["English", "Português (Brasil)"],
+            "appearance/logo": [tr("Standard"), tr("Retro")],
             "projects/backend": ["GTK", "Qt"],
             "editor/recovery": [tr("Off"), tr("15 seconds"), tr("30 seconds"), tr("60 seconds")],
         }

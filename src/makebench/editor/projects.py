@@ -60,7 +60,9 @@ class ProjectMixin:
         from .theme import icon
         from makebench.core.templates import MODELS
 
-        home = QWidget()
+        from .startup import HomeBackground, show_startup
+
+        home = HomeBackground()
         home.setObjectName("home")
         outer = QVBoxLayout(home)
         outer.setContentsMargins(24, 28, 24, 24)
@@ -81,6 +83,7 @@ class ProjectMixin:
             ("new", tr("New…"), lambda: self.new_project_dialog("blank")),
             ("open", tr("Open project…"), self.open_project),
             ("document", tr("Open example…"), self.open_example_dialog),
+            ("history", tr("Download from Git…"), self.clone_project_dialog),
         ]:
             button = QPushButton(icon(symbol), label)
             button.clicked.connect(callback)
@@ -151,6 +154,13 @@ class ProjectMixin:
         center.addStretch()
         outer.addLayout(center)
         outer.addStretch(1)
+        reopen = QHBoxLayout()
+        reopen.addStretch()
+        self.show_startup_button = QPushButton(tr("Show the start window"))
+        self.show_startup_button.clicked.connect(lambda: show_startup(self))
+        reopen.addWidget(self.show_startup_button)
+        reopen.addStretch()
+        outer.addLayout(reopen)
         self.home_page = home
         self.pages.addWidget(home)
         self.new_action.triggered.disconnect()
@@ -159,6 +169,10 @@ class ProjectMixin:
         menu.addSeparator()
         share = menu.addAction(tr("Share project…"))
         share.triggered.connect(self.share_project)
+        self.clone_action = menu.addAction(tr("Download from Git…"))
+        self.clone_action.triggered.connect(self.clone_project_dialog)
+        self.startup_action = menu.addAction(tr("Start window…"))
+        self.startup_action.triggered.connect(lambda: show_startup(self))
         self.refresh_recents()
         self.refresh_recovery()
         from PySide6.QtCore import QFileSystemWatcher
@@ -747,6 +761,22 @@ class ProjectMixin:
             for title, folder, name in catalog
             if (base / folder / name).is_file()
         ]
+
+    def clone_project_dialog(self):
+        """Download a project from Git and open it, like Open project."""
+        from .clone import CloneDialog
+
+        if not self._confirm_discard():
+            return
+        dialog = CloneDialog(self.project_dialog_parent(), self.settings)
+        if not dialog.exec() or not dialog.project_path:
+            return
+        try:
+            self._replace_project(load_project(dialog.project_path), dialog.project_path)
+            self.pages.setCurrentWidget(self.editor_page)
+            self.workspace_toolbar.show()
+        except (OSError, ProjectError) as exc:
+            self._show_error(exc, tr("Could not open the project"))
 
     def open_example_dialog(self):
         """Open a copy of an example in a new folder; the original stays untouched and nothing runs."""
