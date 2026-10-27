@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSizePolicy,
+    QTabBar,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -230,6 +231,57 @@ class ProjectCorner(QWidget):
         painter.fillRect(QRect(0, 4, 1, self.height() - 8), QColor(manager().tokens["border"]))
 
 
+class DocumentTabs(QTabBar):
+    """One tab per window of the project; picking a tab edits that window."""
+
+    def __init__(self, window):
+        super().__init__()
+        self.window = window
+        self.setObjectName("document_tabs")
+        self.setDocumentMode(True)
+        self.setDrawBase(False)
+        self.setExpanding(False)
+        self.setUsesScrollButtons(True)
+        self.setElideMode(Qt.TextElideMode.ElideRight)
+        self.setAccessibleName(tr("Windows of the project"))
+        self.currentChanged.connect(self._picked)
+
+    def sync(self):
+        """Mirror the window selector without firing a context change."""
+        selector = self.window.window_selector
+        entries = [(selector.itemText(i), selector.itemData(i)) for i in range(selector.count())]
+        self.blockSignals(True)
+        while self.count() > len(entries):
+            self.removeTab(self.count() - 1)
+        for index, (text, data) in enumerate(entries):
+            if index >= self.count():
+                self.addTab(text)
+            self.setTabText(index, text)
+            self.setTabData(index, data)
+            self.setTabToolTip(index, text)
+        self.setCurrentIndex(selector.currentIndex())
+        self.setEnabled(selector.isEnabled())
+        self.blockSignals(False)
+
+    def _picked(self, index):
+        selector = self.window.window_selector
+        if 0 <= index < selector.count() and index != selector.currentIndex():
+            selector.setCurrentIndex(index)
+
+
+def git_branch(path):
+    """Branch of the project's folder, or "" when it is not under Git."""
+    if not path:
+        return ""
+    from makebench.core import vcs
+
+    try:
+        root = Path(path).parent
+        return vcs.branch(root) if vcs.is_repo(root) else ""
+    except (vcs.VcsError, OSError):
+        return ""
+
+
 def install_shell(window, logo=None):
     """Put the area bar beside the pages, the strip above the editor and fixed status items."""
     bar = window.mode_switcher
@@ -295,6 +347,13 @@ def install_shell(window, logo=None):
     window.theme_status = status_button(tr("Switch between light and dark"))
     window.theme_status.clicked.connect(toggle_scheme)
     status.removeWidget(window.drawer_toggle)
+    window.branch_status = QLabel()
+    window.branch_status.setToolTip(tr("Git branch of the project folder"))
+    window.preview_status = QLabel()
+    window.preview_status.setToolTip(tr("Toolkit used by the preview (Project › Settings)"))
+    window.language_status = QLabel()
+    window.language_status.setToolTip(tr("Interface language (Preferences › Appearance)"))
+    window._branch_for = object()
     # Document state on the left, view settings on the right, a thin line between items.
     for index, widget in enumerate(
         (window.save_status, window.problems_status, window.test_status)
@@ -303,10 +362,38 @@ def install_shell(window, logo=None):
             status.addWidget(StatusLine())
         status.addWidget(widget)
         widget.show()
-    for widget in (window.selection_status, window.theme_status, window.drawer_toggle):
+    right = [window.selection_status]
+    if hasattr(window, "zoom_box"):
+        right.append(window.zoom_box)
+    right += [
+        window.branch_status,
+        window.preview_status,
+        window.language_status,
+        window.theme_status,
+        window.drawer_toggle,
+    ]
+    for widget in right:
         status.addPermanentWidget(StatusLine())
         status.addPermanentWidget(widget)
         widget.show()
+
+    if hasattr(window, "window_selector"):
+        bar = window.context_bar
+        window.document_tabs = DocumentTabs(window)
+        first = bar.actions()[0]
+        bar.insertWidget(first, window.document_tabs)
+        add = QToolButton()
+        add.setAutoRaise(True)
+        add.setIcon(icon("add"))
+        add.setProperty("makebenchIcon", "add")
+        add.setToolTip(tr("New window…"))
+        add.setAccessibleName(tr("New window…"))
+        add.clicked.connect(window.new_window_dialog)
+        bar.insertWidget(first, add)
+        for action in bar.actions():
+            if bar.widgetForAction(action) is window.window_selector:
+                action.setVisible(False)
+        window.document_tabs.sync()
 
 
 def show_problems(window):
@@ -379,5 +466,19 @@ def sync_shell(window):
         "" if node is None or mode in {"map", "code"} else node.display_name
     )
     window.theme_status.setText("◐ " + (tr("Dark") if t["dark"] else tr("Light")))
+    if window._branch_for != window.path:
+        window._branch_for = window.path
+        name = git_branch(window.path)
+        window.branch_status.setText("⎇ " + name if name else "")
+        window.branch_status.setVisible(bool(name))
+    backend = window.project.application.get("backend", "qt")
+    window.preview_status.setText(
+        tr("Preview: {toolkit}").format(toolkit="GTK 4" if backend == "gtk" else "Qt")
+    )
+    from makebench.i18n import language
+
+    window.language_status.setText("PT-BR" if language() == "pt_BR" else "EN")
+    if hasattr(window, "document_tabs"):
+        window.document_tabs.sync()
     window.area_strip.update()
     window.mode_switcher.update()

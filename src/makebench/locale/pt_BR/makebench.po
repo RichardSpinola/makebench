@@ -6863,3 +6863,23 @@ msgstr "Publicar…"
 #: src/makebench/editor/studio.py
 msgid "Run"
 msgstr "Executar"
+
+#: src/makebench/editor/shell.py
+msgid "Git branch of the project folder"
+msgstr "Ramo Git da pasta do projeto"
+
+#: src/makebench/editor/shell.py
+msgid "Interface language (Preferences › Appearance)"
+msgstr "Idioma da interface (Preferências › Aparência)"
+
+#: src/makebench/editor/shell.py
+msgid "Preview: {toolkit}"
+msgstr "Prévia: {toolkit}"
+
+#: src/makebench/editor/shell.py
+msgid "Toolkit used by the preview (Project › Settings)"
+msgstr "Toolkit usado na prévia (Projeto › Configurações)"
+
+#: src/makebench/editor/shell.py
+msgid "Windows of the project"
+msgstr "Janelas do projeto"

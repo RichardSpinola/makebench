@@ -95,7 +95,6 @@ class StudioMixin(
         for index in range(self.palette.count()):
             item = self.palette.item(index)
             item.setIcon(icon(item.data(Qt.ItemDataRole.UserRole)))
-            item.setSizeHint(__import__("PySide6.QtCore", fromlist=["QSize"]).QSize(160, 34))
         from .catalog import CATEGORIES, filter_library
 
         self.insert_category = QComboBox()

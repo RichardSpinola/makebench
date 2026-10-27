@@ -6,9 +6,15 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 
-from PySide6.QtCore import QMimeData, Qt, Signal
-from PySide6.QtGui import QDrag, QPainter, QPen
-from PySide6.QtWidgets import QAbstractItemView, QListWidget, QListWidgetItem, QTreeWidget
+from PySide6.QtCore import QMimeData, QRect, QSize, Qt, Signal
+from PySide6.QtGui import QColor, QDrag, QFont, QPainter, QPen
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QListWidget,
+    QListWidgetItem,
+    QStyledItemDelegate,
+    QTreeWidget,
+)
 
 from makebench.core.project import KIND_LABELS, ComponentKind, Project
 from makebench.i18n import tr
@@ -48,6 +54,52 @@ def read_payload(mime: QMimeData) -> dict | None:
     return None
 
 
+GROUP_ROLE = Qt.ItemDataRole.UserRole + 1
+ROW = 22
+GROUP = 20
+
+
+class GroupedDelegate(QStyledItemDelegate):
+    """Compact rows; the first visible row of each category carries its group heading."""
+
+    def _first_of_group(self, index):
+        view = self.parent()
+        group = index.data(GROUP_ROLE)
+        for row in range(index.row() - 1, -1, -1):
+            if not view.item(row).isHidden():
+                return view.item(row).data(GROUP_ROLE) != group
+        return True
+
+    def sizeHint(self, option, index):
+        return QSize(option.rect.width(), ROW + (GROUP if self._first_of_group(index) else 0))
+
+    def paint(self, painter, option, index):
+        from makebench.ui.theme import blend, manager
+
+        from .catalog import CATEGORIES
+
+        if self._first_of_group(index):
+            t = manager().tokens
+            band = QRect(option.rect.left(), option.rect.top(), option.rect.width(), GROUP)
+            painter.save()
+            painter.fillRect(band, QColor(blend(t["panel"], t["text"], 0.05)))
+            font = QFont(option.font)
+            font.setWeight(QFont.Weight.DemiBold)
+            font.setPointSizeF(font.pointSizeF() * 0.85)
+            font.setCapitalization(QFont.Capitalization.AllUppercase)
+            font.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 106)
+            painter.setFont(font)
+            painter.setPen(QColor(t["muted"]))
+            painter.drawText(
+                band.adjusted(8, 0, -8, 0),
+                Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                CATEGORIES.get(index.data(GROUP_ROLE), ""),
+            )
+            painter.restore()
+            option.rect = option.rect.adjusted(0, GROUP, 0, 0)
+        super().paint(painter, option, index)
+
+
 class ComponentPalette(QListWidget):
     """Visual library: click to choose, drag or double-click to insert."""
 
@@ -56,11 +108,18 @@ class ComponentPalette(QListWidget):
     def __init__(self, parent=None) -> None:
         """Fill in the available types and enable copy dragging."""
         super().__init__(parent)
-        for kind, label in KIND_LABELS.items():
-            if kind != ComponentKind.WINDOW:
-                item = QListWidgetItem(label)
-                item.setData(Qt.ItemDataRole.UserRole, kind.value)
-                self.addItem(item)
+        from .catalog import CATEGORIES, COMPONENTS
+
+        order = list(CATEGORIES)
+        kinds = [k for k in KIND_LABELS if k != ComponentKind.WINDOW]
+        kinds.sort(key=lambda k: order.index(COMPONENTS.get(k.value, (order[-1],))[0]))
+        for kind in kinds:
+            item = QListWidgetItem(KIND_LABELS[kind])
+            item.setData(Qt.ItemDataRole.UserRole, kind.value)
+            item.setData(GROUP_ROLE, COMPONENTS.get(kind.value, (order[-1],))[0])
+            self.addItem(item)
+        self.setItemDelegate(GroupedDelegate(self))
+        self.setIconSize(QSize(16, 16))
         self.setCurrentRow(0)
         self.setDragEnabled(True)
         self.setMaximumHeight(195)

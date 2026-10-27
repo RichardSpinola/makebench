@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Contextual inspector by scope, with collapsible sections and accessible fields."""
 
-from PySide6.QtCore import Qt, Signal, QEvent, QTimer
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import QRect, Qt, Signal, QEvent, QTimer
+from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMenu,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
     QToolButton,
     QVBoxLayout,
@@ -20,6 +21,115 @@ from PySide6.QtWidgets import (
 )
 from makebench.core.project import KIND_LABELS, LAYOUT_LABELS, ComponentKind, LayoutKind
 from makebench.i18n import ntr, tr
+
+from .theme import blend, icon, manager
+
+ROW_HEIGHT = 24
+LABEL_WIDTH = 104
+
+
+class SectionHeader(QToolButton):
+    """Full-width group bar: ▾/▸ and a bold title on the group color."""
+
+    def __init__(self, title):
+        super().__init__()
+        self.setText(title)
+        self.setCheckable(True)
+        self.setFixedHeight(22)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        bold = QFont(self.font())
+        bold.setWeight(QFont.Weight.DemiBold)
+        self.setFont(bold)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def paintEvent(self, _event):
+        t = manager().tokens
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor(blend(t["panel"], t["text"], 0.07)))
+        painter.fillRect(QRect(0, self.height() - 1, self.width(), 1), QColor(t["border"]))
+        if self.hasFocus():
+            painter.fillRect(QRect(0, 0, 2, self.height()), QColor(t["accent"]))
+        painter.setPen(QColor(t["muted"]))
+        arrow = QRect(6, 0, 12, self.height())
+        painter.drawText(arrow, Qt.AlignmentFlag.AlignCenter, "▾" if self.isChecked() else "▸")
+        painter.setPen(QColor(t["text"]))
+        painter.drawText(
+            self.rect().adjusted(22, 0, -6, 0),
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            self.text(),
+        )
+
+
+class PropertyTable(QWidget):
+    """Two-column property grid: label cells on the left, flat editors on the right."""
+
+    def __init__(self):
+        super().__init__()
+        self.form = QFormLayout(self)
+        self.form.setContentsMargins(0, 0, 0, 0)
+        self.form.setHorizontalSpacing(0)
+        self.form.setVerticalSpacing(0)
+        self.form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.DontWrapRows)
+        self.form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        self.form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+    def event(self, event):
+        if event.type() == QEvent.Type.LayoutRequest:
+            self.flatten()
+        return super().event(event)
+
+    def flatten(self):
+        """Give every row the table look: fixed label width, frameless editors, even height."""
+        for row in range(self.form.rowCount()):
+            label = self.form.itemAt(row, QFormLayout.ItemRole.LabelRole)
+            field = self.form.itemAt(row, QFormLayout.ItemRole.FieldRole)
+            span = self.form.itemAt(row, QFormLayout.ItemRole.SpanningRole)
+            if label and label.widget() and not label.widget().property("tableCell"):
+                widget = label.widget()
+                widget.setProperty("tableCell", True)
+                widget.setMinimumWidth(max(LABEL_WIDTH, widget.sizeHint().width()))
+                widget.setContentsMargins(8, 0, 6, 0)
+                widget.setMinimumHeight(ROW_HEIGHT)
+            for item in (field, span):
+                widget = item.widget() if item else None
+                if widget is None or widget.property("tableCell"):
+                    continue
+                widget.setProperty("tableCell", True)
+                if isinstance(widget, (QLineEdit, QSpinBox, QComboBox)):
+                    widget.setFrame(False)
+                    widget.setAutoFillBackground(False)
+                if item is span and isinstance(widget, QCheckBox):
+                    widget.setContentsMargins(8, 0, 0, 0)
+                if isinstance(widget, (QLineEdit, QSpinBox, QComboBox, QCheckBox, QPushButton)):
+                    widget.setMinimumHeight(ROW_HEIGHT)
+
+    def paintEvent(self, _event):
+        t = manager().tokens
+        painter = QPainter(self)
+        line = QColor(t["border"])
+        cell = QColor(blend(t["panel"], t["text"], 0.03))
+        rows = [QColor(t["raised"]), QColor(blend(t["raised"], t["text"], 0.025))]
+        for row in range(self.form.rowCount()):
+            items = [
+                self.form.itemAt(row, role)
+                for role in (
+                    QFormLayout.ItemRole.LabelRole,
+                    QFormLayout.ItemRole.FieldRole,
+                    QFormLayout.ItemRole.SpanningRole,
+                )
+            ]
+            geometry = [i.geometry() for i in items if i and i.widget() and i.widget().isVisible()]
+            if not geometry:
+                continue
+            top = min(g.top() for g in geometry)
+            bottom = max(g.bottom() for g in geometry)
+            band = QRect(0, top, self.width(), bottom - top + 1)
+            painter.fillRect(band, rows[row % 2])
+            if items[0] and items[0].widget():
+                edge = items[0].geometry().right() + 1
+                painter.fillRect(QRect(0, top, edge, band.height()), cell)
+                painter.fillRect(QRect(edge, top, 1, band.height()), line)
+            painter.fillRect(QRect(0, bottom, self.width(), 1), line)
 
 
 class Inspector(QWidget):
@@ -40,8 +150,9 @@ class Inspector(QWidget):
         """Keep only presentation state; the document stays in the project."""
         super().__init__(parent)
         self.form = QFormLayout(self)
-        self.form.setContentsMargins(8, 8, 8, 8)
-        self.form.setSpacing(6)
+        self.form.setContentsMargins(0, 6, 0, 8)
+        self.form.setHorizontalSpacing(6)
+        self.form.setVerticalSpacing(4)
         self.form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.fields = self.form
         self._expanded = {}
@@ -74,39 +185,28 @@ class Inspector(QWidget):
         wrapper = QWidget()
         layout = QVBoxLayout(wrapper)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
-        header = QToolButton()
-        header.setText(title)
-        header.setCheckable(True)
-        header.setAutoRaise(True)
-        header.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        body = QWidget()
-        body.setProperty("card", True)
-        form = QFormLayout(body)
-        form.setContentsMargins(6, 6, 6, 6)
-        form.setSpacing(6)
-        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        layout.setSpacing(0)
+        header = SectionHeader(title)
+        body = PropertyTable()
         key = (self._kind, title)
         opened = self._expanded.get(key, expanded)
         header.setChecked(opened)
-        header.setArrowType(Qt.ArrowType.DownArrow if opened else Qt.ArrowType.RightArrow)
         body.setVisible(opened)
 
         def toggle(value):
             """Remember the section's open state without changing the document."""
             self._expanded[key] = value
             body.setVisible(value)
-            header.setArrowType(Qt.ArrowType.DownArrow if value else Qt.ArrowType.RightArrow)
 
         header.toggled.connect(toggle)
         layout.addWidget(header)
         layout.addWidget(body)
         self.form.addRow(wrapper)
-        self.fields = form
+        self.fields = body.form
 
     def set_component(self, project, node, overrides=None, state_mode=False):
         """Render effective properties; ● marks differences in the active state."""
+        import html
         import json
 
         parent = project.parent_of(node.id)
@@ -137,8 +237,15 @@ class Inspector(QWidget):
         self._kind = node.kind.value
         self._overrides = overrides or {}
         self.state_mode = state_mode
-        heading = QLabel(KIND_LABELS[node.kind])
-        heading.setProperty("section", True)
+        name = node.properties.get("code_name") or node.display_name
+        heading = QLabel(
+            "<b>{}</b> <span style='color:{}'>: {}</span>".format(
+                html.escape(name), manager().tokens["muted"], KIND_LABELS[node.kind]
+            )
+        )
+        heading.setContentsMargins(8, 0, 8, 0)
+        heading.setTextFormat(Qt.TextFormat.RichText)
+        heading.setAccessibleName(f"{name}: {KIND_LABELS[node.kind]}")
         self.form.addRow(heading)
         parent = project.parent_of(node.id)
         if parent:
@@ -149,6 +256,7 @@ class Inspector(QWidget):
             )
             caption.setWordWrap(True)
             caption.setProperty("muted", True)
+            caption.setContentsMargins(8, 0, 8, 0)
             self.form.addRow(caption)
         self.section(tr("Content"))
         for key, label in [
@@ -234,7 +342,7 @@ class Inspector(QWidget):
         if node.can_have_children and node.kind != ComponentKind.PAGES:
             segments = QWidget()
             row = QGridLayout(segments)
-            row.setContentsMargins(0, 0, 0, 0)
+            row.setContentsMargins(4, 4, 4, 4)
             row.setSpacing(4)
             for index, (mode, label) in enumerate(LAYOUT_LABELS.items()):
                 button = QPushButton(label)
@@ -264,7 +372,7 @@ class Inspector(QWidget):
                 )
                 pad = QWidget()
                 grid = QGridLayout(pad)
-                grid.setContentsMargins(0, 0, 0, 0)
+                grid.setContentsMargins(4, 3, 4, 3)
                 grid.setSpacing(2)
                 symbols = ["↖", "↑", "↗", "←", "·", "→", "↙", "↓", "↘"]
                 for row, y in enumerate(["top", "center", "bottom"]):
@@ -553,15 +661,22 @@ class Inspector(QWidget):
         value = properties.get(key, "")
         row = QWidget()
         layout = QHBoxLayout(row)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0, 0, 2, 0)
+        layout.setSpacing(2)
         pick = QPushButton(value or tr("Default"))
+        pick.setFlat(True)
         pick.setObjectName("property_" + key)
         pick.setAccessibleName(label)
         if value:
             swatch = QPixmap(14, 14)
             swatch.fill(QColor(value))
             pick.setIcon(QIcon(swatch))
-        clear = QPushButton(tr("Clear"))
+        clear = QToolButton()
+        clear.setAutoRaise(True)
+        clear.setIcon(icon("close"))
+        clear.setProperty("makebenchIcon", "close")
+        clear.setToolTip(tr("Clear"))
+        clear.setAccessibleName(tr("Clear"))
         clear.setEnabled(bool(value) and not self.state_mode)
         pick.setEnabled(not self.state_mode)
 

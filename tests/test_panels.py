@@ -102,6 +102,42 @@ class PanelTests(unittest.TestCase):
         self.assertEqual(bar.widgetForAction(self.window.export_action).text(), "Publish…")
         self.assertIs(self.window.test_status.parentWidget(), self.window.statusBar())
 
+    def test_properties_are_a_table_with_group_bars(self):
+        from makebench.editor.inspector import PropertyTable, SectionHeader
+
+        inspector = self.window.inspector
+        headers = inspector.findChildren(SectionHeader)
+        self.assertIn("Content", [h.text() for h in headers])
+        table = inspector.findChildren(PropertyTable)[0]
+        self.assertEqual(table.form.verticalSpacing(), 0)
+        content = next(h for h in headers if h.text() == "Content")
+        content.click()
+        self.assertFalse(table.isVisible())
+
+    def test_components_are_grouped_and_compact(self):
+        from makebench.editor.drag import GROUP_ROLE
+
+        palette = self.window.palette
+        groups = [palette.item(i).data(GROUP_ROLE) for i in range(palette.count())]
+        self.assertEqual(
+            groups, sorted(groups, key=["layout", "content", "input", "feedback"].index)
+        )
+        self.assertEqual(palette.iconSize().height(), 16)
+
+    def test_document_tabs_follow_the_windows(self):
+        tabs = self.window.document_tabs
+        selector = self.window.window_selector
+        self.assertEqual(tabs.count(), selector.count())
+        tabs.setCurrentIndex(tabs.count() - 1)
+        self.app.processEvents()
+        self.assertEqual(self.window.active_window, selector.itemData(selector.count() - 1))
+
+    def test_status_bar_shows_zoom_preview_and_language(self):
+        status = self.window.statusBar()
+        self.assertIs(self.window.zoom_box.parentWidget(), status)
+        self.assertEqual(self.window.preview_status.text(), "Preview: Qt")
+        self.assertEqual(self.window.language_status.text(), "EN")
+
     def test_layout_is_kept_for_the_next_window(self):
         from makebench.editor.window import MainWindow
 

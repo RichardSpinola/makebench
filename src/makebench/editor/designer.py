@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QToolBar,
+    QToolButton,
     QWidget,
 )
 from makebench.core.project import ComponentKind, LayoutKind, ProjectError
@@ -138,7 +139,11 @@ class DesignerMixin:
                     self.zoom_view.fit()
 
             self.canvas.native_preview_ready.connect(native_ready)
-            self.context_bar.addSeparator()
+            # Zoom lives in the status bar, next to the other view settings.
+            self.zoom_box = QWidget()
+            zoom_row = QHBoxLayout(self.zoom_box)
+            zoom_row.setContentsMargins(0, 0, 0, 0)
+            zoom_row.setSpacing(0)
             self.zoom_actions = []
             for key, callback in [
                 ("out", lambda: self.zoom_current(1 / 1.15)),
@@ -146,7 +151,10 @@ class DesignerMixin:
                 ("in", lambda: self.zoom_current(1.15)),
                 ("fit", self.fit_current_canvas),
             ]:
-                button = QPushButton("100%" if key == "actual" else "")
+                button = QToolButton()
+                button.setText("100%" if key == "actual" else "")
+                button.setAutoRaise(True)
+                button.setFixedHeight(20)
                 label = {
                     "out": tr("Zoom out"),
                     "in": tr("Zoom in"),
@@ -163,10 +171,11 @@ class DesignerMixin:
                     )
                     button.setProperty("makebenchIcon", symbol)
                 button.clicked.connect(callback)
-                self.zoom_actions.append(self.context_bar.addWidget(button))
+                zoom_row.addWidget(button)
+                self.zoom_actions.append(button)
                 if key == "actual":
                     self.zoom_reset_button = button
-                    button.setMinimumWidth(76)
+                    button.setMinimumWidth(48)
             self.zoom_view.zoom_changed.connect(self.update_zoom_label)
             self.map_panel.view.zoom_changed.connect(self.update_zoom_label)
             action = QAction(tr("Fit composition"), self)

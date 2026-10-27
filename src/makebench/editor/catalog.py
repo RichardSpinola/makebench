@@ -45,3 +45,5 @@ def filter_library(window):
             or query not in (item.text() + " " + description).casefold()
         )
         item.setToolTip(description + "\n" + tr("Available in Qt and GTK4."))
+    # Group headings depend on which rows are visible.
+    window.palette.scheduleDelayedItemsLayout()
