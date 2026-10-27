@@ -159,6 +159,17 @@ def dot(color):
     return QIcon(pixmap)
 
 
+class StatusLine(QWidget):
+    """One-pixel divider between status bar items."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(1, 16)
+
+    def paintEvent(self, _event):
+        QPainter(self).fillRect(self.rect(), QColor(manager().tokens["border"]))
+
+
 def status_button(tooltip):
     """A flat status bar item that still says what clicking it does."""
     button = QPushButton()
@@ -284,13 +295,16 @@ def install_shell(window, logo=None):
     window.theme_status = status_button(tr("Switch between light and dark"))
     window.theme_status.clicked.connect(toggle_scheme)
     status.removeWidget(window.drawer_toggle)
-    for widget in (
-        window.save_status,
-        window.problems_status,
-        window.selection_status,
-        window.theme_status,
-        window.drawer_toggle,
+    # Document state on the left, view settings on the right, a thin line between items.
+    for index, widget in enumerate(
+        (window.save_status, window.problems_status, window.test_status)
     ):
+        if index:
+            status.addWidget(StatusLine())
+        status.addWidget(widget)
+        widget.show()
+    for widget in (window.selection_status, window.theme_status, window.drawer_toggle):
+        status.addPermanentWidget(StatusLine())
         status.addPermanentWidget(widget)
         widget.show()
 

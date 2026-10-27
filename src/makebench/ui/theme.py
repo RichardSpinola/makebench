@@ -107,10 +107,11 @@ def look_tokens(theme, dark):
     base = PALETTES["dark" if dark else "light"]
     t = {
         "dark": dark,
-        "canvas": c["base"],
+        # The creation area sits a step below the window; panel headers a step above it.
+        "canvas": blend(c["win"], "#000000", 0.12 if dark else 0.08),
         "panel": c["win"],
         "raised": c["base"],
-        "header": c["win"],
+        "header": blend(c["win"], c["fg"], 0.035),
         "sidebar": c["side"],
         "border": c["line"],
         "button": c["btn"],

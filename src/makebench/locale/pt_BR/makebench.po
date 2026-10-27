@@ -6839,3 +6839,27 @@ msgstr "Camadas"
 #: src/makebench/editor/panels.py
 msgid "Restore layout"
 msgstr "Restaurar layout"
+
+#: src/makebench/editor/panels.py
+msgid "Close (reopen in View › Panels)"
+msgstr "Fechar (reabra em Exibir › Painéis)"
+
+#: src/makebench/editor/panels.py
+msgid "Detach (becomes a floating window)"
+msgstr "Desfixar (vira janela solta)"
+
+#: src/makebench/editor/panels.py
+msgid "Dock it back"
+msgstr "Encaixar de volta"
+
+#: src/makebench/editor/panels.py
+msgid "Drag to move"
+msgstr "Arraste para mover"
+
+#: src/makebench/editor/studio.py
+msgid "Publish…"
+msgstr "Publicar…"
+
+#: src/makebench/editor/studio.py
+msgid "Run"
+msgstr "Executar"

@@ -166,6 +166,7 @@ class StudioMixin(
 
         old_right.findChild(QScrollArea).setFrameShape(QFrame.Shape.NoFrame)
         self.tree.setMinimumWidth(160)
+        self.tree.setAlternatingRowColors(True)
         self.inspector.setMinimumWidth(220)
         from .panels import DesignHost
 
@@ -302,21 +303,37 @@ class StudioMixin(
             action.setShortcut(QKeySequence(f"Ctrl+{number}"))
             action.triggered.connect(lambda _, m=mode: self.set_mode(m))
             self.addAction(action)
-        spacer = QWidget()
-        from PySide6.QtWidgets import QSizePolicy
-
-        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        bar.addWidget(spacer)
-        self.test_status = QLabel(tr("Stopped"))
-        self.test_status.setMaximumWidth(190)
-        bar.addWidget(self.test_status)
+        bar.addSeparator()
+        self.run_action.setIcon(icon("run"))
+        self.run_action.setProperty("makebenchIcon", "run")
+        self.run_action.setIconText(tr("Run"))
         bar.addAction(self.run_action)
-        bar.widgetForAction(self.run_action).setProperty("primary", True)
+        run_button = bar.widgetForAction(self.run_action)
+        run_button.setProperty("primary", True)
+        run_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.stop_action = QAction(icon("stop"), tr("Stop test"), self)
         self.stop_action.setShortcut(QKeySequence("Shift+F5"))
         self.stop_action.setProperty("makebenchIcon", "stop")
         self.stop_action.triggered.connect(self.stop_test)
         bar.addAction(self.stop_action)
+        spacer = QWidget()
+        from PySide6.QtWidgets import QSizePolicy
+
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.toolbar_spacer = bar.addWidget(spacer)
+        search = QToolButton()
+        search.setIcon(icon("search"))
+        search.setProperty("makebenchIcon", "search")
+        search.setText(tr("Search commands…") + "   Ctrl+K")
+        search.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        search.setToolTip(tr("Command palette…"))
+        search.setAccessibleName(tr("Command palette…"))
+        search.setMinimumWidth(220)
+        search.clicked.connect(self.show_commands)
+        bar.addWidget(search)
+        # The test state lives in the status bar; the toolbar keeps the commands.
+        self.test_status = QLabel(tr("Stopped"))
+        self.test_status.setMaximumWidth(190)
         self.workspace_toolbar = bar
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, bar)
         view = self.menuBar().addMenu(tr("&View"))
@@ -378,7 +395,11 @@ class StudioMixin(
         self.export_action.setProperty("makebenchIcon", "export")
         self.export_action.setShortcut(QKeySequence("Ctrl+Shift+E"))
         self.export_action.triggered.connect(self.export_application)
-        self.workspace_toolbar.insertAction(self.run_action, self.export_action)
+        self.export_action.setIconText(tr("Publish…"))
+        self.workspace_toolbar.insertAction(self.toolbar_spacer, self.export_action)
+        self.workspace_toolbar.widgetForAction(self.export_action).setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+        )
         project_menu = next(
             (
                 a.menu()

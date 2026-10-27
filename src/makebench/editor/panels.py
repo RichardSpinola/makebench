@@ -1,10 +1,20 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Detachable Design panels: layers, components, data and properties around the creation area."""
 
-from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtWidgets import QDockWidget, QMainWindow, QWidget
+from PySide6.QtCore import QRect, QSettings, QSize, Qt, QTimer
+from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtWidgets import (
+    QDockWidget,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QToolButton,
+    QWidget,
+)
 
 from makebench.i18n import tr
+
+from .theme import icon, manager
 
 LAYOUT_KEY = "workspace/design_docks"
 LAYOUT_VERSION = 1
@@ -19,6 +29,64 @@ def panel_titles():
         "data": tr("Data"),
         "properties": tr("Properties"),
     }
+
+
+class DockTitle(QWidget):
+    """Panel header: grip, bold title, then float and close buttons."""
+
+    def __init__(self, dock):
+        super().__init__(dock)
+        self.dock = dock
+        self.setFixedHeight(24)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(6, 0, 4, 0)
+        row.setSpacing(4)
+        self.grip = QLabel("⋮⋮")
+        self.grip.setToolTip(tr("Drag to move"))
+        self.title = QLabel(dock.windowTitle())
+        bold = QFont(self.title.font())
+        bold.setWeight(QFont.Weight.DemiBold)
+        self.title.setFont(bold)
+        row.addWidget(self.grip)
+        row.addWidget(self.title, 1)
+        self.float_button = self._button("float", tr("Detach (becomes a floating window)"))
+        self.float_button.clicked.connect(lambda: dock.setFloating(not dock.isFloating()))
+        self.close_button = self._button("close", tr("Close (reopen in View › Panels)"))
+        self.close_button.clicked.connect(dock.close)
+        row.addWidget(self.float_button)
+        row.addWidget(self.close_button)
+        dock.windowTitleChanged.connect(self.title.setText)
+        dock.topLevelChanged.connect(self._floating_changed)
+        manager().changed.connect(self.restyle)
+        self.restyle()
+
+    def _button(self, name, tooltip):
+        button = QToolButton(self)
+        button.setAutoRaise(True)
+        button.setIcon(icon(name))
+        button.setProperty("makebenchIcon", name)
+        button.setIconSize(QSize(12, 12))
+        button.setFixedSize(18, 18)
+        button.setToolTip(tooltip)
+        button.setAccessibleName(tooltip)
+        return button
+
+    def _floating_changed(self, floating):
+        tooltip = tr("Dock it back") if floating else tr("Detach (becomes a floating window)")
+        self.float_button.setToolTip(tooltip)
+        self.float_button.setAccessibleName(tooltip)
+
+    def restyle(self, *_):
+        palette = self.grip.palette()
+        palette.setColor(self.grip.foregroundRole(), QColor(manager().tokens["muted"]))
+        self.grip.setPalette(palette)
+        self.update()
+
+    def paintEvent(self, _event):
+        t = manager().tokens
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor(t["header"]))
+        painter.fillRect(QRect(0, self.height() - 1, self.width(), 1), QColor(t["border"]))
 
 
 class DesignHost(QMainWindow):
@@ -38,6 +106,7 @@ class DesignHost(QMainWindow):
         for name, title in panel_titles().items():
             dock = QDockWidget(title, self)
             dock.setObjectName(f"{name}_panel")
+            dock.setTitleBarWidget(DockTitle(dock))
             dock.setWidget(panels[name])
             dock.setFeatures(
                 QDockWidget.DockWidgetFeature.DockWidgetMovable

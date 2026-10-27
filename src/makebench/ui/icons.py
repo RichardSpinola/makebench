@@ -38,6 +38,8 @@ PATHS = {
     "open": '<path d="M3 8V5h7l3 3h8v12H3zM3 9h18"/>',
     "save": '<path d="M4 3h13l3 3v15H4zM8 3v6h8V3M8 21v-8h8v8"/>',
     "undo": '<path d="M4 10h10a6 6 0 0 1 0 12M4 10l5-5M4 10l5 5"/>',
+    "float": '<path d="M9 3h12v10H9zM9 7h12M6 9H3v12h12v-4"/>',
+    "close": '<path d="m6 6 12 12M18 6 6 18"/>',
     "redo": '<path d="M20 10H10a6 6 0 0 0 0 12M20 10l-5-5M20 10l-5 5"/>',
     "search": '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
     "select": '<path d="m5 3 13 10-7 1-3 7z"/>',

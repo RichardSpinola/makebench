@@ -80,6 +80,28 @@ class PanelTests(unittest.TestCase):
         self.assertFalse(properties.isFloating())
         self.assertTrue(host.docks["layers"].isVisible())
 
+    def test_panel_header_floats_and_closes(self):
+        from makebench.editor.panels import DockTitle
+
+        layers = self.window.design_host.docks["layers"]
+        title = layers.titleBarWidget()
+        self.assertIsInstance(title, DockTitle)
+        self.assertEqual(title.title.text(), "Layers")
+        title.float_button.click()
+        self.app.processEvents()
+        self.assertTrue(layers.isFloating())
+        self.assertEqual(title.float_button.toolTip(), "Dock it back")
+        title.float_button.click()
+        title.close_button.click()
+        self.app.processEvents()
+        self.assertFalse(layers.isVisible())
+
+    def test_toolbar_and_status_bar_follow_the_c_layout(self):
+        bar = self.window.workspace_toolbar
+        self.assertEqual(bar.widgetForAction(self.window.run_action).text(), "Run")
+        self.assertEqual(bar.widgetForAction(self.window.export_action).text(), "Publish…")
+        self.assertIs(self.window.test_status.parentWidget(), self.window.statusBar())
+
     def test_layout_is_kept_for_the_next_window(self):
         from makebench.editor.window import MainWindow
 

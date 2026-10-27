@@ -2,7 +2,7 @@
 """Composition tools, reversible conversion and canvas framing."""
 
 from PySide6.QtCore import Qt, QRectF, Signal
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QColor, QKeySequence, QPen
 from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsView,
@@ -36,6 +36,21 @@ class ZoomView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setDragMode(QGraphicsView.DragMode.NoDrag)
         self._pan = False
+
+    def drawBackground(self, painter, rect):
+        """A faint 16 px grid on the theme's canvas color, like a cutting mat."""
+        from .theme import blend, manager
+
+        t = manager().tokens
+        painter.fillRect(rect, QColor(t["canvas"]))
+        painter.setPen(QPen(QColor(blend(t["canvas"], t["text"], 0.05)), 0))
+        step = 16
+        left = int(rect.left()) - int(rect.left()) % step
+        top = int(rect.top()) - int(rect.top()) % step
+        for x in range(left, int(rect.right()) + 1, step):
+            painter.drawLine(x, int(rect.top()), x, int(rect.bottom()))
+        for y in range(top, int(rect.bottom()) + 1, step):
+            painter.drawLine(int(rect.left()), y, int(rect.right()), y)
 
     def update_bounds(self):
         """Include distant controls within the designer's scroll range."""
