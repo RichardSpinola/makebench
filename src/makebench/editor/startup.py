@@ -102,36 +102,40 @@ class HomeBackground(QWidget):
 
 
 class HomeHero(QWidget):
-    """The start page's header card: accent wash, the emblem, the name and a sketch."""
+    """The start page's banner across the whole width: accent wash, emblem, name and a sketch."""
 
     def __init__(self, settings=None):
         super().__init__()
         self.settings = settings
-        self.setFixedHeight(128)
+        self.setFixedHeight(150)
         self.setAccessibleName("Makebench")
+
+    def column(self):
+        """Left and right edges of the page's centered content column."""
+        left = max(32, (self.width() - CONTENT_WIDTH) // 2)
+        return left, self.width() - left
 
     def paintEvent(self, event):
         t = manager().tokens
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        card = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
-        painter.setPen(QColor(t["border"]))
-        painter.setBrush(QColor(blend(t["panel"], t["accent"], 0.11)))
-        painter.drawRoundedRect(card, 8, 8)
-        right = self.width()
-        if right > 620:
+        painter.fillRect(self.rect(), QColor(blend(t["panel"], t["accent"], 0.13)))
+        painter.fillRect(QRect(0, self.height() - 1, self.width(), 1), QColor(t["border"]))
+        left, right = self.column()
+        if right - left > 620:
             line = QColor(t["muted"])
             line.setAlphaF(0.45)
             painter.setPen(QPen(line, 1.5))
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            for x, y, w, h in ((-250, 22, 108, 64), (-118, 58, 82, 50), (-272, 98, 78, 22)):
+            for x, y, w, h in ((-250, 30, 108, 64), (-118, 66, 82, 50), (-272, 106, 78, 22)):
                 painter.drawRoundedRect(QRectF(right + x, y, w, h), 4, 4)
                 painter.drawLine(QPointF(right + x + 1, y + 14), QPointF(right + x + w - 1, y + 14))
             painter.setPen(QPen(QColor(t["accent"]), 2))
             painter.drawPolyline(
-                [QPointF(right - 142, 50), QPointF(right - 77, 50), QPointF(right - 77, 58)]
+                [QPointF(right - 142, 58), QPointF(right - 77, 58), QPointF(right - 77, 66)]
             )
-            painter.drawLine(QPointF(right - 233, 86), QPointF(right - 233, 98))
+            painter.drawLine(QPointF(right - 233, 94), QPointF(right - 233, 106))
+        painter.translate(left - 24, 0)
         top = (self.height() - 64) // 2
         if retro(self.settings):
             tile = QRect(24, top + 8, 68, 48)
@@ -214,6 +218,9 @@ class HomeTile(QAbstractButton):
             metrics.elidedText(self.detail, Qt.TextElideMode.ElideRight, self.width() - 54),
         )
         painter.end()
+
+
+CONTENT_WIDTH = 1000
 
 
 def recovery_text(recoveries):

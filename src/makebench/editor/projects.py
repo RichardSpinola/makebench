@@ -61,6 +61,7 @@ class ProjectMixin:
         from makebench.core.templates import MODELS
 
         from .startup import (
+            CONTENT_WIDTH,
             HomeBackground,
             HomeHero,
             HomeTile,
@@ -72,14 +73,18 @@ class ProjectMixin:
 
         home = HomeBackground()
         home.setObjectName("home")
-        outer = QVBoxLayout(home)
-        outer.setContentsMargins(32, 28, 32, 18)
+        page = QVBoxLayout(home)
+        page.setContentsMargins(0, 0, 0, 0)
+        page.setSpacing(0)
+        page.addWidget(HomeHero(self.settings))
+        outer = QVBoxLayout()
+        outer.setContentsMargins(32, 20, 32, 18)
+        page.addLayout(outer, 1)
         content = QWidget()
-        content.setMaximumWidth(1000)
+        content.setMaximumWidth(CONTENT_WIDTH)
         body = QVBoxLayout(content)
         body.setContentsMargins(0, 0, 0, 0)
         body.setSpacing(16)
-        body.addWidget(HomeHero(self.settings))
         tiles = QHBoxLayout()
         tiles.setSpacing(12)
         self.home_tiles = []

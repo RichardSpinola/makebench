@@ -139,6 +139,25 @@ class StartupTests(unittest.TestCase):
         self.window.recent_search.setText("nothing")
         self.assertTrue(item.isHidden())
 
+    def test_corner_shows_the_application_icon(self):
+        from PySide6.QtGui import QColor, QImage
+
+        from makebench.editor.shell import sync_shell
+
+        corner = self.window.project_corner
+        self.assertIsNone(corner.icon_name)
+        image = QImage(32, 32, QImage.Format.Format_ARGB32)
+        image.fill(QColor("#ff0000"))
+        path = self.root / "app.png"
+        image.save(str(path))
+        self.window.project.application["icon"] = self.window.assets.import_image(path)
+        sync_shell(self.window)
+        self.assertEqual(corner.icon_name, self.window.project.application["icon"])
+        self.assertEqual(corner.logo.pixmap().toImage().pixelColor(12, 12), QColor("#ff0000"))
+        del self.window.project.application["icon"]
+        sync_shell(self.window)
+        self.assertIsNone(corner.icon_name)
+
     def test_start_page_reopens_the_launcher(self):
         from makebench.editor.startup import StartupDialog
 

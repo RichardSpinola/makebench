@@ -49,7 +49,8 @@ class AreaButton(QToolButton):
         super().__init__(parent)
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         self.setIconSize(QSize(18, 18))
-        self.setFixedSize(40, 38)
+        # One pixel narrower than the bar, so the selection stops at its border.
+        self.setFixedSize(39, 38)
         self.setAutoRaise(True)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
 
@@ -209,10 +210,33 @@ class ProjectCorner(QWidget):
         text.addWidget(self.folder)
         layout.addLayout(text)
         self.logo = QLabel()
-        self.logo.setAccessibleName(tr("Makebench"))
-        if logo is not None:
-            self.logo.setPixmap(logo.pixmap(24, 24))
+        self.default_logo = logo
+        self.icon_name = None
+        self.show_icon(None, None)
         layout.addWidget(self.logo)
+
+    def show_icon(self, name, data):
+        """The application's own icon once it has one; the Makebench emblem until then."""
+        pixmap = QPixmap()
+        if name and data:
+            pixmap.loadFromData(data)
+        if not pixmap.isNull():
+            ratio = self.devicePixelRatioF()
+            pixmap = pixmap.scaled(
+                round(24 * ratio),
+                round(24 * ratio),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            pixmap.setDevicePixelRatio(ratio)
+            self.logo.setPixmap(pixmap)
+            self.logo.setAccessibleName(tr("Application icon"))
+            self.icon_name = name
+        else:
+            if self.default_logo is not None:
+                self.logo.setPixmap(self.default_logo.pixmap(24, 24))
+            self.logo.setAccessibleName(tr("Makebench"))
+            self.icon_name = None
 
     def show_project(self, name, path):
         self.name.setText(name)
@@ -445,6 +469,13 @@ def sync_shell(window):
         hint = tr("Editing a state: properties only")
     window.area_strip.show_area(area_names().get(mode, ""), area_path(window), hint)
     window.project_corner.show_project(window.project.name, window.path)
+    app_icon = window.project.application.get("icon")
+    if app_icon != window.project_corner.icon_name:
+        try:
+            data = window.assets.read(app_icon) if app_icon else None
+        except Exception:
+            data = None
+        window.project_corner.show_icon(app_icon, data)
     dirty = (
         window.history.dirty or window.source.dirty or window.logic.pending or window.script_dirty()
     )
