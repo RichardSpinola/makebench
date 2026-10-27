@@ -11,6 +11,8 @@
   `ctx` is fully described for completion.
 - **Window look:** per-window theme, accent and background (Qt and GTK) and
   `ctx.set_theme` / `ctx.set_background`.
+- **Themes and downloads (in progress):** `.mbtheme` color theme files with strict
+  validation, and downloading a project from a Git address.
 - **New project dialog:** advanced options only on request.
 - **Complete examples:** *Complete workshop* with nodes and with blocks, in English
   and Portuguese, with an in-app guide window.

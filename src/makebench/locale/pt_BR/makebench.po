@@ -6559,3 +6559,51 @@ msgstr "Plugins adicionam comandos de menu, peças e trechos de código. Ficam d
 #: src/makebench/editor/plugins_ui.py
 msgid "Select a plugin to see what it does."
 msgstr "Selecione um plugin para ver o que ele faz."
+
+#: src/makebench/core/vcs.py
+msgid "Choose a name for the project folder."
+msgstr "Escolha um nome para a pasta do projeto."
+
+#: src/makebench/ui/themes.py
+msgid "Invalid color for {key} in {where}."
+msgstr "Cor inválida em {key} ({where})."
+
+#: src/makebench/core/vcs.py
+msgid "The folder {name} already exists and is not empty."
+msgstr "A pasta {name} já existe e não está vazia."
+
+#: src/makebench/ui/themes.py
+msgid "The theme file cannot be read."
+msgstr "Não foi possível ler o arquivo do tema."
+
+#: src/makebench/ui/themes.py
+msgid "The theme file is too large."
+msgstr "O arquivo do tema é grande demais."
+
+#: src/makebench/ui/themes.py
+msgid "The theme is missing its {where} colors."
+msgstr "Faltam as cores do tema ({where})."
+
+#: src/makebench/ui/themes.py
+msgid "The theme needs a name of up to 60 characters."
+msgstr "O tema precisa de um nome de até 60 caracteres."
+
+#: src/makebench/ui/themes.py
+msgid "The theme needs an accent color like #3a83c9."
+msgstr "O tema precisa de uma cor de destaque como #3a83c9."
+
+#: src/makebench/ui/themes.py
+msgid "This is not a Makebench theme."
+msgstr "Este não é um tema do Makebench."
+
+#: src/makebench/ui/themes.py
+msgid "This theme needs a newer Makebench."
+msgstr "Este tema precisa de um Makebench mais novo."
+
+#: src/makebench/ui/themes.py
+msgid "dark"
+msgstr "escuro"
+
+#: src/makebench/ui/themes.py
+msgid "light"
+msgstr "claro"

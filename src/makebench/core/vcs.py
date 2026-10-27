@@ -363,6 +363,48 @@ def set_remote(root, url: str, name: str = "origin") -> None:
         _run(root, ["remote", "add", name, url])
 
 
+def repo_name(url: str) -> str:
+    """A folder name taken from a repository address ('' when there is none)."""
+    tail = re.split(r"[/:\\]", url.strip().rstrip("/\\"))[-1]
+    tail = tail[:-4] if tail.endswith(".git") else tail
+    return re.sub(r"[^A-Za-z0-9._-]", "-", tail).strip(".-")
+
+
+def clone(url: str, parent, name: str | None = None) -> Path:
+    """Download a repository into `parent/name` and return that folder.
+
+    Never overwrites: an existing non-empty folder is refused, and a failed download
+    leaves nothing behind.
+    """
+    url = url.strip()
+    if not url or any(c.isspace() for c in url) or url.startswith("-") or url.startswith("ext::"):
+        raise VcsError(
+            tr("Enter the repository address, for example https://github.com/you/app.git")
+        )
+    folder_name = (name or repo_name(url)).strip()
+    if not folder_name or folder_name in {".", ".."} or "/" in folder_name:
+        raise VcsError(tr("Choose a name for the project folder."))
+    parent = Path(parent)
+    target = parent / folder_name
+    if target.exists() and (not target.is_dir() or any(target.iterdir())):
+        raise VcsError(
+            tr("The folder {name} already exists and is not empty.").format(name=folder_name)
+        )
+    parent.mkdir(parents=True, exist_ok=True)
+    existed = target.exists()
+    try:
+        _run(
+            parent,
+            ["-c", "protocol.ext.allow=never", "clone", "--", url, folder_name],
+            timeout=NETWORK_TIMEOUT,
+        )
+    except VcsError:
+        if not existed:
+            shutil.rmtree(target, ignore_errors=True)
+        raise
+    return target
+
+
 def branch(root) -> str:
     """The current branch name."""
     return _run(root, ["symbolic-ref", "--short", "HEAD"])[1].strip()

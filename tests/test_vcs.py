@@ -143,6 +143,31 @@ class VersionHistoryTests(unittest.TestCase):
             with self.assertRaises(vcs.VcsError):
                 vcs.set_remote(self.root, bad)
 
+    def test_clone_from_a_local_server(self):
+        vcs.init(self.root)
+        vcs.commit_all(self.root, "first")
+        server = Path(self.temp.name) / "server.git"
+        vcs._run(self.temp.name, ["init", "--bare", str(server)])
+        vcs.set_remote(self.root, str(server))
+        vcs.push(self.root)
+        parent = Path(self.temp.name) / "downloads"
+        target = vcs.clone(str(server), parent)
+        self.assertEqual(target, parent / "server")
+        self.assertTrue((target / "app.makebench.json").is_file())
+        with self.assertRaises(vcs.VcsError):
+            vcs.clone(str(server), parent)
+
+    def test_clone_failure_leaves_nothing_and_bad_addresses_are_refused(self):
+        parent = Path(self.temp.name) / "downloads"
+        with self.assertRaises(vcs.VcsError):
+            vcs.clone(str(Path(self.temp.name) / "nothing.git"), parent)
+        self.assertFalse((parent / "nothing").exists())
+        for bad in ("", "--upload-pack=x", "a b", "ext::sh -c x"):
+            with self.assertRaises(vcs.VcsError):
+                vcs.clone(bad, parent)
+        self.assertEqual(vcs.repo_name("https://github.com/you/app.git"), "app")
+        self.assertEqual(vcs.repo_name("git@host:you/my app/"), "my-app")
+
 
 if __name__ == "__main__":
     unittest.main()
