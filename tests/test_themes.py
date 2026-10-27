@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""The .mbtheme format: strict validation and safe import."""
+
+import copy
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from makebench.ui import themes
+
+
+class ThemeFileTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name)
+        self.folder = self.base / "themes"
+
+    def write(self, data, name="a.mbtheme"):
+        path = self.base / name
+        path.write_text(data if isinstance(data, str) else json.dumps(data), encoding="utf-8")
+        return path
+
+    def theme(self, **changes):
+        data = copy.deepcopy(themes.BUILTIN)
+        data["name"] = "Forest"
+        data.update(changes)
+        return data
+
+    def test_builtin_is_valid_and_listed_first(self):
+        self.assertEqual(themes.installed(self.folder)[0]["name"], "Makebench")
+
+    def test_rejects_bad_files(self):
+        bad = [
+            "not json",
+            [],
+            self.theme(format="other"),
+            self.theme(version=99),
+            self.theme(name=" "),
+            self.theme(accent="blue"),
+            self.theme(dark={"win": "#000000"}),
+            self.theme(light=None),
+        ]
+        for index, data in enumerate(bad):
+            with self.subTest(index=index):
+                with self.assertRaises(themes.ThemeError):
+                    themes.load(self.write(data, f"b{index}.mbtheme"))
+
+    def test_rejects_huge_and_missing_files(self):
+        with self.assertRaises(themes.ThemeError):
+            themes.load(self.write(" " * (themes.MAX_SIZE + 1)))
+        with self.assertRaises(themes.ThemeError):
+            themes.load(self.base / "missing.mbtheme")
+
+    def test_import_copies_without_overwriting_and_drops_extra_keys(self):
+        data = self.theme(script="rm -rf /")
+        source = self.write(data)
+        themes.import_theme(source, self.folder)
+        themes.import_theme(source, self.folder)
+        files = sorted(p.name for p in self.folder.glob("*.mbtheme"))
+        self.assertEqual(files, ["forest-2.mbtheme", "forest.mbtheme"])
+        self.assertNotIn("script", json.loads((self.folder / files[0]).read_text()))
+
+    def test_installed_skips_invalid_user_files(self):
+        self.folder.mkdir()
+        (self.folder / "broken.mbtheme").write_text("{")
+        themes.import_theme(self.write(self.theme()), self.folder)
+        self.assertEqual(
+            [t["name"] for t in themes.installed(self.folder)], ["Makebench", "Forest"]
+        )
