@@ -216,8 +216,9 @@ def derive_tokens(palette, dark=False, accent="system", system_surfaces=True):
 class ThemeManager(QObject):
     """Makebench's own colors by default, or the desktop's palette; never a global stylesheet.
 
-    Both looks keep the desktop's widget style (Breeze, Fusion…); the Makebench look only
-    supplies the QPalette, the way KDE color schemes do.
+    The native look keeps the desktop's widget style (Breeze, Fusion…). The Makebench look
+    draws with Fusion, because Breeze paints menu and tool bars in the desktop's header
+    colors whatever the palette says, which left dark bars with dark text in light mode.
     """
 
     changed = Signal(dict)
@@ -239,6 +240,7 @@ class ThemeManager(QObject):
             and "Breeze" in QStyleFactory.keys()
         ):
             app.setStyle(QStyleFactory.create("Breeze"))
+        self.native_style = app.style().name()
         self.system_palette = QPalette(app.palette())
         self.mode = "system"
         self.accent = "system"
@@ -303,6 +305,9 @@ class ThemeManager(QObject):
             self.app.setStyleSheet("")
         role = lambda name: p.color(getattr(QPalette.ColorRole, name)).name()
         dark = p.color(QPalette.ColorRole.Window).lightnessF() < 0.45
+        wanted = "fusion" if self.look == "makebench" else self.native_style
+        if self.app.style().name().lower() != wanted.lower():
+            self.app.setStyle(QStyleFactory.create(wanted))
         if self.look == "makebench":
             scheme = self.app.styleHints().colorScheme()
             if self.mode != "system":

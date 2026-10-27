@@ -97,6 +97,16 @@ class LookTests(unittest.TestCase):
         self.assertEqual(chooser.choice(), 2)
         chooser.deleteLater()
 
+    def test_makebench_look_draws_with_fusion_and_native_restores_the_style(self):
+        from makebench.ui.theme import manager
+
+        theme = manager()
+        self.addCleanup(theme.set_look, theme.look)
+        theme.set_look("makebench")
+        self.assertEqual(self.app.style().name().lower(), "fusion")
+        theme.set_look("native")
+        self.assertEqual(self.app.style().name().lower(), theme.native_style.lower())
+
 
 if __name__ == "__main__":
     unittest.main()
