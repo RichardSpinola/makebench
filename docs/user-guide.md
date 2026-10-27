@@ -15,6 +15,23 @@ Press **F1** in the editor to open the short getting-started guide, and
 - **Open project…** opens an existing `.makebench.json` file.
 - **Open example…** copies one of the bundled examples into your projects
   folder and opens the copy. The original examples are never changed.
+- **Download from Git…** clones a project from any Git address into your projects
+  folder and opens it. Nothing in it runs until you press **F5**.
+
+Closing the start window leaves a **Show the start window** button on the empty
+workspace.
+
+## The workspace
+
+The bar on the left switches between the areas; the strip under the toolbar
+names the current area and project. Components, Layers and Properties are panels
+you can detach, dock elsewhere or close; **View › Panels › Restore layout** puts
+them back. The status bar shows whether the project is saved, its problems, the
+toolkit, the zoom and a light/dark switch.
+
+Makebench draws with its own colors by default. **Preferences › Appearance ›
+Look** switches to the desktop's own colors, and **Plugins › Themes…** picks,
+creates or imports `.mbtheme` color themes.
 
 Opening a project never runs it. A project is a `.makebench.json` file with a
 sibling `.actions.py` file for your own Python, an optional `makebench_user/`

@@ -11,8 +11,21 @@
   `ctx` is fully described for completion.
 - **Window look:** per-window theme, accent and background (Qt and GTK) and
   `ctx.set_theme` / `ctx.set_background`.
-- **Themes and downloads (in progress):** `.mbtheme` color theme files with strict
-  validation, and downloading a project from a Git address.
+- **New interface:** Makebench now draws with its own light and dark colors
+  (the desktop's colors stay one setting away), with an area bar on the left, a
+  strip naming the current area, detachable panels with *Restore layout*, a richer
+  status bar with a light/dark switch, and the project's icon in the corner.
+- **Start window and page:** larger start window with recent projects, templates,
+  tips and recovery; the empty workspace shows the emblem (gray in dark mode) and
+  can reopen the start window. A retro emblem is hidden in Preferences.
+- **Themes:** `.mbtheme` color theme files with strict validation, picked, created
+  and imported in *Plugins › Themes…*.
+- **Download from Git:** clone a project from any Git address and open it.
+- **Clearer screens:** Properties as a table, grouped Components, document tabs and
+  tinted headers in History, Publish and Preferences.
+- **Fixed in running apps:** tabbed pages no longer draw over the current tab when
+  the window starts, and an output's starting text is a hint instead of text the
+  program's output is appended to.
 - **New project dialog:** advanced options only on request.
 - **Complete examples:** *Complete workshop* with nodes and with blocks, in English
   and Portuguese, with an in-app guide window.

@@ -17,6 +17,23 @@ atalhos.
 - **Abrir projeto…** abre um arquivo `.makebench.json` existente.
 - **Abrir exemplo…** copia um dos exemplos incluídos para a pasta de projetos e
   abre a cópia. Os exemplos originais nunca são alterados.
+- **Baixar do Git…** clona um projeto de qualquer endereço Git para a pasta de
+  projetos e o abre. Nada nele roda até você apertar **F5**.
+
+Ao fechar a janela de abertura, a área vazia mostra o botão **Mostrar a janela de
+abertura**.
+
+## A área de trabalho
+
+A barra à esquerda troca de área; a faixa abaixo da barra de ferramentas mostra a
+área atual e o projeto. Componentes, Camadas e Propriedades são painéis que você
+pode soltar, encaixar em outro lugar ou fechar; **Exibir › Painéis › Restaurar
+layout** os devolve. A barra de status mostra se o projeto está salvo, os problemas,
+o toolkit, o zoom e um botão de claro/escuro.
+
+O Makebench usa cores próprias por padrão. **Preferências › Aparência › Visual**
+troca para as cores do desktop, e **Plugins › Temas…** escolhe, cria ou importa
+temas de cores `.mbtheme`.
 
 Abrir um projeto nunca o executa. Um projeto é um arquivo `.makebench.json`, com
 um arquivo `.actions.py` ao lado para o seu Python, um pacote opcional de
