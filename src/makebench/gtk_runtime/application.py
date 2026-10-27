@@ -192,6 +192,9 @@ class GtkRuntime:
                 for node in view.root.walk():
                     if node.kind == ComponentKind.OUTPUT:
                         buffer = view.widgets[node.id].get_buffer()
+                        if node.id in view.hints:
+                            view.hints.discard(node.id)
+                            buffer.set_text("")
                         buffer.insert(buffer.get_end_iter(), text)
                         if buffer.get_char_count() > 500000:
                             buffer.delete(

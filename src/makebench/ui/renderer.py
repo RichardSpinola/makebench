@@ -80,7 +80,10 @@ def create_control(node, read_asset, editing=False):
 
             widget = TerminalWidget(editing=editing)
         case ComponentKind.OUTPUT:
-            widget = QPlainTextEdit(text)
+            # A running app keeps the text as a hint, so output never lands after it.
+            widget = QPlainTextEdit(text if editing else "")
+            if not editing:
+                widget.setPlaceholderText(text)
             widget.setReadOnly(True)
             widget.setMinimumHeight(110)
             widget.setMaximumHeight(220)

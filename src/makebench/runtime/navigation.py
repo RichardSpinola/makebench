@@ -83,7 +83,10 @@ class RuntimeNavigation:
                     ComponentKind.CHECKBOX,
                     ComponentKind.OUTPUT,
                 }:
-                    if hasattr(widget, "setPlainText"):
+                    if node.kind == ComponentKind.OUTPUT:
+                        widget.clear()
+                        widget.setPlaceholderText(p.get("text", ""))
+                    elif hasattr(widget, "setPlainText"):
                         widget.setPlainText(p.get("text", ""))
                     else:
                         widget.setText(p.get("text", ""))
@@ -101,7 +104,7 @@ class RuntimeNavigation:
                     widget.setAccessibleName(p.get("alt_text", tr("Image")))
                     widget.update()
                 view.set_enabled(node.id, p.get("enabled", True))
-                view.frames[node.id].setVisible(p.get("visible", True))
+                view.set_visible(node.id, p.get("visible", True))
                 if node.kind == ComponentKind.PAGES:
                     view.show_page(p["initial_page"])
             window = self.app_windows.get(window_id)

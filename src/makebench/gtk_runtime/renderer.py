@@ -40,6 +40,7 @@ class GtkView:
         self.frames = {}
         self.tabs = {}
         self.enabled = {}
+        self.hints = set()  # outputs still showing their starting text
         self.widget = self.render(root)
         self.style_changes = {}
         self.provider = None
@@ -181,6 +182,7 @@ class GtkView:
         elif k == ComponentKind.OUTPUT:
             control = Gtk.TextView(editable=False, monospace=True, wrap_mode=Gtk.WrapMode.WORD_CHAR)
             control.get_buffer().set_text(text)
+            self.hints.add(node.id)
             widget = Gtk.ScrolledWindow(min_content_height=110)
             widget.set_child(control)
             self.widgets[node.id] = control
@@ -233,6 +235,7 @@ class GtkView:
             w._makebench_label.set_label(str(value))
         elif isinstance(w, Gtk.TextView):
             w.get_buffer().set_text(str(value))
+            self.hints.add(identifier)
         elif isinstance(w, (Gtk.Button, Gtk.CheckButton, Gtk.Label)):
             w.set_label(str(value))
         elif isinstance(w, Gtk.Entry):

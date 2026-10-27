@@ -110,6 +110,16 @@ class RuntimeView(QFrame):
             enabled and not (self.busy and identifier in self.event_buttons)
         )
 
+    def set_visible(self, identifier, visible):
+        """A page belongs to its tab widget: showing its frame directly would
+        draw it over the current page, so pages hide or show their tab instead."""
+        parent = self.project.parent_of(identifier)
+        if parent is not None and parent.kind == ComponentKind.PAGES and parent.id in self.tabs:
+            index = [child.id for child in parent.children].index(identifier)
+            self.tabs[parent.id].setTabVisible(index, visible)
+            return
+        self.frames[identifier].setVisible(visible)
+
     def show_page(self, identifier):
         """Reveal pages even inside nested sets of pages."""
         node = self.project.find(identifier)

@@ -78,6 +78,40 @@ class FullExampleTests(unittest.TestCase):
                     window.close()
                     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
+    def test_hidden_pages_stay_behind_their_tab_and_output_starts_empty(self):
+        path = PATHS[1]
+        project = load_project(path)
+        window = RuntimeWindow(
+            project,
+            SourceBuffer.load(path).text,
+            lambda p: b"",
+            path.parent,
+            path.parent / "x.py",
+            supervision=False,
+        )
+        window.show()
+        try:
+            view = window.view
+            self.assertTrue(view.tabs)
+            for tabs_id, tabs in view.tabs.items():
+                pages = project.find(tabs_id).children
+                for index, page in enumerate(pages):
+                    frame = view.frames[page.id]
+                    self.assertEqual(frame.isVisibleTo(tabs), index == tabs.currentIndex())
+            outputs = [n for n in project.walk() if n.kind == ComponentKind.OUTPUT]
+            for node in outputs:
+                widget = view.widgets[node.id]
+                self.assertEqual(widget.toPlainText(), "")
+                self.assertTrue(widget.placeholderText())
+            page = project.find(next(iter(view.tabs))).children[1]
+            view.set_visible(page.id, False)
+            tabs = view.tabs[next(iter(view.tabs))]
+            self.assertFalse(tabs.isTabVisible(1))
+            self.assertFalse(view.frames[page.id].isVisibleTo(tabs))
+        finally:
+            window.close()
+            QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
     def wait(self, predicate, timeout=8):
         deadline = time.time() + timeout
         while time.time() < deadline and not predicate():
