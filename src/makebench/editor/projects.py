@@ -60,66 +60,115 @@ class ProjectMixin:
         from .theme import icon
         from makebench.core.templates import MODELS
 
-        from .startup import HomeBackground, show_startup
+        from .startup import (
+            HomeBackground,
+            HomeHero,
+            HomeTile,
+            LauncherDelegate,
+            style_home,
+            show_startup,
+            tips,
+        )
 
         home = HomeBackground()
         home.setObjectName("home")
         outer = QVBoxLayout(home)
-        outer.setContentsMargins(24, 28, 24, 24)
+        outer.setContentsMargins(32, 28, 32, 18)
         content = QWidget()
-        content.setMaximumWidth(760)
+        content.setMaximumWidth(1000)
         body = QVBoxLayout(content)
         body.setContentsMargins(0, 0, 0, 0)
-        body.setSpacing(18)
-        header = QHBoxLayout()
-        title = QLabel("Makebench")
-        font = title.font()
-        font.setPointSize(24)
-        font.setBold(True)
-        title.setFont(font)
-        header.addWidget(title)
-        header.addStretch()
-        for symbol, label, callback in [
-            ("new", tr("New…"), lambda: self.new_project_dialog("blank")),
-            ("open", tr("Open project…"), self.open_project),
-            ("document", tr("Open example…"), self.open_example_dialog),
-            ("history", tr("Download from Git…"), self.clone_project_dialog),
+        body.setSpacing(16)
+        body.addWidget(HomeHero(self.settings))
+        tiles = QHBoxLayout()
+        tiles.setSpacing(12)
+        self.home_tiles = []
+        for symbol, label, detail, callback in [
+            (
+                "new",
+                tr("New…"),
+                tr("Start from a template"),
+                lambda: self.new_project_dialog("blank"),
+            ),
+            ("open", tr("Open project…"), tr("Continue a saved project"), self.open_project),
+            (
+                "document",
+                tr("Open example…"),
+                tr("A ready app to learn from"),
+                self.open_example_dialog,
+            ),
+            (
+                "history",
+                tr("Download from Git…"),
+                tr("A shared project, with history"),
+                self.clone_project_dialog,
+            ),
         ]:
-            button = QPushButton(icon(symbol), label)
-            button.clicked.connect(callback)
-            header.addWidget(button)
-        body.addLayout(header)
+            tile = HomeTile(symbol, label, detail)
+            tile.clicked.connect(callback)
+            tiles.addWidget(tile)
+            self.home_tiles.append(tile)
+        body.addLayout(tiles)
         self.recovery_row = QFrame()
-        self.recovery_row.setFrameShape(QFrame.Shape.StyledPanel)
+        self.recovery_row.setObjectName("home_recovery")
         rr = QHBoxLayout(self.recovery_row)
-        rr.addWidget(QLabel(tr("Previous session available.")), 1)
+        rr.setContentsMargins(12, 6, 6, 6)
+        self.home_recovery_label = QLabel(tr("Previous session available."))
+        rr.addWidget(self.home_recovery_label, 1)
         recover = QPushButton(tr("Recover"))
         recover.clicked.connect(self.recover_latest)
         rr.addWidget(recover)
         discard = QToolButton()
-        discard.setIcon(icon("remove"))
+        discard.setIcon(icon("close"))
+        discard.setAutoRaise(True)
         discard.setToolTip(tr("Discard recovery"))
+        discard.setAccessibleName(tr("Discard recovery"))
         discard.clicked.connect(self.discard_recovery)
         rr.addWidget(discard)
         body.addWidget(self.recovery_row)
-        recent_header = QHBoxLayout()
-        recent_header.addWidget(make_title(QLabel(tr("Recent")), 1.15))
-        recent_header.addStretch()
+
+        def card(heading_widgets):
+            frame = QFrame()
+            frame.setObjectName("home_card")
+            box = QVBoxLayout(frame)
+            box.setContentsMargins(0, 0, 0, 6)
+            box.setSpacing(0)
+            top = QHBoxLayout()
+            top.setContentsMargins(14, 8, 8, 8)
+            for widget in heading_widgets:
+                top.addWidget(widget)
+            box.addLayout(top)
+            rule = QFrame()
+            rule.setObjectName("home_card_rule")
+            rule.setFixedHeight(1)
+            box.addWidget(rule)
+            return frame, box
+
+        def heading(text):
+            label = QLabel(text)
+            font = label.font()
+            font.setWeight(font.Weight.DemiBold)
+            label.setFont(font)
+            return label
+
         self.recent_search = QLineEdit()
         self.recent_search.setPlaceholderText(tr("Search projects…"))
         self.recent_search.setClearButtonEnabled(True)
-        self.recent_search.setMaximumWidth(320)
+        self.recent_search.setMinimumWidth(200)
+        self.recent_search.setMaximumWidth(260)
         self.recent_search.textChanged.connect(self.filter_recents)
-        recent_header.addWidget(self.recent_search)
-        body.addLayout(recent_header)
+        recent_card, recent_box = card([heading(tr("Recent")), QWidget(), self.recent_search])
+        recent_card.layout().itemAt(0).layout().setStretch(1, 1)
         self.recent_list = QListWidget()
         self.recent_list.setObjectName("recent_list")
         self.recent_list.setFrameShape(QFrame.Shape.NoFrame)
         self.recent_list.setAccessibleName(tr("Recent projects"))
+        self.recent_list.setItemDelegate(LauncherDelegate(self.recent_list))
+        self.recent_list.setMouseTracking(True)
         self.recent_list.itemActivated.connect(self.open_recent)
         self.recent_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.recent_list.customContextMenuRequested.connect(self.recent_context)
-        body.addWidget(self.recent_list)
+        recent_box.addWidget(self.recent_list, 1)
         self.no_recents = make_muted(
             QLabel(
                 tr("No recent projects.")
@@ -127,11 +176,15 @@ class ProjectMixin:
                 + tr("Create a new one or open an example to get started.")
             )
         )
+        self.no_recents.setWordWrap(True)
         self.no_recents.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        body.addWidget(self.no_recents)
+        self.no_recents.setContentsMargins(16, 24, 16, 24)
+        recent_box.addWidget(self.no_recents)
+        recent_box.addStretch()
         self.recent_actions = QWidget()
         actions = QHBoxLayout(self.recent_actions)
-        actions.setContentsMargins(0, 0, 0, 0)
+        actions.setContentsMargins(8, 4, 8, 0)
+        actions.setSpacing(2)
         actions.addStretch()
         for symbol, label, callback in [
             ("open", tr("Open"), lambda: self.open_recent(self.recent_list.currentItem())),
@@ -144,25 +197,56 @@ class ProjectMixin:
             button.setText(label)
             button.setToolTip(label)
             button.setAccessibleName(label)
+            button.setAutoRaise(True)
             button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             button.clicked.connect(callback)
             actions.addWidget(button)
-        body.addWidget(self.recent_actions)
+        recent_box.addWidget(self.recent_actions)
+        models_card, models_box = card([heading(tr("New from template"))])
+        self.home_models = QListWidget()
+        self.home_models.setFrameShape(QFrame.Shape.NoFrame)
+        self.home_models.setAccessibleName(tr("Templates"))
+        self.home_models.setItemDelegate(LauncherDelegate(self.home_models))
+        self.home_models.setMouseTracking(True)
+        for key, label, description in MODELS:
+            item = QListWidgetItem(label)
+            item.setData(Qt.ItemDataRole.UserRole, key)
+            item.setData(Qt.ItemDataRole.UserRole + 1, description)
+            self.home_models.addItem(item)
+        self.home_models.itemActivated.connect(
+            lambda item: self.new_project_dialog(item.data(Qt.ItemDataRole.UserRole))
+        )
+        models_box.addWidget(self.home_models, 1)
+        columns = QHBoxLayout()
+        columns.setSpacing(16)
+        columns.addWidget(recent_card, 3)
+        columns.addWidget(models_card, 2)
+        body.addLayout(columns, 1)
         center = QHBoxLayout()
         center.addStretch()
         center.addWidget(content, 1)
         center.addStretch()
-        outer.addLayout(center)
-        outer.addStretch(1)
-        reopen = QHBoxLayout()
-        reopen.addStretch()
+        outer.addLayout(center, 1)
+        bottom = QHBoxLayout()
+        bottom.setContentsMargins(0, 10, 0, 0)
+        hints = tips()
+        self.home_tip = QLabel(
+            f"<b>{tr('Tip:')}</b> "
+            + hints[self.settings.value("v1/projects/tip", 0, type=int) % len(hints)]
+        )
+        self.home_tip.setObjectName("home_tip")
+        self.home_tip.setWordWrap(True)
+        bottom.addWidget(self.home_tip, 1)
         self.show_startup_button = QPushButton(tr("Show the start window"))
         self.show_startup_button.clicked.connect(lambda: show_startup(self))
-        reopen.addWidget(self.show_startup_button)
-        reopen.addStretch()
-        outer.addLayout(reopen)
+        bottom.addWidget(self.show_startup_button)
+        outer.addLayout(bottom)
+        from .theme import manager as theme_manager
+
+        theme_manager().changed.connect(lambda *_: style_home(self))
         self.home_page = home
         self.pages.addWidget(home)
+        style_home(self)
         self.new_action.triggered.disconnect()
         self.new_action.triggered.connect(lambda: self.new_project_dialog("blank"))
         menu = self.menuBar().actions()[0].menu()
@@ -264,26 +348,25 @@ class ProjectMixin:
         from .theme import icon
         from PySide6.QtCore import QSize
 
+        from .startup import DETAIL_ROLE, SWATCH_ROLE, SWATCHES, short_path, when
+        import zlib
+
         for value in paths[:20]:
             path = Path(value)
-            folder = str(path.parent)
-            home = str(Path.home())
-            if folder.startswith(home + "/"):
-                folder = "~" + folder[len(home) :]
-            text = (
-                path.parent.name
-                + "\n"
-                + folder
-                + (" · " + tr("Not found") if not path.is_file() else "")
+            found = path.is_file()
+            detail = short_path(path.parent) + " · "
+            detail += when(path.stat().st_mtime) if found else tr("Not found")
+            item = QListWidgetItem(path.parent.name)
+            item.setData(DETAIL_ROLE, detail)
+            item.setData(
+                SWATCH_ROLE,
+                SWATCHES[zlib.crc32(str(path).encode()) % len(SWATCHES)] if found else "#777777",
             )
-            item = QListWidgetItem(icon("document"), text)
-            item.setSizeHint(QSize(320, 58))
             item.setToolTip(str(path))
             item.setData(Qt.ItemDataRole.UserRole, str(path))
             self.recent_list.addItem(item)
         count = self.recent_list.count()
         self.recent_list.setVisible(count > 0)
-        self.recent_list.setFixedHeight(max(58, min(360, 58 * count + 4)))
         if hasattr(self, "no_recents"):
             self.no_recents.setVisible(count == 0)
             self.recent_actions.setVisible(count > 0)
@@ -294,7 +377,8 @@ class ProjectMixin:
         query = self.recent_search.text().casefold() if hasattr(self, "recent_search") else ""
         for index in range(self.recent_list.count()):
             item = self.recent_list.item(index)
-            item.setHidden(query not in (item.text() + " " + item.toolTip()).casefold())
+            text = f"{item.text()} {item.data(Qt.ItemDataRole.UserRole + 1) or ''} {item.toolTip()}"
+            item.setHidden(query not in text.casefold())
 
     def recent_context(self, point):
         """The project menu separates opening, locating, removing the reference and trash."""
@@ -916,6 +1000,10 @@ class ProjectMixin:
             else []
         )
         self.recovery_row.setVisible(bool(self.recoveries))
+        if self.recoveries and hasattr(self, "home_recovery_label"):
+            from .startup import recovery_text
+
+            self.home_recovery_label.setText(recovery_text(self.recoveries))
 
     def recover_latest(self):
         """Recover into an isolated session folder, leaving the original untouched."""

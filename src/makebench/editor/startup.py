@@ -10,6 +10,7 @@ from PySide6.QtCore import QPointF, QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
+    QAbstractButton,
     QCheckBox,
     QDialog,
     QFrame,
@@ -68,19 +69,15 @@ _watermarks = {}
 
 
 def watermark_image(retro_style, size):
-    """The emblem in grays, keeping its shapes; drawn faint behind the start page."""
+    """The emblem in its own colors; the hues keep its shapes readable when faded."""
     key = (retro_style, size.width(), size.height())
     if key not in _watermarks:
-        image = QImage(size, QImage.Format.Format_ARGB32)
+        image = QImage(size, QImage.Format.Format_ARGB32_Premultiplied)
         image.fill(Qt.GlobalColor.transparent)
         painter = QPainter(image)
         QSvgRenderer(str(RETRO_LOGO if retro_style else LOGO)).render(painter)
         painter.end()
-        gray = image.convertToFormat(QImage.Format.Format_Grayscale8).convertToFormat(
-            QImage.Format.Format_ARGB32
-        )
-        gray.setAlphaChannel(image.convertToFormat(QImage.Format.Format_Alpha8))
-        _watermarks[key] = gray
+        _watermarks[key] = image
     return _watermarks[key]
 
 
@@ -91,7 +88,7 @@ def paint_watermark(widget, settings=None):
     old_style = retro(settings)
     size = QSize(1000, 588) if old_style else QSize(860, 860)
     painter = QPainter(widget)
-    painter.setOpacity(0.06 if manager().tokens["dark"] else 0.05)
+    painter.setOpacity(0.12 if manager().tokens["dark"] else 0.2)
     painter.drawImage(-70, widget.height() - size.height() + 250, watermark_image(old_style, size))
     painter.end()
 
@@ -102,6 +99,164 @@ class HomeBackground(QWidget):
     def paintEvent(self, event):
         super().paintEvent(event)
         paint_watermark(self)
+
+
+class HomeHero(QWidget):
+    """The start page's header card: accent wash, the emblem, the name and a sketch."""
+
+    def __init__(self, settings=None):
+        super().__init__()
+        self.settings = settings
+        self.setFixedHeight(128)
+        self.setAccessibleName("Makebench")
+
+    def paintEvent(self, event):
+        t = manager().tokens
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        card = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        painter.setPen(QColor(t["border"]))
+        painter.setBrush(QColor(blend(t["panel"], t["accent"], 0.11)))
+        painter.drawRoundedRect(card, 8, 8)
+        right = self.width()
+        if right > 620:
+            line = QColor(t["muted"])
+            line.setAlphaF(0.45)
+            painter.setPen(QPen(line, 1.5))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            for x, y, w, h in ((-250, 22, 108, 64), (-118, 58, 82, 50), (-272, 98, 78, 22)):
+                painter.drawRoundedRect(QRectF(right + x, y, w, h), 4, 4)
+                painter.drawLine(QPointF(right + x + 1, y + 14), QPointF(right + x + w - 1, y + 14))
+            painter.setPen(QPen(QColor(t["accent"]), 2))
+            painter.drawPolyline(
+                [QPointF(right - 142, 50), QPointF(right - 77, 50), QPointF(right - 77, 58)]
+            )
+            painter.drawLine(QPointF(right - 233, 86), QPointF(right - 233, 98))
+        top = (self.height() - 64) // 2
+        if retro(self.settings):
+            tile = QRect(24, top + 8, 68, 48)
+            painter.fillRect(tile, QColor("#d8d8d8" if t["dark"] else "#ffffff"))
+            painter.setPen(QColor(t["border"]))
+            painter.drawRect(tile.adjusted(0, 0, -1, -1))
+            logo_renderer(self.settings).render(painter, QRectF(29, top + 15, 58, 34))
+        else:
+            logo_renderer(self.settings).render(painter, QRectF(24, top, 64, 64))
+        font = QFont(self.font())
+        font.setPointSizeF(font.pointSizeF() * 1.9)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QColor(t["text"]))
+        painter.drawText(QRect(106, top, 400, 38), Qt.AlignmentFlag.AlignVCenter, "Makebench")
+        painter.setFont(self.font())
+        painter.setPen(QColor(t["muted"]))
+        painter.drawText(
+            QRect(108, top + 38, 400, 24),
+            Qt.AlignmentFlag.AlignVCenter,
+            tr("Linux applications, built by you."),
+        )
+        painter.end()
+
+
+class HomeTile(QAbstractButton):
+    """A card for one way to begin: icon, name and one line saying what it does."""
+
+    def __init__(self, symbol, title, detail):
+        super().__init__()
+        self.symbol = symbol
+        self.detail = detail
+        self.setText(title)
+        self.setAccessibleName(title)
+        self.setAccessibleDescription(detail)
+        self.setToolTip(detail)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setMinimumWidth(150)
+
+    def sizeHint(self):
+        return QSize(200, self.fontMetrics().height() * 2 + 34)
+
+    def enterEvent(self, event):
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.update()
+        super().leaveEvent(event)
+
+    def paintEvent(self, event):
+        t = manager().tokens
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        hot = self.underMouse() or self.hasFocus()
+        border = t["accent"] if hot else t["border"]
+        back = t["pressed"] if self.isDown() else (t["hover"] if hot else t["raised"])
+        painter.setPen(QPen(QColor(border), 1.5 if hot else 1))
+        fill = QColor(back)
+        fill.setAlphaF(0.7)
+        painter.setBrush(fill)
+        painter.drawRoundedRect(QRectF(self.rect()).adjusted(1, 1, -1, -1), 6, 6)
+        line = self.fontMetrics().height()
+        painter.drawPixmap(14, 14, icon(self.symbol).pixmap(QSize(20, 20)))
+        bold = QFont(self.font())
+        bold.setWeight(QFont.Weight.DemiBold)
+        painter.setFont(bold)
+        painter.setPen(QColor(t["text"]))
+        text = QRect(44, 13, self.width() - 54, line + 2)
+        painter.drawText(text, Qt.AlignmentFlag.AlignVCenter, self.text())
+        small = QFont(self.font())
+        small.setPointSizeF(self.font().pointSizeF() * 0.9)
+        painter.setFont(small)
+        painter.setPen(QColor(t["muted"]))
+        metrics = painter.fontMetrics()
+        painter.drawText(
+            QRect(44, 15 + line, self.width() - 54, metrics.height() + 2),
+            Qt.AlignmentFlag.AlignVCenter,
+            metrics.elidedText(self.detail, Qt.TextElideMode.ElideRight, self.width() - 54),
+        )
+        painter.end()
+
+
+def recovery_text(recoveries):
+    """'Previous session available — name, today at 14:02' for the newest snapshot."""
+    detail = ""
+    try:
+        data = json.loads((recoveries[0] / "session.json").read_text(encoding="utf-8"))
+        moment = datetime.datetime.fromtimestamp(float(data.get("time", 0)))
+        detail = tr("{name}, {day} at {time}").format(
+            name=data.get("name") or tr("Untitled"),
+            day=when(moment.timestamp()),
+            time=moment.strftime("%H:%M"),
+        )
+    except (OSError, ValueError, TypeError, IndexError):
+        pass
+    return tr("Previous session available") + (f" — {detail}" if detail else "")
+
+
+def warning_amber():
+    """The design's amber: the theme's warning hue reads as an error here."""
+    return QColor("#e0a43a" if manager().tokens["dark"] else "#b7791f")
+
+
+def see_through(color):
+    """Cards let the emblem behind the start page show faintly."""
+    tone = QColor(color)
+    return f"rgba({tone.red()}, {tone.green()}, {tone.blue()}, 0.7)"
+
+
+def style_home(window):
+    """Colors for the start page's lists, warning row and tip from the theme tokens."""
+    t = manager().tokens
+    warn = warning_amber()
+    window.home_page.setStyleSheet(
+        f"#home_recovery {{ border: 1px solid {warn.name()}; border-radius: 4px;"
+        f" background: {blend(t['panel'], warn.name(), 0.12)}; }}"
+        f" #home_card {{ border: 1px solid {t['border']}; border-radius: 6px;"
+        f" background: {see_through(t['raised'])}; }}"
+        f" #home_card QListWidget {{ background: transparent; border: none; }}"
+        f" #home_card_rule {{ background: {t['border']}; }}"
+        f" #home_tip {{ color: {t['muted']}; }}"
+    )
+    window.home_page.update()
 
 
 class StartupBanner(QWidget):
@@ -424,8 +579,7 @@ class StartupDialog(QDialog):
     def restyle(self):
         """Colors from the theme tokens; the frame, the tip and the warning row."""
         t = manager().tokens
-        # The amber of the design: the theme's warning hue reads as an error here.
-        warn = QColor("#e0a43a" if t["dark"] else "#b7791f")
+        warn = warning_amber()
         soft = blend(t["panel"], warn.name(), 0.12)
         self.recovery_row.setStyleSheet(
             f"#recovery_row {{ border: 1px solid {warn.name()}; border-radius: 3px;"
@@ -509,20 +663,7 @@ class StartupDialog(QDialog):
         self.recovery_row.setVisible(bool(recoveries))
         if not recoveries:
             return
-        detail = ""
-        try:
-            data = json.loads((recoveries[0] / "session.json").read_text(encoding="utf-8"))
-            moment = datetime.datetime.fromtimestamp(float(data.get("time", 0)))
-            detail = tr("{name}, {day} at {time}").format(
-                name=data.get("name") or tr("Untitled"),
-                day=when(moment.timestamp()),
-                time=moment.strftime("%H:%M"),
-            )
-        except (OSError, ValueError, TypeError):
-            pass
-        self.recovery_label.setText(
-            tr("Previous session available") + (f" — {detail}" if detail else "")
-        )
+        self.recovery_label.setText(recovery_text(recoveries))
 
     def discard_recovery(self):
         self.window.discard_recovery()

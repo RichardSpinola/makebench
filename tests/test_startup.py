@@ -121,6 +121,24 @@ class StartupTests(unittest.TestCase):
             paint_watermark(self.window.home_page, self.window.settings)
         draw.assert_not_called()
 
+    def test_start_page_has_the_tiles_recents_and_templates(self):
+        from makebench.core.templates import MODELS
+        from makebench.editor.startup import DETAIL_ROLE
+
+        path = self.root / "tasks" / "project.makebench.json"
+        path.parent.mkdir()
+        save_project(Project.empty("tasks"), path)
+        self.window.settings.setValue("projects/recent", [str(path)])
+        self.window.show_home()
+        texts = [tile.text() for tile in self.window.home_tiles]
+        self.assertEqual(texts[-1], "Download from Git…")
+        self.assertEqual(self.window.home_models.count(), len(MODELS))
+        item = self.window.recent_list.item(0)
+        self.assertEqual(item.text(), "tasks")
+        self.assertTrue(item.data(DETAIL_ROLE).endswith("today"))
+        self.window.recent_search.setText("nothing")
+        self.assertTrue(item.isHidden())
+
     def test_start_page_reopens_the_launcher(self):
         from makebench.editor.startup import StartupDialog
 

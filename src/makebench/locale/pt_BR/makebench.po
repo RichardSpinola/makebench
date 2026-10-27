@@ -7015,3 +7015,19 @@ msgstr "ontem"
 #: src/makebench/editor/startup.py
 msgid "{name}, {day} at {time}"
 msgstr "{name}, {day} às {time}"
+
+#: src/makebench/editor/projects.py
+msgid "A ready app to learn from"
+msgstr "Um app pronto para aprender"
+
+#: src/makebench/editor/projects.py
+msgid "A shared project, with history"
+msgstr "Um projeto compartilhado, com histórico"
+
+#: src/makebench/editor/projects.py
+msgid "Continue a saved project"
+msgstr "Continuar um projeto salvo"
+
+#: src/makebench/editor/projects.py
+msgid "Start from a template"
+msgstr "Começar de um modelo"
