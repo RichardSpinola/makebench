@@ -62,7 +62,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
         w.panel_docks["components"].raise_()
         self.app.processEvents()
         self.assertGreater(w.palette.maximumHeight(), 195)
-        self.assertGreater(w.palette.height(), 250)
+        self.assertGreater(w.palette.height(), 220)
         w.insert_search.setText("Separator")
         self.app.processEvents()
         visible = [

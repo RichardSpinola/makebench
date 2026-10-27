@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.0 (unreleased)
+## 0.8.0 — 2026-10-26
 
 - **Version history:** every save can become a Git version; browse by day, name,
   restore without losing anything, and send to GitHub/GitLab/Codeberg with the

@@ -442,7 +442,7 @@ def editor_project():
     project.application = {
         "id": "org.makebench.editor",
         "name": "Makebench",
-        "version": "0.7.0",
+        "version": "0.8.0",
         "backend": "qt",
         "icon": "assets/editor.svg",
         "license": "GPL-3.0-or-later",

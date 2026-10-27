@@ -19,7 +19,7 @@ servidor e sem IA em tempo de execução.
 
 ![Área Design com prévia Qt nativa, árvore de componentes e propriedades](docs/images/design.png)
 
-> **Situação: alfa (0.7.0).** O editor é utilizável e coberto por testes
+> **Situação: alfa (0.8.0).** O editor é utilizável e coberto por testes
 > automatizados, mas o formato dos projetos e as APIs ainda podem mudar. Ainda
 > há um AppImage na
 > [página de versões](https://github.com/RichardSpinola/makebench/releases); ou rode a partir do código-fonte (abaixo).
