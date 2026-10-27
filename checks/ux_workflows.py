@@ -143,7 +143,7 @@ def main():
                     )
                 )
             capture("02-design")
-            window.left_tabs.setCurrentIndex(1)
+            window.panel_docks["components"].raise_()
             window.insert_category.setCurrentIndex(2)
             window.insert_search.setText("texto")
             assert any(not window.palette.item(i).isHidden() for i in range(window.palette.count()))

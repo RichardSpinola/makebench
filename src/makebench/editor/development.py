@@ -123,8 +123,7 @@ class DevelopmentMixin:
             button.clicked.connect(callback)
             actions.addWidget(button)
         dl.addLayout(actions)
-        self.left_tabs.removeTab(2)
-        self.left_tabs.addTab(data_page, tr("Data"))
+        self.panel_docks["data"].setWidget(data_page)
         self.data_list.itemActivated.connect(lambda _: self.edit_data_item())
         self.sync_outline()
         from PySide6.QtWidgets import QToolBar

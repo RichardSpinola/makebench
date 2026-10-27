@@ -6831,3 +6831,11 @@ msgstr "{count} janela"
 #: src/makebench/editor/shell.py
 msgid "{count} windows"
 msgstr "{count} janelas"
+
+#: src/makebench/editor/panels.py
+msgid "Layers"
+msgstr "Camadas"
+
+#: src/makebench/editor/panels.py
+msgid "Restore layout"
+msgstr "Restaurar layout"

@@ -103,7 +103,7 @@ class DesignerMixin:
 
     def install_designer(self):
         """Add zoom and keyboard navigation on top of the existing canvas."""
-        scroll = self.design_splitter.widget(1).findChild(QScrollArea)
+        scroll = self.pasteboard.findChild(QScrollArea)
         if scroll:
             scroll.takeWidget()
             parent = scroll.parentWidget()

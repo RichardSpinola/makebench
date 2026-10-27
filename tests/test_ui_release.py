@@ -59,7 +59,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
     def test_insert_library_uses_vertical_space_and_has_search(self):
         """The library keeps no 195 px limit and no expanded label above the list."""
         w = self.window
-        w.left_tabs.setCurrentIndex(1)
+        w.panel_docks["components"].raise_()
         self.app.processEvents()
         self.assertGreater(w.palette.maximumHeight(), 195)
         self.assertGreater(w.palette.height(), 250)

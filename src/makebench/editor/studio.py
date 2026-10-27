@@ -71,12 +71,6 @@ class StudioMixin(
         self.design_splitter = self.tabs.widget(0)
         # Rebuild the existing views into panels with explicit responsibilities.
         old_left = self.design_splitter.widget(0)
-        left = QWidget()
-        ll = QVBoxLayout(left)
-        ll.setContentsMargins(0, 0, 0, 0)
-        self.left_tabs = QTabWidget()
-        self.left_tabs.setDocumentMode(True)
-        self.left_tabs.setTabPosition(QTabWidget.TabPosition.South)
         structure = QWidget()
         sl = QVBoxLayout(structure)
         sl.setContentsMargins(4, 4, 4, 4)
@@ -121,16 +115,10 @@ class StudioMixin(
         il.addWidget(add)
         self.data_list = QListWidget()
         self.data_list.setAccessibleName(tr("Project assets and functions"))
-        self.left_tabs.addTab(structure, tr("Structure"))
-        self.left_tabs.addTab(insert, tr("Insert"))
-        self.left_tabs.addTab(self.data_list, tr("Data"))
-        ll.addWidget(self.left_tabs)
         # The old button will be destroyed; its visual callback must not survive.
         self.remove_action.changed.disconnect()
-        self.design_splitter.replaceWidget(0, left)
         old_left.hide()
         old_left.deleteLater()
-        self.left_panel = left
         middle = self.design_splitter.widget(1)
         ml = middle.layout()
         ml.setContentsMargins(0, 0, 0, 0)
@@ -174,29 +162,30 @@ class StudioMixin(
             QLabel, options=Qt.FindChildOption.FindDirectChildrenOnly
         ):
             heading.hide()
-        self.property_tabs = QTabWidget()
-        self.property_tabs.setDocumentMode(True)
-        self.property_tabs.setTabPosition(QTabWidget.TabPosition.South)
-        self.design_splitter.replaceWidget(2, self.property_tabs)
-        self.property_tabs.addTab(old_right, tr("Properties"))
-        self.right_panel = self.property_tabs
         from PySide6.QtWidgets import QFrame
 
         old_right.findChild(QScrollArea).setFrameShape(QFrame.Shape.NoFrame)
-        self.design_splitter.setHandleWidth(4)
-        self.design_splitter.setChildrenCollapsible(True)
         self.tree.setMinimumWidth(160)
         self.inspector.setMinimumWidth(220)
-        self.design_splitter.setSizes([230, 740, 280])
-        self.design_splitter.setObjectName("design_panels")
-        saved = self.settings.value("workspace/design_panels")
-        if saved:
-            self.design_splitter.restoreState(saved)
-        self.design_splitter.splitterMoved.connect(
-            lambda *_: self.settings.setValue(
-                "workspace/design_panels", self.design_splitter.saveState()
-            )
+        from .panels import DesignHost
+
+        self.pasteboard = middle
+        self.design_host = DesignHost(
+            middle,
+            {
+                "layers": structure,
+                "components": insert,
+                "data": self.data_list,
+                "properties": old_right,
+            },
         )
+        self.panel_docks = self.design_host.docks
+        label = self.tabs.tabText(0)
+        self.tabs.removeTab(0)
+        self.tabs.insertTab(0, self.design_host, label)
+        self.tabs.setCurrentIndex(0)
+        self.design_splitter.deleteLater()
+        del self.design_splitter
         # One drawer shared by every mode, outside the document.
         self.drawer = QTabWidget()
         self.drawer.setDocumentMode(True)
@@ -343,6 +332,9 @@ class StudioMixin(
             action.setShortcut(QKeySequence(shortcut))
             action.triggered.connect(callback)
             view.addAction(action)
+        from .panels import add_panel_menu
+
+        add_panel_menu(self, view)
         view.addAction(self.home_action)
         grid = view.addAction(tr("Snap to grid"))
         grid.setCheckable(True)
@@ -891,7 +883,7 @@ class StudioMixin(
         """Toggle only the panel that belongs to the current mode."""
         target = None
         if self._mode == "design":
-            target = self.left_panel if side == "left" else self.right_panel
+            self.design_host.toggle_side(side)
         elif self._mode == "logic" and side == "right":
             target = self.logic.splitter.widget(1)
         elif self._mode == "map":

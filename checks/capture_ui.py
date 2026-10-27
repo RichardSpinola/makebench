@@ -100,10 +100,10 @@ def main():
                         raise RuntimeError("Falha ao gravar " + str(filename))
                 window.publish_dialog.hide()
                 window.set_mode("design")
-                window.left_tabs.setCurrentIndex(1)
+                window.panel_docks["components"].raise_()
                 QTest.qWait(80)
                 window.grab().save(str(args.output / f"{theme}-{size}-insert.png"))
-                window.left_tabs.setCurrentIndex(0)
+                window.panel_docks["layers"].raise_()
                 window.show_test_error(
                     {
                         "message": "Example failure: task ended with code 3.",
