@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from shiboken6 import isValid
 
 DETAIL_ROLE = Qt.ItemDataRole.UserRole + 2
 
@@ -82,6 +83,9 @@ class _EmptyHint(QObject):
         return False
 
     def refresh(self, *_):
+        # The model clears its rows while the list is being destroyed.
+        if not isValid(self.view) or not isValid(self.label):
+            return
         self.label.setGeometry(self.view.viewport().rect().adjusted(16, 16, -16, -16))
         self.label.setVisible(self.view.model().rowCount() == 0)
 
