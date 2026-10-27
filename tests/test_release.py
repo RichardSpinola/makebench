@@ -37,10 +37,14 @@ class PaletteTests(unittest.TestCase):
         self.assertNotEqual(accents[0], accents[2])
 
     def test_theme_does_not_replace_system_palette(self):
-        """Applying preferences never calls setPalette on the application."""
+        """With desktop colors, preferences never call setPalette on the application."""
         from unittest.mock import patch
 
         theme = getattr(self.app, "makebench_theme", None) or ThemeManager(self.app)
+        look = theme.look
+        theme.look = "native"
+        theme.apply()
+        self.addCleanup(lambda: (setattr(theme, "look", look), theme.apply()))
         with patch.object(self.app, "setPalette") as setter:
             theme.set_mode("dark")
             theme.set_accent("green")

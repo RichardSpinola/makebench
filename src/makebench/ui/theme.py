@@ -98,6 +98,81 @@ def legible(color, backgrounds, ratio):
     return target
 
 
+LOOKS = ("makebench", "native")
+
+
+def look_tokens(theme, dark):
+    """Tokens for one of Makebench's own color themes (`.mbtheme`), same keys as native."""
+    c = theme["dark" if dark else "light"]
+    base = PALETTES["dark" if dark else "light"]
+    t = {
+        "dark": dark,
+        "canvas": c["base"],
+        "panel": c["win"],
+        "raised": c["base"],
+        "header": c["win"],
+        "sidebar": c["side"],
+        "border": c["line"],
+        "button": c["btn"],
+        "button_border": c["btnLine"],
+        "text": c["fg"],
+        "system_accent": theme["accent"],
+    }
+    surfaces = [t["panel"], t["raised"], t["sidebar"], t["button"]]
+    t["accent"] = legible(theme["accent"], [t["panel"], t["raised"]], 3)
+    t["accent_adjusted"] = t["accent"] != theme["accent"]
+    t["fill"] = t["accent"]
+    t["on_accent"] = max(("#ffffff", "#000000"), key=lambda v: contrast(v, t["fill"]))
+    t["muted"] = legible(c["mut"], surfaces, 4.5)
+    t["control"] = legible(c["btnLine"], [t["panel"], t["raised"]], 3)
+    for key in ("success", "warning", "error", "guide"):
+        t[key] = legible(base[key], surfaces, 4.5)
+    t["info"] = legible(t["accent"], surfaces, 4.5)
+    t["hover"] = blend(t["panel"], t["text"], 0.07)
+    t["selection"] = blend(t["panel"], t["accent"], 0.25)
+    t["pressed"] = blend(t["accent"], t["on_accent"], 0.15)
+    return t
+
+
+def look_palette(t):
+    """A complete QPalette for the tokens, so every native style draws with them."""
+    p = QPalette()
+    disabled = blend(t["text"], t["panel"], 0.55)
+    roles = {
+        "Window": t["panel"],
+        "WindowText": t["text"],
+        "Base": t["raised"],
+        "AlternateBase": t["sidebar"],
+        "Text": t["text"],
+        "Button": t["button"],
+        "ButtonText": t["text"],
+        "BrightText": "#ffffff",
+        "Highlight": t["fill"],
+        "HighlightedText": t["on_accent"],
+        "PlaceholderText": t["muted"],
+        "ToolTipBase": t["button"],
+        "ToolTipText": t["text"],
+        "Link": t["info"],
+        "LinkVisited": t["guide"],
+        "Light": blend(t["button"], "#ffffff", 0.12),
+        "Midlight": blend(t["button"], t["button_border"], 0.5),
+        "Mid": t["border"],
+        "Dark": blend(t["panel"], "#000000", 0.35),
+        "Shadow": blend(t["panel"], "#000000", 0.6),
+    }
+    if hasattr(QPalette.ColorRole, "Accent"):
+        roles["Accent"] = t["fill"]
+    for name, value in roles.items():
+        p.setColor(getattr(QPalette.ColorRole, name), QColor(value))
+    for name in ("WindowText", "Text", "ButtonText", "PlaceholderText"):
+        p.setColor(
+            QPalette.ColorGroup.Disabled, getattr(QPalette.ColorRole, name), QColor(disabled)
+        )
+    p.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Highlight, QColor(t["border"]))
+    p.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(t["text"]))
+    return p
+
+
 def derive_tokens(palette, dark=False, accent="system", system_surfaces=True):
     """Produce testable tokens without changing the desktop QPalette or the document."""
     t = dict(PALETTES["dark" if dark else "light"], dark=dark)
@@ -138,7 +213,11 @@ def derive_tokens(palette, dark=False, accent="system", system_surfaces=True):
 
 
 class ThemeManager(QObject):
-    """Use Qt/KDE's native style and palette, with no stylesheet of our own."""
+    """Makebench's own colors by default, or the desktop's palette; never a global stylesheet.
+
+    Both looks keep the desktop's widget style (Breeze, Fusion…); the Makebench look only
+    supplies the QPalette, the way KDE color schemes do.
+    """
 
     changed = Signal(dict)
 
@@ -162,6 +241,10 @@ class ThemeManager(QObject):
         self.system_palette = QPalette(app.palette())
         self.mode = "system"
         self.accent = "system"
+        self.look = self.settings.value("v1/appearance/look", "makebench")
+        if self.look not in LOOKS:
+            self.look = "makebench"
+        self.color_theme = self.settings.value("v1/appearance/color_theme", "Makebench")
         self.scale = 100
         self.reduce_motion = False
         if not self.settings.value("v2/native_theme", False, type=bool):
@@ -182,13 +265,13 @@ class ThemeManager(QObject):
 
     def palette_changed(self, palette):
         """Follow real desktop changes while the application is open."""
-        if self._applying:
+        if self._applying or self.look != "native":
             return
         self.system_palette = QPalette(palette)
         self.apply()
 
     def set_mode(self, mode):
-        """Ask the Qt platform for the scheme; never fabricates a replacement palette."""
+        """Ask the Qt platform for the scheme; the Makebench look follows the same choice."""
         if mode not in {"system", "light", "dark"}:
             raise ValueError(tr("Unknown theme"))
         self.mode = mode
@@ -209,7 +292,7 @@ class ThemeManager(QObject):
         self.apply()
 
     def apply(self):
-        """Read Qt palette roles for drawing the canvas, maps and syntax."""
+        """Set the palette for the chosen look and publish tokens for canvas, maps and syntax."""
         if self._applying:
             return
         self._applying = True
@@ -219,7 +302,23 @@ class ThemeManager(QObject):
             self.app.setStyleSheet("")
         role = lambda name: p.color(getattr(QPalette.ColorRole, name)).name()
         dark = p.color(QPalette.ColorRole.Window).lightnessF() < 0.45
-        self.tokens = t = {
+        if self.look == "makebench":
+            scheme = self.app.styleHints().colorScheme()
+            if self.mode != "system":
+                dark = self.mode == "dark"
+            elif scheme != Qt.ColorScheme.Unknown:
+                dark = scheme == Qt.ColorScheme.Dark
+            t = look_tokens(self.selected_theme(), dark)
+            palette = look_palette(t)
+            if self.app.palette() != palette:
+                self.app.setPalette(palette)
+        else:
+            if self.app.palette().resolveMask():
+                # Back from the Makebench look: an empty palette returns to the desktop's.
+                self.app.setPalette(QPalette())
+                self.system_palette = p = QPalette(self.app.palette())
+            t = None
+        self.tokens = t = t or {
             "dark": dark,
             "canvas": role("AlternateBase"),
             "panel": role("Window"),
@@ -244,7 +343,8 @@ class ThemeManager(QObject):
             "system_accent": role("Highlight"),
             "accent_adjusted": False,
         }
-        font = QFont(self.base_font)
+        t["look"] = self.look
+        font = QFont(self.look_font() if self.look == "makebench" else self.base_font)
         font.setPointSizeF(max(8, font.pointSizeF()) * self.scale / 100)
         font_changed = self.app.font() != font
         if font_changed:
@@ -260,6 +360,32 @@ class ThemeManager(QObject):
         self._applying = False
         if previous != t or font_changed:
             self.changed.emit(t)
+
+    def selected_theme(self):
+        """The chosen `.mbtheme`; the built-in one when it is missing or broken."""
+        from . import themes
+
+        for theme in themes.installed():
+            if theme["name"] == self.color_theme:
+                return theme
+        return themes.validate(themes.BUILTIN)
+
+    def look_font(self):
+        """Noto Sans at the desktop's size when installed, otherwise the desktop font."""
+        from PySide6.QtGui import QFontDatabase
+
+        font = QFont(self.base_font)
+        if "Noto Sans" in QFontDatabase.families():
+            font.setFamily("Noto Sans")
+        return font
+
+    def set_look(self, look):
+        """Switch between Makebench's colors and the desktop's palette."""
+        if look not in LOOKS:
+            raise ValueError(tr("Unknown theme"))
+        self.look = look
+        self.settings.setValue("v1/appearance/look", look)
+        self.apply()
 
 
 def manager():

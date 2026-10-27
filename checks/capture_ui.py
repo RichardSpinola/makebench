@@ -17,6 +17,7 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--sizes", nargs="+", default=["1280x800", "1920x1080"])
     parser.add_argument("--themes", nargs="+", default=["light", "dark"])
+    parser.add_argument("--look", choices=["makebench", "native"], default="makebench")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="makebench-captures-") as temporary:
@@ -51,8 +52,16 @@ def main():
         for theme in args.themes:
             # QA only: offscreen does not receive the compositor scheme. The palette comes
             # from the installed Breeze schemes, with no palette invented by the editor.
-            app.setPalette(kde_palette(theme))
-            manager().set_mode("system")
+            theme_manager = manager()
+            theme_manager.look = args.look
+            if args.look == "native":
+                app.setPalette(kde_palette(theme))
+                theme_manager.set_mode("system")
+            else:
+                # The Design preview keeps the desktop palette; the editor draws its own.
+                theme_manager.system_palette = kde_palette(theme)
+                theme_manager.set_mode(theme)
+            window.canvas.set_project(window.project)
             for size in args.sizes:
                 width, height = map(int, size.split("x"))
                 window.resize(width, height)
@@ -82,7 +91,7 @@ def main():
                         ):
                             QTest.qWait(50)
                     QTest.qWait(400 if mode == "logic" else 100)
-                    filename = args.output / f"{theme}-{size}-{mode}.png"
+                    filename = args.output / f"{args.look}-{theme}-{size}-{mode}.png"
                     if (
                         not (window.publish_dialog if mode == "publish" else window)
                         .grab()

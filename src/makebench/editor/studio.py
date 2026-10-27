@@ -866,6 +866,11 @@ class StudioMixin(
         """Update icons and keep the selection/fields intact when switching appearance."""
         register(self)
         QTimer.singleShot(0, self, self._sync_native_bars)
+        if getattr(self, "project", None) is not None and _tokens.get("look") != getattr(
+            self, "_preview_look", None
+        ):
+            self._preview_look = _tokens.get("look")
+            self.canvas.set_project(self.project)
         from PySide6.QtWidgets import QAbstractButton
 
         for button in self.findChildren(QAbstractButton):

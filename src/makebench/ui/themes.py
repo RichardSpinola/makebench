@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 """Color themes for the editor, stored as small `.mbtheme` JSON files."""
 
 from __future__ import annotations

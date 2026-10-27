@@ -32,6 +32,15 @@ from makebench.i18n import tr
 EDGES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
 
 
+def native_look(widget) -> None:
+    """The preview shows the desktop's own palette and font, not the editor's look."""
+    from makebench.ui.theme import manager
+
+    theme = manager()
+    widget.setPalette(theme.system_palette)
+    widget.setFont(theme.base_font)
+
+
 class ResizeHandle(QWidget):
     """Handle drawn over the component without taking layout space."""
 
@@ -287,6 +296,8 @@ class PreviewCanvas(QFrame):
         surface.setStyleSheet(
             qt_stylesheet(window_style(project.root.properties), "mbWindowPreview")
         )
+        native_look(self.title_bar)
+        native_look(surface)
         surface.setMinimumSize(surface.minimumSize().expandedTo(QSize(360, 320)))
         surface.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._layout.addWidget(surface, 1)

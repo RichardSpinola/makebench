@@ -69,3 +69,57 @@ class ThemeFileTests(unittest.TestCase):
         self.assertEqual(
             [t["name"] for t in themes.installed(self.folder)], ["Makebench", "Forest"]
         )
+
+
+class MakebenchLookTests(unittest.TestCase):
+    """The default look supplies a palette; desktop colors bring the system's back."""
+
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from makebench.ui.theme import manager
+
+        self.theme = manager()
+        saved = (self.theme.look, self.theme.mode)
+        self.addCleanup(self.restore, saved)
+
+    def restore(self, saved):
+        self.theme.look, self.theme.mode = saved
+        self.theme.apply()
+
+    def test_tokens_are_legible_in_both_modes(self):
+        from makebench.ui.theme import contrast, look_tokens
+
+        theme = themes.validate(themes.BUILTIN)
+        for dark in (False, True):
+            t = look_tokens(theme, dark)
+            for key in ("text", "muted", "success", "warning", "error", "info"):
+                for bg in ("panel", "raised", "sidebar"):
+                    with self.subTest(dark=dark, key=key, bg=bg):
+                        self.assertGreaterEqual(contrast(t[key], t[bg]), 4.5)
+            self.assertGreaterEqual(contrast(t["accent"], t["panel"]), 3)
+            self.assertGreaterEqual(contrast(t["on_accent"], t["fill"]), 4.5)
+
+    def test_switching_looks_sets_and_restores_the_palette(self):
+        from PySide6.QtGui import QPalette
+
+        window = QPalette.ColorRole.Window
+        self.theme.look, self.theme.mode = "native", "system"
+        self.theme.apply()
+        native = self.app.palette().color(window).name()
+        self.theme.look, self.theme.mode = "makebench", "dark"
+        self.theme.apply()
+        self.assertEqual(self.app.palette().color(window).name(), "#2b2e32")
+        self.assertEqual(self.theme.tokens["look"], "makebench")
+        self.assertEqual(self.app.styleSheet(), "")
+        self.theme.mode = "light"
+        self.theme.apply()
+        self.assertEqual(self.app.palette().color(window).name(), "#eceef0")
+        self.theme.look = "native"
+        self.theme.apply()
+        self.assertEqual(self.app.palette().color(window).name(), native)
+        self.assertEqual(self.app.palette().resolveMask(), 0)

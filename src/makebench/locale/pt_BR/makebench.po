@@ -6607,3 +6607,19 @@ msgstr "escuro"
 #: src/makebench/ui/themes.py
 msgid "light"
 msgstr "claro"
+
+#: src/makebench/editor/settings.py
+msgid "Desktop colors"
+msgstr "Cores do sistema"
+
+#: src/makebench/editor/settings.py
+msgid "Desktop colors keep your system's palette, as in other KDE or GNOME apps."
+msgstr "Cores do sistema mantêm a paleta do seu desktop, como nos outros apps do KDE ou GNOME."
+
+#: src/makebench/editor/settings.py
+msgid "Look"
+msgstr "Visual"
+
+#: src/makebench/editor/settings.py
+msgid "Makebench"
+msgstr "Makebench"

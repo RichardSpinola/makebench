@@ -34,6 +34,7 @@ from .look import make_muted, make_title
 from makebench.i18n import language, tr
 
 DEFAULTS = {
+    "appearance/look": "makebench",
     "appearance/theme": "system",
     "appearance/accent": "system",
     "appearance/scale": 100,
@@ -53,6 +54,7 @@ DEFAULTS = {
     "test/duration": True,
 }
 CHOICES = {
+    "appearance/look": ["makebench", "native"],
     "appearance/theme": ["system", "light", "dark"],
     "appearance/accent": ["system"],
     "appearance/scale": [90, 100, 115, 125, 130, 150],
@@ -297,6 +299,7 @@ class EditorPreferences(SettingsShell):
     def populate(self, group, prefix):
         """Create controls bound to versioned keys and validated options."""
         labels = {
+            "appearance/look": tr("Look"),
             "appearance/theme": tr("Theme"),
             "appearance/accent": tr("Accent color"),
             "appearance/scale": tr("Text size"),
@@ -316,6 +319,7 @@ class EditorPreferences(SettingsShell):
             "test/duration": tr("Show run time"),
         }
         option_labels = {
+            "appearance/look": [tr("Makebench"), tr("Desktop colors")],
             "appearance/theme": [tr("System"), tr("Light"), tr("Dark")],
             "appearance/accent": [tr("From the system")],
             "appearance/scale": ["90%", "100%", "115%", "125%", "130%", "150%"],
@@ -359,6 +363,8 @@ class EditorPreferences(SettingsShell):
                 field,
                 tr("Fixed 4-space indentation.")
                 if key == "editor/code_font"
+                else tr("Desktop colors keep your system's palette, as in other KDE or GNOME apps.")
+                if key == "appearance/look"
                 else tr("Takes effect the next time Makebench starts.")
                 if key == "appearance/language"
                 else "",
@@ -392,6 +398,7 @@ class EditorPreferences(SettingsShell):
 def apply_preferences(window):
     """Apply theme, code, recovery and behavior to the existing widgets."""
     theme = manager()
+    theme.look = preference("appearance/look")
     theme.mode = preference("appearance/theme")
     theme.accent = "system"
     theme.scale = preference("appearance/scale")
