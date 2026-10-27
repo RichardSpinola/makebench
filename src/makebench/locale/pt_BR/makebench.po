@@ -1651,10 +1651,6 @@ msgid "Edit {name}"
 msgstr "Editar {name}"
 
 #: src/makebench/editor/window.py
-msgid "Editing a state: properties only. Project > Restore selection from Default removes differences."
-msgstr "Editando estado: somente propriedades. Projeto > Restaurar seleção do Padrão remove diferenças."
-
-#: src/makebench/editor/window.py
 msgid "Editing preview · Ctrl+drag moves free components to another container."
 msgstr "Prévia de edição · Ctrl+arraste transfere componentes livres para outro contêiner."
 
@@ -6759,3 +6755,79 @@ msgstr "Cópia de {name}"
 #: src/makebench/editor/themes_ui.py
 msgid "The default theme: sober, dense and at home among Qt programs."
 msgstr "O tema padrão: sóbrio, compacto e à vontade entre programas Qt."
+
+#: src/makebench/editor/shell.py
+msgid "Areas"
+msgstr "Áreas"
+
+#: src/makebench/editor/shell.py
+msgid "Blocks and nodes for what happens"
+msgstr "Blocos e nós do que acontece"
+
+#: src/makebench/editor/shell.py
+msgid "CODE"
+msgstr "CÓDIGO"
+
+#: src/makebench/editor/shell.py
+msgid "DESIGN"
+msgstr "DESIGN"
+
+#: src/makebench/editor/shell.py
+msgid "Drag components into the window"
+msgstr "Arraste componentes para a janela"
+
+#: src/makebench/editor/shell.py
+msgid "Editing a state: properties only"
+msgstr "Editando um estado: só propriedades"
+
+#: src/makebench/editor/shell.py
+msgid "How the windows connect"
+msgstr "Como as janelas se ligam"
+
+#: src/makebench/editor/shell.py
+msgid "LOGIC"
+msgstr "LÓGICA"
+
+#: src/makebench/editor/shell.py
+msgid "MAP"
+msgstr "MAPA"
+
+#: src/makebench/editor/shell.py
+msgid "No problems"
+msgstr "Sem problemas"
+
+#: src/makebench/editor/shell.py
+msgid "Not saved yet"
+msgstr "Ainda não salvo"
+
+#: src/makebench/editor/shell.py
+msgid "Open the version history"
+msgstr "Abrir o histórico de versões"
+
+#: src/makebench/editor/shell.py
+msgid "Pieces"
+msgstr "Peças"
+
+#: src/makebench/editor/shell.py
+msgid "Plugins and themes"
+msgstr "Plugins e temas"
+
+#: src/makebench/editor/shell.py
+msgid "Show the project's problems"
+msgstr "Ver os problemas do projeto"
+
+#: src/makebench/editor/shell.py
+msgid "Switch between light and dark"
+msgstr "Alternar entre claro e escuro"
+
+#: src/makebench/editor/shell.py
+msgid "The project's Python"
+msgstr "O Python do projeto"
+
+#: src/makebench/editor/shell.py
+msgid "{count} window"
+msgstr "{count} janela"
+
+#: src/makebench/editor/shell.py
+msgid "{count} windows"
+msgstr "{count} janelas"

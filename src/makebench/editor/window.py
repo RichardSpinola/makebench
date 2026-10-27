@@ -166,6 +166,9 @@ class MainWindow(StudioMixin, QMainWindow):
         )
         if file_menu is not None:
             file_menu.insertAction(file_menu.actions()[-2], history_action)
+        from .shell import install_shell
+
+        install_shell(self, application_icon())
         self._refresh()
         self.remember_project()
 
@@ -647,12 +650,6 @@ class MainWindow(StudioMixin, QMainWindow):
         )
         if hasattr(self, "selected_ids"):
             self.canvas.select_many(self.selected_ids)
-        if self.active_state != "@default":
-            self.statusBar().showMessage(
-                tr(
-                    "Editing a state: properties only. Project > Restore selection from Default removes differences."
-                )
-            )
         if len(getattr(self, "selected_ids", [])) > 1:
             self.select_multiple(self.selected_ids)
         self._update_actions()
@@ -744,17 +741,6 @@ class MainWindow(StudioMixin, QMainWindow):
             )
         self.setWindowModified(
             self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
-        )
-        count = len(list(self.project.root.walk())) - 1
-        state = (
-            tr("Unsaved changes")
-            if self.history.dirty or self.source.dirty or self.logic.pending or self.script_dirty()
-            else tr("Ready")
-        )
-        self.statusBar().showMessage(
-            state
-            + " · "
-            + ntr("{count} component", "{count} components", count).format(count=count)
         )
         self.sync_studio()
 

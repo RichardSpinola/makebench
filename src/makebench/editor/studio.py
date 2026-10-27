@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -294,31 +293,26 @@ class StudioMixin(
         self.mode_group = QButtonGroup(self)
         self.mode_group.setExclusive(True)
         self.mode_buttons = {}
-        self.mode_switcher = QWidget()
-        mode_row = QHBoxLayout(self.mode_switcher)
-        mode_row.setContentsMargins(6, 0, 0, 0)
-        mode_row.setSpacing(0)
+        from .shell import AreaBar, AreaButton
+
+        self.mode_switcher = AreaBar(self)
+        self.mode_switcher.hide()
         for number, (mode, name) in enumerate(MODE_LABELS.items(), 1):
-            button = QToolButton()
+            button = AreaButton()
             button.setIcon(icon(MODE_ICONS[mode]))
-            button.setIconSize(QSize(16, 16))
-            button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
             button.setText(name)
             button.setToolTip(name + f" · Ctrl+{number}")
-            button.setFixedSize(84, 26)
-            button.setAutoRaise(True)
             button.setProperty("mode", True)
             button.setCheckable(True)
             button.setAccessibleName(tr("{mode} mode").format(mode=name))
             button.clicked.connect(lambda _, m=mode: self.set_mode(m))
             self.mode_group.addButton(button)
-            mode_row.addWidget(button)
+            self.mode_switcher.add_area(button)
             self.mode_buttons[mode] = button
             action = QAction(tr("{mode} mode").format(mode=name), self)
             action.setShortcut(QKeySequence(f"Ctrl+{number}"))
             action.triggered.connect(lambda _, m=mode: self.set_mode(m))
             self.addAction(action)
-        self.menuBar().setCornerWidget(self.mode_switcher, Qt.Corner.TopRightCorner)
         spacer = QWidget()
         from PySide6.QtWidgets import QSizePolicy
 
@@ -531,6 +525,9 @@ class StudioMixin(
             self.publish_panel.sync()
         if hasattr(self, "map_panel") and self.tabs.currentIndex() == 3:
             self.map_panel.sync()
+        from .shell import sync_shell
+
+        sync_shell(self)
 
     def sync_problems(self):
         """Gather static diagnostics, linked to their flow or line."""
@@ -886,6 +883,9 @@ class StudioMixin(
             node = self.project.find(identifier)
             if node:
                 item.setIcon(0, icon(node.kind.value))
+        from .shell import sync_shell
+
+        sync_shell(self)
 
     def toggle_side(self, side):
         """Toggle only the panel that belongs to the current mode."""
