@@ -379,6 +379,12 @@ class ThemeManager(QObject):
             font.setFamily("Noto Sans")
         return font
 
+    def set_color_theme(self, name):
+        """Use one of the installed `.mbtheme` files with Makebench's own look."""
+        self.color_theme = name
+        self.settings.setValue("v1/appearance/color_theme", name)
+        self.set_look("makebench")
+
     def set_look(self, look):
         """Switch between Makebench's colors and the desktop's palette."""
         if look not in LOOKS:

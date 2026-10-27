@@ -3,6 +3,7 @@
 
 import copy
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -43,9 +44,8 @@ class ThemeFileTests(unittest.TestCase):
             self.theme(light=None),
         ]
         for index, data in enumerate(bad):
-            with self.subTest(index=index):
-                with self.assertRaises(themes.ThemeError):
-                    themes.load(self.write(data, f"b{index}.mbtheme"))
+            with self.subTest(index=index), self.assertRaises(themes.ThemeError):
+                themes.load(self.write(data, f"b{index}.mbtheme"))
 
     def test_rejects_huge_and_missing_files(self):
         with self.assertRaises(themes.ThemeError):
@@ -123,3 +123,48 @@ class MakebenchLookTests(unittest.TestCase):
         self.theme.apply()
         self.assertEqual(self.app.palette().color(window).name(), native)
         self.assertEqual(self.app.palette().resolveMask(), 0)
+
+
+class ThemesDialogTests(unittest.TestCase):
+    def setUp(self):
+        from PySide6.QtWidgets import QApplication
+
+        self.app = QApplication.instance() or QApplication([])
+        from PySide6.QtCore import QSettings
+
+        from makebench.ui.theme import manager
+
+        self.manager = manager()
+        self.folder = Path(tempfile.mkdtemp())
+        # Never write the person's real settings.
+        self.saved = (self.manager.settings, self.manager.look, self.manager.color_theme)
+        self.manager.settings = QSettings(
+            str(self.folder / "settings.ini"), QSettings.Format.IniFormat
+        )
+
+    def tearDown(self):
+        self.manager.settings, look, self.manager.color_theme = self.saved
+        self.manager.look = look
+        self.manager.apply()
+        shutil.rmtree(self.folder)
+
+    def test_lists_builtin_user_and_desktop_and_applies(self):
+        from makebench.editor.themes_ui import DESKTOP, ThemesDialog
+
+        mine = {**themes.validate(themes.BUILTIN), "name": "Ocean", "accent": "#118899"}
+        themes.add(mine, self.folder)
+        dialog = ThemesDialog(folder=self.folder)
+        names = [dialog.list.item(i).data(256) for i in range(dialog.list.count())]
+        self.assertEqual(names, ["Makebench", "Ocean", DESKTOP])
+        dialog.list.setCurrentRow(1)
+        self.assertTrue(dialog.swatches["fg"].isEnabled())
+        dialog._change_color("accent", "#aa3355")
+        self.assertEqual(themes.load(self.folder / "ocean.mbtheme")["accent"], "#aa3355")
+        dialog.list.setCurrentRow(2)
+        dialog._apply()
+        self.assertEqual(self.manager.look, "native")
+        dialog.list.setCurrentRow(0)
+        self.assertFalse(dialog.swatches["fg"].isEnabled())
+        dialog._apply()
+        self.assertEqual((self.manager.look, self.manager.color_theme), ("makebench", "Makebench"))
+        self.assertFalse(dialog.apply_button.isEnabled())

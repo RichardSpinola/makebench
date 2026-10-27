@@ -61,10 +61,17 @@ def rebuild_menu(window) -> None:
     if menu.actions():
         menu.addSeparator()
     menu.addAction(tr("Manage plugins…"), lambda: PluginsDialog(window).exec())
+    menu.addAction(tr("Themes…"), lambda: open_themes(window))
     from .pieces import rebuild_menu as rebuild_pieces
 
     if hasattr(window, "pieces_menu"):
         rebuild_pieces(window)
+
+
+def open_themes(window) -> None:
+    from .themes_ui import ThemesDialog
+
+    ThemesDialog(window).exec()
 
 
 def ask_enable(parent) -> bool:

@@ -20,6 +20,7 @@ BUILTIN = {
     "format": FORMAT,
     "version": VERSION,
     "name": "Makebench",
+    "about": "The default theme: sober, dense and at home among Qt programs.",
     "accent": "#3a83c9",
     "dark": dict(
         win="#2b2e32",
@@ -78,10 +79,14 @@ def validate(data) -> dict:
     accent = data.get("accent")
     if not isinstance(accent, str) or not COLOR.match(accent):
         raise ThemeError(tr("The theme needs an accent color like #3a83c9."))
+    about = data.get("about", "")
+    if not isinstance(about, str) or len(about) > 200:
+        raise ThemeError(tr("The theme description must be text of up to 200 characters."))
     return {
         "format": FORMAT,
         "version": VERSION,
         "name": name.strip(),
+        "about": about.strip(),
         "accent": accent.lower(),
         "dark": _colors(data.get("dark"), tr("dark")),
         "light": _colors(data.get("light"), tr("light")),
@@ -110,21 +115,25 @@ def slug(name: str) -> str:
 
 
 def installed(folder: Path | None = None) -> list[dict]:
-    """The built-in theme first, then the valid user themes by name; bad files are skipped."""
+    """The built-in theme first, then the valid user themes by name; bad files are skipped.
+
+    Each theme carries its file as "path" (None for the built-in one).
+    """
     found = []
     folder = Path(folder) if folder else user_dir()
     for path in sorted(folder.glob("*.mbtheme")) if folder.is_dir() else []:
         try:
-            found.append(load(path))
+            found.append({**load(path), "path": path})
         except ThemeError:
             continue
     found.sort(key=lambda theme: theme["name"].lower())
-    return [validate(BUILTIN), *[t for t in found if t["name"] != BUILTIN["name"]]]
+    builtin = {**validate(BUILTIN), "path": None}
+    return [builtin, *[t for t in found if t["name"] != BUILTIN["name"]]]
 
 
-def import_theme(source, folder: Path | None = None) -> dict:
-    """Validate a file and copy it, rewritten, into the themes folder without overwriting."""
-    theme = load(source)
+def add(theme: dict, folder: Path | None = None) -> Path:
+    """Save a theme as a new file in the themes folder, never overwriting one."""
+    theme = validate(theme)
     folder = Path(folder) if folder else user_dir()
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / f"{slug(theme['name'])}.mbtheme"
@@ -133,4 +142,10 @@ def import_theme(source, folder: Path | None = None) -> dict:
         target = folder / f"{slug(theme['name'])}-{number}.mbtheme"
         number += 1
     save(target, theme)
-    return theme
+    return target
+
+
+def import_theme(source, folder: Path | None = None) -> dict:
+    """Validate a file and copy it, rewritten, into the themes folder."""
+    theme = load(source)
+    return {**theme, "path": add(theme, folder)}

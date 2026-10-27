@@ -6623,3 +6623,139 @@ msgstr "Visual"
 #: src/makebench/editor/settings.py
 msgid "Makebench"
 msgstr "Makebench"
+
+#: src/makebench/ui/themes.py
+msgid "The theme description must be text of up to 200 characters."
+msgstr "A descrição do tema deve ser um texto de até 200 caracteres."
+
+#: src/makebench/editor/themes_ui.py
+msgid "A theme is a simple JSON file (.mbtheme) you can share with other people."
+msgstr "Um tema é um arquivo JSON simples (.mbtheme) que você pode compartilhar com outras pessoas."
+
+#: src/makebench/editor/themes_ui.py
+msgid "Accent"
+msgstr "Destaque"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Background"
+msgstr "Fundo"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Bars"
+msgstr "Barras"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Built-in"
+msgstr "Embutido"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Built-in themes can't be changed. Make a new one."
+msgstr "Temas embutidos não podem ser alterados. Crie um novo."
+
+#: src/makebench/editor/themes_ui.py
+msgid "Buttons"
+msgstr "Botões"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Choose the colors of the Makebench window. Your apps keep their own look."
+msgstr "Escolha as cores da janela do Makebench. Seus apps mantêm a aparência própria."
+
+#: src/makebench/editor/themes_ui.py
+msgid "Dim text"
+msgstr "Texto fraco"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Dim text sits next to normal text."
+msgstr "O texto fraco fica ao lado do texto normal."
+
+#: src/makebench/editor/themes_ui.py
+msgid "Export .mbtheme…"
+msgstr "Exportar .mbtheme…"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Export theme"
+msgstr "Exportar tema"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Follows your desktop"
+msgstr "Segue o seu desktop"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Import theme"
+msgstr "Importar tema"
+
+#: src/makebench/editor/themes_ui.py
+msgid "In use"
+msgstr "Em uso"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Item {number}"
+msgstr "Item {number}"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Lines"
+msgstr "Linhas"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Makebench themes (*.mbtheme)"
+msgstr "Temas do Makebench (*.mbtheme)"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Name:"
+msgstr "Nome:"
+
+#: src/makebench/editor/themes_ui.py
+msgid "New theme"
+msgstr "Novo tema"
+
+#: src/makebench/editor/themes_ui.py
+msgid "New theme…"
+msgstr "Novo tema…"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Open themes folder"
+msgstr "Abrir pasta de temas"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Panels"
+msgstr "Painéis"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Save theme"
+msgstr "Salvar tema"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Theme colors"
+msgstr "Cores do tema"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Themes"
+msgstr "Temas"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Themes…"
+msgstr "Temas…"
+
+#: src/makebench/editor/themes_ui.py
+msgid "There is already a theme with this name."
+msgstr "Já existe um tema com esse nome."
+
+#: src/makebench/editor/themes_ui.py
+msgid "Uses your system's palette, as in other KDE or GNOME apps."
+msgstr "Usa a paleta do seu sistema, como outros apps do KDE ou GNOME."
+
+#: src/makebench/editor/themes_ui.py
+msgid "Your desktop's colors"
+msgstr "As cores do seu desktop"
+
+#: src/makebench/editor/themes_ui.py
+msgid "Yours"
+msgstr "Seu"
+
+#: src/makebench/editor/themes_ui.py
+msgid "{name} copy"
+msgstr "Cópia de {name}"
+
+#: src/makebench/editor/themes_ui.py
+msgid "The default theme: sober, dense and at home among Qt programs."
+msgstr "O tema padrão: sóbrio, compacto e à vontade entre programas Qt."
