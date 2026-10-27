@@ -36,6 +36,24 @@ class LookTests(unittest.TestCase):
     def menu_titles(self):
         return [action.text().replace("&", "") for action in self.window.menuBar().actions()]
 
+    def test_banner_tints_toward_the_accent_and_carries_the_search(self):
+        from PySide6.QtGui import QPalette
+
+        from makebench.editor.look import header, wash
+
+        banner = header("Title", "Help")
+        palette = banner.palette()
+        tint = wash(palette)
+        self.assertNotEqual(tint, palette.color(QPalette.ColorRole.Window))
+        banner.resize(300, 60)
+        image = banner.grab().toImage()
+        self.assertEqual(image.pixelColor(150, 30), tint)
+        self.assertEqual(image.pixelColor(1, 30), palette.color(QPalette.ColorRole.Highlight))
+        self.window.preferences()
+        dialog = self.window.preferences_dialog
+        self.assertIs(dialog.search.parent(), dialog.banner)
+        dialog.close()
+
     def test_menus_follow_the_usual_order_and_quit_is_last(self):
         titles = self.menu_titles()
         expected = [tr(name).replace("&", "") for name in ("&File", "&Edit", "&View", "&Help")]

@@ -30,7 +30,7 @@ from makebench.core.diagnostics import environment_report
 from makebench.core.exporter import effects
 from makebench import __version__
 from .theme import manager, icon
-from .look import make_muted, make_title
+from .look import header, make_muted, make_title
 from makebench.i18n import language, tr
 
 DEFAULTS = {
@@ -104,7 +104,7 @@ class SettingsShell(QDialog):
 
         name_unlabeled_buttons(self)
 
-    def __init__(self, parent, title):
+    def __init__(self, parent, title, help_text="", symbol="settings"):
         """The search filters rows across all pages and keeps keyboard focus."""
         super().__init__(parent)
         self.setWindowTitle(title)
@@ -113,10 +113,13 @@ class SettingsShell(QDialog):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(10, 10, 10, 10)
         outer.setSpacing(8)
+        self.banner = header(title, help_text, icon(symbol))
         self.search = QLineEdit()
         self.search.setPlaceholderText(tr("Search settings…"))
         self.search.setClearButtonEnabled(True)
-        outer.addWidget(self.search)
+        self.search.setMinimumWidth(260)
+        self.banner.add_widget(self.search)
+        outer.addWidget(self.banner)
         body = QHBoxLayout()
         self.sections = QListWidget()
         self.sections.setMaximumWidth(200)
@@ -168,6 +171,12 @@ class SettingsShell(QDialog):
 
         card = QFrame()
         card.setFrameShape(QFrame.Shape.NoFrame)
+        # A raised card with a thin edge, from palette roles so both looks follow it.
+        card.setObjectName("settings_card")
+        card.setStyleSheet(
+            "#settings_card { background: palette(alternate-base); border: 1px solid palette(mid);"
+            " border-radius: 6px; }"
+        )
         layout = QVBoxLayout(card)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(8)
@@ -225,7 +234,7 @@ class EditorPreferences(SettingsShell):
 
     def __init__(self, window):
         """Build the pages and keep each option with a single source of truth."""
-        super().__init__(window, tr("Makebench preferences"))
+        super().__init__(window, tr("Makebench preferences"), tr("Changes apply immediately."))
         self.window = window
         self.settings = window.settings
         self.controls = {}
@@ -236,7 +245,7 @@ class EditorPreferences(SettingsShell):
             ("test", tr("Testing")),
         ]:
             page = self.add_page(title)
-            group = self.group(page, title, tr("Changes apply immediately."))
+            group = self.group(page, title)
             self.populate(group, prefix)
             if prefix == "projects":
                 clear = QPushButton(tr("Clear recent projects"))
@@ -491,7 +500,12 @@ class ApplicationSettings(SettingsShell):
 
     def __init__(self, window):
         """Identity, icon, backend, dependencies, permissions, windows, data and targets."""
-        super().__init__(window, tr("Application settings"))
+        super().__init__(
+            window,
+            tr("Application settings"),
+            tr("Saved with the project and used when it runs."),
+            "window",
+        )
         self.window = window
         self.fields = {}
         self.validation_errors = {}

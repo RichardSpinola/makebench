@@ -7031,3 +7031,9 @@ msgstr "Continuar um projeto salvo"
 #: src/makebench/editor/projects.py
 msgid "Start from a template"
 msgstr "Começar de um modelo"
+
+msgid "Publish"
+msgstr "Publicar"
+
+msgid "Saved with the project and used when it runs."
+msgstr "Salvo com o projeto e usado quando ele roda."

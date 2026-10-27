@@ -36,6 +36,8 @@ from makebench.core.portable import (
 )
 from makebench.i18n import tr
 from .errors import describe
+from .look import header
+from .theme import icon
 
 
 class BuildJob(QThread):
@@ -125,10 +127,10 @@ class PrepareJob(QThread):
 
 
 def stage_text(active=None):
-    """Export steps, with the active one in brackets (Format → Check → Build → Result)."""
+    """Export steps, with the active one in bold (Format → Check → Build → Result)."""
     names = [tr("Format"), tr("Verify"), tr("Build"), tr("Result")]
     return "  →  ".join(
-        f"[{number} {name}]" if number == active else f"{number} {name}"
+        f"<b>{number} {name}</b>" if number == active else f"{number} {name}"
         for number, name in enumerate(names, 1)
     )
 
@@ -144,16 +146,18 @@ class PublishPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 10, 12, 10)
         layout.setSpacing(8)
-        self.stages = QLabel(stage_text())
-        layout.addWidget(self.stages)
-        header = QHBoxLayout()
+        banner = header(tr("Publish"), stage_text(), icon("export"))
+        layout.addWidget(banner)
+        # The banner's phrase follows the export: Format → Verify → Build → Result.
+        self.stages = banner.help
+        summary_row = QHBoxLayout()
         self.summary = QLabel()
-        header.addWidget(self.summary, 1)
+        summary_row.addWidget(self.summary, 1)
         edit = QPushButton(tr("Application…"))
         self.edit_application_button = edit
         edit.clicked.connect(window.application_settings)
-        header.addWidget(edit)
-        layout.addLayout(header)
+        summary_row.addWidget(edit)
+        layout.addLayout(summary_row)
         form = QFormLayout()
         self.destination_form = form
         self.product = QComboBox()

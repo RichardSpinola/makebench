@@ -4,8 +4,8 @@
 Colors come from palette roles, never fixed values, so they follow theme changes.
 """
 
-from PySide6.QtCore import QEvent, QObject, Qt
-from PySide6.QtGui import QPalette
+from PySide6.QtCore import QEvent, QObject, QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QIcon, QPainter, QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -38,16 +38,60 @@ def make_muted(label: QLabel) -> QLabel:
     return label
 
 
-def header(title: str, help_text: str = "") -> QWidget:
+def wash(palette: QPalette, amount: float = 0.13) -> QColor:
+    """The window color tinted toward the accent, as in the start page's banner."""
+    base, accent = (
+        palette.color(QPalette.ColorRole.Window),
+        palette.color(QPalette.ColorRole.Highlight),
+    )
+    return QColor(
+        *(round(a + (b - a) * amount) for a, b in zip(base.getRgb()[:3], accent.getRgb()[:3]))
+    )
+
+
+class Banner(QWidget):
+    """A dialog or page header: accent-tinted band, an accent edge, title and one phrase."""
+
+    def __init__(self, title: str, help_text: str = "", icon: QIcon | None = None):
+        super().__init__()
+        self.row = QHBoxLayout(self)
+        self.row.setContentsMargins(16, 10, 12, 10)
+        self.row.setSpacing(12)
+        if icon is not None and not icon.isNull():
+            self.icon = QLabel()
+            self.icon.setPixmap(icon.pixmap(QSize(24, 24), self.devicePixelRatioF()))
+            self.row.addWidget(self.icon, 0, Qt.AlignmentFlag.AlignVCenter)
+        text = QVBoxLayout()
+        text.setSpacing(1)
+        self.title = make_title(QLabel(title))
+        text.addWidget(self.title)
+        self.help = make_muted(QLabel(help_text))
+        self.help.setWordWrap(True)
+        self.help.setVisible(bool(help_text))
+        text.addWidget(self.help)
+        self.row.addLayout(text, 1)
+
+    def add_widget(self, widget):
+        """Put a control (a search field, a button) on the banner's right side."""
+        self.row.addWidget(widget, 0, Qt.AlignmentFlag.AlignVCenter)
+
+    def paintEvent(self, _event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        palette = self.palette()
+        rect = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        painter.setPen(palette.color(QPalette.ColorRole.Mid))
+        painter.setBrush(wash(palette))
+        painter.drawRoundedRect(rect, 6, 6)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(palette.color(QPalette.ColorRole.Highlight))
+        painter.drawRoundedRect(QRectF(0, 0, 4, self.height()), 2, 2)
+        painter.end()
+
+
+def header(title: str, help_text: str = "", icon: QIcon | None = None) -> Banner:
     """An area or dialog header: a title and, below it, one phrase of help."""
-    widget = QWidget()
-    layout = QVBoxLayout(widget)
-    layout.setContentsMargins(0, 0, 0, 4)
-    layout.setSpacing(2)
-    layout.addWidget(make_title(QLabel(title)))
-    if help_text:
-        layout.addWidget(make_muted(QLabel(help_text)))
-    return widget
+    return Banner(title, help_text, icon)
 
 
 def button_row(*buttons, trailing=()) -> QHBoxLayout:

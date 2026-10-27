@@ -116,6 +116,10 @@ class StartupTests(unittest.TestCase):
             self.assertTrue(QSvgRenderer(str(path)).isValid())
         image = watermark_image(True, QSize(68, 40))
         self.assertTrue(image.pixelColor(30, 20).alpha() > 0)
+        gray = watermark_image(False, QSize(80, 80), gray=True)
+        pixels = [gray.pixelColor(x, y) for x in range(0, 80, 4) for y in range(0, 80, 4)]
+        self.assertTrue(any(p.alpha() for p in pixels))
+        self.assertTrue(all(p.red() == p.green() == p.blue() for p in pixels if p.alpha()))
         self.window.settings.setValue("v1/appearance/watermark", False)
         with unittest.mock.patch("makebench.editor.startup.watermark_image") as draw:
             paint_watermark(self.window.home_page, self.window.settings)

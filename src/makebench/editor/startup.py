@@ -68,15 +68,21 @@ def logo_renderer(settings=None):
 _watermarks = {}
 
 
-def watermark_image(retro_style, size):
-    """The emblem in its own colors; the hues keep its shapes readable when faded."""
-    key = (retro_style, size.width(), size.height())
+def watermark_image(retro_style, size, gray=False):
+    """The emblem in its own colors, or in grays for the dark theme where hues glare."""
+    key = (retro_style, size.width(), size.height(), gray)
     if key not in _watermarks:
-        image = QImage(size, QImage.Format.Format_ARGB32_Premultiplied)
+        image = QImage(size, QImage.Format.Format_ARGB32)
         image.fill(Qt.GlobalColor.transparent)
         painter = QPainter(image)
         QSvgRenderer(str(RETRO_LOGO if retro_style else LOGO)).render(painter)
         painter.end()
+        if gray:
+            alpha = image.convertToFormat(QImage.Format.Format_Alpha8)
+            image = image.convertToFormat(QImage.Format.Format_Grayscale8).convertToFormat(
+                QImage.Format.Format_ARGB32
+            )
+            image.setAlphaChannel(alpha)
         _watermarks[key] = image
     return _watermarks[key]
 
@@ -87,9 +93,12 @@ def paint_watermark(widget, settings=None):
         return
     old_style = retro(settings)
     size = QSize(1000, 588) if old_style else QSize(860, 860)
+    dark = manager().tokens["dark"]
     painter = QPainter(widget)
-    painter.setOpacity(0.12 if manager().tokens["dark"] else 0.2)
-    painter.drawImage(-70, widget.height() - size.height() + 250, watermark_image(old_style, size))
+    painter.setOpacity(0.1 if dark else 0.2)
+    painter.drawImage(
+        -70, widget.height() - size.height() + 250, watermark_image(old_style, size, dark)
+    )
     painter.end()
 
 

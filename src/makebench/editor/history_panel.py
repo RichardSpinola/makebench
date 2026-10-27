@@ -28,7 +28,8 @@ from makebench.core.storage import load_project
 from makebench.i18n import ntr, tr
 
 from .errors import show_error
-from .look import make_title
+from .look import header
+from .theme import icon
 
 
 class _Signals(QObject):
@@ -111,10 +112,10 @@ class HistoryDialog(QDialog):
         self.setWindowTitle(tr("Version history"))
         self.resize(640, 640)
         layout = QVBoxLayout(self)
-        layout.addWidget(make_title(QLabel(tr("Version history"))))
-        self.status = QLabel()
-        self.status.setWordWrap(True)
-        layout.addWidget(self.status)
+        banner = header(tr("Version history"), " ", icon("history"))
+        layout.addWidget(banner)
+        # The banner's phrase says where history stands: off, empty or how many versions.
+        self.status = banner.help
         self.enable = QPushButton(tr("Turn on version history"))
         self.enable.setDefault(True)
         self.enable.clicked.connect(self.turn_on)
