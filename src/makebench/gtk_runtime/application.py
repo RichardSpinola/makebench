@@ -62,6 +62,8 @@ class GtkRuntime:
         self.open_windows = set()
         self.states = {}
         self.pending = []
+        self.timers = {}
+        self.closing = {}
         self.current = project.entry_window or project.root.id
         self.process = None
         self.task = None
@@ -215,6 +217,7 @@ class GtkRuntime:
                 start_components(view.root, view.widgets, self.root)
             self.set_busy(False)
             self.queue_event(self.current, "start")
+            self.start_timer(self.current)
             self.emit("ready")
         elif kind == "debug":
             self.observer(message)
@@ -224,6 +227,7 @@ class GtkRuntime:
             self.set_busy(False)
             self.emit("done", **{k: v for k, v in message.items() if k != "type"})
             self.dispatch()
+            self.finish_closing()
         elif kind == "log":
             self.output(message["channel"], message["text"])
         elif kind == "error":
@@ -242,7 +246,7 @@ class GtkRuntime:
 
     def queue_event(self, identifier, kind="click"):
         """Pick state-specific flows before generic ones."""
-        if kind == "click" and self.busy:
+        if kind in {"click", "change"} and self.busy:
             return
         owner = self.project.window_of(identifier)
         if owner is None:
@@ -276,7 +280,7 @@ class GtkRuntime:
         if reset:
             if identifier in self.windows:
                 self.windows[identifier].destroy()
-            view = GtkView(root, self.read_asset, self.queue_event)
+            view = GtkView(root, self.read_asset, self.queue_event, self.queue_event)
             self.views[identifier] = view
             if self.Adw:
                 window = self.Adw.ApplicationWindow(application=self.app)
@@ -313,6 +317,7 @@ class GtkRuntime:
 
             start_components(root, self.views[identifier].widgets, self.root)
             self.queue_event(identifier, "start")
+            self.start_timer(identifier)
         self.emit("navigation", windows=sorted(self.open_windows), states=dict(self.states))
         return reset
 
@@ -333,7 +338,9 @@ class GtkRuntime:
             }:
                 view.set_text(node.id, p.get("text", ""))
             if node.kind == ComponentKind.CHECKBOX:
+                view.programmatic = True
                 widget.set_active(p.get("checked", False))
+                view.programmatic = False
             if node.kind == ComponentKind.PROGRESS:
                 widget.set_fraction(p.get("value", 0) / 100)
             if node.kind == ComponentKind.IMAGE:
@@ -359,8 +366,52 @@ class GtkRuntime:
         if self.admin:
             self.emit("status", text=tr("Wait for the administrative task to finish."))
             return True
-        self.close_window(identifier)
+        self.close_with_event(identifier, lambda: self.close_window(identifier))
         return True
+
+    def has_flow(self, identifier, kind):
+        """Whether an event of this kind is bound to the component."""
+        return any(
+            f["event"] == {"kind": kind, "component": identifier}
+            for f in self.project.editable_flows
+        )
+
+    def start_timer(self, identifier):
+        """Tick the window's timer flow while it is open; a tick during a task is skipped."""
+        root = next((r for r in self.project.roots if r.id == identifier), None)
+        seconds = root.properties.get("timer_seconds", 0) if root else 0
+        if not seconds or not self.has_flow(identifier, "timer") or identifier in self.timers:
+            return
+
+        def tick():
+            if identifier not in self.open_windows:
+                self.timers.pop(identifier, None)
+                return False
+            if self.active and not self.busy and not self.stopping:
+                self.queue_event(identifier, "timer")
+            return True
+
+        self.timers[identifier] = self.GLib.timeout_add_seconds(seconds, tick)
+
+    def close_with_event(self, identifier, action):
+        """Run the window's close flow first; `action` closes once it ends (at once without one)."""
+        if (
+            self.active
+            and not self.busy
+            and identifier not in self.closing
+            and self.has_flow(identifier, "close")
+        ):
+            self.closing[identifier] = action
+            self.queue_event(identifier, "close")
+            return
+        action()
+
+    def finish_closing(self):
+        """Close the windows whose close flow has ended."""
+        if self.closing and not self.pending and not self.busy:
+            actions, self.closing = list(self.closing.values()), {}
+            for action in actions:
+                action()
 
     def close_window(self, identifier, check_last=True):
         """Close an interface and end the application when no other remains."""
@@ -371,6 +422,7 @@ class GtkRuntime:
         if identifier in self.views:
             stop_components(self.views[identifier].widgets)
         self.open_windows.discard(identifier)
+        self.timers.pop(identifier, None)
         if identifier in self.windows:
             self.windows[identifier].set_visible(False)
         if check_last and not self.open_windows:

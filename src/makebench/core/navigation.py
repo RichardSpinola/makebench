@@ -160,6 +160,12 @@ def validate_navigation(project):
         for key in ("visible", "enabled", "resizable"):
             if key in p and type(p[key]) is not bool:
                 raise ProjectError(tr("Invalid boolean property: {key}").format(key=key))
+        if "timer_seconds" in p and (
+            node.kind != ComponentKind.WINDOW
+            or type(p["timer_seconds"]) is not int
+            or not 0 <= p["timer_seconds"] <= 3600
+        ):
+            raise ProjectError(tr("The timer interval must be between 0 and 3600 seconds."))
         for key in ("width", "height"):
             if key in p and (type(p[key]) is not int or not 1 <= p[key] <= 20000):
                 raise ProjectError(tr("Invalid initial size."))

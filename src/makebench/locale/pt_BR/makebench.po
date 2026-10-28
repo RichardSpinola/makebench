@@ -4002,10 +4002,6 @@ msgstr "Selecione pelo menos três componentes."
 msgid "Select siblings in a Free container in the Default state."
 msgstr "Selecione irmãos em um contêiner Livre no estado Padrão."
 
-#: src/makebench/core/logic.py
-msgid "Select the window or a button to create an event."
-msgstr "Selecione a janela ou um botão para criar um evento."
-
 #: src/makebench/editor/logic.py
 msgid "Select this event's origin in the Designer"
 msgstr "Selecionar a origem deste evento no Designer"
@@ -4589,10 +4585,6 @@ msgstr "O editor é Qt. Esta escolha define os controles do aplicativo que você
 #: src/makebench/editor/window.py
 msgid "The error belongs to another project open in the run."
 msgstr "O erro pertence a outro projeto aberto na execução."
-
-#: src/makebench/core/logic.py
-msgid "The event must point to the window or an existing button."
-msgstr "O evento precisa apontar para a janela ou um botão existente."
 
 #: 
 msgid "The examples are not included in this installation. They are in the examples folder of the source code."
@@ -7000,3 +6992,51 @@ msgstr "Módulo (deixe vazio para nenhum)"
 
 msgid "Could not move to the module"
 msgstr "Não foi possível mover para o módulo"
+
+#: src/makebench/core/logic.py
+msgid "Change: {text}"
+msgstr "Mudança: {text}"
+
+#: src/makebench/core/logic.py
+msgid "Control"
+msgstr "Controle"
+
+#: src/makebench/core/logic.py
+msgid "On change:"
+msgstr "Ao mudar:"
+
+#: src/makebench/core/logic.py
+msgid "On close"
+msgstr "Ao fechar"
+
+#: src/makebench/core/logic.py
+msgid "On close:"
+msgstr "Ao fechar:"
+
+#: src/makebench/core/logic.py
+msgid "On timer"
+msgstr "No temporizador"
+
+#: src/makebench/core/logic.py
+msgid "On timer:"
+msgstr "No temporizador:"
+
+#: src/makebench/core/logic.py
+msgid "Select the window or a control that can fire this event."
+msgstr "Selecione a janela ou um controle que possa disparar este evento."
+
+#: src/makebench/core/logic.py
+msgid "The event must point to the window or an existing control."
+msgstr "O evento deve apontar para a janela ou para um controle existente."
+
+#: src/makebench/core/navigation.py
+msgid "The timer interval must be between 0 and 3600 seconds."
+msgstr "O intervalo do temporizador deve ficar entre 0 e 3600 segundos."
+
+#: src/makebench/core/logic.py
+msgid "This component cannot fire that event."
+msgstr "Este componente não dispara esse evento."
+
+#: src/makebench/editor/inspector.py
+msgid "Timer every (seconds, 0 = off)"
+msgstr "Temporizador a cada (segundos, 0 = desligado)"

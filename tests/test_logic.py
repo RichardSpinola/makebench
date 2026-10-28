@@ -81,6 +81,41 @@ class LogicTests(unittest.TestCase):
         self.project.workflows = []
         self.project.remove(group.id)
 
+    def test_change_close_and_timer_events_bind_to_the_right_components(self):
+        from makebench.core.logic import event_choices
+
+        field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
+        window = self.project.root
+        change = create_flow(self.project, field.id)
+        self.assertEqual(change["event"], {"kind": "change", "component": field.id})
+        close = create_flow(self.project, window.id, kind="close")
+        timer = create_flow(self.project, window.id, kind="timer")
+        self.assertEqual(create_flow(self.project, window.id)["event"]["kind"], "start")
+        self.assertIs(create_flow(self.project, window.id, kind="close"), close)
+        with self.assertRaises(ProjectError):
+            create_flow(self.project, self.button.id, kind="timer")
+        with self.assertRaises(ProjectError):
+            create_flow(self.project, field.id, kind="click")
+        validate(self.project)
+        self.assertEqual(self.project.to_dict()["format_version"], 10)
+        self.assertEqual(
+            {kind for _, _, kind in event_choices(self.project)},
+            {"start", "close", "timer", "click", "change"},
+        )
+        timer["event"]["kind"] = "click"
+        with self.assertRaisesRegex(ProjectError, "cannot fire"):
+            validate(self.project)
+        timer["event"]["kind"] = "timer"
+        self.project.root.properties["timer_seconds"] = 5
+        self.assertEqual(
+            Project.from_dict(self.project.to_dict()).root.properties["timer_seconds"], 5
+        )
+        self.project.root.properties["timer_seconds"] = -1
+        with self.assertRaisesRegex(ProjectError, "timer"):
+            from makebench.core.navigation import validate_navigation
+
+            validate_navigation(self.project)
+
     def test_python_events_are_validated_created_and_converted(self):
         from makebench.core.codegen import convert_to_python, generate
         from makebench.core.logic import create_python_event, guard_removal, is_draft

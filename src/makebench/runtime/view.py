@@ -2,7 +2,15 @@
 """Runnable Qt interface, using the same controls/layouts as the designer."""
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QPlainTextEdit, QPushButton, QTabWidget, QVBoxLayout
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QFrame,
+    QLineEdit,
+    QPlainTextEdit,
+    QPushButton,
+    QTabWidget,
+    QVBoxLayout,
+)
 from makebench.core.project import ComponentKind
 from makebench.core.style import qt_stylesheet, window_style
 from makebench.core.web import WEB_PAGE, is_web
@@ -15,6 +23,7 @@ class RuntimeView(QFrame):
     """Interface instance independent of the editable document and its handles."""
 
     clicked = Signal(str)
+    changed = Signal(str)
 
     def __init__(self, project, read_asset, parent=None, window_root=None):
         """Render the snapshot and keep controls for context reads/changes."""
@@ -106,6 +115,12 @@ class RuntimeView(QFrame):
             layout.addWidget(widget)
             if isinstance(widget, QPushButton):
                 widget.clicked.connect(lambda _, identifier=node.id: self.clicked.emit(identifier))
+            if isinstance(widget, QLineEdit):
+                widget.textEdited.connect(
+                    lambda _, identifier=node.id: self.changed.emit(identifier)
+                )
+            if isinstance(widget, QCheckBox):
+                widget.clicked.connect(lambda _, identifier=node.id: self.changed.emit(identifier))
             if isinstance(widget, QPlainTextEdit):
                 widget.setMaximumBlockCount(2000)
         return frame

@@ -32,7 +32,14 @@ from PySide6.QtWidgets import (
 )
 
 from makebench.core.codegen import generate
-from makebench.core.logic import block_functions, editable, find_unit, function_names, modules
+from makebench.core.logic import (
+    block_functions,
+    editable,
+    event_choices,
+    find_unit,
+    function_names,
+    modules,
+)
 from makebench.core.project import ComponentKind
 from makebench.i18n import language, tr
 
@@ -94,7 +101,7 @@ class LogicPanel(QWidget):
     """Select events, keep the Blockly session and show the matching Python."""
 
     breakpoint_requested = Signal(str, str)
-    add_requested = Signal(str)
+    add_requested = Signal(str, str)
     remove_requested = Signal(str)
     rename_requested = Signal(str, str)
     flow_changed = Signal(dict)
@@ -286,9 +293,11 @@ class LogicPanel(QWidget):
         layout = QVBoxLayout(dialog)
         layout.addWidget(QLabel(tr("When this happens")))
         choices = QComboBox()
-        for index in range(self.targets.count()):
-            choices.addItem(self.targets.itemText(index), self.targets.itemData(index))
-        choices.setCurrentIndex(max(0, choices.findData(self.targets.currentData())))
+        current = self.targets.currentData()
+        for label, component, kind in event_choices(self.get_project()):
+            choices.addItem(label, (component, kind))
+            if component == current and kind in {"start", "click", "change"}:
+                choices.setCurrentIndex(choices.count() - 1)
         layout.addWidget(choices)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -299,7 +308,7 @@ class LogicPanel(QWidget):
         layout.addWidget(buttons)
         dialog.setFixedHeight(dialog.sizeHint().height())
         if dialog.exec() == QDialog.DialogCode.Accepted and choices.currentData():
-            self.add_requested.emit(choices.currentData())
+            self.add_requested.emit(*choices.currentData())
 
     def ensure_loaded(self):
         """Open only local resources, with a temporary profile and no network."""

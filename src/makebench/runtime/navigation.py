@@ -43,11 +43,15 @@ class AppWindow(QMainWindow):
             return
         from makebench.terminal.components import stop_components
 
-        stop_components(self.owner.views[self.identifier].widgets)
-        self.owner.open_windows.discard(self.identifier)
-        self.hide()
+        def finish():
+            stop_components(self.owner.views[self.identifier].widgets)
+            self.owner.stop_timer(self.identifier)
+            self.owner.open_windows.discard(self.identifier)
+            self.hide()
+            self.owner.stop_if_last()
+
         event.ignore()
-        self.owner.stop_if_last()
+        self.owner.close_with_event(self.identifier, finish)
 
 
 class RuntimeNavigation:
@@ -62,6 +66,8 @@ class RuntimeNavigation:
         self.active_states = {}
         self.current_window = self.root_window_id
         self._queued_flows = []
+        self._timers = {}
+        self._closing = {}
         self.view.window_id = self.root_window_id
         for root in self.project.roots:
             self.active_states[root.id] = root.properties.get("initial_state", "@default")
@@ -124,6 +130,7 @@ class RuntimeNavigation:
             view = RuntimeView(self.project, self.read_asset, window_root=root)
             view.window_id = identifier
             view.clicked.connect(self._clicked)
+            view.changed.connect(self._changed)
             window = AppWindow(self, root, view)
             self.views[identifier] = view
             self.app_windows[identifier] = window
@@ -144,6 +151,7 @@ class RuntimeNavigation:
 
             start_components(root, self.views[identifier].widgets, self.session.root)
             self.queue_event(identifier, "start")
+            self.start_timer(identifier)
         return not was_open
 
     def close_app_window(self, identifier, check_last=True):
@@ -155,6 +163,7 @@ class RuntimeNavigation:
         if identifier in self.views:
             stop_components(self.views[identifier].widgets)
         self.open_windows.discard(identifier)
+        self.stop_timer(identifier)
         if identifier in self.app_windows:
             self.app_windows[identifier].hide()
         if check_last:
@@ -165,6 +174,55 @@ class RuntimeNavigation:
         if not self.open_windows:
             self.close_pending = True
             QTimer.singleShot(0, self.stop)
+
+    def has_flow(self, identifier, kind):
+        """Whether an event of this kind is bound to the component."""
+        return any(
+            f["event"] == {"kind": kind, "component": identifier} for f in self.project.workflows
+        )
+
+    def start_timer(self, window_id):
+        """Tick the window's timer flow while it is open; a tick during a task is skipped."""
+        root = next((r for r in self.project.roots if r.id == window_id), None)
+        seconds = root.properties.get("timer_seconds", 0) if root else 0
+        if not seconds or not self.has_flow(window_id, "timer") or window_id in self._timers:
+            return
+        timer = QTimer(self)
+        timer.setInterval(seconds * 1000)
+        timer.timeout.connect(lambda: self._tick(window_id))
+        self._timers[window_id] = timer
+        timer.start()
+
+    def stop_timer(self, window_id):
+        """Stop the window's timer when it closes."""
+        timer = self._timers.pop(window_id, None)
+        if timer:
+            timer.stop()
+
+    def _tick(self, window_id):
+        """Run the timer flow only for an open window and an idle session."""
+        if window_id in self.open_windows and self.session.active and not self.session.busy:
+            self.queue_event(window_id, "timer")
+
+    def close_with_event(self, identifier, action):
+        """Run the window's close flow first; `action` closes once it ends (at once without one)."""
+        if (
+            self.session.active
+            and not self.session.busy
+            and identifier not in self._closing
+            and self.has_flow(identifier, "close")
+        ):
+            self._closing[identifier] = action
+            self.queue_event(identifier, "close")
+            return
+        action()
+
+    def finish_closing(self):
+        """Close the windows whose close flow has ended."""
+        if self._closing and not self._queued_flows and not self.session.busy:
+            pending, self._closing = list(self._closing.values()), {}
+            for action in pending:
+                action()
 
     def widget_for(self, identifier):
         """Find controls in any window already created."""

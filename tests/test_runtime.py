@@ -202,6 +202,25 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("From blocks", w.output.toPlainText())
         self.assertNotIn("no", w.output.toPlainText().split("From blocks")[-1])
 
+    def test_change_timer_and_close_events_run_their_flows(self):
+        field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
+        window = self.project.root
+        window.properties["timer_seconds"] = 1
+        create_flow(self.project, field.id)["body"] = [log("c", "changed")]
+        create_flow(self.project, window.id, kind="timer")["body"] = [log("t", "tick")]
+        create_flow(self.project, window.id, kind="close")["body"] = [log("x", "bye")]
+        w = self.window("")
+        edit = w.view.widgets[field.id]
+        edit.textEdited.emit("a")
+        self.wait(lambda: "changed" in w.output.toPlainText() and not w.session.busy)
+        self.wait(lambda: "tick" in w.output.toPlainText(), timeout=4)
+        seen = []
+        w.session.output.connect(lambda _channel, text: seen.append(text))
+        w.close()
+        self.wait(lambda: w.session.closed)
+        self.assertIn("bye\n", seen)
+        self.windows.remove(w)  # closing the last window already deleted it
+
     def test_block_function_returns_a_value_to_the_event(self):
         from makebench.core.logic import create_block_function
 

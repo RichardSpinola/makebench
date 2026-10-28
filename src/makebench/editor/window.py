@@ -29,6 +29,7 @@ from copy import deepcopy
 from makebench.core.logic import (
     create_block_function,
     create_flow,
+    default_event_kind,
     create_python_event,
     editable,
     find_unit,
@@ -1572,16 +1573,19 @@ class MainWindow(StudioMixin, QMainWindow):
         )
         self.source_label.setText(tr("Your functions · {file}").format(file=label))
 
-    def edit_logic(self, component_id):
+    def edit_logic(self, component_id, kind=None):
         """Create or open the flow of the event selected in the interface."""
         if not self._finish_field_edit():
             return
         try:
             states = [self.active_state] if self.project.states.get(self.active_window) else None
+            node = self.project.find(component_id)
+            kind = kind or (node and default_event_kind(node))
             existing = [
                 f
                 for f in self.project.workflows
                 if f.get("event", {}).get("component") == component_id
+                and f["event"].get("kind") == kind
             ]
             flow = next(
                 (f for f in existing if self.active_state in f.get("states", [])), None
@@ -1589,7 +1593,7 @@ class MainWindow(StudioMixin, QMainWindow):
             python = self.project.programming == "python"
             if flow is None and python:
                 before = self.source_editor.toPlainText()
-                flow, after = create_python_event(self.project, component_id, before, states)
+                flow, after = create_python_event(self.project, component_id, before, states, kind)
                 if after != before:
                     stub = after[len(before.rstrip("\n")) :].strip("\n")
                     if before.strip():
@@ -1597,7 +1601,7 @@ class MainWindow(StudioMixin, QMainWindow):
                     else:
                         self.source_editor.setPlainText(stub + "\n")
             elif flow is None:
-                flow = create_flow(self.project, component_id, states=states)
+                flow = create_flow(self.project, component_id, states=states, kind=kind)
         except ProjectError as exc:
             self._show_error(exc, tr("Could not open the logic"))
             return

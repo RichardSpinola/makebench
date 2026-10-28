@@ -28,7 +28,7 @@ def layout_spec(node):
 class GtkView:
     """One rendered window, with controls reachable through the ctx API."""
 
-    def __init__(self, root, read_asset, clicked):
+    def __init__(self, root, read_asset, clicked, changed=None):
         """Build widgets; never imports functions or starts document events."""
         import gi
 
@@ -39,6 +39,8 @@ class GtkView:
         self.root = root
         self.read_asset = read_asset
         self.clicked = clicked
+        self.changed = changed
+        self.programmatic = False  # true while the app, not the user, edits a control
         self.widgets = {}
         self.frames = {}
         self.tabs = {}
@@ -213,8 +215,10 @@ class GtkView:
                     pass
         elif k == ComponentKind.TEXT_INPUT:
             widget = Gtk.Entry(text=text, placeholder_text=p.get("placeholder", ""))
+            widget.connect("changed", lambda _entry: self.user_changed(node.id))
         elif k == ComponentKind.CHECKBOX:
             widget = Gtk.CheckButton(label=text, active=p.get("checked", False))
+            widget.connect("toggled", lambda _check: self.user_changed(node.id))
         elif k == ComponentKind.PROGRESS:
             widget = Gtk.ProgressBar(show_text=True, fraction=p.get("value", 0) / 100)
         elif k == ComponentKind.TERMINAL:
@@ -269,8 +273,20 @@ class GtkView:
         w.set_vexpand(node.layout != LayoutKind.HORIZONTAL)
         return w
 
+    def user_changed(self, identifier):
+        """Report an edit made by the user, never one made through the ctx API."""
+        if self.changed and not self.programmatic:
+            self.changed(identifier, "change")
+
     def set_text(self, identifier, value):
         """Update text using each GTK control's specific API."""
+        self.programmatic = True
+        try:
+            self._set_text(identifier, value)
+        finally:
+            self.programmatic = False
+
+    def _set_text(self, identifier, value):
         w = self.widgets[identifier]
         Gtk = self.Gtk
         if hasattr(w, "_makebench_label"):

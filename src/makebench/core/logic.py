@@ -25,13 +25,60 @@ TEXT_KINDS = {
 }
 
 
+EVENT_TARGETS = {
+    "start": {ComponentKind.WINDOW},
+    "close": {ComponentKind.WINDOW},
+    "timer": {ComponentKind.WINDOW},
+    "click": {ComponentKind.BUTTON},
+    "change": {ComponentKind.TEXT_INPUT, ComponentKind.CHECKBOX},
+}
+EVENT_SUFFIX = {
+    "start": "start",
+    "close": "close",
+    "timer": "timer",
+    "click": "click",
+    "change": "change",
+}
+
+
+def event_choices(project: Project) -> list[tuple[str, str, str]]:
+    """Every (label, component id, event kind) a flow can be bound to, in document order."""
+    labels = {
+        "start": tr("On start:"),
+        "close": tr("On close:"),
+        "timer": tr("On timer:"),
+        "click": tr("On click:"),
+        "change": tr("On change:"),
+    }
+    choices = []
+    for node in project.walk():
+        for kind, kinds in EVENT_TARGETS.items():
+            if node.kind in kinds:
+                prefix = (
+                    project.window_of(node.id).properties.get("title", tr("Interface")) + " › "
+                    if len(project.roots) > 1
+                    else ""
+                )
+                choices.append((labels[kind] + " " + prefix + node.display_name, node.id, kind))
+    return choices
+
+
+def default_event_kind(node) -> str | None:
+    """The event a component fires when none is named: start, click or change."""
+    return next(
+        (kind for kind in ("start", "click", "change") if node.kind in EVENT_TARGETS[kind]), None
+    )
+
+
 def editable(project: Project) -> bool:
     """Recognize logic of this version without reinterpreting older extensions."""
     return not project.workflows or project.metadata.get("logic_version") == LOGIC_VERSION
 
 
-def create_flow(project: Project, component_id: str, states: list[str] | None = None) -> dict:
-    """Bind window start or button click; reuse an existing binding."""
+def create_flow(
+    project: Project, component_id: str, states: list[str] | None = None, kind: str | None = None
+) -> dict:
+    """Bind an event of a window or component; reuse an existing binding."""
     if not editable(project):
         raise ProjectError(
             tr(
@@ -39,21 +86,17 @@ def create_flow(project: Project, component_id: str, states: list[str] | None = 
             )
         )
     node = project.find(component_id)
-    if node is None or node.kind not in {ComponentKind.WINDOW, ComponentKind.BUTTON}:
-        raise ProjectError(tr("Select the window or a button to create an event."))
-    event = {
-        "kind": "start" if node.kind == ComponentKind.WINDOW else "click",
-        "component": node.id,
-    }
+    kind = kind or (node and default_event_kind(node))
+    if node is None or kind not in EVENT_TARGETS or node.kind not in EVENT_TARGETS[kind]:
+        raise ProjectError(tr("Select the window or a control that can fire this event."))
+    event = {"kind": kind, "component": node.id}
     for flow in project.workflows:
         if flow["event"] == event and sorted(flow.get("states", [])) == sorted(states or []):
             return flow
     project.metadata["logic_version"] = LOGIC_VERSION
     flow = {
         "id": new_id("flow"),
-        "name": tr("On start")
-        if event["kind"] == "start"
-        else tr("Click: {text}").format(text=node.properties.get("text", tr("Button"))),
+        "name": event_name(event["kind"], node),
         "event": event,
         "body": [],
         "workspace": {},
@@ -62,6 +105,18 @@ def create_flow(project: Project, component_id: str, states: list[str] | None = 
         flow["states"] = list(states)
     project.workflows.append(flow)
     return flow
+
+
+def event_name(kind: str, node) -> str:
+    """Readable default name of a new flow."""
+    text = node.properties.get("text", "") or node.properties.get("placeholder", "")
+    return {
+        "start": lambda: tr("On start"),
+        "close": lambda: tr("On close"),
+        "timer": lambda: tr("On timer"),
+        "click": lambda: tr("Click: {text}").format(text=text or tr("Button")),
+        "change": lambda: tr("Change: {text}").format(text=text or tr("Control")),
+    }[kind]()
 
 
 def is_draft(flow: dict) -> bool:
@@ -179,16 +234,22 @@ def called_functions(unit: dict) -> list[str]:
     return found
 
 
-def suggest_function(project: Project, component_id: str, taken) -> str:
+def suggest_function(project: Project, component_id: str, taken, kind: str | None = None) -> str:
     """Build a readable, unused Python name for an event's function."""
     import re
     import unicodedata
 
     node = project.find(component_id)
+    kind = kind or default_event_kind(node)
     if node.kind == ComponentKind.WINDOW:
-        base, suffix = node.properties.get("code_name") or node.properties.get("title", ""), "start"
+        base = node.properties.get("code_name") or node.properties.get("title", "")
     else:
-        base, suffix = node.properties.get("code_name") or node.properties.get("text", ""), "click"
+        base = (
+            node.properties.get("code_name")
+            or node.properties.get("text", "")
+            or node.properties.get("placeholder", "")
+        )
+    suffix = EVENT_SUFFIX[kind]
     ascii_text = unicodedata.normalize("NFKD", str(base)).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^a-z0-9]+", "_", ascii_text.lower()).strip("_")[:40] or "event"
     name = f"on_{slug}_{suffix}"
@@ -200,14 +261,18 @@ def suggest_function(project: Project, component_id: str, taken) -> str:
 
 
 def create_python_event(
-    project: Project, component_id: str, source: str, states: list[str] | None = None
+    project: Project,
+    component_id: str,
+    source: str,
+    states: list[str] | None = None,
+    kind: str | None = None,
 ) -> tuple[dict, str]:
     """Bind an event to a function, adding an empty function when it does not exist yet."""
-    flow = create_flow(project, component_id, states)
+    flow = create_flow(project, component_id, states, kind)
     if is_python_event(flow):
         return flow, source
     names, _ = function_names(source)
-    name = suggest_function(project, component_id, names)
+    name = suggest_function(project, component_id, names, flow["event"]["kind"])
     for key in ("body", "workspace", "errors"):
         flow.pop(key, None)
     flow["function"] = name
@@ -295,11 +360,10 @@ def validate(project: Project) -> None:
             if not isinstance(event, dict):
                 raise ProjectError(tr("Invalid event."))
             node = project.find(event.get("component"))
-            expected = (
-                ComponentKind.WINDOW if event.get("kind") == "start" else ComponentKind.BUTTON
-            )
-            if event.get("kind") not in {"start", "click"} or node is None or node.kind != expected:
-                raise ProjectError(tr("The event must point to the window or an existing button."))
+            if event.get("kind") not in EVENT_TARGETS or node is None:
+                raise ProjectError(tr("The event must point to the window or an existing control."))
+            if node.kind not in EVENT_TARGETS[event["kind"]]:
+                raise ProjectError(tr("This component cannot fire that event."))
             states = flow.get("states", [])
             owner = project.window_of(node.id)
             state_ids = {"@default", *[item["id"] for item in project.states.get(owner.id, [])]}

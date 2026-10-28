@@ -303,7 +303,7 @@ def convert_to_python(project: Project, source: str) -> str:
         if is_python_event(flow):
             continue
         offset, chunk = chunk_at(f"def on_event_{index}(ctx):")
-        name = suggest_function(project, flow["event"]["component"], taken)
+        name = suggest_function(project, flow["event"]["component"], taken, flow["event"]["kind"])
         taken.add(name)
         chunk[offset] = f"def {name}(ctx):"
         chunks.append("\n".join(chunk))

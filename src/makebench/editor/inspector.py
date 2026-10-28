@@ -449,6 +449,14 @@ class Inspector(QWidget):
             self._boolean_field(
                 tr("Resizable"), node.id, "resizable", node.properties.get("resizable", True)
             )
+            self._number_field(
+                tr("Timer every (seconds, 0 = off)"),
+                node.id,
+                "timer_seconds",
+                node.properties.get("timer_seconds", 0),
+                0,
+                3600,
+            )
             self.section(tr("Window look"))
             self._choice_field(
                 tr("Theme"),

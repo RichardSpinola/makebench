@@ -171,6 +171,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
             self.state.hide()
         self.install_navigation(read_asset)
         self.view.clicked.connect(self._clicked)
+        self.view.changed.connect(self._changed)
         self.session.ready.connect(self._ready)
         self.session.request.connect(self._request)
         self.session.output.connect(self._output)
@@ -197,6 +198,12 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         start_components(self.view.window_root, self.view.widgets, self.session.root)
         self.set_status(tr("Application running."))
         self.queue_event(self.root_window_id, "start")
+        self.start_timer(self.root_window_id)
+
+    def _changed(self, identifier):
+        """Fire a control's change flow; edits made while a task runs are not queued."""
+        if not self.session.busy:
+            self.queue_event(identifier, "change")
 
     def _clicked(self, identifier):
         """Fire a button's flow; concurrent tasks are not queued."""
@@ -289,6 +296,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         if message["outcome"] != "success":
             self._queued_flows.clear()
         QTimer.singleShot(0, self.dispatch_next)
+        QTimer.singleShot(0, self.finish_closing)
 
     def _admin_changed(self, active):
         """Keep the elevated task supervised without offering a forced stop."""
@@ -495,13 +503,18 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
     def closeEvent(self, event):
         """Never abandon processes or close during an active elevated task."""
         if not self.session.closed:
-            if len(self.open_windows) > 1 and self.root_window_id in self.open_windows:
-                self.close_app_window(self.root_window_id)
-                event.ignore()
-                return
-            if self.stop():
-                self.close_pending = True
             event.ignore()
+            if len(self.open_windows) > 1 and self.root_window_id in self.open_windows:
+                self.close_with_event(
+                    self.root_window_id, lambda: self.close_app_window(self.root_window_id)
+                )
+                return
+
+            def finish():
+                if self.stop():
+                    self.close_pending = True
+
+            self.close_with_event(self.root_window_id, finish)
             return
         if self.temporary:
             self.temporary.cleanup()

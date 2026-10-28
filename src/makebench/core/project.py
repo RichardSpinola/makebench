@@ -15,7 +15,7 @@ from typing import Any, Iterator
 from uuid import uuid4
 from makebench.i18n import tr
 
-FORMAT_VERSION = 9
+FORMAT_VERSION = 10
 FORMAT_NAME = "makebench.project"
 
 
@@ -40,6 +40,10 @@ class ComponentKind(StrEnum):
     TERMINAL = "terminal"
     SEPARATOR = "separator"
     SPACER = "spacer"
+
+
+V10_EVENTS = {"change", "close", "timer"}
+V10_KINDS: set[ComponentKind] = set()  # grows with each new 1.0 component
 
 
 class LayoutKind(StrEnum):
@@ -400,6 +404,12 @@ class Project:
             node.properties.update(deepcopy(state.get("overrides", {}).get(node.id, {})))
         return clone
 
+    def uses_v10(self) -> bool:
+        """Format 10 adds the change, close and timer events and the 1.0 components."""
+        return any(
+            flow.get("event", {}).get("kind") in V10_EVENTS for flow in self.workflows
+        ) or any(node.kind in V10_KINDS for node in self.walk())
+
     def uses_v5(self) -> bool:
         """Keep writing v4 until a change requires the newer contract."""
 
@@ -660,6 +670,7 @@ class Project:
         result = {
             "format": FORMAT_NAME,
             "format_version": max(
+                10 if self.uses_v10() else 4,
                 9 if self.metadata.get("programming") else 4,
                 8 if self.python_files else 4,
                 6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4,
