@@ -43,10 +43,12 @@ from makebench.editor.logic import LogicPanel
 from makebench.core.history import History
 from makebench.core.project import (
     Component,
+    RANGE_KINDS,
     ComponentKind,
     LayoutKind,
     Project,
     ProjectError,
+    clamp_range,
 )
 from makebench.core.storage import load_project, save_workspace
 from makebench.editor.assets import AssetStore
@@ -842,6 +844,8 @@ class MainWindow(StudioMixin, QMainWindow):
                 if node.properties.get(key) == value:
                     return
                 node.properties[key] = value
+                if node.kind in RANGE_KINDS:
+                    clamp_range(node)
         try:
             Project.from_dict(self.project.to_dict())
         except ProjectError as exc:
@@ -864,6 +868,10 @@ class MainWindow(StudioMixin, QMainWindow):
         }
         if (
             key in structural
+            or (
+                key in {"value", "minimum", "maximum", "step", "decimals"}
+                and self.project.find(identifier).kind in RANGE_KINDS
+            )
             or key in {"width", "height", "resizable", "theme", "accent", "background"}
             or key == "icon"
             and self.project.find(identifier).kind == ComponentKind.WINDOW

@@ -23,6 +23,7 @@ TEXT_KINDS = {
     ComponentKind.CHECKBOX,
     ComponentKind.OUTPUT,
 }
+VALUE_KINDS = {ComponentKind.PROGRESS, ComponentKind.NUMBER, ComponentKind.SLIDER}
 
 
 EVENT_TARGETS = {
@@ -30,7 +31,12 @@ EVENT_TARGETS = {
     "close": {ComponentKind.WINDOW},
     "timer": {ComponentKind.WINDOW},
     "click": {ComponentKind.BUTTON},
-    "change": {ComponentKind.TEXT_INPUT, ComponentKind.CHECKBOX},
+    "change": {
+        ComponentKind.TEXT_INPUT,
+        ComponentKind.CHECKBOX,
+        ComponentKind.NUMBER,
+        ComponentKind.SLIDER,
+    },
 }
 EVENT_SUFFIX = {
     "start": "start",
@@ -475,7 +481,7 @@ def validate(project: Project) -> None:
                         if attribute == "text"
                         else {ComponentKind.CHECKBOX}
                         if attribute == "checked"
-                        else {ComponentKind.PROGRESS}
+                        else VALUE_KINDS
                         if attribute == "value"
                         else set()
                     )
@@ -512,11 +518,7 @@ def validate(project: Project) -> None:
             elif op in {"set_text", "set_enabled", "set_value"}:
                 target(
                     value.get("component"),
-                    TEXT_KINDS
-                    if op == "set_text"
-                    else {ComponentKind.PROGRESS}
-                    if op == "set_value"
-                    else None,
+                    TEXT_KINDS if op == "set_text" else VALUE_KINDS if op == "set_value" else None,
                 )
                 expr("value")
             elif op in {"terminal_start", "terminal_send", "terminal_stop"}:

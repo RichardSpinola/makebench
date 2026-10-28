@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from makebench.core.project import ComponentKind, LayoutKind
+from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, LayoutKind
 from makebench.core.web import WEB_PAGE, is_web, materialize
 from makebench.i18n import tr
 
@@ -46,6 +46,7 @@ class GtkView:
         self.tabs = {}
         self.enabled = {}
         self.hints = set()  # outputs still showing their starting text
+        self.ranges = set()  # numbers and sliders
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
         self.provider = None
@@ -221,6 +222,27 @@ class GtkView:
             widget.connect("toggled", lambda _check: self.user_changed(node.id))
         elif k == ComponentKind.PROGRESS:
             widget = Gtk.ProgressBar(show_text=True, fraction=p.get("value", 0) / 100)
+        elif k in RANGE_KINDS:
+            r = {**RANGE_DEFAULTS, **p}
+            adjustment = Gtk.Adjustment(
+                value=r["value"],
+                lower=r["minimum"],
+                upper=r["maximum"],
+                step_increment=r["step"],
+                page_increment=max(r["step"], (r["maximum"] - r["minimum"]) / 10),
+            )
+            if k == ComponentKind.NUMBER:
+                widget = Gtk.SpinButton(adjustment=adjustment, digits=r["decimals"], numeric=True)
+            else:
+                widget = Gtk.Scale(
+                    orientation=Gtk.Orientation.HORIZONTAL,
+                    adjustment=adjustment,
+                    draw_value=True,
+                    digits=0,
+                    hexpand=True,
+                )
+            self.ranges.add(node.id)
+            widget.connect("value-changed", lambda _widget: self.user_changed(node.id))
         elif k == ComponentKind.TERMINAL:
             from makebench.terminal.gtk import create_terminal
 
@@ -301,6 +323,18 @@ class GtkView:
         else:
             raise ValueError(tr("This component has no text."))
 
+    def set_range(self, identifier, value):
+        """Move a number or slider without telling the application the person did it."""
+        widget = self.widgets[identifier]
+        adjustment = widget.get_adjustment()
+        if not adjustment.get_lower() <= value <= adjustment.get_upper():
+            raise ValueError(tr("The value is outside the limits of the component."))
+        self.programmatic = True
+        try:
+            widget.set_value(value)
+        finally:
+            self.programmatic = False
+
     def read(self, identifier, attribute):
         """Read the current controls, including changes made by the user."""
         w = self.widgets[identifier]
@@ -315,6 +349,9 @@ class GtkView:
         if attribute == "checked":
             return w.get_active()
         if attribute == "value":
+            if isinstance(w, (Gtk.SpinButton, Gtk.Scale)):
+                value = w.get_value()
+                return value if w.get_digits() else int(round(value))
             return round(w.get_fraction() * 100)
             raise ValueError(tr("Unknown property."))
 

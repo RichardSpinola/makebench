@@ -15,7 +15,9 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
+    QDoubleSpinBox,
     QPlainTextEdit,
+    QSlider,
     QPushButton,
     QScrollArea,
     QSplitter,
@@ -26,6 +28,7 @@ from makebench.core.codegen import generate
 from makebench.core.project import Project, ProjectError
 from .session import RuntimeSession
 from makebench.core.project import ComponentKind
+from makebench.ui.renderer import range_value, set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -334,7 +337,11 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                 elif attribute == "checked":
                     value = widget.isChecked()
                 elif attribute == "value":
-                    value = widget.value()
+                    value = (
+                        range_value(widget)
+                        if isinstance(widget, (QDoubleSpinBox, QSlider))
+                        else widget.value()
+                    )
                 else:
                     raise ValueError(tr("Unknown property."))
                 self.session.reply(identifier, value)
@@ -366,9 +373,14 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                 view.set_enabled(component, request["value"])
                 self.session.reply(identifier)
             elif method == "set_value":
-                if widget is None or not 0 <= request["value"] <= 100:
+                if isinstance(widget, (QDoubleSpinBox, QSlider)):
+                    if not widget.minimum() <= request["value"] <= widget.maximum():
+                        raise ValueError(tr("The value is outside the limits of the component."))
+                    set_range_value(widget, request["value"])
+                elif widget is None or not 0 <= request["value"] <= 100:
                     raise ValueError(tr("Progress must be between 0 and 100."))
-                widget.setValue(request["value"])
+                else:
+                    widget.setValue(int(request["value"]))
                 self.session.reply(identifier)
             elif method == "show_page":
                 if view is None:

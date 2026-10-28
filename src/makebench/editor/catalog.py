@@ -27,6 +27,8 @@ COMPONENTS = {
             "Interactive Linux terminal, with colors and keyboard. The preview never starts processes."
         ),
     ),
+    "number": ("input", tr("A number the user types or adjusts, with limits and step.")),
+    "slider": ("input", tr("A bar the user drags to pick a whole number in a range.")),
     "progress": ("feedback", tr("Shows a value between 0 and 100.")),
     "output": ("feedback", tr("Shows messages and task output.")),
 }

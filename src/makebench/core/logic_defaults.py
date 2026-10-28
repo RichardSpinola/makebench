@@ -13,7 +13,7 @@ OPS = [
     ("message", tr("Show message")),
     ("set_text", tr("Change text")),
     ("set_enabled", tr("Enable component")),
-    ("set_value", tr("Change progress")),
+    ("set_value", tr("Change value")),
     ("assign", tr("Set variable")),
     ("call", tr("Call Python function")),
     ("script", tr("Run Bash")),
@@ -43,7 +43,7 @@ def default_block(op, project, window):
     if op in {"set_text", "set_enabled", "set_value", "show_page"}:
         kinds = {
             "set_text": {"label", "button", "text_input", "checkbox", "output"},
-            "set_value": {"progress"},
+            "set_value": {"progress", "number", "slider"},
             "show_page": {"page"},
         }.get(op)
         target = next((n for n in components if kinds is None or n.kind.value in kinds), None)

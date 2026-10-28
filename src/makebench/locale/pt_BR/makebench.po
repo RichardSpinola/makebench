@@ -674,10 +674,6 @@ msgstr "Alterar texto de componente"
 msgid "Change icon…"
 msgstr "Trocar ícone…"
 
-#: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
-msgid "Change progress"
-msgstr "Alterar progresso"
-
 #: 
 msgid "Change properties"
 msgstr "Alterar propriedades"
@@ -3449,10 +3445,6 @@ msgstr "Ler texto do componente"
 #: src/makebench/core/behaviors.py
 msgid "Read field"
 msgstr "Ler campo"
-
-#: src/makebench/editor/development.py
-msgid "Read progress"
-msgstr "Ler progresso"
 
 #: src/makebench/editor/code_workspace.py
 msgid "read-only"
@@ -7040,3 +7032,67 @@ msgstr "Este componente não dispara esse evento."
 #: src/makebench/editor/inspector.py
 msgid "Timer every (seconds, 0 = off)"
 msgstr "Temporizador a cada (segundos, 0 = desligado)"
+
+#: src/makebench/editor/inspector.py
+msgid "+ On change"
+msgstr "+ Ao mudar"
+
+#: src/makebench/editor/catalog.py
+msgid "A bar the user drags to pick a whole number in a range."
+msgstr "Barra que a pessoa arrasta para escolher um número inteiro dentro de um intervalo."
+
+#: src/makebench/editor/catalog.py
+msgid "A number the user types or adjusts, with limits and step."
+msgstr "Número digitado ou ajustado pela pessoa, com limites e passo."
+
+#: src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Change value"
+msgstr "Mudar valor"
+
+#: src/makebench/editor/inspector.py
+msgid "Decimals"
+msgstr "Casas decimais"
+
+#: src/makebench/editor/inspector.py
+msgid "Maximum"
+msgstr "Máximo"
+
+#: src/makebench/editor/inspector.py
+msgid "Minimum"
+msgstr "Mínimo"
+
+#: src/makebench/editor/development.py
+msgid "Read value"
+msgstr "Ler valor"
+
+#: src/makebench/core/project.py
+msgid "Slider"
+msgstr "Controle deslizante"
+
+#: src/makebench/editor/inspector.py
+msgid "Step"
+msgstr "Passo"
+
+#: src/makebench/core/project.py
+msgid "The decimals of {id} must be a whole number from 0 to 6."
+msgstr "As casas decimais de {id} devem ser um número inteiro de 0 a 6."
+
+#: src/makebench/core/project.py
+msgid "The limits or step of {id} are invalid."
+msgstr "Os limites ou o passo de {id} são inválidos."
+
+#: src/makebench/core/project.py
+msgid "The number {key} of {id} is invalid."
+msgstr "O número {key} de {id} é inválido."
+
+#: src/makebench/core/project.py
+msgid "The number {key} of {id} must be a whole number."
+msgstr "O número {key} de {id} deve ser inteiro."
+
+#: src/makebench/gtk_runtime/renderer.py src/makebench/runtime/window.py
+msgid "The value is outside the limits of the component."
+msgstr "O valor está fora dos limites do componente."
+
+#: src/makebench/core/project.py
+msgid "The value of {id} must be between its limits."
+msgstr "O valor de {id} deve ficar entre os limites."

@@ -14,12 +14,20 @@ from PySide6.QtWidgets import (
     QMenu,
     QPushButton,
     QSizePolicy,
+    QDoubleSpinBox,
     QSpinBox,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
-from makebench.core.project import KIND_LABELS, LAYOUT_LABELS, ComponentKind, LayoutKind
+from makebench.core.project import (
+    KIND_LABELS,
+    LAYOUT_LABELS,
+    RANGE_DEFAULTS,
+    RANGE_KINDS,
+    ComponentKind,
+    LayoutKind,
+)
 from makebench.i18n import ntr, tr
 
 from .theme import blend, icon, manager
@@ -95,12 +103,14 @@ class PropertyTable(QWidget):
                 if widget is None or widget.property("tableCell"):
                     continue
                 widget.setProperty("tableCell", True)
-                if isinstance(widget, (QLineEdit, QSpinBox, QComboBox)):
+                if isinstance(widget, (QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox)):
                     widget.setFrame(False)
                     widget.setAutoFillBackground(False)
                 if item is span and isinstance(widget, QCheckBox):
                     widget.setContentsMargins(8, 0, 0, 0)
-                if isinstance(widget, (QLineEdit, QSpinBox, QComboBox, QCheckBox, QPushButton)):
+                if isinstance(
+                    widget, (QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QPushButton)
+                ):
                     widget.setMinimumHeight(ROW_HEIGHT)
 
     def paintEvent(self, _event):
@@ -329,6 +339,18 @@ class Inspector(QWidget):
             self._number_field(
                 tr("Progress (%)"), node.id, "value", node.properties.get("value", 0), 0, 100
             )
+        if node.kind in RANGE_KINDS:
+            r = {**RANGE_DEFAULTS, **node.properties}
+            digits = 0 if node.kind == ComponentKind.SLIDER else r["decimals"]
+            for label, key in [
+                (tr("Value"), "value"),
+                (tr("Minimum"), "minimum"),
+                (tr("Maximum"), "maximum"),
+                (tr("Step"), "step"),
+            ]:
+                self._decimal_field(label, node.id, key, r[key], digits)
+            if node.kind == ComponentKind.NUMBER:
+                self._number_field(tr("Decimals"), node.id, "decimals", r["decimals"], 0, 6)
         if node.kind == ComponentKind.PAGES:
             pages = QComboBox()
             for child in node.children:
@@ -532,7 +554,13 @@ class Inspector(QWidget):
                 "checked",
                 node.properties.get("checked", False),
             )
-        if node.kind in {ComponentKind.WINDOW, ComponentKind.BUTTON}:
+        if node.kind in {
+            ComponentKind.WINDOW,
+            ComponentKind.BUTTON,
+            ComponentKind.TEXT_INPUT,
+            ComponentKind.CHECKBOX,
+            *RANGE_KINDS,
+        }:
             self.section(tr("Interactions"))
             count = sum(
                 1
@@ -545,6 +573,8 @@ class Inspector(QWidget):
                 else tr("+ On start")
                 if node.kind == ComponentKind.WINDOW
                 else tr("+ On click")
+                if node.kind == ComponentKind.BUTTON
+                else tr("+ On change")
             )
             logic = QPushButton(
                 label
@@ -647,6 +677,25 @@ class Inspector(QWidget):
         if self.state_mode and key not in {"value"}:
             field.setEnabled(False)
         field.valueChanged.connect(lambda value: self.property_changed.emit(node_id, key, value))
+        self._restore_menu(field, node_id, key)
+        self.fields.addRow(self._label(label, key), field)
+
+    def _decimal_field(self, label, node_id, key, value, digits):
+        """Edit a number that may have decimals; whole numbers stay whole in the document."""
+        field = QDoubleSpinBox()
+        field.setObjectName("property_" + key)
+        field.setDecimals(digits)
+        field.setRange(-1e12, 1e12)
+        field.setValue(value)
+        field.setKeyboardTracking(False)
+        field.setAccessibleName(label)
+        if self.state_mode and key != "value":
+            field.setEnabled(False)
+        field.valueChanged.connect(
+            lambda number: self.property_changed.emit(
+                node_id, key, number if digits else int(round(number))
+            )
+        )
         self._restore_menu(field, node_id, key)
         self.fields.addRow(self._label(label, key), field)
 
@@ -880,7 +929,7 @@ class Inspector(QWidget):
         try:
             if isinstance(field, QLineEdit) and field.text() != str(value):
                 field.setText(str(value))
-            elif isinstance(field, QSpinBox) and field.value() != value:
+            elif isinstance(field, (QSpinBox, QDoubleSpinBox)) and field.value() != value:
                 field.setValue(value)
         finally:
             field.blockSignals(blocked)

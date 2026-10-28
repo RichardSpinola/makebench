@@ -25,6 +25,37 @@ class ProjectTests(unittest.TestCase):
         restored.find(button.id).properties["text"] = "Alterado"
         self.assertEqual(button.properties["text"], "Começar")
 
+    def test_number_and_slider_validate_limits_and_write_format_10(self):
+        from makebench.core.project import clamp_range
+
+        project = Project.empty("Ranges")
+        number = project.add(project.root.id, ComponentKind.NUMBER)
+        slider = project.add(project.root.id, ComponentKind.SLIDER)
+        self.assertEqual(project.to_dict()["format_version"], 10)
+        self.assertEqual(Project.from_dict(project.to_dict()).find(number.id).kind, "number")
+        for node, bad in [
+            (number, {"value": 500}),
+            (number, {"minimum": 5, "maximum": 1}),
+            (number, {"step": 0}),
+            (number, {"decimals": 7}),
+            (number, {"value": 1.5}),  # a fraction while decimals is 0
+            (number, {"value": True}),
+            (slider, {"decimals": 1}),
+        ]:
+            before = dict(node.properties)
+            node.properties.update(bad)
+            with self.assertRaises(ProjectError):
+                Project.from_dict(project.to_dict())
+            node.properties = before
+        number.properties.update(decimals=2, value=1.25, step=0.25)
+        self.assertEqual(
+            Project.from_dict(project.to_dict()).find(number.id).properties["value"], 1.25
+        )
+        number.properties.update(maximum=1)  # the value no longer fits
+        clamp_range(number)
+        self.assertEqual(number.properties["value"], 1)
+        Project.from_dict(project.to_dict())
+
     def test_future_version_is_rejected_without_migrating_silently(self):
         data = Project.empty().to_dict()
         data["format_version"] = 99

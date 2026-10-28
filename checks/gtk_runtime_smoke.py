@@ -23,6 +23,9 @@ def check_runtime():
         p = welcome_template()
         entry = p.add(p.root.id, ComponentKind.TEXT_INPUT)
         progress = p.add(p.root.id, ComponentKind.PROGRESS)
+        number = p.add(p.root.id, ComponentKind.NUMBER)
+        number.properties.update(decimals=1, step=0.5)
+        slider = p.add(p.root.id, ComponentKind.SLIDER)
         output = p.add(p.root.id, ComponentKind.OUTPUT)
         launch = p.add(p.root.id, ComponentKind.BUTTON)
         launch.properties.update(text="API ctx", icon="assets/button.svg", tooltip="Testar API ctx")
@@ -42,6 +45,10 @@ def check_runtime():
     assert ctx.read({entry.id!r}, 'text') == 'GTK real'
     ctx.set_value({progress.id!r}, 75)
     assert ctx.read({progress.id!r}, 'value') == 75
+    ctx.set_value({number.id!r}, 2.5)
+    assert ctx.read({number.id!r}, 'value') == 2.5
+    ctx.set_value({slider.id!r}, 30)
+    assert ctx.read({slider.id!r}, 'value') == 30
     assert ctx.ask('text', 'Pergunta de teste') == 'resposta'
     ctx.run('/bin/sh', ['-c', 'printf saida; printf aviso >&2'])
     ctx.run('/bin/sh', ['-c', 'exit 3'])

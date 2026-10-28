@@ -93,8 +93,8 @@ class Context:
         return self.request("set_background", color=str(color))
 
     def set_value(self, component, value):
-        """Update integer progress in the 0–100 range."""
-        return self.request("set_value", component=component, value=int(value))
+        """Update a progress bar (0–100), a number or a slider (within its limits)."""
+        return self.request("set_value", component=component, value=value)
 
     @property
     def window_variables(self):

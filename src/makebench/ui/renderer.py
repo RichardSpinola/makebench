@@ -5,6 +5,7 @@ from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
+    QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -13,13 +14,53 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QSizePolicy,
+    QSlider,
     QVBoxLayout,
     QFrame,
     QWidget,
 )
-from makebench.core.project import ComponentKind, LayoutKind
+from makebench.core.project import RANGE_DEFAULTS, ComponentKind, LayoutKind
 from makebench.core.storage import StorageError
 from makebench.i18n import tr
+
+
+def range_properties(node):
+    """The limits and value of a number or slider, with the defaults filled in."""
+    return {**RANGE_DEFAULTS, **node.properties}
+
+
+def set_range_value(widget, value):
+    """Move a number or slider without telling the application the person did it."""
+    blocked = widget.blockSignals(True)
+    try:
+        widget.setValue(value if isinstance(widget, QDoubleSpinBox) else int(value))
+    finally:
+        widget.blockSignals(blocked)
+
+
+def configure_range(widget, node):
+    """Apply minimum, maximum, step, decimals and value of a number or slider."""
+    p = range_properties(node)
+    widget.blockSignals(True)
+    if isinstance(widget, QDoubleSpinBox):
+        widget.setDecimals(p["decimals"])
+        widget.setRange(p["minimum"], p["maximum"])
+        widget.setSingleStep(p["step"])
+        widget.setKeyboardTracking(False)
+    else:
+        widget.setRange(int(p["minimum"]), int(p["maximum"]))
+        widget.setSingleStep(int(p["step"]))
+        widget.setPageStep(max(int(p["step"]), 1))
+    widget.blockSignals(False)
+    set_range_value(widget, p["value"])
+
+
+def range_value(widget):
+    """Read a number or slider as int when it has no decimals."""
+    value = widget.value()
+    if isinstance(widget, QDoubleSpinBox) and widget.decimals():
+        return value
+    return int(round(value))
 
 
 class ImageLabel(QLabel):
@@ -75,6 +116,12 @@ def create_control(node, read_asset, editing=False):
         case ComponentKind.PROGRESS:
             widget = QProgressBar()
             widget.setValue(node.properties.get("value", 0))
+        case ComponentKind.NUMBER:
+            widget = QDoubleSpinBox()
+            configure_range(widget, node)
+        case ComponentKind.SLIDER:
+            widget = QSlider(Qt.Orientation.Horizontal)
+            configure_range(widget, node)
         case ComponentKind.TERMINAL:
             from makebench.terminal.qt import TerminalWidget
 

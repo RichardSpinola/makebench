@@ -4,10 +4,12 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
+    QDoubleSpinBox,
     QFrame,
     QLineEdit,
     QPlainTextEdit,
     QPushButton,
+    QSlider,
     QTabWidget,
     QVBoxLayout,
 )
@@ -121,6 +123,10 @@ class RuntimeView(QFrame):
                 )
             if isinstance(widget, QCheckBox):
                 widget.clicked.connect(lambda _, identifier=node.id: self.changed.emit(identifier))
+            if isinstance(widget, (QDoubleSpinBox, QSlider)):
+                widget.valueChanged.connect(
+                    lambda _, identifier=node.id: self.changed.emit(identifier)
+                )
             if isinstance(widget, QPlainTextEdit):
                 widget.setMaximumBlockCount(2000)
         return frame

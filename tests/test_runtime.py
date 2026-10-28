@@ -221,6 +221,34 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("bye\n", seen)
         self.windows.remove(w)  # closing the last window already deleted it
 
+    def test_number_and_slider_read_set_and_fire_change(self):
+        root = self.project.root.id
+        number = self.project.add(root, ComponentKind.NUMBER)
+        number.properties.update(value=5, maximum=10, decimals=1, step=0.5)
+        slider = self.project.add(root, ComponentKind.SLIDER)
+        for node in (number, slider):
+            create_flow(self.project, node.id)["body"] = [log("c", "changed " + node.id[:6])]
+
+        def read(node):
+            return {"id": "r" + node.id, "op": "read", "component": node.id, "attribute": "value"}
+
+        self.flow["body"] = [
+            {"id": "s1", "op": "set_value", "component": number.id, "value": literal("v", 7.5)},
+            {"id": "s2", "op": "set_value", "component": slider.id, "value": literal("w", 40)},
+            {"id": "l1", "op": "log", "value": read(number)},
+            {"id": "l2", "op": "log", "value": read(slider)},
+        ]
+        w = self.window("")
+        self.click(w)
+        out = w.output.toPlainText()
+        self.assertIn("7.5", out)
+        self.assertIn("40", out)
+        self.assertNotIn("changed", out)  # the ctx API never fires change
+        w.view.widgets[slider.id].setValue(55)
+        self.wait(lambda: "changed " + slider.id[:6] in w.output.toPlainText())
+        w.view.widgets[number.id].setValue(2.0)
+        self.wait(lambda: "changed " + number.id[:6] in w.output.toPlainText())
+
     def test_block_function_returns_a_value_to_the_event(self):
         from makebench.core.logic import create_block_function
 

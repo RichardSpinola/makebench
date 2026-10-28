@@ -472,11 +472,11 @@ class DevelopmentMixin:
                 tr("Multi-line text"): "mb_multiline",
                 tr("Change component text"): "mb_set_text",
                 tr("Enable component"): "mb_set_enabled",
-                tr("Change progress"): "mb_set_value",
+                tr("Change value"): "mb_set_value",
                 tr("Show page"): "mb_show_page",
                 tr("Read component text"): "mb_read_text",
                 tr("Read checkbox selection"): "mb_read_checked",
-                tr("Read progress"): "mb_read_value",
+                tr("Read value"): "mb_read_value",
                 tr("Join texts"): "mb_join",
                 tr("Compare or calculate"): "mb_binary",
             }

@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from makebench.core.codegen import generate
-from makebench.core.project import ComponentKind, ProjectError
+from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, ProjectError
 from makebench.i18n import language, tr
 from .renderer import GtkView
 
@@ -343,6 +343,8 @@ class GtkRuntime:
                 view.programmatic = False
             if node.kind == ComponentKind.PROGRESS:
                 widget.set_fraction(p.get("value", 0) / 100)
+            if node.kind in RANGE_KINDS:
+                view.set_range(node.id, {**RANGE_DEFAULTS, **p}["value"])
             if node.kind == ComponentKind.IMAGE:
                 paintable = (
                     view.Gdk.Texture.new_from_bytes(
@@ -488,6 +490,8 @@ class GtkRuntime:
                 elif method == "set_enabled":
                     view.enabled[key] = r["value"]
                     widget.set_sensitive(r["value"])
+                elif method == "set_value" and key in view.ranges:
+                    view.set_range(key, r["value"])
                 elif method == "set_value":
                     if not 0 <= r["value"] <= 100:
                         raise ValueError(tr("Progress must be between 0 and 100."))

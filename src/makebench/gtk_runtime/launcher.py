@@ -91,13 +91,15 @@ def main():
                             "text_input",
                             "checkbox",
                             "progress",
+                            "number",
+                            "slider",
                             "output",
                         }:
                             attribute = (
                                 "checked"
                                 if node.kind.value == "checkbox"
                                 else "value"
-                                if node.kind.value == "progress"
+                                if node.kind.value in {"progress", "number", "slider"}
                                 else "text"
                             )
                             controls[identifier] = view.read(identifier, attribute)

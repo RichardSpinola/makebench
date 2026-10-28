@@ -7,6 +7,7 @@ separate files and is never rewritten when the interface is regenerated.
 
 from __future__ import annotations
 
+import math
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -36,6 +37,8 @@ class ComponentKind(StrEnum):
     TEXT_INPUT = "text_input"
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
+    NUMBER = "number"
+    SLIDER = "slider"
     OUTPUT = "output"
     TERMINAL = "terminal"
     SEPARATOR = "separator"
@@ -43,7 +46,9 @@ class ComponentKind(StrEnum):
 
 
 V10_EVENTS = {"change", "close", "timer"}
-V10_KINDS: set[ComponentKind] = set()  # grows with each new 1.0 component
+V10_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}  # grows with each new 1.0 component
+RANGE_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}
+RANGE_DEFAULTS = {"value": 0, "minimum": 0, "maximum": 100, "step": 1, "decimals": 0}
 
 
 class LayoutKind(StrEnum):
@@ -74,6 +79,8 @@ KIND_LABELS = {
     ComponentKind.TEXT_INPUT: tr("Text field"),
     ComponentKind.CHECKBOX: tr("Checkbox"),
     ComponentKind.PROGRESS: tr("Progress"),
+    ComponentKind.NUMBER: tr("Number"),
+    ComponentKind.SLIDER: tr("Slider"),
     ComponentKind.OUTPUT: tr("Output panel"),
     ComponentKind.TERMINAL: tr("Terminal"),
 }
@@ -218,7 +225,9 @@ class Component:
             raise ProjectError(
                 tr("The selection of {id} must be true or false.").format(id=component_id)
             )
-        if "value" in properties and (
+        if kind in RANGE_KINDS:
+            validate_range(kind, properties, component_id)
+        elif "value" in properties and (
             type(properties["value"]) is not int or not 0 <= properties["value"] <= 100
         ):
             raise ProjectError(
@@ -298,6 +307,52 @@ class Component:
         return node
 
 
+def validate_range(kind, properties, component_id):
+    """Check the value, limits, step and decimals of a number or slider."""
+    values = {**RANGE_DEFAULTS, **properties}
+    decimals = values["decimals"]
+    if (
+        type(decimals) is not int
+        or not 0 <= decimals <= 6
+        or (kind == ComponentKind.SLIDER and decimals)
+    ):
+        raise ProjectError(
+            tr("The decimals of {id} must be a whole number from 0 to 6.").format(id=component_id)
+        )
+    for key in ("value", "minimum", "maximum", "step"):
+        item = values[key]
+        if type(item) not in {int, float} or not math.isfinite(item) or abs(item) > 1e12:
+            raise ProjectError(
+                tr("The number {key} of {id} is invalid.").format(key=key, id=component_id)
+            )
+        if not decimals and item != int(item):
+            raise ProjectError(
+                tr("The number {key} of {id} must be a whole number.").format(
+                    key=key, id=component_id
+                )
+            )
+    if values["minimum"] > values["maximum"] or values["step"] <= 0:
+        raise ProjectError(tr("The limits or step of {id} are invalid.").format(id=component_id))
+    if not values["minimum"] <= values["value"] <= values["maximum"]:
+        raise ProjectError(
+            tr("The value of {id} must be between its limits.").format(id=component_id)
+        )
+
+
+def clamp_range(node):
+    """Keep a number or slider valid after one of its limits, step or decimals changed."""
+    p = {**RANGE_DEFAULTS, **node.properties}
+    if node.kind == ComponentKind.SLIDER:
+        p["decimals"] = 0
+    for key in ("value", "minimum", "maximum", "step"):
+        p[key] = round(p[key]) if not p["decimals"] else round(p[key], p["decimals"])
+    p["step"] = p["step"] or 10 ** -p["decimals"]
+    p["maximum"] = max(p["maximum"], p["minimum"])
+    p["value"] = min(max(p["value"], p["minimum"]), p["maximum"])
+    p.pop("decimals") if node.kind == ComponentKind.SLIDER else None
+    node.properties.update(p)
+
+
 def create_component(kind: ComponentKind) -> Component:
     """Create a component with starting properties suited to its type."""
     kind = ComponentKind(kind)
@@ -314,6 +369,8 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.TEXT_INPUT: {"text": "", "placeholder": tr("Type here")},
         ComponentKind.CHECKBOX: {"text": tr("New option"), "checked": False},
         ComponentKind.PROGRESS: {"value": 0},
+        ComponentKind.NUMBER: dict(RANGE_DEFAULTS),
+        ComponentKind.SLIDER: {k: v for k, v in RANGE_DEFAULTS.items() if k != "decimals"},
         ComponentKind.OUTPUT: {"text": tr("Task output will appear here.")},
         ComponentKind.TERMINAL: {
             "terminal_program": "",

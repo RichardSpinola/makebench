@@ -3,7 +3,8 @@
 
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QMainWindow, QScrollArea
-from makebench.core.project import ComponentKind, ProjectError
+from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, ProjectError
+from makebench.ui.renderer import set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -100,6 +101,8 @@ class RuntimeNavigation:
                     widget.setChecked(p.get("checked", False))
                 if node.kind == ComponentKind.PROGRESS:
                     widget.setValue(p.get("value", 0))
+                if node.kind in RANGE_KINDS:
+                    set_range_value(widget, {**RANGE_DEFAULTS, **p}["value"])
                 if node.kind == ComponentKind.IMAGE:
                     from PySide6.QtGui import QPixmap
 
