@@ -116,6 +116,27 @@ class LogicTests(unittest.TestCase):
 
             validate_navigation(self.project)
 
+    def test_menu_items_become_events_of_the_window(self):
+        from makebench.core.logic import event_choices
+        from makebench.core.menus import format_menus, parse_menus
+
+        window = self.project.root
+        menus = parse_menus("File\n  Open | Ctrl+O\n  Quit\nHelp\n  About")
+        self.assertEqual(menus[0]["items"][0], {"id": "open", "text": "Open", "shortcut": "Ctrl+O"})
+        self.assertEqual(parse_menus(format_menus(menus), menus), menus)
+        window.properties["menus"] = menus
+        with self.assertRaises(ProjectError):
+            create_flow(self.project, window.id, kind="menu:missing")
+        flow = create_flow(self.project, window.id, kind="menu:open")
+        self.assertEqual(flow["event"], {"kind": "menu:open", "component": window.id})
+        self.assertIs(create_flow(self.project, window.id, kind="menu:open"), flow)
+        validate(self.project)
+        self.assertEqual(self.project.to_dict()["format_version"], 10)
+        self.assertIn("menu:quit", {kind for _, _, kind in event_choices(self.project)})
+        window.properties["menus"] = [{"text": "Empty", "items": []}]
+        with self.assertRaisesRegex(ProjectError, "menus"):
+            Project.from_dict(self.project.to_dict())
+
     def test_python_events_are_validated_created_and_converted(self):
         from makebench.core.codegen import convert_to_python, generate
         from makebench.core.logic import create_python_event, guard_removal, is_draft

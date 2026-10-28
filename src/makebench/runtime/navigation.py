@@ -2,11 +2,31 @@
 """Coordination of real windows and states over a single run session."""
 
 from PySide6.QtCore import QTimer, Qt
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMainWindow, QScrollArea
+from makebench.core.menus import menu_items
 from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, ProjectError
 from makebench.ui.renderer import fill_choice, set_date, set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
+
+
+def install_menu_bar(window, root, owner):
+    """Show the window's menus; choosing an item fires its `menu:<id>` flow."""
+    bar = window.menuBar()
+    bar.clear()
+    for menu in root.properties.get("menus", []):
+        popup = bar.addMenu(menu["text"])
+        for item in menu["items"]:
+            action = QAction(item["text"], popup)
+            action.setObjectName("menu_" + item["id"])
+            if item["shortcut"]:
+                action.setShortcut(QKeySequence(item["shortcut"]))
+            action.triggered.connect(
+                lambda _checked=False, i=item["id"]: owner.queue_event(root.id, "menu:" + i)
+            )
+            popup.addAction(action)
+    bar.setVisible(bool(menu_items(root.properties)))
 
 
 class AppWindow(QMainWindow):
@@ -32,6 +52,7 @@ class AppWindow(QMainWindow):
         scroll.setWidgetResizable(True)
         scroll.setWidget(view)
         self.setCentralWidget(scroll)
+        install_menu_bar(self, root, owner)
 
     def closeEvent(self, event):
         """Remove the window without abandoning administrative tasks or ordinary processes."""

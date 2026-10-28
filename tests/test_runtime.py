@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QCoreApplication, QEvent, QTimer, Qt
+from PySide6.QtGui import QAction
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QInputDialog, QMessageBox, QLineEdit
 from makebench.core.logic import create_flow
@@ -220,6 +221,19 @@ class RuntimeTests(unittest.TestCase):
         self.wait(lambda: w.session.closed)
         self.assertIn("bye\n", seen)
         self.windows.remove(w)  # closing the last window already deleted it
+
+    def test_menu_item_fires_its_flow(self):
+        from makebench.core.menus import parse_menus
+
+        self.project.root.properties["menus"] = parse_menus("File\n  Save | Ctrl+S")
+        create_flow(self.project, self.project.root.id, kind="menu:save")["body"] = [
+            log("m", "saved")
+        ]
+        w = self.window("")
+        action = w.findChild(QAction, "menu_save")
+        self.assertEqual(action.shortcut().toString(), "Ctrl+S")
+        action.trigger()
+        self.wait(lambda: "saved" in w.output.toPlainText())
 
     def test_number_and_slider_read_set_and_fire_change(self):
         root = self.project.root.id

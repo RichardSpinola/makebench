@@ -33,6 +33,16 @@ def check_runtime():
         table.properties["headers"] = ["A", "B"]
         date = p.add(p.root.id, ComponentKind.DATE)
         date.properties["text"] = "2026-03-04"
+        p.root.properties["menus"] = [
+            {"text": "File", "items": [{"id": "save", "text": "Save", "shortcut": "Ctrl+S"}]}
+        ]
+        create_flow(p, p.root.id, kind="menu:save")["body"] = [
+            {
+                "id": "menu_log",
+                "op": "log",
+                "value": {"id": "ml", "op": "literal", "value": "menu"},
+            }
+        ]
         output = p.add(p.root.id, ComponentKind.OUTPUT)
         launch = p.add(p.root.id, ComponentKind.BUTTON)
         launch.properties.update(text="API ctx", icon="assets/button.svg", tooltip="Testar API ctx")
@@ -101,6 +111,7 @@ def check_runtime():
                 if not runtime.active or runtime.busy:
                     return True
                 if step[0] == 0:
+                    assert runtime.menu_bar(p.root, p.root.id), "The menu bar is missing"
                     runtime.queue_event(launch.id)
                     step[0] = 1
                     return True

@@ -30,6 +30,7 @@ from makebench.core.project import (
     ComponentKind,
     LayoutKind,
 )
+from makebench.core.menus import format_menus, parse_menus
 from makebench.i18n import ntr, tr
 
 from .theme import blend, icon, manager
@@ -507,6 +508,7 @@ class Inspector(QWidget):
                 0,
                 3600,
             )
+            self._menus_field(node)
             self.section(tr("Window look"))
             self._choice_field(
                 tr("Theme"),
@@ -725,6 +727,24 @@ class Inspector(QWidget):
             )
         )
         self.fields.addRow(self._label(label, key), field)
+
+    def _menus_field(self, node):
+        """Edit the application menus as text; items get their events from + Event."""
+        label = tr("Menus")
+        field = _LinesEdit(format_menus(node.properties.get("menus", [])))
+        field.setObjectName("property_menus")
+        field.setAccessibleName(label)
+        field.setMaximumHeight(130)
+        field.setPlaceholderText(tr("File\n  Open | Ctrl+O\n  Quit | Ctrl+Q"))
+        field.setToolTip(tr("A menu title per line; indent its items. Add a shortcut after “|”."))
+        field.setReadOnly(self.state_mode)
+        previous = node.properties.get("menus", [])
+        field.committed.connect(
+            lambda: self.property_changed.emit(
+                node.id, "menus", parse_menus(field.toPlainText(), previous)
+            )
+        )
+        self.fields.addRow(self._label(label, "menus"), field)
 
     def _date_field(self, label, node_id, key, value):
         """Edit a date; the document keeps it as YYYY-MM-DD."""

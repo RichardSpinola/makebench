@@ -69,7 +69,7 @@ def append_output(editor, text, color=None):
         bar.setValue(position)
 
 
-from .navigation import RuntimeNavigation
+from .navigation import RuntimeNavigation, install_menu_bar
 
 
 class RuntimeWindow(RuntimeNavigation, QMainWindow):
@@ -185,6 +185,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
             self.stop_button.hide()
             self.state.hide()
         self.install_navigation(read_asset)
+        install_menu_bar(self, initial, self)
         self.view.clicked.connect(self._clicked)
         self.view.changed.connect(self._changed)
         self.session.ready.connect(self._ready)

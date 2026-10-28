@@ -881,6 +881,7 @@ class MainWindow(StudioMixin, QMainWindow):
                 key in {"options", "text"}
                 and self.project.find(identifier).kind == ComponentKind.CHOICE
             )
+            or key == "menus"
             or (key == "headers" and self.project.find(identifier).kind == ComponentKind.TABLE)
             or key in {"width", "height", "resizable", "theme", "accent", "background"}
             or key == "icon"

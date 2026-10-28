@@ -38,7 +38,7 @@ class GtkRuntime:
 
         if not Gtk.init_check():
             raise ProjectError(tr("Could not open GTK4: no graphical display is available."))
-        self.Gtk, self.GLib = Gtk, GLib
+        self.Gtk, self.GLib, self.Gio = Gtk, GLib, Gio
         self.Adw = None
         try:
             gi.require_version("Adw", "1")
@@ -282,16 +282,28 @@ class GtkRuntime:
                 self.windows[identifier].destroy()
             view = GtkView(root, self.read_asset, self.queue_event, self.queue_event)
             self.views[identifier] = view
+            bar = self.menu_bar(root, identifier)
             if self.Adw:
                 window = self.Adw.ApplicationWindow(application=self.app)
                 box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL)
                 box.append(self.Adw.HeaderBar())
+                if bar:
+                    box.append(bar[0])
                 box.append(view.widget)
                 view.widget.set_vexpand(True)
                 window.set_content(box)
+            elif bar:
+                window = self.Gtk.ApplicationWindow(application=self.app)
+                box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL)
+                box.append(bar[0])
+                box.append(view.widget)
+                view.widget.set_vexpand(True)
+                window.set_child(box)
             else:
                 window = self.Gtk.ApplicationWindow(application=self.app)
                 window.set_child(view.widget)
+            if bar:
+                window.insert_action_group("menu", bar[1])
             icon = root.properties.get("icon") or self.project.application.get("icon")
             if icon:
                 self.Gtk.IconTheme.get_for_display(window.get_display()).add_search_path(
@@ -320,6 +332,39 @@ class GtkRuntime:
             self.start_timer(identifier)
         self.emit("navigation", windows=sorted(self.open_windows), states=dict(self.states))
         return reset
+
+    def menu_bar(self, root, identifier):
+        """A (PopoverMenuBar, action group) pair for the window's menus, or None without any."""
+        menus = root.properties.get("menus", [])
+        if not menus:
+            return None
+        model, group = self.Gio.Menu(), self.Gio.SimpleActionGroup()
+        for menu in menus:
+            section = self.Gio.Menu()
+            for item in menu["items"]:
+                action = self.Gio.SimpleAction.new(item["id"], None)
+                action.connect(
+                    "activate",
+                    lambda _action, _param, i=item["id"]: self.queue_event(identifier, "menu:" + i),
+                )
+                group.add_action(action)
+                label = item["text"]
+                section.append(label, "menu." + item["id"])
+                if item["shortcut"]:
+                    self.app.set_accels_for_action(
+                        "menu." + item["id"], [self.accelerator(item["shortcut"])]
+                    )
+            model.append_submenu(menu["text"], section)
+        return self.Gtk.PopoverMenuBar.new_from_model(model), group
+
+    @staticmethod
+    def accelerator(shortcut):
+        """`Ctrl+Shift+S` as GTK writes it: `<Control><Shift>s`."""
+        *mods, key = shortcut.split("+")
+        names = {"ctrl": "Control", "shift": "Shift", "alt": "Alt", "meta": "Super"}
+        return "".join(f"<{names.get(m.lower(), m)}>" for m in mods) + (
+            key.lower() if len(key) == 1 else key
+        )
 
     def apply_state(self, identifier, state):
         """Apply only content differences, keeping IDs and the base structure."""

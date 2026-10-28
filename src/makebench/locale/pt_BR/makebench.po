@@ -7205,46 +7205,34 @@ msgstr "Tabela"
 msgid "The columns of {id} must be 1 to 64 short texts."
 msgstr "As colunas de {id} devem ser de 1 a 64 textos curtos."
 
-#: src/makebench/core/logic_defaults.py src/makebench/editor/development.py
-msgid "Add table row"
-msgstr ""
-
-#: src/makebench/core/logic_defaults.py
-msgid "Cell 1"
-msgstr ""
-
-#: src/makebench/core/logic_defaults.py
-msgid "Cell 2"
-msgstr ""
-
-#: src/makebench/core/logic_defaults.py src/makebench/editor/development.py
-msgid "Change table rows"
-msgstr ""
-
-#: src/makebench/core/project.py
-msgid "Column 1"
-msgstr ""
-
-#: src/makebench/core/project.py
-msgid "Column 2"
-msgstr ""
+#: src/makebench/editor/inspector.py
+msgid "A menu title per line; indent its items. Add a shortcut after “|”."
+msgstr "Um título de menu por linha; recue os itens. Coloque o atalho depois de “|”."
 
 #: src/makebench/editor/inspector.py
-msgid "Columns (one per line)"
-msgstr ""
+msgid "File\n  Open | Ctrl+O\n  Quit | Ctrl+Q"
+msgstr "Arquivo\n  Abrir | Ctrl+O\n  Sair | Ctrl+Q"
 
-#: src/makebench/editor/development.py
-msgid "Read selected table row"
-msgstr ""
+#: src/makebench/core/logic.py
+msgid "Menu: {text}"
+msgstr "Menu: {text}"
 
-#: src/makebench/editor/catalog.py
-msgid "Rows and columns of text; the user selects a row."
-msgstr ""
+#: src/makebench/editor/inspector.py
+msgid "Menus"
+msgstr "Menus"
+
+#: src/makebench/core/logic.py
+msgid "On menu:"
+msgstr "Ao escolher no menu:"
 
 #: src/makebench/core/project.py
-msgid "Table"
-msgstr ""
+msgid "Only a window can have menus."
+msgstr "Só uma janela pode ter menus."
 
-#: src/makebench/core/project.py
-msgid "The columns of {id} must be 1 to 64 short texts."
-msgstr ""
+#: src/makebench/core/logic.py
+msgid "The menu item of this event does not exist."
+msgstr "O item de menu deste evento não existe."
+
+#: src/makebench/core/menus.py
+msgid "The menus of {id} are invalid."
+msgstr "Os menus de {id} são inválidos."

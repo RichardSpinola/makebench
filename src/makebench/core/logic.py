@@ -9,6 +9,7 @@ import keyword
 import math
 from typing import TYPE_CHECKING
 
+from .menus import menu_items
 from .project import ComponentKind, ProjectError, new_id
 from makebench.i18n import tr
 
@@ -33,6 +34,7 @@ EVENT_TARGETS = {
     "start": {ComponentKind.WINDOW},
     "close": {ComponentKind.WINDOW},
     "timer": {ComponentKind.WINDOW},
+    "menu": {ComponentKind.WINDOW},
     "click": {ComponentKind.BUTTON},
     "change": {
         ComponentKind.TEXT_INPUT,
@@ -49,9 +51,15 @@ EVENT_SUFFIX = {
     "start": "start",
     "close": "close",
     "timer": "timer",
+    "menu": "menu",
     "click": "click",
     "change": "change",
 }
+
+
+def event_family(kind: str) -> str:
+    """`menu:save` belongs to the menu family; other events are their own."""
+    return kind.split(":")[0]
 
 
 def event_choices(project: Project) -> list[tuple[str, str, str]]:
@@ -66,7 +74,16 @@ def event_choices(project: Project) -> list[tuple[str, str, str]]:
     choices = []
     for node in project.walk():
         for kind, kinds in EVENT_TARGETS.items():
-            if node.kind in kinds:
+            if kind == "menu":
+                for menu, item in menu_items(node.properties):
+                    prefix = (
+                        project.window_of(node.id).properties.get("title", tr("Interface")) + " › "
+                        if len(project.roots) > 1
+                        else ""
+                    )
+                    label = tr("On menu:") + " " + prefix + menu["text"] + " › " + item["text"]
+                    choices.append((label, node.id, "menu:" + item["id"]))
+            elif node.kind in kinds:
                 prefix = (
                     project.window_of(node.id).properties.get("title", tr("Interface")) + " › "
                     if len(project.roots) > 1
@@ -100,7 +117,13 @@ def create_flow(
         )
     node = project.find(component_id)
     kind = kind or (node and default_event_kind(node))
-    if node is None or kind not in EVENT_TARGETS or node.kind not in EVENT_TARGETS[kind]:
+    family = event_family(kind or "")
+    if (
+        node is None
+        or family not in EVENT_TARGETS
+        or node.kind not in EVENT_TARGETS[family]
+        or (family == "menu" and kind[5:] not in {i["id"] for _, i in menu_items(node.properties)})
+    ):
         raise ProjectError(tr("Select the window or a control that can fire this event."))
     event = {"kind": kind, "component": node.id}
     for flow in project.workflows:
@@ -127,9 +150,18 @@ def event_name(kind: str, node) -> str:
         "start": lambda: tr("On start"),
         "close": lambda: tr("On close"),
         "timer": lambda: tr("On timer"),
+        "menu": lambda: tr("Menu: {text}").format(text=menu_text(node, kind)),
         "click": lambda: tr("Click: {text}").format(text=text or tr("Button")),
         "change": lambda: tr("Change: {text}").format(text=text or tr("Control")),
-    }[kind]()
+    }[event_family(kind)]()
+
+
+def menu_text(node, kind: str) -> str:
+    """The text of the menu item an event `menu:<id>` names."""
+    for _menu, item in menu_items(node.properties):
+        if "menu:" + item["id"] == kind:
+            return item["text"]
+    return kind[5:]
 
 
 def is_draft(flow: dict) -> bool:
@@ -262,7 +294,7 @@ def suggest_function(project: Project, component_id: str, taken, kind: str | Non
             or node.properties.get("text", "")
             or node.properties.get("placeholder", "")
         )
-    suffix = EVENT_SUFFIX[kind]
+    suffix = EVENT_SUFFIX[event_family(kind)] + (kind[4:].replace(":", "_") if ":" in kind else "")
     ascii_text = unicodedata.normalize("NFKD", str(base)).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^a-z0-9]+", "_", ascii_text.lower()).strip("_")[:40] or "event"
     name = f"on_{slug}_{suffix}"
@@ -373,10 +405,15 @@ def validate(project: Project) -> None:
             if not isinstance(event, dict):
                 raise ProjectError(tr("Invalid event."))
             node = project.find(event.get("component"))
-            if event.get("kind") not in EVENT_TARGETS or node is None:
+            family = event_family(event.get("kind") if isinstance(event.get("kind"), str) else "")
+            if family not in EVENT_TARGETS or node is None:
                 raise ProjectError(tr("The event must point to the window or an existing control."))
-            if node.kind not in EVENT_TARGETS[event["kind"]]:
+            if node.kind not in EVENT_TARGETS[family]:
                 raise ProjectError(tr("This component cannot fire that event."))
+            if family == "menu" and event["kind"][5:] not in {
+                i["id"] for _, i in menu_items(node.properties)
+            }:
+                raise ProjectError(tr("The menu item of this event does not exist."))
             states = flow.get("states", [])
             owner = project.window_of(node.id)
             state_ids = {"@default", *[item["id"] for item in project.states.get(owner.id, [])]}

@@ -17,6 +17,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 from makebench.i18n import tr
+from .menus import validate_menus
 
 FORMAT_VERSION = 10
 FORMAT_NAME = "makebench.project"
@@ -51,7 +52,7 @@ class ComponentKind(StrEnum):
     SPACER = "spacer"
 
 
-V10_EVENTS = {"change", "close", "timer"}
+V10_EVENTS = {"change", "close", "timer", "menu"}
 V10_KINDS = {
     ComponentKind.NUMBER,
     ComponentKind.SLIDER,
@@ -256,6 +257,13 @@ class Component:
                 raise ProjectError(
                     tr("The selected option of {id} is not in its list.").format(id=component_id)
                 )
+        if "menus" in properties:
+            if kind != ComponentKind.WINDOW:
+                raise ProjectError(tr("Only a window can have menus."))
+            try:
+                validate_menus(properties["menus"], component_id)
+            except ValueError as exc:
+                raise ProjectError(str(exc)) from None
         if kind == ComponentKind.TABLE:
             columns = properties.get("headers", [])
             if (
@@ -528,9 +536,14 @@ class Project:
 
     def uses_v10(self) -> bool:
         """Format 10 adds the change, close and timer events and the 1.0 components."""
-        return any(
-            flow.get("event", {}).get("kind") in V10_EVENTS for flow in self.workflows
-        ) or any(node.kind in V10_KINDS for node in self.walk())
+        return (
+            any(
+                flow.get("event", {}).get("kind", "").split(":")[0] in V10_EVENTS
+                for flow in self.workflows
+            )
+            or any(node.kind in V10_KINDS for node in self.walk())
+            or any(root.properties.get("menus") for root in self.roots)
+        )
 
     def uses_v5(self) -> bool:
         """Keep writing v4 until a change requires the newer contract."""
