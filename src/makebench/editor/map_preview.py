@@ -6,11 +6,18 @@ import base64
 import hashlib
 import json
 from PySide6.QtCore import QObject, QTimer, Signal, Qt, QSize
-from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtGui import QPixmap, QImage, QPalette
 from makebench.core.project import Project
 from .native_preview import GtkPreviewJob
 from .theme import manager
 from makebench.i18n import tr
+
+
+def desktop_colors() -> str:
+    """The desktop palette roles that change how a Qt thumbnail looks."""
+    palette = manager().system_palette
+    roles = ("Window", "WindowText", "Base", "Text", "Button", "ButtonText", "Highlight")
+    return ",".join(palette.color(getattr(QPalette.ColorRole, role)).name() for role in roles)
 
 
 class ThumbnailCache(QObject):
@@ -60,6 +67,8 @@ class ThumbnailCache(QObject):
                 + backend
                 + str(manager().tokens)
                 + str(manager().scale)
+                # Cards use the desktop palette, which can change apart from the editor tokens.
+                + desktop_colors()
             ).encode()
         ).hexdigest()
         self.wanted[key] = signature
