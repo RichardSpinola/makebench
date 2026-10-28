@@ -140,6 +140,52 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         labels = [w.problems.item(i).text() for i in range(w.problems.count())]
         self.assertTrue(any("calls Python" in label for label in labels))
 
+    def test_problems_and_map_show_collections(self):
+        w = self.window
+        w.project.metadata.update(programming="blocks", logic_version=1)
+        w.project.metadata["collections"] = [
+            {
+                "id": "c1",
+                "name": "Livros",
+                "fields": [{"id": "f1", "name": "titulo", "type": "text"}],
+            }
+        ]
+        lit = {"id": "v", "op": "literal", "value": "x"}
+        w.project.workflows = [
+            {
+                "id": "flow-a",
+                "name": "Start",
+                "event": {"kind": "start", "component": w.project.root.id},
+                "body": [
+                    {"id": "b1", "op": "data_add", "collection": "Livros", "values": []},
+                    {"id": "b2", "op": "data_add", "collection": "Fantasma", "values": []},
+                    {
+                        "id": "b3",
+                        "op": "data_add",
+                        "collection": "Livros",
+                        "values": [{"field": "nada", "value": lit}],
+                    },
+                ],
+                "workspace": {},
+            }
+        ]
+        w.sync_problems()
+        labels = [w.problems.item(i).text() for i in range(w.problems.count())]
+        self.assertTrue(any("Fantasma" in label for label in labels), labels)
+        self.assertTrue(any("nada" in label for label in labels), labels)
+        self.assertFalse(any("b1" in label for label in labels))
+        w.history.push(w.project)
+        w.set_mode("map")
+        w.map_panel.sync()
+        outline = w.map_panel.outline
+        group = next(
+            outline.topLevelItem(i)
+            for i in range(outline.topLevelItemCount())
+            if outline.topLevelItem(i).text(0) == "Collections"
+        )
+        self.assertTrue(group.child(0).text(0).startswith("Livros"))
+        self.assertEqual(group.child(0).child(0).text(0).split(" →")[0], "Start")
+
     def test_logic_area_opens_blocks_or_python_by_project(self):
         w = self.window
         self.assertNotIn("code", w.mode_buttons)

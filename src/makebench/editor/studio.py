@@ -561,6 +561,7 @@ class StudioMixin(
             tuple((r.id, r.properties.get("title")) for r in self.project.roots),
             self.project.entry_window,
             self.project.programming,
+            json.dumps(self.project.metadata.get("collections", []), sort_keys=True),
         )
         if signature == getattr(self, "_problems_signature", None):
             return
@@ -599,6 +600,7 @@ class StudioMixin(
                         tr("Missing function: {name}").format(name=value.get("function", "")),
                         {"flow": flow["id"], "block": value["id"]},
                     )
+                self._check_collection_use(value, flow)
                 for child in value.values():
                     visit(child, flow)
             elif isinstance(value, list):
@@ -663,6 +665,35 @@ class StudioMixin(
                 else ""
             )
         )
+
+    def _check_collection_use(self, block, flow):
+        """Warn when a block cites a collection or a field the project does not declare."""
+        from makebench.core.datamodel import find_collection, find_field
+
+        name = block.get("collection")
+        if name is None:
+            return
+        target = {"flow": flow["id"], "block": block.get("id")}
+        found = find_collection(self.project.metadata, name)
+        if found is None:
+            self._add_problem(
+                tr("{flow}: collection {name} not found.").format(
+                    flow=flow.get("name", tr("Flow")), name=name
+                ),
+                target,
+            )
+            return
+        cited = [block.get(key) for key in ("field", "order", "sum")]
+        cited += [e.get("field") for e in block.get("values", []) if isinstance(e, dict)]
+        for field in cited:
+            if isinstance(field, str) and not field.startswith("@") and field != "id":
+                if find_field(found, field) is None:
+                    self._add_problem(
+                        tr("{flow}: field {field} not found in {collection}.").format(
+                            flow=flow.get("name", tr("Flow")), field=field, collection=found["name"]
+                        ),
+                        target,
+                    )
 
     def _add_problem(self, label, target):
         """Add a navigable row without interpreting text as an instruction."""

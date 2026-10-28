@@ -7463,3 +7463,15 @@ msgstr "Pizza"
 #: src/makebench/core/project.py
 msgid "The chart {id} needs a type (bar, line or pie) and a short title."
 msgstr "O gráfico {id} precisa de um tipo (barras, linhas ou pizza) e de um título curto."
+
+#: src/makebench/editor/map_panel.py
+msgid "Collections"
+msgstr "Coleções"
+
+#: src/makebench/editor/studio.py
+msgid "{flow}: collection {name} not found."
+msgstr "{flow}: coleção {name} não encontrada."
+
+#: src/makebench/editor/studio.py
+msgid "{flow}: field {field} not found in {collection}."
+msgstr "{flow}: campo {field} não encontrado em {collection}."

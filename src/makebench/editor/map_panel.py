@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 from makebench.core.logic import block_functions, called_functions, is_draft
+from makebench.core.datamodel import collections_of
+from .collections_ui import uses_collection
 from makebench.core.navigation import (
     navigation_edges,
     find_navigation_block,
@@ -200,6 +202,10 @@ class MapPanel(QWidget):
                 (u["id"], u["name"], u.get("function"), called_functions(u))
                 for u in [*project.editable_flows, *block_functions(project)]
             ],
+            "collections": [
+                (c["id"], c["name"], [u["id"] for u in self.collection_users(c)])
+                for c in collections_of(project.metadata)
+            ],
             "collapsed": sorted(self.collapsed),
             "empty": empty,
             "theme": manager().tokens,
@@ -344,6 +350,28 @@ class MapPanel(QWidget):
             for function in functions:
                 group.addChild(self._logic_item(function, function))
             group.setExpanded(True)
+        collections = collections_of(project.metadata)
+        if collections:
+            group = QTreeWidgetItem([tr("Collections")])
+            group.setIcon(0, icon("data"))
+            self.outline.addTopLevelItem(group)
+            for collection in collections:
+                users = self.collection_users(collection)
+                entry = QTreeWidgetItem(
+                    [
+                        collection["name"]
+                        + " · "
+                        + ntr("{count} field", "{count} fields", len(collection["fields"])).format(
+                            count=len(collection["fields"])
+                        )
+                    ]
+                )
+                entry.setIcon(0, icon("data"))
+                for unit in users:
+                    entry.addChild(self._logic_item(unit, unit if "params" in unit else None))
+                group.addChild(entry)
+                entry.setExpanded(True)
+            group.setExpanded(True)
         for edge in edges:
             self.add_edge(edge)
         scene.setSceneRect(scene.itemsBoundingRect().adjusted(-70, -70, 70, 70))
@@ -362,6 +390,15 @@ class MapPanel(QWidget):
             )
             if line:
                 line.setSelected(True)
+
+    def collection_users(self, collection):
+        """The flows and block functions whose blocks cite this collection."""
+        project = self.window.project
+        return [
+            unit
+            for unit in [*project.editable_flows, *block_functions(project)]
+            if uses_collection(unit.get("body"), collection["id"], collection["name"])
+        ]
 
     def _logic_item(self, unit, function=None):
         """One event or block function in the list; activating it opens it in Logic."""
