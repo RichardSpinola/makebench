@@ -6649,8 +6649,8 @@ msgid "Built-in"
 msgstr "Embutido"
 
 #: src/makebench/editor/themes_ui.py
-msgid "Built-in themes can't be changed. Make a new one."
-msgstr "Temas embutidos não podem ser alterados. Crie um novo."
+msgid "Built-in and official themes can't be changed. Make a new one."
+msgstr "Temas embutidos e oficiais não podem ser alterados. Crie um novo."
 
 #: src/makebench/editor/themes_ui.py
 msgid "Buttons"
@@ -7045,3 +7045,21 @@ msgstr "Publicar"
 
 msgid "Saved with the project and used when it runs."
 msgstr "Salvo com o projeto e usado quando ele roda."
+
+msgid "Official"
+msgstr "Oficial"
+
+msgid "Soothing pastels: Mocha when dark, Latte when light."
+msgstr "Tons pastel suaves: Mocha no escuro, Latte no claro."
+
+msgid "A dark theme with vivid purple; the light side uses Alucard."
+msgstr "Um tema escuro com roxo vivo; o lado claro usa o Alucard."
+
+msgid "Retro groove: warm earth tones with a soft contrast."
+msgstr "Retrô: tons terrosos e quentes com contraste suave."
+
+msgid "An arctic, north-bluish palette, calm and clean."
+msgstr "Uma paleta ártica e azulada, calma e limpa."
+
+msgid "Precise, balanced colors with fixed contrast in both modes."
+msgstr "Cores precisas e equilibradas, com o mesmo contraste nos dois modos."

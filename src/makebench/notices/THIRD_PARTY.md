@@ -50,3 +50,15 @@ license and notice files of the libraries they bundle into
 
 These notices describe Makebench's components. They do not decide the license of
 an application you build with Makebench; choose that license yourself.
+
+## Official color themes — MIT
+
+The `.mbtheme` files in `makebench/themepack` reproduce the color palettes of
+well-known themes, adapted to Makebench's eight surface colors. No code or
+artwork is copied. Each palette belongs to its authors, all under the MIT license:
+
+- Catppuccin — Copyright (c) 2021 Catppuccin, https://github.com/catppuccin/catppuccin
+- Dracula and Alucard — Copyright (c) 2016 Dracula Theme, https://draculatheme.com
+- Gruvbox — Copyright (c) 2012 Pavel Pertsev (morhetz), https://github.com/morhetz/gruvbox
+- Nord — Copyright (c) 2016 Sven Greb (Arctic Ice Studio), https://www.nordtheme.com
+- Solarized — Copyright (c) 2011 Ethan Schoonover, https://ethanschoonover.com/solarized

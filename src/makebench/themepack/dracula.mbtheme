@@ -1,0 +1,27 @@
+{
+  "format": "mbtheme",
+  "version": 1,
+  "name": "Dracula",
+  "about": "A dark theme with vivid purple; the light side uses Alucard.",
+  "accent": "#bd93f9",
+  "dark": {
+    "win": "#282a36",
+    "side": "#21222c",
+    "base": "#191a21",
+    "line": "#44475a",
+    "btn": "#343746",
+    "btnLine": "#565970",
+    "fg": "#f8f8f2",
+    "mut": "#a4abc8"
+  },
+  "light": {
+    "win": "#fffbeb",
+    "side": "#f5efd6",
+    "base": "#ffffff",
+    "line": "#dcd6bf",
+    "btn": "#fffdf5",
+    "btnLine": "#cfc8ad",
+    "fg": "#1f1f1f",
+    "mut": "#6c664b"
+  }
+}

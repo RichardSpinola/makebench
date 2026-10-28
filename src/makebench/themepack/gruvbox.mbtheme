@@ -1,0 +1,27 @@
+{
+  "format": "mbtheme",
+  "version": 1,
+  "name": "Gruvbox",
+  "about": "Retro groove: warm earth tones with a soft contrast.",
+  "accent": "#d79921",
+  "dark": {
+    "win": "#282828",
+    "side": "#1d2021",
+    "base": "#1d2021",
+    "line": "#504945",
+    "btn": "#3c3836",
+    "btnLine": "#665c54",
+    "fg": "#ebdbb2",
+    "mut": "#a89984"
+  },
+  "light": {
+    "win": "#fbf1c7",
+    "side": "#f2e5bc",
+    "base": "#f9f5d7",
+    "line": "#d5c4a1",
+    "btn": "#ebdbb2",
+    "btnLine": "#bdae93",
+    "fg": "#3c3836",
+    "mut": "#7c6f64"
+  }
+}

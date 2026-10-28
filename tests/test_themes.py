@@ -33,6 +33,24 @@ class ThemeFileTests(unittest.TestCase):
     def test_builtin_is_valid_and_listed_first(self):
         self.assertEqual(themes.installed(self.folder)[0]["name"], "Makebench")
 
+    def test_official_pack_is_listed_after_builtin_and_never_edited(self):
+        names = [theme["name"] for theme in themes.installed(self.folder)]
+        self.assertEqual(
+            names, ["Makebench", "Catppuccin", "Dracula", "Gruvbox", "Nord", "Solarized"]
+        )
+        for theme in themes.installed(self.folder)[1:]:
+            self.assertTrue(theme["official"])
+            self.assertFalse(themes.editable(theme))
+
+    def test_user_theme_cannot_take_an_official_name(self):
+        themes.add(self.theme(name="Nord", accent="#123456"), self.folder)
+        themes.add(self.theme(name="Forest"), self.folder)
+        listed = themes.installed(self.folder)
+        nord = [theme for theme in listed if theme["name"] == "Nord"]
+        self.assertEqual(len(nord), 1)
+        self.assertTrue(nord[0]["official"])
+        self.assertTrue(themes.editable(listed[-1]))
+
     def test_rejects_bad_files(self):
         bad = [
             "not json",
@@ -68,7 +86,12 @@ class ThemeFileTests(unittest.TestCase):
         (self.folder / "broken.mbtheme").write_text("{")
         themes.import_theme(self.write(self.theme()), self.folder)
         self.assertEqual(
-            [t["name"] for t in themes.installed(self.folder)], ["Makebench", "Forest"]
+            [
+                t["name"]
+                for t in themes.installed(self.folder)
+                if t["path"] is None or not t.get("official")
+            ],
+            ["Makebench", "Forest"],
         )
 
 
@@ -95,7 +118,11 @@ class MakebenchLookTests(unittest.TestCase):
     def test_tokens_are_legible_in_both_modes(self):
         from makebench.ui.theme import contrast, look_tokens
 
-        theme = themes.validate(themes.BUILTIN)
+        for theme in themes.installed(Path(tempfile.gettempdir()) / "no-such-themes"):
+            with self.subTest(theme=theme["name"]):
+                self.check_legible(theme, contrast, look_tokens)
+
+    def check_legible(self, theme, contrast, look_tokens):
         for dark in (False, True):
             t = look_tokens(theme, dark)
             for key in ("text", "muted", "success", "warning", "error", "info"):
@@ -150,18 +177,24 @@ class ThemesDialogTests(unittest.TestCase):
         shutil.rmtree(self.folder)
 
     def test_lists_builtin_user_and_desktop_and_applies(self):
+        from makebench.editor.look import DETAIL_ROLE
         from makebench.editor.themes_ui import DESKTOP, ThemesDialog
+        from makebench.i18n import tr
 
         mine = {**themes.validate(themes.BUILTIN), "name": "Ocean", "accent": "#118899"}
         themes.add(mine, self.folder)
         dialog = ThemesDialog(folder=self.folder)
         names = [dialog.list.item(i).data(256) for i in range(dialog.list.count())]
-        self.assertEqual(names, ["Makebench", "Ocean", DESKTOP])
-        dialog.list.setCurrentRow(1)
+        official = ["Catppuccin", "Dracula", "Gruvbox", "Nord", "Solarized"]
+        self.assertEqual(names, ["Makebench", *official, "Ocean", DESKTOP])
+        dialog.list.setCurrentRow(names.index("Nord"))
+        self.assertIn(tr("Official"), dialog.list.currentItem().data(DETAIL_ROLE))
+        self.assertFalse(dialog.swatches["fg"].isEnabled())
+        dialog.list.setCurrentRow(names.index("Ocean"))
         self.assertTrue(dialog.swatches["fg"].isEnabled())
         dialog._change_color("accent", "#aa3355")
         self.assertEqual(themes.load(self.folder / "ocean.mbtheme")["accent"], "#aa3355")
-        dialog.list.setCurrentRow(2)
+        dialog.list.setCurrentRow(names.index(DESKTOP))
         dialog._apply()
         self.assertEqual(self.manager.look, "native")
         dialog.list.setCurrentRow(0)

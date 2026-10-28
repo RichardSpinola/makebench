@@ -15,6 +15,8 @@ VERSION = 1
 MAX_SIZE = 64 * 1024
 SURFACE_KEYS = ("win", "side", "base", "line", "btn", "btnLine", "fg", "mut")
 COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
+# Well-known palettes shipped with Makebench; see notices/THIRD_PARTY.md.
+OFFICIAL_DIR = Path(__file__).resolve().parent.parent / "themepack"
 
 BUILTIN = {
     "format": FORMAT,
@@ -114,21 +116,37 @@ def slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "theme"
 
 
-def installed(folder: Path | None = None) -> list[dict]:
-    """The built-in theme first, then the valid user themes by name; bad files are skipped.
-
-    Each theme carries its file as "path" (None for the built-in one).
-    """
+def _folder_themes(folder: Path, **extra) -> list[dict]:
     found = []
-    folder = Path(folder) if folder else user_dir()
     for path in sorted(folder.glob("*.mbtheme")) if folder.is_dir() else []:
         try:
-            found.append({**load(path), "path": path})
+            found.append({**load(path), "path": path, **extra})
         except ThemeError:
             continue
-    found.sort(key=lambda theme: theme["name"].lower())
-    builtin = {**validate(BUILTIN), "path": None}
-    return [builtin, *[t for t in found if t["name"] != BUILTIN["name"]]]
+    return sorted(found, key=lambda theme: theme["name"].lower())
+
+
+def installed(folder: Path | None = None) -> list[dict]:
+    """The built-in theme, the official pack, then the user's themes; bad files are skipped.
+
+    Each theme carries its file as "path" (None for the built-in one). Official themes
+    are marked "official" and, like the built-in one, are copied rather than edited;
+    a user theme with a name already taken is left out.
+    """
+    result = [{**validate(BUILTIN), "path": None}]
+    taken = {BUILTIN["name"]}
+    official = _folder_themes(OFFICIAL_DIR, official=True)
+    mine = _folder_themes(Path(folder) if folder else user_dir())
+    for theme in official + mine:
+        if theme["name"] not in taken:
+            taken.add(theme["name"])
+            result.append(theme)
+    return result
+
+
+def editable(theme: dict) -> bool:
+    """Only the person's own files can be changed in place."""
+    return theme["path"] is not None and not theme.get("official")
 
 
 def add(theme: dict, folder: Path | None = None) -> Path:

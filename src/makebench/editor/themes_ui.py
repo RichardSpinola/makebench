@@ -33,6 +33,17 @@ from .look import DETAIL_ROLE, TwoLineDelegate, button_row, header, make_muted
 DESKTOP = "\x00desktop"
 
 
+def official_about() -> dict[str, str]:
+    """Translated descriptions of the official themes, by name."""
+    return {
+        "Catppuccin": tr("Soothing pastels: Mocha when dark, Latte when light."),
+        "Dracula": tr("A dark theme with vivid purple; the light side uses Alucard."),
+        "Gruvbox": tr("Retro groove: warm earth tones with a soft contrast."),
+        "Nord": tr("An arctic, north-bluish palette, calm and clean."),
+        "Solarized": tr("Precise, balanced colors with fixed contrast in both modes."),
+    }
+
+
 def color_names() -> list[tuple[str, str]]:
     return [
         ("win", tr("Background")),
@@ -132,7 +143,9 @@ class Swatch(QPushButton):
         self.value = value
         self.setText(f"{self.label}  {value}")
         self.setEnabled(editable)
-        self.setToolTip("" if editable else tr("Built-in themes can't be changed. Make a new one."))
+        self.setToolTip(
+            "" if editable else tr("Built-in and official themes can't be changed. Make a new one.")
+        )
         text = "#000000" if QColor(value).lightnessF() > 0.55 else "#ffffff"
         self.setStyleSheet(f"QPushButton {{ background: {value}; color: {text}; }}")
 
@@ -230,12 +243,15 @@ class ThemesDialog(QDialog):
             DESKTOP if self.theme_manager.look == "native" else self.theme_manager.color_theme
         )
         self.list.clear()
-        rows = [(name, theme["path"]) for name, theme in self.themes.items()]
+        rows = list(self.themes.items())
         rows.append((DESKTOP, None))
-        for name, path in rows:
-            kind = tr("Built-in") if path is None else tr("Yours")
+        for name, theme in rows:
             if name == DESKTOP:
                 kind = tr("Follows your desktop")
+            elif theme.get("official"):
+                kind = tr("Official")
+            else:
+                kind = tr("Built-in") if theme["path"] is None else tr("Yours")
             detail = kind + (" · " + tr("In use") if self._in_use(name) else "")
             item = QListWidgetItem(tr("Desktop colors") if name == DESKTOP else name)
             item.setData(Qt.ItemDataRole.UserRole, name)
@@ -271,19 +287,21 @@ class ThemesDialog(QDialog):
         about = theme.get("about", "")
         if theme["path"] is None:
             about = tr("The default theme: sober, dense and at home among Qt programs.")
+        elif theme.get("official"):
+            about = official_about().get(theme["name"], about)
         self.about.setText(about)
         colors = theme["dark" if self.mode.currentIndex() == 0 else "light"]
         self.preview.show_theme(colors, theme["accent"])
-        editable = theme["path"] is not None
+        editable = themes.editable(theme)
         for key, swatch in self.swatches.items():
             swatch.show_color(theme["accent"] if key == "accent" else colors[key], editable)
 
     def _clean(self, theme):
-        return {key: value for key, value in theme.items() if key != "path"}
+        return {key: value for key, value in theme.items() if key not in ("path", "official")}
 
     def _change_color(self, key, value):
         theme = self.themes.get(self._current())
-        if theme is None or theme["path"] is None:
+        if theme is None or not themes.editable(theme):
             return
         if key == "accent":
             theme["accent"] = value

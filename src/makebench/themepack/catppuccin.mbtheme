@@ -1,0 +1,27 @@
+{
+  "format": "mbtheme",
+  "version": 1,
+  "name": "Catppuccin",
+  "about": "Soothing pastels: Mocha when dark, Latte when light.",
+  "accent": "#8839ef",
+  "dark": {
+    "win": "#1e1e2e",
+    "side": "#181825",
+    "base": "#11111b",
+    "line": "#45475a",
+    "btn": "#313244",
+    "btnLine": "#585b70",
+    "fg": "#cdd6f4",
+    "mut": "#a6adc8"
+  },
+  "light": {
+    "win": "#e6e9ef",
+    "side": "#dce0e8",
+    "base": "#eff1f5",
+    "line": "#bcc0cc",
+    "btn": "#eff1f5",
+    "btnLine": "#acb0be",
+    "fg": "#4c4f69",
+    "mut": "#6c6f85"
+  }
+}

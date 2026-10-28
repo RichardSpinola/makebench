@@ -1,0 +1,27 @@
+{
+  "format": "mbtheme",
+  "version": 1,
+  "name": "Nord",
+  "about": "An arctic, north-bluish palette, calm and clean.",
+  "accent": "#5e81ac",
+  "dark": {
+    "win": "#2e3440",
+    "side": "#292e39",
+    "base": "#242933",
+    "line": "#434c5e",
+    "btn": "#3b4252",
+    "btnLine": "#4c566a",
+    "fg": "#d8dee9",
+    "mut": "#a5adbd"
+  },
+  "light": {
+    "win": "#e5e9f0",
+    "side": "#d8dee9",
+    "base": "#eceff4",
+    "line": "#c2cad6",
+    "btn": "#eceff4",
+    "btnLine": "#b3bccb",
+    "fg": "#2e3440",
+    "mut": "#4c566a"
+  }
+}

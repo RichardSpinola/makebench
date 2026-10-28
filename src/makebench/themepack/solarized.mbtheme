@@ -1,0 +1,27 @@
+{
+  "format": "mbtheme",
+  "version": 1,
+  "name": "Solarized",
+  "about": "Precise, balanced colors with fixed contrast in both modes.",
+  "accent": "#268bd2",
+  "dark": {
+    "win": "#002b36",
+    "side": "#00252e",
+    "base": "#001f27",
+    "line": "#0e4552",
+    "btn": "#073642",
+    "btnLine": "#2a5561",
+    "fg": "#93a1a1",
+    "mut": "#839496"
+  },
+  "light": {
+    "win": "#fdf6e3",
+    "side": "#f5efdc",
+    "base": "#fffcf2",
+    "line": "#ddd6c1",
+    "btn": "#eee8d5",
+    "btnLine": "#c9c2ad",
+    "fg": "#586e75",
+    "mut": "#657b83"
+  }
+}
