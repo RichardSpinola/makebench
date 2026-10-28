@@ -35,6 +35,35 @@ from .theme import manager, icon
 from makebench.i18n import ntr, tr
 
 
+def edge_path(source, target):
+    """Route an arrow between two cards' top-left corners without crossing either card."""
+    top = QPointF(CARD_WIDTH / 2, 0)
+    bottom = QPointF(CARD_WIDTH / 2, CARD_HEIGHT)
+    if abs(target.y() - source.y()) >= CARD_HEIGHT:
+        # Another row: leave from the facing edge and enter the other card's facing edge.
+        down = target.y() > source.y()
+        start = source + (bottom if down else top)
+        end = target + (top if down else bottom)
+        bend = max(35, abs(end.y() - start.y()) / 2) * (1 if down else -1)
+        path = QPainterPath(start)
+        path.cubicTo(start + QPointF(0, bend), end - QPointF(0, bend), end)
+        return path
+    if target.x() > source.x():
+        start = source + QPointF(CARD_WIDTH, 126)
+        end = target + QPointF(0, 126)
+        bend = max(35, (end.x() - start.x()) / 2)
+        path = QPainterPath(start)
+        path.cubicTo(start + QPointF(bend, 0), end - QPointF(bend, 0), end)
+        return path
+    # Same row, going back (or to itself): an arc over the row.
+    start = source + top
+    end = target + top
+    lane = min(start.y(), end.y()) - 65
+    path = QPainterPath(start)
+    path.cubicTo(QPointF(start.x() + 35, lane), QPointF(end.x() - 35, lane), end)
+    return path
+
+
 class MapPanel(QWidget):
     """Thumbnail composition, keyboard navigation and contextual inspection in one space."""
 
@@ -346,19 +375,7 @@ class MapPanel(QWidget):
                 continue
             if source is target and edge["source"] in self.collapsed:
                 continue
-            start = source.scenePos() + QPointF(CARD_WIDTH, 126)
-            end = target.scenePos() + QPointF(0, 126)
-            path = QPainterPath(start)
-            if target.pos().x() > source.pos().x():
-                bend = max(35, (end.x() - start.x()) / 2)
-                path.cubicTo(start + QPointF(bend, 0), end - QPointF(bend, 0), end)
-            else:
-                start = source.scenePos() + QPointF(CARD_WIDTH / 2, 0)
-                end = target.scenePos() + QPointF(CARD_WIDTH / 2, 0)
-                lane = min(start.y(), end.y()) - 65
-                path = QPainterPath(start)
-                path.cubicTo(QPointF(start.x() + 35, lane), QPointF(end.x() - 35, lane), end)
-            line = MapEdge(path, edge)
+            line = MapEdge(edge_path(source.scenePos(), target.scenePos()), edge)
             self.view.scene().addItem(line)
             self.edges.append(line)
 

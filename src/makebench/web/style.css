@@ -2,3 +2,5 @@ html, body {margin:0; height:100%; overflow:hidden; background:var(--mb-canvas, 
 #workspace {height:100%; width:100%;}
 #empty {position:absolute; inset:0; display:flex; justify-content:center; align-items:center; background:var(--mb-canvas, transparent); padding:30px; text-align:center; pointer-events:none;}
 .blocklyToolbox {font-size:13px;}
+/* Blockly sets 16px on the labels; keep them at the size of the rest of the interface. */
+.blocklyToolbox .blocklyToolboxCategoryLabel {font:inherit;}

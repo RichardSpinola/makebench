@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Map thumbnails follow the desktop palette they are drawn with."""
+"""Map thumbnails follow the desktop palette; arrows go around the cards."""
 
 import support  # noqa: F401  (first: isolates settings and data)
 import os
@@ -42,3 +42,42 @@ class ThumbnailSignatureTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EdgeRouteTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from PySide6.QtWidgets import QApplication
+
+        cls.app = QApplication.instance() or QApplication([])
+
+    def crosses_a_card(self, source, target):
+        from PySide6.QtCore import QRectF
+
+        from makebench.editor.map_items import CARD_HEIGHT, CARD_WIDTH
+        from makebench.editor.map_panel import edge_path
+
+        path = edge_path(source, target)
+        cards = [
+            QRectF(point, point + type(point)(CARD_WIDTH, CARD_HEIGHT))
+            for point in (source, target)
+        ]
+        for step in range(1, 20):
+            point = path.pointAtPercent(step / 20)
+            if any(card.adjusted(2, 2, -2, -2).contains(point) for card in cards):
+                return True
+        return False
+
+    def test_arrows_to_another_row_go_around_the_cards(self):
+        from PySide6.QtCore import QPointF
+
+        origin = QPointF(0, 0)
+        for target in (QPointF(-370, 387), QPointF(0, 387), QPointF(370, 387), QPointF(0, -387)):
+            self.assertFalse(self.crosses_a_card(origin, target), target)
+
+    def test_arrows_in_the_same_row_stay_outside_the_cards(self):
+        from PySide6.QtCore import QPointF
+
+        origin = QPointF(0, 0)
+        for target in (QPointF(370, 0), QPointF(-370, 0)):
+            self.assertFalse(self.crosses_a_card(origin, target), target)
