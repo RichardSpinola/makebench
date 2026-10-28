@@ -216,3 +216,22 @@ class CollectionMixin:
                 del self.project.metadata["collections"]
 
         self._edit(edit, label=tr("Remove collection"))
+
+    def clear_test_data(self):
+        """Delete the records stored by test runs of this project; the app's own data stays."""
+        from makebench.core.datastore import data_path
+
+        path = data_path(self.project, True)
+        if not path.is_file():
+            self.statusBar().showMessage(tr("There is no test data to delete."), 6000)
+            return
+        answer = QMessageBox.question(
+            self,
+            tr("Delete test data"),
+            tr("Delete all records stored by test runs of this project?"),
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        for suffix in ("", "-wal", "-shm", "-journal"):
+            path.with_name(path.name + suffix).unlink(missing_ok=True)
+        self.statusBar().showMessage(tr("Test data deleted."), 6000)

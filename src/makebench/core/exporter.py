@@ -192,7 +192,7 @@ def main():
     """Start real GTK controls, with no editor and no Qt dependency."""
     root=Path(__file__).resolve().parent;path=root/'project.makebench.json'
     project=load_project(path);set_language(project.application.get('language'))
-    return GtkRuntime(project,SourceBuffer.load(path).text,lambda name:(root/name).read_bytes(),root,root/'project.actions.py',lambda message:print(message.get('text',message.get('message','')),end='' if message.get('type')=='log' else '\n') if message.get('type') in {'log','error'} else None).run()
+    return GtkRuntime(project,SourceBuffer.load(path).text,lambda name:(root/name).read_bytes(),root,root/'project.actions.py',lambda message:print(message.get('text',message.get('message','')),end='' if message.get('type')=='log' else '\n') if message.get('type') in {'log','error'} else None,testing=False).run()
 
 
 if __name__=='__main__':raise SystemExit(main())

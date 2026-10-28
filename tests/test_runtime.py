@@ -203,6 +203,44 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("From blocks", w.output.toPlainText())
         self.assertNotIn("no", w.output.toPlainText().split("From blocks")[-1])
 
+    def test_python_flow_stores_and_reads_records_through_ctx_data(self):
+        from makebench.core.codegen import convert_to_python
+        from makebench.core.datastore import data_path
+
+        self.project.metadata["collections"] = [
+            {
+                "id": "authors",
+                "name": "Autores",
+                "fields": [{"id": "n", "name": "nome", "type": "text"}],
+            },
+            {
+                "id": "books",
+                "name": "Livros",
+                "fields": [
+                    {"id": "t", "name": "titulo", "type": "text"},
+                    {"id": "a", "name": "autor", "type": "ref", "target": "authors"},
+                ],
+            },
+        ]
+        self.flow["body"] = [log("hello", "x")]
+        convert_to_python(self.project, "")
+        source = (
+            "def on_new_button_click(ctx):\n"
+            "    author = ctx.data.add('Autores', nome='Ana')\n"
+            "    ctx.data.add('Livros', titulo='Um', autor=author)\n"
+            "    ctx.log(ctx.data.count('Livros'))\n"
+            "    try:\n"
+            "        ctx.data.delete('Autores', author)\n"
+            "    except Exception as error:\n"
+            "        ctx.log(type(error).__name__ + ': ' + str(error))\n"
+        )
+        w = self.window(source)
+        self.click(w)
+        text = w.output.toPlainText()
+        self.assertIn("1\n", text)
+        self.assertIn("TaskError: Cannot delete: 1 record of Livros still points to it.", text)
+        self.assertTrue(data_path(self.project, True).is_file())
+
     def test_change_timer_and_close_events_run_their_flows(self):
         field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
         window = self.project.root

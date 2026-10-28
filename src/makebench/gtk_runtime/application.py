@@ -29,7 +29,9 @@ def terminate_group(process, force=False):
 class GtkRuntime:
     """Share the Qt runtime's ctx protocol and keep the GTK loop responsive."""
 
-    def __init__(self, project, source, read_asset, root, source_filename, observer=None):
+    def __init__(
+        self, project, source, read_asset, root, source_filename, observer=None, testing=True
+    ):
         """Prepare the snapshot; building the instance does not run the user's code."""
         import gi
 
@@ -56,6 +58,7 @@ class GtkRuntime:
         if diagnostics:
             raise ProjectError("\n".join(diagnostics))
         self.debug_config = {}
+        self.testing = testing
         self.observer = observer or (lambda value: None)
         self.windows = {}
         self.views = {}
@@ -114,17 +117,20 @@ class GtkRuntime:
         )
         from makebench.core.source import source_files
 
-        self.send(
-            {
-                "source_files": source_files(self.source),
-                "project": self.project.to_dict(),
-                "source": self.source,
-                "root": str(self.root),
-                "source_filename": str(self.source_filename or "<makebench-actions>"),
-                "debug": self.debug_config,
-                "language": language(),
-            }
-        )
+        snapshot = {
+            "source_files": source_files(self.source),
+            "project": self.project.to_dict(),
+            "source": self.source,
+            "root": str(self.root),
+            "source_filename": str(self.source_filename or "<makebench-actions>"),
+            "debug": self.debug_config,
+            "language": language(),
+        }
+        if self.project.metadata.get("collections"):
+            from makebench.core.datastore import data_path
+
+            snapshot["data_path"] = str(data_path(self.project, testing=self.testing))
+        self.send(snapshot)
         threading.Thread(target=self.read_worker, daemon=True).start()
         threading.Thread(
             target=self.read_channel, args=(self.process.stderr, "stderr"), daemon=True

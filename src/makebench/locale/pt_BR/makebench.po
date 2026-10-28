@@ -7355,3 +7355,59 @@ msgstr "{count} campo"
 #: src/makebench/editor/collections_ui.py
 msgid "{count} fields"
 msgstr "{count} campos"
+
+#: src/makebench/core/datastore.py
+msgid "Cannot delete: {count} record of {collection} still points to it."
+msgstr "Não é possível apagar: {count} registro de {collection} ainda aponta para ele."
+
+#: src/makebench/core/datastore.py
+msgid "Cannot delete: {count} records of {collection} still point to it."
+msgstr "Não é possível apagar: {count} registros de {collection} ainda apontam para ele."
+
+#: src/makebench/editor/collections_ui.py
+msgid "Delete all records stored by test runs of this project?"
+msgstr "Apagar todos os registros guardados pelos testes deste projeto?"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Delete test data"
+msgstr "Apagar dados de teste"
+
+#: src/makebench/editor/development.py
+msgid "Delete test data…"
+msgstr "Apagar dados de teste…"
+
+#: src/makebench/core/datastore.py
+msgid "Invalid value for {field}: {value!r}."
+msgstr "Valor inválido para {field}: {value!r}."
+
+#: src/makebench/core/datastore.py
+msgid "Only number fields can be summed: {field}."
+msgstr "Só campos numéricos podem ser somados: {field}."
+
+#: src/makebench/editor/collections_ui.py
+msgid "Test data deleted."
+msgstr "Dados de teste apagados."
+
+#: src/makebench/editor/collections_ui.py
+msgid "There is no test data to delete."
+msgstr "Não há dados de teste para apagar."
+
+#: src/makebench/runtime/worker.py
+msgid "This project has no data collections."
+msgstr "Este projeto não tem coleções de dados."
+
+#: src/makebench/core/datastore.py
+msgid "Unknown collection: {name}."
+msgstr "Coleção desconhecida: {name}."
+
+#: src/makebench/core/datastore.py
+msgid "Unknown comparison: {operator}."
+msgstr "Comparação desconhecida: {operator}."
+
+#: src/makebench/core/datastore.py
+msgid "Unknown field {field} in {collection}."
+msgstr "Campo {field} desconhecido em {collection}."
+
+#: src/makebench/core/datastore.py
+msgid "{collection} has no record {id}."
+msgstr "{collection} não tem o registro {id}."

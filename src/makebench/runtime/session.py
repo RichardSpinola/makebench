@@ -29,7 +29,7 @@ class RuntimeSession(QObject):
     admin_changed = Signal(bool)
     task_changed = Signal(dict)
 
-    def __init__(self, project, source, root, source_filename, parent=None):
+    def __init__(self, project, source, root, source_filename, parent=None, testing=True):
         """Keep the snapshot and transport; construction does not start execution."""
         super().__init__(parent)
         self.project = project
@@ -44,6 +44,10 @@ class RuntimeSession(QObject):
             "source_filename": str(source_filename),
             "language": language(),
         }
+        if project.metadata.get("collections"):
+            from makebench.core.datastore import data_path
+
+            self.snapshot["data_path"] = str(data_path(project, testing))
         self.process = QProcess(self)
         self.process.setUnixProcessParameters(QProcess.UnixProcessFlag.CreateNewSession)
         environment = QProcessEnvironment.systemEnvironment()

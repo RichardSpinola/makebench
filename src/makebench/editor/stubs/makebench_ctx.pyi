@@ -3,8 +3,49 @@
 
 from typing import Any
 
+class Data:
+    """Records of the collections declared in the Data panel, kept between runs."""
+
+    def add(self, collection: str, /, **fields: Any) -> int:
+        """Add a record (fields by name) and return its id."""
+    def update(self, collection: str, record_id: int, /, **fields: Any) -> None:
+        """Change fields of a record."""
+    def delete(self, collection: str, record_id: int) -> None:
+        """Delete a record; refused while other records still point to it."""
+    def get(self, collection: str, record_id: int) -> dict[str, Any] | None:
+        """One record as a dict with its id, or None."""
+    def find(
+        self,
+        collection: str,
+        field: str | None = None,
+        op: str = "=",
+        value: Any = None,
+        order: str | None = None,
+        descending: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Records where field op value holds (=, !=, <, >, <=, >=, contains)."""
+    def count(
+        self, collection: str, field: str | None = None, op: str = "=", value: Any = None
+    ) -> int:
+        """How many records match."""
+    def sum(
+        self,
+        collection: str,
+        field: str,
+        filter_field: str | None = None,
+        op: str = "=",
+        value: Any = None,
+    ) -> float:
+        """Total of a number field over the matching records."""
+    def name(self, collection: str, record_id: int) -> str:
+        """The text that names a record in references."""
+
 class Context:
     """The running application, as seen by your own Python functions."""
+
+    @property
+    def data(self) -> Data:
+        """The records of your collections."""
 
     @property
     def window_variables(self) -> dict[str, Any]:

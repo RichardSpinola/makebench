@@ -17,6 +17,7 @@ import traceback
 from .debugger import Debugger, DebugStopped, WorkerTransport
 
 from makebench.core.codegen import generate
+from makebench.core.datastore import DataError, DataStore
 from makebench.core.project import Project
 from makebench.i18n import set_language, tr
 
@@ -36,6 +37,59 @@ def table_rows(rows):
     return [[str(cell) for cell in row] for row in rows]
 
 
+class Data:
+    """`ctx.data`: the project's collections; failures end the flow like any task error."""
+
+    def __init__(self, open_store):
+        """Open the database on first use, so projects without records never create a file."""
+        self._open, self._store = open_store, None
+
+    def _call(self, method, *args, **kwargs):
+        if self._store is None:
+            self._store = self._open()
+        try:
+            return getattr(self._store, method)(*args, **kwargs)
+        except DataError as exc:
+            raise TaskError(str(exc)) from exc
+
+    def close(self):
+        """Release the database file."""
+        if self._store is not None:
+            self._store.close()
+
+    def add(self, collection, /, **fields):
+        """Add a record (fields by name) and return its id."""
+        return self._call("add", collection, **fields)
+
+    def update(self, collection, record_id, /, **fields):
+        """Change fields of a record."""
+        return self._call("update", collection, record_id, **fields)
+
+    def delete(self, collection, record_id):
+        """Delete a record; refused while other records still point to it."""
+        return self._call("delete", collection, record_id)
+
+    def get(self, collection, record_id):
+        """One record as a dict (with its id), or None."""
+        return self._call("get", collection, record_id)
+
+    def find(self, collection, field=None, op="=", value=None, order=None, descending=False):
+        """Records matching `field op value` (=, !=, <, >, <=, >=, contains), in order."""
+        return self._call("find", collection, field, op, value, order, descending)
+
+    def count(self, collection, field=None, op="=", value=None):
+        """How many records match."""
+        return self._call("count", collection, field, op, value)
+
+    def sum(self, collection, field, filter_field=None, op="=", value=None):
+        """Total of a number field over the matching records."""
+        return self._call("sum", collection, field, filter_field, op, value)
+
+    def name(self, collection, record_id):
+        """The text that names a record, as shown in references."""
+        return self._call("name", collection, record_id)
+
+
 class Context:
     """Synchronous application API, with requests served by the UI process."""
 
@@ -50,6 +104,17 @@ class Context:
         self.sequence = 0
         self.receive_response = None
         self.debugger = None
+        self.data_source = None
+        self._data = None
+
+    @property
+    def data(self):
+        """The records of the project's collections."""
+        if self._data is None:
+            if self.data_source is None:
+                raise TaskError(tr("This project has no data collections."))
+            self._data = Data(lambda: DataStore(*self.data_source))
+        return self._data
 
     def request(self, method, **values):
         """Wait for the matching reply, aborting on cancellation/failure."""
@@ -287,6 +352,8 @@ def main():
             )
             scope[variable["name"]] = variable.get("initial")
         context.window_defaults = deepcopy(context.window_scopes)
+        if snapshot.get("data_path") and project.metadata.get("collections"):
+            context.data_source = (snapshot["data_path"], project.metadata["collections"])
         source = snapshot["source"]
         source_filename = snapshot.get("source_filename", source_filename)
         from makebench.core.source import SourceText
@@ -357,6 +424,8 @@ def main():
     except BaseException as exc:
         failure(exc)
     finally:
+        if context._data is not None:
+            context._data.close()
         protocol.close()
     return 0
 

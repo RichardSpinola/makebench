@@ -216,6 +216,21 @@ class EditorTests(unittest.TestCase):
         self.window.undo()
         self.assertEqual(len(self.window.project.metadata["collections"]), 1)
 
+    def test_clear_test_data_only_touches_the_test_database(self):
+        from makebench.core.datastore import data_path
+
+        path = data_path(self.window.project, True)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"x")
+        app_file = data_path(self.window.project, False)
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No):
+            self.window.clear_test_data()
+        self.assertTrue(path.exists())
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            self.window.clear_test_data()
+        self.assertFalse(path.exists())
+        self.assertNotEqual(path, app_file)
+
 
 if __name__ == "__main__":
     unittest.main()

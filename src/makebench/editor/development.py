@@ -119,6 +119,7 @@ class DevelopmentMixin:
             (tr("+ Collection"), self.collection_dialog),
             (tr("Edit"), self.edit_data_item),
             (tr("Remove"), self.remove_variable),
+            (tr("Delete test data…"), self.clear_test_data),
         ]:
             button = QPushButton(label)
             button.clicked.connect(callback)

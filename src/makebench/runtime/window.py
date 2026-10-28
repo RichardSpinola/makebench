@@ -107,7 +107,12 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
         )
         root = Path(root or self.temporary.name).resolve()
         self.session = RuntimeSession(
-            project, source, root, source_filename or str(root / "project.actions.py"), self
+            project,
+            source,
+            root,
+            source_filename or str(root / "project.actions.py"),
+            self,
+            testing=supervision,
         )
         self.root_window_id = project.entry_window or project.root.id
         initial = project.find(self.root_window_id)
