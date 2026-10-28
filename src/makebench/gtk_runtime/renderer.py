@@ -47,6 +47,7 @@ class GtkView:
         self.enabled = {}
         self.hints = set()  # outputs still showing their starting text
         self.ranges = set()  # numbers and sliders
+        self.areas = set()  # long text inputs
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
         self.provider = None
@@ -247,6 +248,14 @@ class GtkView:
             from makebench.terminal.gtk import create_terminal
 
             widget = create_terminal()
+        elif k == ComponentKind.TEXT_AREA:
+            control = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR)
+            control.get_buffer().set_text(text)
+            control.get_buffer().connect("changed", lambda _buffer: self.user_changed(node.id))
+            widget = Gtk.ScrolledWindow(min_content_height=80)
+            widget.set_child(control)
+            self.widgets[node.id] = control
+            self.areas.add(node.id)
         elif k == ComponentKind.OUTPUT:
             control = Gtk.TextView(editable=False, monospace=True, wrap_mode=Gtk.WrapMode.WORD_CHAR)
             control.get_buffer().set_text(text)
@@ -315,7 +324,8 @@ class GtkView:
             w._makebench_label.set_label(str(value))
         elif isinstance(w, Gtk.TextView):
             w.get_buffer().set_text(str(value))
-            self.hints.add(identifier)
+            if identifier not in self.areas:
+                self.hints.add(identifier)
         elif isinstance(w, (Gtk.Button, Gtk.CheckButton, Gtk.Label)):
             w.set_label(str(value))
         elif isinstance(w, Gtk.Entry):

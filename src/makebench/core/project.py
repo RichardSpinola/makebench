@@ -35,6 +35,7 @@ class ComponentKind(StrEnum):
     LABEL = "label"
     BUTTON = "button"
     TEXT_INPUT = "text_input"
+    TEXT_AREA = "text_area"
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     NUMBER = "number"
@@ -46,7 +47,11 @@ class ComponentKind(StrEnum):
 
 
 V10_EVENTS = {"change", "close", "timer"}
-V10_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}  # grows with each new 1.0 component
+V10_KINDS = {
+    ComponentKind.NUMBER,
+    ComponentKind.SLIDER,
+    ComponentKind.TEXT_AREA,
+}  # grows with each new 1.0 component
 RANGE_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}
 RANGE_DEFAULTS = {"value": 0, "minimum": 0, "maximum": 100, "step": 1, "decimals": 0}
 
@@ -79,6 +84,7 @@ KIND_LABELS = {
     ComponentKind.TEXT_INPUT: tr("Text field"),
     ComponentKind.CHECKBOX: tr("Checkbox"),
     ComponentKind.PROGRESS: tr("Progress"),
+    ComponentKind.TEXT_AREA: tr("Long text"),
     ComponentKind.NUMBER: tr("Number"),
     ComponentKind.SLIDER: tr("Slider"),
     ComponentKind.OUTPUT: tr("Output panel"),
@@ -369,6 +375,7 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.TEXT_INPUT: {"text": "", "placeholder": tr("Type here")},
         ComponentKind.CHECKBOX: {"text": tr("New option"), "checked": False},
         ComponentKind.PROGRESS: {"value": 0},
+        ComponentKind.TEXT_AREA: {"text": "", "placeholder": tr("Type here")},
         ComponentKind.NUMBER: dict(RANGE_DEFAULTS),
         ComponentKind.SLIDER: {k: v for k, v in RANGE_DEFAULTS.items() if k != "decimals"},
         ComponentKind.OUTPUT: {"text": tr("Task output will appear here.")},
@@ -383,7 +390,7 @@ def create_component(kind: ComponentKind) -> Component:
         node.geometry.update(width=360, height=240)
     elif kind == ComponentKind.IMAGE:
         node.geometry.update(width=240, height=160)
-    elif kind in {ComponentKind.OUTPUT, ComponentKind.TERMINAL}:
+    elif kind in {ComponentKind.OUTPUT, ComponentKind.TERMINAL, ComponentKind.TEXT_AREA}:
         node.geometry.update(width=360, height=140)
     if kind == ComponentKind.PAGES:
         page = create_component(ComponentKind.PAGE)

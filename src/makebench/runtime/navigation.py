@@ -87,6 +87,7 @@ class RuntimeNavigation:
                     ComponentKind.LABEL,
                     ComponentKind.BUTTON,
                     ComponentKind.TEXT_INPUT,
+                    ComponentKind.TEXT_AREA,
                     ComponentKind.CHECKBOX,
                     ComponentKind.OUTPUT,
                 }:

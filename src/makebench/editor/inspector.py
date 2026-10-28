@@ -558,6 +558,7 @@ class Inspector(QWidget):
             ComponentKind.WINDOW,
             ComponentKind.BUTTON,
             ComponentKind.TEXT_INPUT,
+            ComponentKind.TEXT_AREA,
             ComponentKind.CHECKBOX,
             *RANGE_KINDS,
         }:

@@ -17,7 +17,7 @@ from makebench.core.project import ComponentKind
 from makebench.core.style import qt_stylesheet, window_style
 from makebench.core.web import WEB_PAGE, is_web
 from makebench.ui import web
-from makebench.ui.renderer import create_control, place_children
+from makebench.ui.renderer import TextArea, create_control, place_children
 from makebench.i18n import tr
 
 
@@ -123,6 +123,8 @@ class RuntimeView(QFrame):
                 )
             if isinstance(widget, QCheckBox):
                 widget.clicked.connect(lambda _, identifier=node.id: self.changed.emit(identifier))
+            if isinstance(widget, TextArea):
+                widget.edited.connect(lambda identifier=node.id: self.changed.emit(identifier))
             if isinstance(widget, (QDoubleSpinBox, QSlider)):
                 widget.valueChanged.connect(
                     lambda _, identifier=node.id: self.changed.emit(identifier)

@@ -20,6 +20,7 @@ COMPONENTS = {
     "image": ("content", tr("Image imported and saved with the project.")),
     "button": ("input", tr("Fires a click event and its actions.")),
     "text_input": ("input", tr("Receives text typed by the user.")),
+    "text_area": ("input", tr("Receives several lines of text typed by the user.")),
     "checkbox": ("input", tr("An option that can be checked or unchecked.")),
     "terminal": (
         "feedback",

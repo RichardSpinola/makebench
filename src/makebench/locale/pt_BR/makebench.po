@@ -7096,3 +7096,11 @@ msgstr "O valor está fora dos limites do componente."
 #: src/makebench/core/project.py
 msgid "The value of {id} must be between its limits."
 msgstr "O valor de {id} deve ficar entre os limites."
+
+#: src/makebench/core/project.py
+msgid "Long text"
+msgstr "Texto longo"
+
+#: src/makebench/editor/catalog.py
+msgid "Receives several lines of text typed by the user."
+msgstr "Recebe várias linhas de texto digitadas pela pessoa."

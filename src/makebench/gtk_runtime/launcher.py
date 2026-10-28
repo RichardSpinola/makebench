@@ -89,6 +89,7 @@ def main():
                             "label",
                             "button",
                             "text_input",
+                            "text_area",
                             "checkbox",
                             "progress",
                             "number",

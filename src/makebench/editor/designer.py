@@ -223,7 +223,8 @@ class DesignerMixin:
                 parent = surface
             editor = (
                 InlineParagraph
-                if "\n" in shown.properties.get("text", "") or node.kind == ComponentKind.OUTPUT
+                if "\n" in shown.properties.get("text", "")
+                or node.kind in {ComponentKind.OUTPUT, ComponentKind.TEXT_AREA}
                 else InlineText
             )(shown.properties.get("text", ""), parent)
             editor.setAccessibleName(tr("Edit component text"))

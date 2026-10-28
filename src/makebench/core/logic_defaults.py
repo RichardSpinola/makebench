@@ -42,7 +42,7 @@ def default_block(op, project, window):
         node["value"] = literal(tr("Hello!"))
     if op in {"set_text", "set_enabled", "set_value", "show_page"}:
         kinds = {
-            "set_text": {"label", "button", "text_input", "checkbox", "output"},
+            "set_text": {"label", "button", "text_input", "text_area", "checkbox", "output"},
             "set_value": {"progress", "number", "slider"},
             "show_page": {"page"},
         }.get(op)

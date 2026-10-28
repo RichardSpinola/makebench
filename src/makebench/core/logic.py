@@ -20,6 +20,7 @@ TEXT_KINDS = {
     ComponentKind.LABEL,
     ComponentKind.BUTTON,
     ComponentKind.TEXT_INPUT,
+    ComponentKind.TEXT_AREA,
     ComponentKind.CHECKBOX,
     ComponentKind.OUTPUT,
 }
@@ -33,6 +34,7 @@ EVENT_TARGETS = {
     "click": {ComponentKind.BUTTON},
     "change": {
         ComponentKind.TEXT_INPUT,
+        ComponentKind.TEXT_AREA,
         ComponentKind.CHECKBOX,
         ComponentKind.NUMBER,
         ComponentKind.SLIDER,

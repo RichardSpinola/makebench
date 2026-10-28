@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Controls and layouts shared by editing and running Qt applications."""
 
-from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtCore import QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -63,6 +63,28 @@ def range_value(widget):
     return int(round(value))
 
 
+class TextArea(QPlainTextEdit):
+    """Multi-line input that reports only what the person types, never ctx edits."""
+
+    edited = Signal()
+
+    def __init__(self, text=""):
+        """Start with the initial text without reporting it."""
+        super().__init__()
+        self._silent = True
+        self.setPlainText(text)
+        self._silent = False
+        self.textChanged.connect(lambda: None if self._silent else self.edited.emit())
+
+    def setPlainText(self, text):
+        """Replace the text as the application, not as the person."""
+        previous, self._silent = self._silent, True
+        try:
+            super().setPlainText(text)
+        finally:
+            self._silent = previous
+
+
 class ImageLabel(QLabel):
     """Show an image scaled to the available space, with an accessible description."""
 
@@ -110,6 +132,11 @@ def create_control(node, read_asset, editing=False):
             widget = QLineEdit(text)
             widget.setPlaceholderText(node.properties.get("placeholder", ""))
             widget.setReadOnly(editing)
+        case ComponentKind.TEXT_AREA:
+            widget = TextArea(text)
+            widget.setPlaceholderText(node.properties.get("placeholder", ""))
+            widget.setReadOnly(editing)
+            widget.setMinimumHeight(70)
         case ComponentKind.CHECKBOX:
             widget = QCheckBox(text)
             widget.setChecked(node.properties.get("checked", False))

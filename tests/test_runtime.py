@@ -249,6 +249,28 @@ class RuntimeTests(unittest.TestCase):
         w.view.widgets[number.id].setValue(2.0)
         self.wait(lambda: "changed " + number.id[:6] in w.output.toPlainText())
 
+    def test_text_area_reads_sets_and_fires_change_only_for_the_person(self):
+        area = self.project.add(self.project.root.id, ComponentKind.TEXT_AREA)
+        area.properties["text"] = "one\ntwo"
+        create_flow(self.project, area.id)["body"] = [log("c", "changed")]
+        self.flow["body"] = [
+            {"id": "s", "op": "set_text", "component": area.id, "value": literal("v", "a\nb")},
+            {
+                "id": "l",
+                "op": "log",
+                "value": {"id": "r", "op": "read", "component": area.id, "attribute": "text"},
+            },
+        ]
+        w = self.window("")
+        edit = w.view.widgets[area.id]
+        self.assertEqual(edit.toPlainText(), "one\ntwo")
+        self.click(w)
+        self.assertEqual(edit.toPlainText(), "a\nb")
+        self.assertIn("a\nb", w.output.toPlainText())
+        self.assertNotIn("changed", w.output.toPlainText())
+        edit.insertPlainText("!")
+        self.wait(lambda: "changed" in w.output.toPlainText())
+
     def test_block_function_returns_a_value_to_the_event(self):
         from makebench.core.logic import create_block_function
 

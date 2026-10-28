@@ -26,6 +26,7 @@ def check_runtime():
         number = p.add(p.root.id, ComponentKind.NUMBER)
         number.properties.update(decimals=1, step=0.5)
         slider = p.add(p.root.id, ComponentKind.SLIDER)
+        area = p.add(p.root.id, ComponentKind.TEXT_AREA)
         output = p.add(p.root.id, ComponentKind.OUTPUT)
         launch = p.add(p.root.id, ComponentKind.BUTTON)
         launch.properties.update(text="API ctx", icon="assets/button.svg", tooltip="Testar API ctx")
@@ -45,6 +46,8 @@ def check_runtime():
     assert ctx.read({entry.id!r}, 'text') == 'GTK real'
     ctx.set_value({progress.id!r}, 75)
     assert ctx.read({progress.id!r}, 'value') == 75
+    ctx.set_text({area.id!r}, 'linha 1\\nlinha 2')
+    assert ctx.read({area.id!r}, 'text') == 'linha 1\\nlinha 2'
     ctx.set_value({number.id!r}, 2.5)
     assert ctx.read({number.id!r}, 'value') == 2.5
     ctx.set_value({slider.id!r}, 30)
