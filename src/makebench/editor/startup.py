@@ -7,7 +7,7 @@ import zlib
 from pathlib import Path
 
 from PySide6.QtCore import QPointF, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QIcon, QImage, QPainter, QPen
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QAbstractButton,
@@ -37,9 +37,19 @@ from .settings import preference
 from .theme import blend, icon, manager
 
 LOGO = Path(__file__).with_name("makebench.svg")
+# Symbol shown beside each structure template.
+MODEL_ICONS = {
+    "simple": "window",
+    "welcome": "pages",
+    "tasks": "output",
+    "multi": "panels",
+    "blank": "new",
+}
 RETRO_LOGO = Path(__file__).with_name("makebench-retro.svg")
 DETAIL_ROLE = Qt.ItemDataRole.UserRole + 1
 SWATCH_ROLE = Qt.ItemDataRole.UserRole + 2
+# Icon name, drawn at paint time so it follows the current theme.
+SYMBOL_ROLE = Qt.ItemDataRole.UserRole + 3
 SWATCHES = ("#c4762b", "#3a83c9", "#3d8b5a", "#9a5bb5", "#b5544a", "#3f8f8f")
 
 
@@ -253,12 +263,6 @@ def warning_amber():
     return QColor("#e0a43a" if manager().tokens["dark"] else "#b7791f")
 
 
-def see_through(color):
-    """Cards let the emblem behind the start page show faintly."""
-    tone = QColor(color)
-    return f"rgba({tone.red()}, {tone.green()}, {tone.blue()}, 0.7)"
-
-
 def style_home(window):
     """Colors for the start page's lists, warning row and tip from the theme tokens."""
     t = manager().tokens
@@ -267,7 +271,7 @@ def style_home(window):
         f"#home_recovery {{ border: 1px solid {warn.name()}; border-radius: 4px;"
         f" background: {blend(t['panel'], warn.name(), 0.12)}; }}"
         f" #home_card {{ border: 1px solid {t['border']}; border-radius: 6px;"
-        f" background: {see_through(t['raised'])}; }}"
+        f" background: {t['raised']}; }}"
         f" #home_card QListWidget {{ background: transparent; border: none; }}"
         f" #home_card_rule {{ background: {t['border']}; }}"
         f" #home_tip {{ color: {t['muted']}; }}"
@@ -367,6 +371,12 @@ class LauncherDelegate(QStyledItemDelegate):
             painter.setPen(QColor(t["on_accent"] if selected else t["muted"]))
             painter.drawRect(square)
             rect.setLeft(square.right() + 9)
+        symbol = index.data(SYMBOL_ROLE)
+        if symbol and not swatch:
+            size = min(20, rect.height())
+            mode = QIcon.Mode.Selected if selected else QIcon.Mode.Normal
+            icon(symbol).paint(painter, QRect(rect.left(), rect.top(), size, size), mode=mode)
+            rect.setLeft(rect.left() + size + 8)
         name_font = QFont(opt.font)
         if swatch:
             name_font.setWeight(QFont.Weight.DemiBold)
@@ -668,6 +678,7 @@ class StartupDialog(QDialog):
             MODELS, key=lambda m: order.get(m[0], len(order) + MODELS.index(m))
         ):
             item = QListWidgetItem(label)
+            item.setData(SYMBOL_ROLE, MODEL_ICONS.get(key, "new"))
             item.setData(Qt.ItemDataRole.UserRole, key)
             item.setData(DETAIL_ROLE, description)
             self.models.addItem(item)

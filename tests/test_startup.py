@@ -175,6 +175,25 @@ class StartupTests(unittest.TestCase):
         self.window.startup_dialog.banner.close_button.click()
         self.assertTrue(self.window.isVisible())
 
+    def test_home_page_hides_the_document_status_and_shows_template_symbols(self):
+        self.window.show()
+        self.window.show_home()
+        self.app.processEvents()
+        status = [widget for _, widget in self.window.project_status]
+        self.assertTrue(status)
+        self.assertFalse(any(widget.isVisible() for widget in status))
+        self.assertTrue(self.window.theme_status.isVisible())
+        from makebench.editor.startup import SYMBOL_ROLE
+        from makebench.ui.icons import PATHS
+
+        models = self.window.home_models
+        for row in range(models.count()):
+            self.assertIn(models.item(row).data(SYMBOL_ROLE), PATHS)
+        self.window.pages.setCurrentWidget(self.window.editor_page)
+        self.app.processEvents()
+        self.assertTrue(self.window.save_status.isVisible())
+        self.assertTrue(self.window.problems_status.isVisible())
+
 
 @unittest.skipUnless(vcs.available(), "git is not installed")
 class CloneDialogTests(unittest.TestCase):

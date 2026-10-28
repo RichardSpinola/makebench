@@ -213,8 +213,11 @@ class ProjectMixin:
         self.home_models.setAccessibleName(tr("Templates"))
         self.home_models.setItemDelegate(LauncherDelegate(self.home_models))
         self.home_models.setMouseTracking(True)
+        from .startup import MODEL_ICONS, SYMBOL_ROLE
+
         for key, label, description in MODELS:
             item = QListWidgetItem(label)
+            item.setData(SYMBOL_ROLE, MODEL_ICONS.get(key, "new"))
             item.setData(Qt.ItemDataRole.UserRole, key)
             item.setData(Qt.ItemDataRole.UserRole + 1, description)
             self.home_models.addItem(item)
@@ -242,7 +245,12 @@ class ProjectMixin:
         self.home_tip.setObjectName("home_tip")
         self.home_tip.setWordWrap(True)
         bottom.addWidget(self.home_tip, 1)
-        self.show_startup_button = QPushButton(tr("Show the start window"))
+        self.show_startup_button = QToolButton()
+        self.show_startup_button.setText(tr("Show the start window"))
+        self.show_startup_button.setIcon(icon("start-window"))
+        self.show_startup_button.setProperty("makebenchIcon", "start-window")
+        self.show_startup_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.show_startup_button.setAutoRaise(True)
         self.show_startup_button.clicked.connect(lambda: show_startup(self))
         bottom.addWidget(self.show_startup_button)
         outer.addLayout(bottom)
@@ -270,6 +278,9 @@ class ProjectMixin:
         self.source_watcher.fileChanged.connect(self.source_changed_externally)
         self.watch_source()
         self.pages.currentChanged.connect(lambda _: self._update_actions())
+        from .shell import sync_status_items
+
+        self.pages.currentChanged.connect(lambda _: sync_status_items(self))
         self.external_change_row = QWidget()
         row = QHBoxLayout(self.external_change_row)
         row.addWidget(QLabel(tr("Functions changed outside Makebench.")), 1)

@@ -379,13 +379,18 @@ def install_shell(window, logo=None):
     window.language_status.setToolTip(tr("Interface language (Preferences › Appearance)"))
     window._branch_for = object()
     # Document state on the left, view settings on the right, a thin line between items.
+    # Items about the open document; the start page hides them with their dividers.
+    window.project_status = []
     for index, widget in enumerate(
         (window.save_status, window.problems_status, window.test_status)
     ):
+        line = None
         if index:
-            status.addWidget(StatusLine())
+            line = StatusLine()
+            status.addWidget(line)
         status.addWidget(widget)
         widget.show()
+        window.project_status.append((line, widget))
     right = [window.selection_status]
     if hasattr(window, "zoom_box"):
         right.append(window.zoom_box)
@@ -396,10 +401,14 @@ def install_shell(window, logo=None):
         window.theme_status,
         window.drawer_toggle,
     ]
+    general = (window.language_status, window.theme_status)
     for widget in right:
-        status.addPermanentWidget(StatusLine())
+        line = StatusLine()
+        status.addPermanentWidget(line)
         status.addPermanentWidget(widget)
         widget.show()
+        if widget not in general:
+            window.project_status.append((line, widget))
 
     if hasattr(window, "window_selector"):
         bar = window.context_bar
@@ -458,6 +467,19 @@ def area_path(window):
     return " › ".join(trail)
 
 
+def sync_status_items(window):
+    """Show the document's status items only while a document is on screen."""
+    if not hasattr(window, "project_status"):
+        return
+    home = getattr(window, "home_page", None)
+    editing = home is None or window.pages.currentWidget() is not home
+    for line, widget in window.project_status:
+        shown = editing and (widget is not window.branch_status or bool(widget.text()))
+        widget.setVisible(shown)
+        if line is not None:
+            line.setVisible(shown)
+
+
 def sync_shell(window):
     """Refresh the strip, the corner and the status items from the current document."""
     if not hasattr(window, "area_strip"):
@@ -501,7 +523,6 @@ def sync_shell(window):
         window._branch_for = window.path
         name = git_branch(window.path)
         window.branch_status.setText("⎇ " + name if name else "")
-        window.branch_status.setVisible(bool(name))
     backend = window.project.application.get("backend", "qt")
     window.preview_status.setText(
         tr("Preview: {toolkit}").format(toolkit="GTK 4" if backend == "gtk" else "Qt")
@@ -509,6 +530,7 @@ def sync_shell(window):
     from makebench.i18n import language
 
     window.language_status.setText("PT-BR" if language() == "pt_BR" else "EN")
+    sync_status_items(window)
     if hasattr(window, "document_tabs"):
         window.document_tabs.sync()
     window.area_strip.update()
