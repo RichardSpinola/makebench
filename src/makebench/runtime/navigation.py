@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Coordination of real windows and states over a single run session."""
 
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QEvent, QObject, QTimer, Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMainWindow, QScrollArea
 from makebench.core.menus import menu_items
@@ -9,6 +9,43 @@ from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, P
 from makebench.ui.renderer import fill_choice, set_date, set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
+
+
+class _Dragger(QObject):
+    """Let the person move a window without a frame by dragging its empty background."""
+
+    def eventFilter(self, watched, event):
+        """Hand a left press on the background to the window system."""
+        if (
+            event.type() == QEvent.Type.MouseButtonPress
+            and event.button() == Qt.MouseButton.LeftButton
+            and watched.window().windowHandle()
+        ):
+            return watched.window().windowHandle().startSystemMove()
+        return False
+
+
+def apply_frame(window, root, draggable=()):
+    """Frame, position and stacking of a window, before it is shown."""
+    properties = root.properties
+    frame = properties.get("frame", "normal")
+    flags = window.windowFlags()
+    if frame == "none":
+        flags |= Qt.WindowType.FramelessWindowHint
+        dragger = _Dragger(window)
+        for widget in draggable:
+            widget.installEventFilter(dragger)
+    elif frame == "no_buttons":
+        flags = (
+            Qt.WindowType.Window | Qt.WindowType.CustomizeWindowHint | Qt.WindowType.WindowTitleHint
+        )
+        flags |= window.windowFlags() & Qt.WindowType.WindowStaysOnTopHint
+    if properties.get("on_top"):
+        flags |= Qt.WindowType.WindowStaysOnTopHint
+    window.setWindowFlags(flags)
+    if properties.get("centered") and window.screen():
+        area = window.screen().availableGeometry()
+        window.move(area.center() - window.rect().center())
 
 
 def install_menu_bar(window, root, owner):
@@ -53,6 +90,7 @@ class AppWindow(QMainWindow):
         scroll.setWidget(view)
         self.setCentralWidget(scroll)
         install_menu_bar(self, root, owner)
+        apply_frame(self, root, (scroll.viewport(), view))
 
     def closeEvent(self, event):
         """Remove the window without abandoning administrative tasks or ordinary processes."""

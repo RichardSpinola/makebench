@@ -9,6 +9,7 @@ from .project import (
     LayoutKind,
     Project,
     ProjectError,
+    WINDOW_FRAMES,
     create_component,
     new_id,
 )
@@ -157,7 +158,7 @@ def validate_navigation(project):
                 raise ProjectError(tr("The window icon must be in assets."))
         if not isinstance(p.get("tooltip", ""), str):
             raise ProjectError(tr("The component tooltip must be text."))
-        for key in ("visible", "enabled", "resizable"):
+        for key in ("visible", "enabled", "resizable", "centered", "on_top"):
             if key in p and type(p[key]) is not bool:
                 raise ProjectError(tr("Invalid boolean property: {key}").format(key=key))
         if "timer_seconds" in p and (
@@ -166,6 +167,12 @@ def validate_navigation(project):
             or not 0 <= p["timer_seconds"] <= 3600
         ):
             raise ProjectError(tr("The timer interval must be between 0 and 3600 seconds."))
+        if "frame" in p and p["frame"] not in WINDOW_FRAMES:
+            raise ProjectError(tr("The window frame must be normal, no_buttons or none."))
+        if node.kind != ComponentKind.WINDOW and any(
+            k in p for k in ("frame", "centered", "on_top")
+        ):
+            raise ProjectError(tr("Only a window has a frame, position and stacking."))
         for key in ("width", "height"):
             if key in p and (type(p[key]) is not int or not 1 <= p[key] <= 20000):
                 raise ProjectError(tr("Invalid initial size."))

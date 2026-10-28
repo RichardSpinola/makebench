@@ -31,6 +31,8 @@ class QtWindowChrome(QWidget):
 
     def buttons(self):
         """Names of the buttons shown, right to left as on most Linux desktops."""
+        if self.root.properties.get("frame", "normal") != "normal":
+            return []
         names = ["close"]
         if self.root.properties.get("resizable", True):
             names.append("maximize")

@@ -222,6 +222,19 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("bye\n", seen)
         self.windows.remove(w)  # closing the last window already deleted it
 
+    def test_window_frame_position_and_stacking(self):
+        self.project.root.properties.update(frame="none", on_top=True, centered=True)
+        w = self.window("")
+        flags = w.windowFlags()
+        self.assertTrue(flags & Qt.WindowType.FramelessWindowHint)
+        self.assertTrue(flags & Qt.WindowType.WindowStaysOnTopHint)
+        self.project.root.properties.update(frame="no_buttons", on_top=False)
+        w2 = self.window("")
+        flags = w2.windowFlags()
+        self.assertTrue(flags & Qt.WindowType.CustomizeWindowHint)
+        self.assertFalse(flags & Qt.WindowType.WindowCloseButtonHint)
+        self.assertFalse(flags & Qt.WindowType.WindowStaysOnTopHint)
+
     def test_menu_item_fires_its_flow(self):
         from makebench.core.menus import parse_menus
 

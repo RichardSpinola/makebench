@@ -500,6 +500,23 @@ class Inspector(QWidget):
             self._boolean_field(
                 tr("Resizable"), node.id, "resizable", node.properties.get("resizable", True)
             )
+            self._choice_field(
+                tr("Window frame"),
+                node.id,
+                "frame",
+                node.properties.get("frame", "normal"),
+                [
+                    (tr("Normal"), "normal"),
+                    (tr("Without buttons"), "no_buttons"),
+                    (tr("Without frame"), "none"),
+                ],
+            )
+            self._boolean_field(
+                tr("Centered"), node.id, "centered", node.properties.get("centered", False)
+            )
+            self._boolean_field(
+                tr("Always on top"), node.id, "on_top", node.properties.get("on_top", False)
+            )
             self._number_field(
                 tr("Timer every (seconds, 0 = off)"),
                 node.id,

@@ -130,6 +130,14 @@ def verify(project, source, read_asset):
             ),
             "permissions",
         )
+    if any(r.properties.get("on_top") or r.properties.get("centered") for r in project.roots):
+        add(
+            "warning",
+            tr(
+                "GTK 4 on Wayland ignores “Always on top” and “Centered”; they only work with the Qt toolkit."
+            ),
+            "windows",
+        )
     if not any(i["level"] == "error" for i in issues):
         add("success", tr("Project ready to export as Python source."), "")
     return issues

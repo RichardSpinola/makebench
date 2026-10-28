@@ -53,6 +53,7 @@ class ComponentKind(StrEnum):
 
 
 V10_EVENTS = {"change", "close", "timer", "menu"}
+WINDOW_FRAMES = ("normal", "no_buttons", "none")
 V10_KINDS = {
     ComponentKind.NUMBER,
     ComponentKind.SLIDER,
@@ -542,7 +543,13 @@ class Project:
                 for flow in self.workflows
             )
             or any(node.kind in V10_KINDS for node in self.walk())
-            or any(root.properties.get("menus") for root in self.roots)
+            or any(
+                root.properties.get("menus")
+                or root.properties.get("frame", "normal") != "normal"
+                or root.properties.get("centered")
+                or root.properties.get("on_top")
+                for root in self.roots
+            )
         )
 
     def uses_v5(self) -> bool:

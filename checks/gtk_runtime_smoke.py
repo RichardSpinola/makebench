@@ -33,6 +33,7 @@ def check_runtime():
         table.properties["headers"] = ["A", "B"]
         date = p.add(p.root.id, ComponentKind.DATE)
         date.properties["text"] = "2026-03-04"
+        p.root.properties["frame"] = "no_buttons"
         p.root.properties["menus"] = [
             {"text": "File", "items": [{"id": "save", "text": "Save", "shortcut": "Ctrl+S"}]}
         ]
@@ -112,6 +113,7 @@ def check_runtime():
                     return True
                 if step[0] == 0:
                     assert runtime.menu_bar(p.root, p.root.id), "The menu bar is missing"
+                    assert not runtime.windows[p.root.id].get_deletable(), "The close button stayed"
                     runtime.queue_event(launch.id)
                     step[0] = 1
                     return True

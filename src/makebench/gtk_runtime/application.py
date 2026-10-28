@@ -283,25 +283,35 @@ class GtkRuntime:
             view = GtkView(root, self.read_asset, self.queue_event, self.queue_event)
             self.views[identifier] = view
             bar = self.menu_bar(root, identifier)
+            frame = root.properties.get("frame", "normal")
+            body = view.widget
+            if frame == "none":
+                body = self.Gtk.WindowHandle()
+                body.set_child(view.widget)
+            body.set_vexpand(True)
             if self.Adw:
                 window = self.Adw.ApplicationWindow(application=self.app)
                 box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL)
-                box.append(self.Adw.HeaderBar())
+                if frame != "none":
+                    header = self.Adw.HeaderBar()
+                    header.set_show_end_title_buttons(frame == "normal")
+                    header.set_show_start_title_buttons(frame == "normal")
+                    box.append(header)
                 if bar:
                     box.append(bar[0])
-                box.append(view.widget)
-                view.widget.set_vexpand(True)
+                box.append(body)
                 window.set_content(box)
             elif bar:
                 window = self.Gtk.ApplicationWindow(application=self.app)
                 box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL)
                 box.append(bar[0])
-                box.append(view.widget)
-                view.widget.set_vexpand(True)
+                box.append(body)
                 window.set_child(box)
             else:
                 window = self.Gtk.ApplicationWindow(application=self.app)
-                window.set_child(view.widget)
+                window.set_child(body)
+            window.set_decorated(frame != "none")
+            window.set_deletable(frame == "normal")
             if bar:
                 window.insert_action_group("menu", bar[1])
             icon = root.properties.get("icon") or self.project.application.get("icon")

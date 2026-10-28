@@ -7236,3 +7236,38 @@ msgstr "O item de menu deste evento não existe."
 #: src/makebench/core/menus.py
 msgid "The menus of {id} are invalid."
 msgstr "Os menus de {id} são inválidos."
+#: src/makebench/editor/inspector.py
+msgid "Always on top"
+msgstr "Sempre na frente"
+
+#: src/makebench/editor/inspector.py
+msgid "Centered"
+msgstr "Centralizada"
+
+#: src/makebench/core/exporter.py
+msgid "GTK 4 on Wayland ignores “Always on top” and “Centered”; they only work with the Qt toolkit."
+msgstr "O GTK 4 no Wayland ignora “Sempre na frente” e “Centralizada”; só funcionam com o Qt."
+
+#: src/makebench/editor/inspector.py
+msgid "Normal"
+msgstr "Normal"
+
+#: src/makebench/core/navigation.py
+msgid "Only a window has a frame, position and stacking."
+msgstr "Só uma janela tem moldura, posição e empilhamento."
+
+#: src/makebench/core/navigation.py
+msgid "The window frame must be normal, no_buttons or none."
+msgstr "A moldura da janela deve ser normal, no_buttons ou none."
+
+#: src/makebench/editor/inspector.py
+msgid "Window frame"
+msgstr "Moldura da janela"
+
+#: src/makebench/editor/inspector.py
+msgid "Without buttons"
+msgstr "Sem botões"
+
+#: src/makebench/editor/inspector.py
+msgid "Without frame"
+msgstr "Sem moldura"

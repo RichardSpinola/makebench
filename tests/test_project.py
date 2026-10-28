@@ -79,6 +79,18 @@ class ProjectTests(unittest.TestCase):
             with self.assertRaises(ProjectError):
                 Project.from_dict(project.to_dict())
 
+    def test_window_frame_is_validated_and_needs_format_10(self):
+        project = Project.empty()
+        self.assertNotEqual(project.to_dict()["format_version"], 10)
+        project.root.properties.update(frame="no_buttons", centered=True, on_top=True)
+        self.assertEqual(project.to_dict()["format_version"], 10)
+        Project.from_dict(project.to_dict())
+        for bad in ({"frame": "round"}, {"centered": "yes"}, {"on_top": 1}):
+            data = project.to_dict()
+            data["ui"]["properties"].update(bad)
+            with self.assertRaises(ProjectError):
+                Project.from_dict(data)
+
     def test_date_must_be_a_real_iso_day(self):
         project = Project.empty("Date")
         date = project.add(project.root.id, ComponentKind.DATE)
