@@ -34,6 +34,7 @@ TEXT = {
         tasks="Tarefas",
         terminal="Terminal",
         free="Livre",
+        form="Formulário",
         name_ph="Seu nome",
         loud="Cumprimentar em voz alta",
         greet="Cumprimentar",
@@ -92,6 +93,7 @@ TEXT = {
         tasks="Tasks",
         terminal="Terminal",
         free="Free",
+        form="Form",
         name_ph="Your name",
         loud="Greet out loud",
         greet="Greet",
@@ -283,6 +285,8 @@ def build(language, destination):
     tasks.properties["title"] = t["tasks"]
     term_page = project.add(pages.id, K.PAGE)
     term_page.properties["title"] = t["terminal"]
+    form_page = project.add(pages.id, K.PAGE)
+    form_page.properties["title"] = t["form"]
     free_page = project.add(pages.id, K.PAGE)
     free_page.properties["title"] = t["free"]
     free_page.layout = LayoutKind.FREE
@@ -309,6 +313,16 @@ def build(language, destination):
     t_start = add(buttons, K.BUTTON, "terminal_start", text=t["t_start"])
     t_send = add(buttons, K.BUTTON, "terminal_send", text=t["t_send"])
     t_stop = add(buttons, K.BUTTON, "terminal_stop", text=t["t_stop"])
+
+    for kind, code in (
+        (K.TEXT_AREA, "notes_area"),
+        (K.NUMBER, "amount_input"),
+        (K.SLIDER, "level_slider"),
+        (K.CHOICE, "kind_choice"),
+        (K.DATE, "due_date"),
+        (K.TABLE, "items_table"),
+    ):
+        add(form_page, kind, code)
 
     free_label = add(free_page, K.LABEL, text=t["free_label"])
     free_label.geometry.update(x=24, y=24, width=200, height=32)
