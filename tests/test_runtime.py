@@ -189,6 +189,29 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("Falha própria", w.output.toPlainText())
         self.assertTrue(w.session.active)
 
+    def test_python_event_runs_its_function_and_converted_blocks_behave_the_same(self):
+        from makebench.core.codegen import convert_to_python
+
+        self.flow["body"] = [log("hello", "From blocks")]
+        source = convert_to_python(self.project, "")
+        self.assertEqual(self.project.programming, "python")
+        self.assertEqual(self.flow["function"], "on_new_button_click")
+        self.assertNotIn("body", self.flow)
+        w = self.window(source + "\n\ndef unused(ctx):\n    print('no')\n")
+        self.click(w)
+        self.assertIn("From blocks", w.output.toPlainText())
+        self.assertNotIn("no", w.output.toPlainText().split("From blocks")[-1])
+
+    def test_missing_event_function_reports_its_name(self):
+        self.project.metadata["programming"] = "python"
+        self.flow.pop("body")
+        self.flow.pop("workspace")
+        self.flow["function"] = "gone"
+        w = self.window("")
+        self.click(w)
+        self.assertIn("gone", w.output.toPlainText())
+        self.assertTrue(w.session.active)
+
     def test_text_choice_and_cancel_do_not_run_following_actions(self):
         self.flow["body"] = [
             {

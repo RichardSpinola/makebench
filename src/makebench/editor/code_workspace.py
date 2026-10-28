@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QToolButton,
     QTreeWidget,
@@ -57,6 +59,12 @@ class CodeWorkspaceMixin:
             row.addWidget(button)
         layout.insertWidget(0, controls)
         layout.insertWidget(1, self.code_tree, 1)
+        self.code_events = QListWidget()
+        self.code_events.setAccessibleName(tr("Events"))
+        self.code_events.itemActivated.connect(self.code_event_open)
+        self.code_events.itemClicked.connect(self.code_event_open)
+        layout.insertWidget(0, QLabel(tr("Events")))
+        layout.insertWidget(1, self.code_events, 1)
         self.code_splitter.insertWidget(0, pane)
         self.code_splitter.setSizes([260, 900])
         self.code_signature = QLabel()
@@ -149,9 +157,46 @@ class CodeWorkspaceMixin:
                 self.code_files.indexOf(editor),
                 Path(name).name + (" •" if self.source.modules[name].dirty else ""),
             )
+        self.sync_code_events()
         self.sync_code_tree_selection()
         self.watch_source()
         self.refresh_code_index()
+
+    def sync_code_events(self):
+        """List Python events as 'name → function()'; selecting one opens the function."""
+        from makebench.core.logic import is_python_event
+
+        flows = [f for f in self.project.editable_flows if is_python_event(f)]
+        signature = tuple((f["id"], f["name"], f["function"]) for f in flows)
+        if signature == getattr(self, "_code_events_signature", None):
+            return
+        self._code_events_signature = signature
+        self.code_events.clear()
+        for flow in flows:
+            item = QListWidgetItem(f"{flow['name']} → {flow['function']}()")
+            item.setData(Qt.ItemDataRole.UserRole, flow["id"])
+            self.code_events.addItem(item)
+
+    def code_event_open(self, item):
+        """Open the function bound to the selected event."""
+        self.open_event_function(item.data(Qt.ItemDataRole.UserRole))
+
+    def open_event_function(self, flow_id):
+        """Show an event's function in the actions file, at its definition when it exists."""
+        import ast
+
+        flow = next((f for f in self.project.editable_flows if f["id"] == flow_id), None)
+        if flow is None:
+            return
+        line = 1
+        try:
+            tree = ast.parse(self.source_editor.toPlainText())
+        except (SyntaxError, ValueError):
+            tree = None
+        for node in getattr(tree, "body", []):
+            if isinstance(node, ast.FunctionDef) and node.name == flow["function"]:
+                line = node.lineno
+        self.open_code_file(ENTRY_FILE, line)
 
     def current_code_file(self):
         """Identify the active file, keeping the indexes of the two legacy tabs."""

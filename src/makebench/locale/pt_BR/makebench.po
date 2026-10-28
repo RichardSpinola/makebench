@@ -6871,3 +6871,42 @@ msgstr "Mostrar o Python gerado por estes blocos (só leitura)"
 #: src/makebench/editor/logic.py
 msgid "View Python"
 msgstr "Ver Python"
+
+msgid "A Python event cannot also have blocks."
+msgstr "Um evento Python não pode ter blocos também."
+
+msgid "Convert to Python"
+msgstr "Converter para Python"
+
+msgid "Convert to Python…"
+msgstr "Converter para Python…"
+
+msgid "Could not convert to Python"
+msgstr "Não foi possível converter para Python"
+
+msgid "Could not keep a copy of the blocks"
+msgstr "Não foi possível guardar uma cópia dos blocos"
+
+msgid "Each event becomes a Python function in the actions file, and the project is programmed in Python from now on. A copy of the blocks is kept next to the project as .bak-blocks. Continue?"
+msgstr "Cada evento vira uma função Python no arquivo de ações, e o projeto passa a ser programado em Python. Uma cópia dos blocos fica ao lado do projeto como .bak-blocks. Continuar?"
+
+msgid "Event function not found: {name}."
+msgstr "Função do evento não encontrada: {name}."
+
+msgid "Finish these flows before converting: {names}."
+msgstr "Termine estes fluxos antes de converter: {names}."
+
+msgid "Fix the Python file before converting. {error}"
+msgstr "Corrija o arquivo Python antes de converter. {error}"
+
+msgid "Reserved flows from another version cannot be converted."
+msgstr "Fluxos reservados de outra versão não podem ser convertidos."
+
+msgid "The event function must be a Python name."
+msgstr "A função do evento precisa ser um nome Python."
+
+msgid "This project is already written in Python."
+msgstr "Este projeto já é escrito em Python."
+
+msgid "{flow}: function {name}() not found in the actions file."
+msgstr "{flow}: função {name}() não encontrada no arquivo de ações."

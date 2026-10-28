@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QMessageBox,
 )
+from makebench.core.logic import is_draft
 from makebench.core.navigation import (
     navigation_edges,
     find_navigation_block,
@@ -285,7 +286,7 @@ class MapPanel(QWidget):
                     else ""
                 )
                 if any(
-                    f.get("body") is None
+                    is_draft(f)
                     for f in project.editable_flows
                     if project.window_of(f["event"]["component"]).id == root.id
                 ):

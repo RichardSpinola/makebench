@@ -91,10 +91,18 @@ senhas.
 
 ### Projetos em Python
 
-Um projeto em Python guarda o código: o arquivo `.actions.py` do projeto e os módulos em
-`makebench_user/`. Uma função é chamada pelos blocos como `funcao(ctx, valor)`,
-em que `ctx` dá acesso ao aplicativo (ler e alterar componentes, mostrar
-páginas, registrar saída, fazer perguntas, executar tarefas).
+Um projeto em Python guarda o código no arquivo `.actions.py` do projeto e nos
+módulos em `makebench_user/`. Cada evento é ligado a uma função pelo nome: dê
+dois cliques num botão (ou na janela) no Design e o Makebench acrescenta
+`def on_salvar_click(ctx):` ao arquivo de ações e o abre. A lista **Eventos**
+mostra todas as ligações; `ctx` dá acesso ao aplicativo (ler e alterar
+componentes, mostrar páginas, registrar saída, fazer perguntas, executar
+tarefas). Se a função não existir, o painel Problemas avisa.
+
+**Projeto › Converter para Python…** transforma um projeto em blocos num projeto
+Python: os blocos de cada evento viram uma função com o mesmo comportamento. O
+projeto e o arquivo de ações anteriores ficam ao lado, com o sufixo
+`.bak-blocks`.
 
 - Sugestões, **F12** para ir à definição e diagnósticos enquanto você digita. A
   análise é estática: o código é lido, nunca importado ou executado.

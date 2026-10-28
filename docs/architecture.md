@@ -52,6 +52,9 @@ default). Python files use the text editor's own undo stack.
 `core/logic.py` validates the neutral logic model (`metadata.logic_version = 1`):
 events (`start` on a window, `click` on a button), statements and expressions,
 each with an id. A flow whose `body` is `null` is a draft and generates no code.
+In Python projects a flow has `function` instead of `body`/`workspace`: the
+handler calls `ctx.handle_event(name)`, and `codegen.convert_to_python()` turns
+block flows into such functions.
 Limits: 48 levels and 5000 nodes per flow.
 
 - `web/logic.js` translates Blockly blocks to and from this model. On opening, it

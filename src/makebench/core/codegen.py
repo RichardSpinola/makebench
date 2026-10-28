@@ -2,8 +2,15 @@
 """Readable Python from the neutral model, never running project content."""
 
 from dataclasses import dataclass, field
-from .logic import editable, function_names, validate
-from .project import Project
+from .logic import (
+    editable,
+    function_names,
+    is_draft,
+    is_python_event,
+    suggest_function,
+    validate,
+)
+from .project import Project, ProjectError
 from makebench.i18n import tr
 
 
@@ -49,6 +56,16 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
     else:
         for index, flow in enumerate(project.workflows, 1):
             flow_id = flow["id"]
+            if "function" in flow:
+                lines.extend(
+                    [
+                        f"# {flow['name'].replace(chr(10), ' ').replace(chr(13), ' ')}",
+                        f"def on_event_{index}(ctx):",
+                        f"    ctx.handle_event({flow['function']!r})",
+                        "",
+                    ]
+                )
+                continue
             if flow.get("body") is None:
                 result.diagnostics.extend(
                     f"{flow['name']}: {e}"
@@ -209,3 +226,45 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
             lines.append("")
     result.text = "\n".join(lines) + "\n"
     return result
+
+
+def convert_to_python(project: Project, source: str) -> str:
+    """Turn every blocks flow into a function of the actions file; returns the new source.
+
+    The project changes in place: flows keep their id, name, event and states and
+    point to the new function. Drafts must be finished first.
+    """
+    if not editable(project):
+        raise ProjectError(tr("Reserved flows from another version cannot be converted."))
+    drafts = [flow["name"] for flow in project.workflows if is_draft(flow)]
+    if drafts:
+        raise ProjectError(
+            tr("Finish these flows before converting: {names}.").format(names=", ".join(drafts))
+        )
+    names, error = function_names(source)
+    if error:
+        raise ProjectError(tr("Fix the Python file before converting. {error}").format(error=error))
+    generated = generate(project, source).text.splitlines()
+    taken, chunks = set(names), []
+    for index, flow in enumerate(project.workflows, 1):
+        if is_python_event(flow):
+            continue
+        start = generated.index(f"def on_event_{index}(ctx):")
+        head, end = start, start
+        while head > 0 and generated[head - 1].startswith("#"):
+            head -= 1
+        while end < len(generated) and generated[end]:
+            end += 1
+        name = suggest_function(project, flow["event"]["component"], taken)
+        taken.add(name)
+        chunk = generated[head:end]
+        chunk[start - head] = f"def {name}(ctx):"
+        chunks.append("\n".join(chunk))
+        kept = {key: flow[key] for key in ("id", "name", "event", "states") if key in flow}
+        flow.clear()
+        flow.update(kept, function=name)
+    project.metadata["programming"] = "python"
+    text = source.rstrip("\n")
+    if not chunks:
+        return source
+    return (text + "\n\n\n" if text else "") + "\n\n\n".join(chunks) + "\n"

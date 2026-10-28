@@ -81,6 +81,39 @@ class LogicTests(unittest.TestCase):
         self.project.workflows = []
         self.project.remove(group.id)
 
+    def test_python_events_are_validated_created_and_converted(self):
+        from makebench.core.codegen import convert_to_python, generate
+        from makebench.core.logic import create_python_event, guard_removal, is_draft
+
+        project = Project.empty()
+        button = project.add(project.root.id, ComponentKind.BUTTON)
+        button.properties["text"] = "Salvar já"
+        project.metadata["programming"] = "python"
+        flow, source = create_python_event(
+            project, button.id, "def on_salvar_ja_click():\n    pass\n"
+        )
+        self.assertEqual(flow["function"], "on_salvar_ja_click_2")
+        self.assertIn("def on_salvar_ja_click_2(ctx):", source)
+        self.assertFalse(is_draft(flow))
+        self.assertEqual(create_python_event(project, button.id, source), (flow, source))
+        validate(project)
+        self.assertIn("ctx.handle_event('on_salvar_ja_click_2')", generate(project, source).text)
+        with self.assertRaises(ProjectError):
+            guard_removal(project, {button.id})
+        flow["function"] = "not a name"
+        with self.assertRaisesRegex(ProjectError, "Python name"):
+            validate(project)
+        flow["function"] = "ok"
+        flow["body"] = []
+        with self.assertRaisesRegex(ProjectError, "blocks"):
+            validate(project)
+
+        blocks = Project.empty()
+        create_flow(blocks, blocks.root.id)["body"] = None
+        blocks.workflows[0]["workspace"] = {"blocks": {}}
+        with self.assertRaisesRegex(ProjectError, "Finish"):
+            convert_to_python(blocks, "")
+
     def test_generated_control_flow_is_valid_and_has_source_map(self):
         self.flow["body"] = [
             {

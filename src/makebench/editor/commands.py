@@ -188,6 +188,7 @@ def menu_icon_names():
         tr("Remove state"): "trash",
         tr("Remove window"): "trash",
         tr("Application settings…"): "app-settings",
+        tr("Convert to Python…"): "code",
         tr("Debug application"): "debug",
         tr("Continue"): "continue",
         tr("Next step"): "step-over",

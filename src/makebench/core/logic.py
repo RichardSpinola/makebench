@@ -64,6 +64,53 @@ def create_flow(project: Project, component_id: str, states: list[str] | None = 
     return flow
 
 
+def is_draft(flow: dict) -> bool:
+    """A blocks flow whose body is null is unfinished; Python events have no body."""
+    return flow.get("body") is None and "function" not in flow
+
+
+def is_python_event(flow: dict) -> bool:
+    """Python events call a function of the actions file by name."""
+    return "function" in flow
+
+
+def suggest_function(project: Project, component_id: str, taken) -> str:
+    """Build a readable, unused Python name for an event's function."""
+    import re
+    import unicodedata
+
+    node = project.find(component_id)
+    if node.kind == ComponentKind.WINDOW:
+        base, suffix = node.properties.get("code_name") or node.properties.get("title", ""), "start"
+    else:
+        base, suffix = node.properties.get("code_name") or node.properties.get("text", ""), "click"
+    ascii_text = unicodedata.normalize("NFKD", str(base)).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "_", ascii_text.lower()).strip("_")[:40] or "event"
+    name = f"on_{slug}_{suffix}"
+    taken = set(taken) | {f.get("function") for f in project.workflows}
+    candidate, number = name, 2
+    while candidate in taken or keyword.iskeyword(candidate):
+        candidate, number = f"{name}_{number}", number + 1
+    return candidate
+
+
+def create_python_event(
+    project: Project, component_id: str, source: str, states: list[str] | None = None
+) -> tuple[dict, str]:
+    """Bind an event to a function, adding an empty function when it does not exist yet."""
+    flow = create_flow(project, component_id, states)
+    if is_python_event(flow):
+        return flow, source
+    names, _ = function_names(source)
+    name = suggest_function(project, component_id, names)
+    for key in ("body", "workspace", "errors"):
+        flow.pop(key, None)
+    flow["function"] = name
+    stub = f"def {name}(ctx):\n    pass\n"
+    text = source.rstrip("\n")
+    return flow, (text + "\n\n\n" if text else "") + stub
+
+
 def function_names(source: str) -> tuple[list[str], str | None]:
     """Inspect signatures without importing or running the Python file."""
     try:
@@ -116,6 +163,13 @@ def validate(project: Project) -> None:
         if key in seen_events:
             raise ProjectError(tr("There is more than one flow for the same event."))
         seen_events.add(key)
+        if "function" in flow:
+            name = flow["function"]
+            if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
+                raise ProjectError(tr("The event function must be a Python name."))
+            if any(key in flow for key in ("body", "workspace")):
+                raise ProjectError(tr("A Python event cannot also have blocks."))
+            continue
         if not isinstance(flow.get("workspace", {}), dict):
             raise ProjectError(tr("The visual state of the blocks must be an object."))
         if not isinstance(flow.get("errors", []), list) or any(
@@ -327,7 +381,7 @@ def guard_removal(project: Project, ids: set[str]) -> None:
     if not editable(project) and project.workflows:
         raise ProjectError(tr("Reserved flows require reference validation before deleting."))
     for flow in project.workflows:
-        if flow.get("body") is None or ids & referenced_components(flow):
+        if is_draft(flow) or ids & referenced_components(flow):
             raise ProjectError(
                 tr(
                     "Review or remove the flow ‘{name}’ in the Logic tab before deleting this component."
@@ -341,9 +395,14 @@ def duplicate_flows(project: Project, identifiers: dict[str, str]) -> None:
     for flow in project.workflows:
         if flow["event"]["component"] not in identifiers:
             continue
-        if flow.get("body") is None:
+        if is_draft(flow):
             raise ProjectError(tr("Complete this component's blocks before duplicating it."))
         clone = deepcopy(flow)
+        if is_python_event(flow):
+            clone.update(id=new_id("flow"), name=flow["name"] + " " + tr("(copy)"))
+            clone["event"]["component"] = identifiers[flow["event"]["component"]]
+            copies.append(clone)
+            continue
         clone.update(
             id=new_id("flow"),
             name=flow["name"] + " " + tr("(copy)"),

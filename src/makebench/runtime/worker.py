@@ -164,6 +164,13 @@ class Context:
             "/bin/bash", ["-c", source, "makebench-script", *arguments], admin=admin, check=check
         )
 
+    def handle_event(self, name):
+        """Run the actions-file function bound to an event."""
+        function = self.actions.get(name)
+        if not callable(function):
+            raise RuntimeError(tr("Event function not found: {name}.").format(name=name))
+        return function(self)
+
     def call_action(self, name, value):
         """Resolve your own function only in this explicit run."""
         function = self.actions.get(name)

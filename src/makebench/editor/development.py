@@ -524,8 +524,10 @@ class DevelopmentMixin:
         from makebench.core.logic import create_flow
         from makebench.core.project import ComponentKind, new_id
 
+        from makebench.core.logic import is_draft
+
         flow = next(f for f in self.project.workflows if f["id"] == identifier)
-        if flow.get("body") is None:
+        if is_draft(flow):
             self._show_error(tr("Complete the draft before duplicating the flow."))
             return
         targets = [
@@ -575,6 +577,11 @@ class DevelopmentMixin:
         def copy():
             """Duplicate data and references, keeping the original."""
             clone = create_flow(self.project, target.id, states=filters)
+            if "function" in flow:
+                for key in ("body", "workspace", "errors"):
+                    clone.pop(key, None)
+                clone["function"] = flow["function"]
+                return
             clone["body"] = deepcopy(flow["body"])
             clone["workspace"] = {
                 "workspaceComments": deepcopy(

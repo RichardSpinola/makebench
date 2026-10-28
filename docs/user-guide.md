@@ -86,10 +86,17 @@ authentication dialog. It never asks for or stores passwords.
 
 ### Python projects
 
-A Python project keeps its code: the project's `.actions.py` file and any modules in
-`makebench_user/`. A function is called from blocks as `function(ctx, value)`,
-where `ctx` gives access to the application (read and change components, show
-pages, log, ask questions, run tasks).
+A Python project keeps its code in the project's `.actions.py` file and any
+modules in `makebench_user/`. Each event is bound to a function by name:
+double-click a button (or the window) in Design and Makebench adds
+`def on_save_click(ctx):` to the actions file and opens it. The **Events** list
+shows every binding; `ctx` gives access to the application (read and change
+components, show pages, log, ask questions, run tasks). If the function is
+missing, Problems says so.
+
+**Project › Convert to Python…** turns a blocks project into a Python one: each
+event's blocks become a function with the same behavior. The previous project
+and actions file are kept next to it with a `.bak-blocks` suffix.
 
 - Suggestions, **F12** to go to a definition, and diagnostics as you type.
   Analysis is static: your code is parsed, never imported or run.

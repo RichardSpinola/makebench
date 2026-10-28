@@ -806,6 +806,10 @@ class ProjectMixin:
                     [model.currentData(), *[key for key in used if key != model.currentData()]][:5],
                 )
                 chosen = programming.checkedButton().property("programming")
+                if chosen == "python" and project.workflows:
+                    from makebench.core.codegen import convert_to_python
+
+                    source = convert_to_python(project, source)
                 project.metadata["programming"] = chosen
                 self.settings.setValue("v1/projects/programming", chosen)
                 if identifier.text().strip():

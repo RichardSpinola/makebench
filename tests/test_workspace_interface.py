@@ -167,6 +167,46 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.logic.view_python.setChecked(True)
         self.assertTrue(w.logic.code_box.isVisibleTo(w.logic))
 
+    def test_python_events_create_functions_list_them_and_flag_missing_ones(self):
+        w = self.window
+        w.project.metadata["programming"] = "python"
+        button = w.project.add(w.project.root.id, ComponentKind.BUTTON)
+        button.properties["text"] = "Save"
+        w._refresh()
+        w.source_editor.setPlainText("")
+        w.edit_logic(button.id)
+        flow = w.project.workflows[0]
+        self.assertEqual(flow["function"], "on_save_click")
+        self.assertIn("def on_save_click(ctx):", w.source_editor.toPlainText())
+        self.assertEqual(w.tabs.currentIndex(), 2)
+        self.assertEqual(w.code_events.count(), 1)
+        self.assertIn("on_save_click()", w.code_events.item(0).text())
+        w.source_editor.setPlainText("")
+        w._update_code()
+        w.sync_problems()
+        labels = [w.problems.item(i).text() for i in range(w.problems.count())]
+        self.assertTrue(any("on_save_click() not found" in label for label in labels))
+
+    def test_convert_to_python_keeps_a_copy_of_the_blocks(self):
+        w = self.window
+        w.project.metadata["programming"] = "blocks"
+        button = w.project.add(w.project.root.id, ComponentKind.BUTTON)
+        from makebench.core.logic import create_flow
+
+        create_flow(w.project, button.id)["body"] = [
+            {"id": "b1", "op": "log", "value": {"id": "b2", "op": "literal", "value": "hi"}}
+        ]
+        w.history.push(w.project)
+        w._refresh()
+        path = self.root / "project.makebench.json"
+        self.assertTrue(w.save_to(path))
+        self.assertTrue(w.convert_to_python(confirm=False))
+        self.assertEqual(w.project.programming, "python")
+        self.assertIn("function", w.project.workflows[0])
+        self.assertIn("def on_new_button_click(ctx):", w.source_editor.toPlainText())
+        self.assertTrue((self.root / "project.makebench.json.bak-blocks").exists())
+        self.assertEqual(load_project(path).programming, "python")
+
     def test_completion_enter_undo_and_component_suggestions(self):
         from PySide6.QtCore import Qt
         from PySide6.QtTest import QTest

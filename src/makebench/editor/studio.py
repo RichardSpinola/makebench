@@ -407,6 +407,9 @@ class StudioMixin(
             None,
         ) or self.menuBar().addMenu(tr("&Project"))
         project_menu.addAction(tr("Application settings…"), self.application_settings)
+        self.convert_python_action = project_menu.addAction(
+            tr("Convert to Python…"), self.convert_to_python
+        )
         project_menu.addAction(self.export_action)
         from .settings import show_diagnostic, open_checklist, apply_preferences
 
@@ -605,8 +608,17 @@ class StudioMixin(
             self._add_problem(
                 tr("Reserved flows were kept. Running them requires a compatible version."), {}
             )
+        from makebench.core.logic import is_draft
+
         for flow in self.project.editable_flows:
-            if flow.get("body") is None:
+            if "function" in flow and flow["function"] not in names:
+                self._add_problem(
+                    tr("{flow}: function {name}() not found in the actions file.").format(
+                        flow=flow.get("name", tr("Flow")), name=flow["function"]
+                    ),
+                    {"flow": flow["id"]},
+                )
+            if is_draft(flow):
                 self._add_problem(
                     flow.get("name", tr("Flow"))
                     + ": "
@@ -753,6 +765,58 @@ class StudioMixin(
 
         self.preferences_dialog = EditorPreferences(self)
         self.preferences_dialog.show()
+
+    def convert_to_python(self, confirm=True):
+        """Turn every block event into a Python function, keeping a .bak-blocks copy."""
+        import json
+        from pathlib import Path
+        from PySide6.QtWidgets import QMessageBox
+        from makebench.core.codegen import convert_to_python
+        from makebench.core.project import ProjectError
+
+        if not self._finish_field_edit():
+            return False
+        if self.project.programming == "python":
+            self._show_error(tr("This project is already written in Python."))
+            return False
+        if confirm and (
+            QMessageBox.question(
+                self,
+                tr("Convert to Python"),
+                tr(
+                    "Each event becomes a Python function in the actions file, and the project "
+                    "is programmed in Python from now on. A copy of the blocks is kept next to "
+                    "the project as .bak-blocks. Continue?"
+                ),
+            )
+            != QMessageBox.StandardButton.Yes
+        ):
+            return False
+        before = self.project.to_dict()
+        try:
+            source = convert_to_python(self.project, self.source_editor.toPlainText())
+        except ProjectError as exc:
+            self._show_error(exc, tr("Could not convert to Python"))
+            return False
+        try:
+            if self.path:
+                backup = Path(str(self.path) + ".bak-blocks")
+                backup.write_text(json.dumps(before, ensure_ascii=False, indent=2), "utf-8")
+            if self.source.path:
+                Path(str(self.source.path) + ".bak-blocks").write_text(self.source.text, "utf-8")
+        except OSError as exc:
+            self.project = type(self.project).from_dict(before)
+            self._show_error(exc, tr("Could not keep a copy of the blocks"))
+            return False
+        cursor = self.source_editor.textCursor()
+        cursor.select(cursor.SelectionType.Document)
+        cursor.insertText(source)
+        self.history.push(self.project, tr("Convert to Python"))
+        self._refresh()
+        if self.path:
+            self.save_to(self.path)
+        self.set_mode("logic")
+        return True
 
     def application_settings(self, field=None):
         """Open the single settings center of the application being built."""
@@ -938,6 +1002,9 @@ class StudioMixin(
             window = self.project.window_of(flow["event"]["component"])
             self.activate_window(window.id, (flow.get("states") or ["@default"])[0])
             self._select(flow["event"]["component"])
+            if "function" in flow:
+                self.open_event_function(identifier)
+                return
             self.set_mode("logic")
             self.logic.sync(identifier)
             return

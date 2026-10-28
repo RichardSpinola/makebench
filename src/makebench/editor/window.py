@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from copy import deepcopy
-from makebench.core.logic import create_flow, editable, validate
+from makebench.core.logic import create_flow, create_python_event, editable, validate
 from makebench.core.source import ENTRY_FILE, SourceBuffer
 from makebench.editor.code import CodeEditor
 from makebench.editor.logic import LogicPanel
@@ -1575,10 +1575,27 @@ class MainWindow(StudioMixin, QMainWindow):
             flow = next(
                 (f for f in existing if self.active_state in f.get("states", [])), None
             ) or next((f for f in existing if not f.get("states")), None)
-            if flow is None:
+            python = self.project.programming == "python"
+            if flow is None and python:
+                before = self.source_editor.toPlainText()
+                flow, after = create_python_event(self.project, component_id, before, states)
+                if after != before:
+                    stub = after[len(before.rstrip("\n")) :].strip("\n")
+                    if before.strip():
+                        self.source_editor.appendPlainText("\n\n" + stub)
+                    else:
+                        self.source_editor.setPlainText(stub + "\n")
+            elif flow is None:
                 flow = create_flow(self.project, component_id, states=states)
         except ProjectError as exc:
             self._show_error(exc, tr("Could not open the logic"))
+            return
+        if python:
+            if not any(f is flow for f in existing):
+                self.history.push(self.project, tr("Create event"))
+            self.sync_code_workspace()
+            self.open_event_function(flow["id"])
+            self._update_actions()
             return
         self.history.push(self.project, tr("Create event"))
         self.logic.sync(flow["id"])
