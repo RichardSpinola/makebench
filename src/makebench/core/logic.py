@@ -653,6 +653,10 @@ def validate(project: Project) -> None:
                 collection()
                 if "records" in value:
                     expr("records")
+            elif op == "set_chart":
+                target(value.get("component"), {ComponentKind.CHART})
+                expr("labels")
+                expr("value")
             elif op in {"set_rows", "add_row"}:
                 target(value.get("component"), {ComponentKind.TABLE})
                 expr("value")

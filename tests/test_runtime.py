@@ -350,6 +350,33 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(Path(shown).read_bytes().decode(), expected)
             self.assertIn("[['Zé, o \"bom\"']]", w.output.toPlainText())
 
+    def test_set_chart_block_draws_the_given_data(self):
+        chart = self.project.add(self.project.root.id, ComponentKind.CHART)
+        chart.properties["chart_type"] = "pie"
+        lit = lambda i, v: {"id": i, "op": "literal", "value": v}  # noqa: E731
+        items = lambda i, *v: {  # noqa: E731
+            "id": i,
+            "op": "list",
+            "items": [lit(f"{i}{n}", x) for n, x in enumerate(v)],
+        }
+        self.flow["body"] = [
+            {
+                "id": "c1",
+                "op": "set_chart",
+                "component": chart.id,
+                "labels": items("l", "A", "B"),
+                "value": items("v", 3, 5),
+            },
+            log("done", "done"),
+        ]
+        w = self.window("")
+        self.click(w)
+        self.wait(lambda: "done" in w.output.toPlainText())
+        _, widget = w.widget_for(chart.id)
+        self.assertEqual((widget.labels, widget.values), (["A", "B"], [3, 5]))
+        self.assertEqual(widget.chart_type, "pie")
+        self.assertTrue(widget.grab().toImage().width() > 0)
+
     def test_change_timer_and_close_events_run_their_flows(self):
         field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
         window = self.project.root

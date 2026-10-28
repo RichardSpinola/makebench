@@ -301,6 +301,15 @@ class Inspector(QWidget):
             self._lines_field(
                 tr("Columns (one per line)"), node.id, "headers", node.properties.get("headers", [])
             )
+        if node.kind == ComponentKind.CHART:
+            self._choice_field(
+                tr("Chart type"),
+                node.id,
+                "chart_type",
+                node.properties.get("chart_type", "bar"),
+                [(tr("Bars"), "bar"), (tr("Line"), "line"), (tr("Pie"), "pie")],
+            )
+            self._text_field(tr("Title"), node.id, "title", node.properties.get("title", ""))
         if node.kind == ComponentKind.CHOICE:
             self._lines_field(
                 tr("Options (one per line)"), node.id, "options", node.properties.get("options", [])

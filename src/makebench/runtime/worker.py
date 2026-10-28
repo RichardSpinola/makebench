@@ -11,6 +11,7 @@ import csv
 import io
 from copy import deepcopy
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -186,6 +187,18 @@ class Context:
     def set_options(self, component, options):
         """Replace the options of a choice list, keeping the selection when it remains."""
         return self.request("set_options", component=component, value=[str(x) for x in options])
+
+    def set_chart(self, component, labels, values):
+        """Show these labels and numbers in a chart component (one value per label)."""
+        labels, values = list(labels), list(values)
+        if len(labels) != len(values) or any(
+            isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+            for v in values
+        ):
+            raise TaskError(tr("A chart needs one number for each label."))
+        return self.request(
+            "set_chart", component=component, labels=[str(x) for x in labels], value=values
+        )
 
     def show_records(self, component, collection, records=None):
         """Show records (all of the collection by default) in a table or a choice list."""

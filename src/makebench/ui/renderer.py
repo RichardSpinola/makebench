@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 from makebench.core.project import RANGE_DEFAULTS, ComponentKind, LayoutKind
 from makebench.core.storage import StorageError
 from makebench.i18n import tr
+from .chart import ChartWidget
 
 
 def range_properties(node):
@@ -239,6 +240,10 @@ def create_control(node, read_asset, editing=False):
         case ComponentKind.PROGRESS:
             widget = QProgressBar()
             widget.setValue(node.properties.get("value", 0))
+        case ComponentKind.CHART:
+            widget = ChartWidget(
+                node.properties.get("chart_type", "bar"), node.properties.get("title", ""), editing
+            )
         case ComponentKind.CHOICE:
             widget = QComboBox()
             fill_choice(widget, node.properties.get("options", []), node.properties.get("text", ""))

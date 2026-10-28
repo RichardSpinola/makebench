@@ -24,6 +24,7 @@ COMPONENTS = {
     "choice": ("input", tr("A list of options; the user picks one.")),
     "date": ("input", tr("A calendar date the user picks.")),
     "table": ("input", tr("Rows and columns of text; the user selects a row.")),
+    "chart": ("feedback", tr("A bar, line or pie chart drawn from a list of labels and values.")),
     "checkbox": ("input", tr("An option that can be checked or unchecked.")),
     "terminal": (
         "feedback",

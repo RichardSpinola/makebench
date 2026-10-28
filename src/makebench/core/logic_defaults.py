@@ -17,6 +17,7 @@ OPS = [
     ("set_options", tr("Change options")),
     ("set_rows", tr("Change table rows")),
     ("add_row", tr("Add table row")),
+    ("set_chart", tr("Change chart data")),
     ("assign", tr("Set variable")),
     ("call", tr("Call Python function")),
     ("script", tr("Run Bash")),
@@ -50,6 +51,7 @@ def default_block(op, project, window):
         "set_options",
         "set_rows",
         "add_row",
+        "set_chart",
         "show_page",
     }:
         kinds = {
@@ -66,6 +68,7 @@ def default_block(op, project, window):
             "set_options": {"choice"},
             "set_rows": {"table"},
             "add_row": {"table"},
+            "set_chart": {"chart"},
             "set_value": {"progress", "number", "slider"},
             "show_page": {"page"},
         }.get(op)
@@ -93,6 +96,17 @@ def default_block(op, project, window):
             "id": new_id("value"),
             "op": "list",
             "items": [literal(tr("Option 1")), literal(tr("Option 2"))],
+        }
+    if op == "set_chart":
+        node["labels"] = {
+            "id": new_id("value"),
+            "op": "list",
+            "items": [literal("A"), literal("B")],
+        }
+        node["value"] = {
+            "id": new_id("value"),
+            "op": "list",
+            "items": [literal(3), literal(5)],
         }
     if op == "set_rows":
         node["value"] = {"id": new_id("value"), "op": "list", "items": []}

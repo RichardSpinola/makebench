@@ -484,6 +484,7 @@ class DevelopmentMixin:
                 tr("Change options"): "mb_set_options",
                 tr("Change table rows"): "mb_set_rows",
                 tr("Add table row"): "mb_add_row",
+                tr("Change chart data"): "mb_set_chart",
                 tr("Show page"): "mb_show_page",
                 tr("Read component text"): "mb_read_text",
                 tr("Read checkbox selection"): "mb_read_checked",

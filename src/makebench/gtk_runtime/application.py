@@ -562,6 +562,8 @@ class GtkRuntime:
                     view.add_row(key, r["value"])
                 elif method == "show_records":
                     view.show_records(key, r["value"])
+                elif method == "set_chart" and key in view.charts:
+                    view.set_chart(key, r["labels"], r["value"])
                 elif method == "set_options" and key in view.choices:
                     view.set_options(key, r["value"])
                 elif method == "set_value" and key in view.ranges:

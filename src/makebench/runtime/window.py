@@ -44,6 +44,7 @@ from makebench.ui.renderer import (
     set_range_value,
     set_table_rows,
 )
+from makebench.ui.chart import ChartWidget
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -414,6 +415,11 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     blocked = widget.blockSignals(True)
                     append_table_row(widget, request["value"])
                     widget.blockSignals(blocked)
+                self.session.reply(identifier)
+            elif method == "set_chart":
+                if not isinstance(widget, ChartWidget):
+                    raise ValueError(tr("The component does not exist."))
+                widget.set_data(request["labels"], request["value"])
                 self.session.reply(identifier)
             elif method == "show_records":
                 listing = request["value"]

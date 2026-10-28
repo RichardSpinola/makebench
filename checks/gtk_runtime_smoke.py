@@ -3,6 +3,8 @@
 
 import json
 import os
+
+import cairo
 from pathlib import Path
 import subprocess
 import sys
@@ -47,6 +49,8 @@ def check_runtime():
         choice.properties.update(options=["um", "dois"], text="dois")
         table = p.add(p.root.id, ComponentKind.TABLE)
         table.properties["headers"] = ["A", "B"]
+        chart = p.add(p.root.id, ComponentKind.CHART)
+        chart.properties["chart_type"] = "pie"
         date = p.add(p.root.id, ComponentKind.DATE)
         date.properties["text"] = "2026-03-04"
         p.root.properties["frame"] = "no_buttons"
@@ -102,6 +106,7 @@ def check_runtime():
     ctx.show_records({choice.id!r}, 'Autores')
     assert ctx.read({choice.id!r}, 'text') == 'Ana'
     assert ctx.read({choice.id!r}, 'record') == ana
+    ctx.set_chart({chart.id!r}, ['A', 'B'], [3, 5])
     ctx.set_value({number.id!r}, 2.5)
     assert ctx.read({number.id!r}, 'value') == 2.5
     ctx.set_value({slider.id!r}, 30)
@@ -155,6 +160,12 @@ def check_runtime():
                         m["type"] == "log" and m.get("channel") == "stderr" and "aviso" in m["text"]
                         for m in messages
                     )
+                    area = runtime.views[p.root.id].charts[chart.id]
+                    assert area.state.labels == ["A", "B"] and area.state.values == [3, 5]
+                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 200, 150)
+                    from makebench.gtk_runtime.chart import draw
+
+                    draw(cairo.Context(surface), 200, 150, area.state, (0, 0, 0, 1))
                     text = runtime.views[p.root.id].read(output.id, "text")
                     assert "saida" in text and "aviso" in text and "[Error]" in text, text
                     step[0] = 2

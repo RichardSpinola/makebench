@@ -17,6 +17,7 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 from makebench.i18n import tr
+from .chart import CHART_TYPES
 from .datamodel import validate_collections
 from .menus import validate_menus
 
@@ -43,6 +44,7 @@ class ComponentKind(StrEnum):
     CHOICE = "choice"
     DATE = "date"
     TABLE = "table"
+    CHART = "chart"
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     NUMBER = "number"
@@ -99,6 +101,7 @@ KIND_LABELS = {
     ComponentKind.CHOICE: tr("Choice list"),
     ComponentKind.DATE: tr("Date"),
     ComponentKind.TABLE: tr("Table"),
+    ComponentKind.CHART: tr("Chart"),
     ComponentKind.NUMBER: tr("Number"),
     ComponentKind.SLIDER: tr("Slider"),
     ComponentKind.OUTPUT: tr("Output panel"),
@@ -276,6 +279,16 @@ class Component:
                 raise ProjectError(
                     tr("The columns of {id} must be 1 to 64 short texts.").format(id=component_id)
                 )
+        if kind == ComponentKind.CHART and (
+            properties.get("chart_type", "bar") not in CHART_TYPES
+            or not isinstance(properties.get("title", ""), str)
+            or len(properties.get("title", "")) > 200
+        ):
+            raise ProjectError(
+                tr("The chart {id} needs a type (bar, line or pie) and a short title.").format(
+                    id=component_id
+                )
+            )
         if kind == ComponentKind.DATE and not valid_date(properties.get("text", "")):
             raise ProjectError(
                 tr("The date of {id} must be written as YYYY-MM-DD.").format(id=component_id)
@@ -438,6 +451,7 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.TEXT_AREA: {"text": "", "placeholder": tr("Type here")},
         ComponentKind.CHOICE: {"options": [tr("Option 1"), tr("Option 2")], "text": ""},
         ComponentKind.TABLE: {"headers": [tr("Column 1"), tr("Column 2")]},
+        ComponentKind.CHART: {"chart_type": "bar", "title": ""},
         ComponentKind.DATE: {"text": datetime.date.today().isoformat()},
         ComponentKind.NUMBER: dict(RANGE_DEFAULTS),
         ComponentKind.SLIDER: {k: v for k, v in RANGE_DEFAULTS.items() if k != "decimals"},
@@ -458,6 +472,7 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.TERMINAL,
         ComponentKind.TEXT_AREA,
         ComponentKind.TABLE,
+        ComponentKind.CHART,
     }:
         node.geometry.update(width=360, height=140)
     if kind == ComponentKind.PAGES:
@@ -555,7 +570,9 @@ class Project:
 
     def uses_v11(self) -> bool:
         """Format 11 adds data collections."""
-        return "collections" in self.metadata
+        return "collections" in self.metadata or any(
+            node.kind == ComponentKind.CHART for node in self.walk()
+        )
 
     def uses_v5(self) -> bool:
         """Keep writing v4 until a change requires the newer contract."""

@@ -7435,3 +7435,31 @@ msgstr "Não foi possível ler {path}: {error}"
 #: src/makebench/runtime/worker.py
 msgid "Cannot write {path}: {error}"
 msgstr "Não foi possível gravar {path}: {error}"
+
+#: src/makebench/editor/catalog.py
+msgid "A bar, line or pie chart drawn from a list of labels and values."
+msgstr "Um gráfico de barras, linhas ou pizza desenhado a partir de rótulos e valores."
+
+#: src/makebench/runtime/worker.py
+msgid "A chart needs one number for each label."
+msgstr "Um gráfico precisa de um número para cada rótulo."
+
+#: src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Change chart data"
+msgstr "Mudar dados do gráfico"
+
+#: src/makebench/core/project.py
+msgid "Chart"
+msgstr "Gráfico"
+
+#: src/makebench/editor/inspector.py
+msgid "Chart type"
+msgstr "Tipo de gráfico"
+
+#: src/makebench/editor/inspector.py
+msgid "Pie"
+msgstr "Pizza"
+
+#: src/makebench/core/project.py
+msgid "The chart {id} needs a type (bar, line or pie) and a short title."
+msgstr "O gráfico {id} precisa de um tipo (barras, linhas ou pizza) e de um título curto."

@@ -75,6 +75,8 @@ class Context:
         """Replace all rows of a table; each row is a list of cells."""
     def add_row(self, component: str, row: list[Any]) -> None:
         """Append one row (a list of cells) to a table."""
+    def set_chart(self, component: str, labels: list[Any], values: list[float]) -> None:
+        """Show these labels and numbers in a chart (one number per label)."""
     def show_page(self, component: str) -> None:
         """Show a page and the pages that contain it."""
     def go_state(self, state: str) -> None:

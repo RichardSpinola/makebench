@@ -53,6 +53,7 @@ PATHS = {
     "choice": '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="m14 11 3 3 3-3"/>',
     "date": '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     "table": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 9v11"/>',
+    "chart": '<path d="M4 20V4M4 20h16"/><path d="M8 20v-6M13 20V8M18 20v-9"/>',
     "checkbox": '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="m7 12 3 3 7-7"/>',
     "number": '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="m14 11 2 2 2-2"/><path d="M7 12h3"/>',
     "slider": '<path d="M4 12h16"/><circle cx="14" cy="12" r="3"/>',

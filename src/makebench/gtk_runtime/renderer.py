@@ -52,6 +52,7 @@ class GtkView:
         self.choice_ids = {}  # record ids hidden behind the options of a choice list
         self.table_views = {}  # the column view of each table
         self.dates = set()  # date pickers
+        self.charts = {}  # id -> chart state drawn by a Gtk.DrawingArea
         self.tables = {}  # id -> (Gio.ListStore, Gtk.SingleSelection)
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
@@ -65,7 +66,11 @@ class GtkView:
         from makebench.core.style import gtk_css, window_style
 
         Gtk, Gdk = self.Gtk, self.Gdk
-        css = gtk_css(window_style({**self.root.properties, **self.style_changes}), self.css_class)
+        style = window_style({**self.root.properties, **self.style_changes})
+        css = gtk_css(style, self.css_class)
+        for area in self.charts.values():
+            area.state.accent = style["accent"]
+            area.queue_draw()
         display = Gdk.Display.get_default()
         if self.provider is not None and display is not None:
             Gtk.StyleContext.remove_provider_for_display(display, self.provider)
@@ -228,6 +233,8 @@ class GtkView:
             widget.connect("toggled", lambda _check: self.user_changed(node.id))
         elif k == ComponentKind.PROGRESS:
             widget = Gtk.ProgressBar(show_text=True, fraction=p.get("value", 0) / 100)
+        elif k == ComponentKind.CHART:
+            widget = self.chart(node)
         elif k == ComponentKind.TABLE:
             widget = self.table(node.id, p.get("headers", []))
         elif k == ComponentKind.DATE:
@@ -377,6 +384,38 @@ class GtkView:
                 ),
             )
             view.append_column(Gtk.ColumnViewColumn(title=title, factory=factory, expand=True))
+
+    def chart(self, node):
+        """A drawing area painted by cairo; Design shows sample data, an app starts empty."""
+        from makebench.core.chart import SAMPLE_LABELS, SAMPLE_VALUES
+        from .chart import draw
+
+        p = node.properties
+        state = type("Chart", (), {})()
+        state.type, state.title, state.accent = p.get("chart_type", "bar"), p.get("title", ""), ""
+        state.labels, state.values = [], []
+        area = self.Gtk.DrawingArea(
+            hexpand=True, vexpand=True, content_width=160, content_height=110
+        )
+        area.set_draw_func(
+            lambda widget, cr, width, height: draw(cr, width, height, state, self.ink(widget))
+        )
+        area.state = state
+        self.charts[node.id] = area
+        return area
+
+    def ink(self, widget):
+        """Text color of the widget (white or black fallback for old GTK)."""
+        if hasattr(widget, "get_color"):
+            color = widget.get_color()
+            return (color.red, color.green, color.blue, color.alpha)
+        return (0.1, 0.1, 0.1, 1.0)
+
+    def set_chart(self, identifier, labels, values):
+        """Replace the data of a chart and repaint."""
+        area = self.charts[identifier]
+        area.state.labels, area.state.values = list(labels), list(values)
+        area.queue_draw()
 
     def set_rows(self, identifier, rows, ids=None):
         """Replace the rows of a table without reporting a change."""

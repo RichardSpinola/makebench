@@ -294,6 +294,47 @@ class LogicTests(unittest.TestCase):
         with self.assertRaises(ProjectError):
             validate(self.project)
 
+    def test_chart_block_validates_and_generates_python(self):
+        chart = self.project.add(self.project.root.id, ComponentKind.CHART)
+        label = self.project.add(self.project.root.id, ComponentKind.LABEL)
+        lit = lambda i, v: {"id": i, "op": "literal", "value": v}  # noqa: E731
+        empty = lambda i: {"id": i, "op": "list", "items": []}  # noqa: E731
+        self.flow["body"] = [
+            {
+                "id": "c",
+                "op": "set_chart",
+                "component": chart.id,
+                "labels": empty("l"),
+                "value": empty("v"),
+            }
+        ]
+        validate(self.project)
+        self.assertIn(f"ctx.set_chart('{chart.id}', [], [])", generate(self.project).text)
+        self.assertEqual(self.project.to_dict()["format_version"], 11)
+        self.flow["body"][0]["component"] = label.id
+        with self.assertRaises(ProjectError):
+            validate(self.project)
+        self.flow["body"][0]["component"] = chart.id
+        del self.flow["body"][0]["labels"]
+        with self.assertRaises(ProjectError):
+            validate(self.project)
+        self.assertEqual(lit("x", 1)["op"], "literal")
+        chart.properties["chart_type"] = "radar"
+        with self.assertRaises(ProjectError):
+            Project.from_dict(self.project.to_dict())
+
+    def test_chart_layout_has_a_shape_per_value(self):
+        from makebench.core.chart import layout
+
+        for kind in ("bar", "line", "pie"):
+            shapes = layout(kind, "T", ["a", "b", "c"], [1, -2, 0], 300, 200)
+            self.assertTrue(shapes and shapes[0][0] == "text")
+        self.assertEqual(
+            len([s for s in layout("bar", "", ["a", "b"], [1, 2], 300, 200) if s[0] == "rect"]), 2
+        )
+        self.assertEqual(layout("bar", "", [], [], 300, 200), [])
+        self.assertEqual([s[0] for s in layout("pie", "", ["a"], [0], 300, 200)].count("slice"), 0)
+
     def test_data_blocks_validate_generate_python_and_survive_conversion(self):
         from makebench.core.codegen import convert_to_python
 

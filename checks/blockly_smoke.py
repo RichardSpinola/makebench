@@ -865,6 +865,27 @@ class BlocklyTests(unittest.TestCase):
         self.assertEqual(compiled["errors"], [])
         self.assertEqual(compiled["body"], expected)
 
+    def test_25_set_chart_block_roundtrips_through_blockly(self):
+        """Changing chart data keeps the labels and the values."""
+        chart = self.window.project.add(self.window.project.root.id, ComponentKind.CHART)
+        lit = lambda i, v: {"id": i, "op": "literal", "value": v}  # noqa: E731
+        self.flow["body"] = [
+            {
+                "id": "c",
+                "op": "set_chart",
+                "component": chart.id,
+                "labels": {"id": "l", "op": "list", "items": [lit("a", "A")]},
+                "value": {"id": "v", "op": "list", "items": [lit("b", 3)]},
+            }
+        ]
+        expected = json.loads(json.dumps(self.flow["body"]))
+        self.window._refresh()
+        self.window.logic.sync(self.flow["id"])
+        QTest.qWait(300)
+        compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
+        self.assertEqual(compiled["errors"], [])
+        self.assertEqual(compiled["body"], expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

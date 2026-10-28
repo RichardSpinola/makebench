@@ -62,7 +62,10 @@ def qt_stylesheet(style, name):
             f"#{name} QLineEdit, #{name} QPlainTextEdit, #{name} QTextEdit "
             f"{{ background-color: {style['background']}; color: {style['text']}; }}"
         )
+    if style["text"]:
+        rules.append(f'#{name} *[mbChart="true"] {{ color: {style["text"]}; }}')
     if style["accent"]:
+        rules.append(f'#{name} *[mbChart="true"] {{ qproperty-accent: "{style["accent"]}"; }}')
         rules.append(
             f"#{name} QPushButton {{ background-color: {style['accent']}; color: white; "
             "border: none; border-radius: 4px; padding: 5px 12px; }"
