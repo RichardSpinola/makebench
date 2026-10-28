@@ -87,6 +87,32 @@ def find_unit(project: Project, unit_id: str | None) -> dict | None:
     )
 
 
+def modules(project: Project) -> list[str]:
+    """Return the block module names in use, sorted, for the sidebar and menus."""
+    units = [*project.workflows, *block_functions(project)]
+    return sorted({unit["module"] for unit in units if unit.get("module")}, key=str.casefold)
+
+
+def set_module(project: Project, unit_id: str, module: str) -> None:
+    """Group an event or a function under a module; an empty name ungroups it."""
+    unit = find_unit(project, unit_id)
+    if unit is None:
+        raise ProjectError(tr("The flow no longer exists."))
+    previous = unit.get("module")
+    module = " ".join(module.split())
+    if module:
+        unit["module"] = module
+    else:
+        unit.pop("module", None)
+    try:
+        validate(project)
+    except ProjectError:
+        unit.pop("module", None)
+        if previous is not None:
+            unit["module"] = previous
+        raise
+
+
 def create_block_function(project: Project, name: str, params: list[str] | None = None) -> dict:
     """Add an empty block function; the name and parameters must be Python names."""
     if not editable(project):
@@ -235,6 +261,11 @@ def validate(project: Project) -> None:
         seen_flows.add(flow["id"])
         if not isinstance(flow.get("name"), str):
             raise ProjectError(tr("The flow name must be text."))
+        module = flow.get("module")
+        if module is not None and (
+            not isinstance(module, str) or not module.strip() or len(module) > 60
+        ):
+            raise ProjectError(tr("A module name must be 1 to 60 characters."))
         in_function = any(flow is item for item in functions)
         if in_function:
             state_ids = all_states

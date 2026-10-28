@@ -33,6 +33,7 @@ from makebench.core.logic import (
     editable,
     find_unit,
     function_calls,
+    set_module,
     validate,
 )
 from makebench.core.source import ENTRY_FILE, SourceBuffer
@@ -417,6 +418,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.logic.rename_requested.connect(self.rename_flow)
         self.logic.flow_changed.connect(self._receive_flow)
         self.logic.function_edit_requested.connect(self.save_block_function)
+        self.logic.module_requested.connect(self.move_to_module)
         self.logic.error.connect(self._show_error)
         self.logic.save_requested.connect(self.save)
         self.logic.undo_requested.connect(self.undo)
@@ -1651,6 +1653,18 @@ class MainWindow(StudioMixin, QMainWindow):
         self.logic.sync()
         self._update_code()
         self._update_actions()
+
+    def move_to_module(self, unit_id, module):
+        """Group an event or function under a block module (organization only)."""
+        if not self.logic.flush():
+            return
+        try:
+            set_module(self.project, unit_id, module)
+        except ProjectError as exc:
+            self._show_error(exc, tr("Could not move to the module"))
+            return
+        self.history.push(self.project, tr("Move to module"))
+        self.logic.sync()
 
     def remove_flow(self, flow_id):
         """Remove only the logic binding; undo restores blocks and comments."""

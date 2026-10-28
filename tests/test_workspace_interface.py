@@ -225,6 +225,35 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.remove_flow(function["id"])
         self.assertNotIn("functions", w.project.metadata)
 
+    def test_block_modules_group_events_and_functions_in_the_sidebar(self):
+        w = self.window
+        w.project.metadata["programming"] = "blocks"
+        button = w.project.add(w.project.root.id, ComponentKind.BUTTON)
+        from makebench.core.logic import create_flow, modules
+
+        flow = create_flow(w.project, button.id)
+        w.history.push(w.project)
+        w._refresh()
+        w.save_block_function("", "total", [])
+        function = w.project.metadata["functions"][0]
+        w.move_to_module(flow["id"], "  Checkout   page ")
+        w.move_to_module(function["id"], "Checkout page")
+        self.assertEqual(flow["module"], "Checkout page")
+        self.assertEqual(modules(w.project), ["Checkout page"])
+        outline = w.logic.outline
+        groups = [outline.topLevelItem(i) for i in range(outline.topLevelItemCount())]
+        self.assertEqual(groups[-1].text(0), "Modules")
+        folder = groups[-1].child(0)
+        self.assertEqual(folder.text(0), "Checkout page")
+        self.assertEqual(folder.childCount(), 2)
+        self.assertEqual(groups[0].childCount(), 0)
+        with patch.object(w, "_show_error") as shown:
+            w.move_to_module(flow["id"], "x" * 61)
+        shown.assert_called_once()
+        self.assertEqual(flow["module"], "Checkout page")
+        w.move_to_module(flow["id"], "")
+        self.assertNotIn("module", flow)
+
     def test_convert_to_python_keeps_a_copy_of_the_blocks(self):
         w = self.window
         w.project.metadata["programming"] = "blocks"

@@ -60,6 +60,8 @@ workspace}`. Codegen emits them first as `def fn_<name>(ctx, *params)` with the
 inputs copied into `local_variables`; `call_function` (statement or value) refers
 to the function by id and passes `args` in order, and `return` is only valid
 inside a function. Conversion to Python copies these definitions as they are.
+Flows and functions may carry an optional `module` name (1–60 characters) that
+only groups them in the sidebar.
 Limits: 48 levels and 5000 nodes per flow.
 
 - `web/logic.js` translates Blockly blocks to and from this model. On opening, it

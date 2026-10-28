@@ -6982,3 +6982,21 @@ msgstr "preco, quantidade"
 
 msgid "“Return” only works inside a function."
 msgstr "“Retornar” só funciona dentro de uma função."
+
+msgid "A module name must be 1 to 60 characters."
+msgstr "O nome do módulo deve ter de 1 a 60 caracteres."
+
+msgid "The flow no longer exists."
+msgstr "O fluxo não existe mais."
+
+msgid "Move to module…"
+msgstr "Mover para módulo…"
+
+msgid "Move to module"
+msgstr "Mover para módulo"
+
+msgid "Module (leave empty for none)"
+msgstr "Módulo (deixe vazio para nenhum)"
+
+msgid "Could not move to the module"
+msgstr "Não foi possível mover para o módulo"

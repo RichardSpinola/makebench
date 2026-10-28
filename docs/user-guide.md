@@ -90,6 +90,10 @@ Use **call** as a statement or **result of** as a value. A function that is
 still called cannot be removed, and the number of its inputs only changes after
 you remove its calls.
 
+**Modules** only organize: choose **⋯ › Move to module…** and type a name to
+group the open event or function with others in the sidebar. Leave the name
+empty to take it out. Right-click a block to add a comment or collapse it.
+
 ![Logic](images/logic.png)
 
 ### Python projects

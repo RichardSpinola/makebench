@@ -95,6 +95,11 @@ variáveis locais ("deste fluxo"), e **retornar** devolve um valor. Use
 chamada não pode ser removida, e o número de entradas só muda depois que você
 remove as chamadas.
 
+Os **Módulos** só organizam: escolha **⋯ › Mover para módulo…** e digite um
+nome para agrupar o evento ou a função aberta com outros na barra lateral.
+Deixe o nome vazio para tirar do módulo. Clique com o botão direito num bloco
+para comentar ou recolher.
+
 ![Lógica](images/logic.png)
 
 ### Projetos em Python

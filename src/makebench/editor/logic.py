@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMenu,
@@ -31,7 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 from makebench.core.codegen import generate
-from makebench.core.logic import block_functions, editable, find_unit, function_names
+from makebench.core.logic import block_functions, editable, find_unit, function_names, modules
 from makebench.core.project import ComponentKind
 from makebench.i18n import language, tr
 
@@ -110,6 +111,7 @@ class LogicPanel(QWidget):
     duplicate_requested = Signal(str)
     design_requested = Signal(str)
     function_edit_requested = Signal(str, str, list)
+    module_requested = Signal(str, str)
 
     def __init__(self, project_getter, source_getter, parent=None):
         """Create native controls; WebEngine starts only when entering the Logic tab."""
@@ -182,6 +184,9 @@ class LogicPanel(QWidget):
             icon("code"),
             tr("Function name and inputs…"),
             lambda: self.function_dialog(self.flow_id),
+        )
+        self.move_module = menu.addAction(
+            icon("layers"), tr("Move to module…"), lambda: self.module_dialog()
         )
         menu.addSeparator()
         self.remove = menu.addAction(
@@ -507,6 +512,7 @@ class LogicPanel(QWidget):
         reconcile_combo(self.state_filter, entries, filters)
         self.state_filter.setEnabled(flow is not None and not function)
         self.edit_function.setEnabled(function is not None)
+        self.move_module.setEnabled(flow is not None)
         self.name.setEnabled(flow is not None)
         self.remove.setEnabled(flow is not None)
         target = self._target_component or self.targets.currentData()
@@ -685,6 +691,21 @@ class LogicPanel(QWidget):
                 [item.strip() for item in params.text().split(",") if item.strip()],
             )
 
+    def module_dialog(self):
+        """Ask which module groups the open event or function; empty leaves the module."""
+        unit = find_unit(self.get_project(), self.flow_id)
+        if unit is None or not self.flush():
+            return
+        choices = ["", *modules(self.get_project())]
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle(tr("Move to module"))
+        dialog.setLabelText(tr("Module (leave empty for none)"))
+        dialog.setComboBoxItems(choices)
+        dialog.setComboBoxEditable(True)
+        dialog.setTextValue(unit.get("module", ""))
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.module_requested.emit(self.flow_id, dialog.textValue().strip())
+
     def _sync_outline(self):
         """Mirror the event list in the sidebar without emitting selection changes."""
         self.outline.blockSignals(True)
@@ -718,6 +739,36 @@ class LogicPanel(QWidget):
                         if group.child(i).data(0, Qt.ItemDataRole.UserRole) == self.flow_id
                     )
                 )
+        # Modules gather events and functions in one more group; each unit stays in one place.
+        project = self.get_project()
+        grouped = {
+            unit["id"]: unit["module"]
+            for unit in [*project.workflows, *block_functions(project)]
+            if unit.get("module")
+        }
+        if grouped:
+            group = QTreeWidgetItem([tr("Modules")])
+            group.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            self.outline.addTopLevelItem(group)
+            folders = {}
+            for name in modules(project):
+                folders[name] = QTreeWidgetItem([name])
+                folders[name].setFlags(Qt.ItemFlag.ItemIsEnabled)
+                group.addChild(folders[name])
+            for index in reversed(range(self.outline.topLevelItemCount() - 1)):
+                parent = self.outline.topLevelItem(index)
+                for child_index in reversed(range(parent.childCount())):
+                    child = parent.child(child_index)
+                    module = grouped.get(child.data(0, Qt.ItemDataRole.UserRole))
+                    if module:
+                        parent.removeChild(child)
+                        folders[module].insertChild(0, child)
+            group.setExpanded(True)
+            for folder in folders.values():
+                folder.setExpanded(True)
+                for i in range(folder.childCount()):
+                    if folder.child(i).data(0, Qt.ItemDataRole.UserRole) == self.flow_id:
+                        self.outline.setCurrentItem(folder.child(i))
         self.outline.blockSignals(False)
 
     def _outline_clicked(self, item, _column=0):
