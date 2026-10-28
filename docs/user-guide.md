@@ -178,7 +178,7 @@ version, icon and language with **Application…**.
   `ctx.set_background(...)`.
 - **Complete examples:** *Complete workshop* uses every
   component kind, several windows with different looks, a state, a task, a terminal,
-  an own module and a breakpoint. Open the *Guide* window inside them for a short tour.
+  block functions, block modules and a breakpoint. Open the *Guide* window inside them for a short tour.
 
 ## Preferences
 

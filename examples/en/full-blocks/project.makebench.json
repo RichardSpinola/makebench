@@ -1,10 +1,10 @@
 {
   "format": "makebench.project",
-  "format_version": 8,
-  "id": "project_00bd788fbca4",
+  "format_version": 9,
+  "id": "project_7cfdd99efb2f",
   "name": "Complete workshop",
   "ui": {
-    "id": "window_ab717f22a973",
+    "id": "window_e29588a0ec47",
     "kind": "window",
     "layout": "vertical",
     "properties": {
@@ -22,7 +22,7 @@
     },
     "children": [
       {
-        "id": "container_ea8c419bb2b5",
+        "id": "container_b3e467f99cac",
         "kind": "container",
         "layout": "horizontal",
         "properties": {},
@@ -34,7 +34,7 @@
         },
         "children": [
           {
-            "id": "label_666dd849201d",
+            "id": "label_2414c80f6fb2",
             "kind": "label",
             "layout": "vertical",
             "properties": {
@@ -50,7 +50,7 @@
             "children": []
           },
           {
-            "id": "spacer_40a21a4d2ab2",
+            "id": "spacer_0e5ebad4664e",
             "kind": "spacer",
             "layout": "vertical",
             "properties": {
@@ -68,7 +68,7 @@
             "children": []
           },
           {
-            "id": "button_1f9d7427e45e",
+            "id": "button_b6d3de9b5780",
             "kind": "button",
             "layout": "vertical",
             "properties": {
@@ -84,7 +84,7 @@
             "children": []
           },
           {
-            "id": "button_5a06fc01855f",
+            "id": "button_f683062af2e2",
             "kind": "button",
             "layout": "vertical",
             "properties": {
@@ -100,7 +100,7 @@
             "children": []
           },
           {
-            "id": "button_3b6be86759ce",
+            "id": "button_f1529a201633",
             "kind": "button",
             "layout": "vertical",
             "properties": {
@@ -118,7 +118,7 @@
         ]
       },
       {
-        "id": "label_4ed3272bcbc4",
+        "id": "label_5421c530795f",
         "kind": "label",
         "layout": "vertical",
         "properties": {
@@ -134,7 +134,7 @@
         "children": []
       },
       {
-        "id": "separator_f50142a310ef",
+        "id": "separator_3dd99e87c9d8",
         "kind": "separator",
         "layout": "vertical",
         "properties": {},
@@ -147,11 +147,11 @@
         "children": []
       },
       {
-        "id": "pages_d47b8ac39a0f",
+        "id": "pages_0f75c7a75187",
         "kind": "pages",
         "layout": "vertical",
         "properties": {
-          "initial_page": "page_2761c3ddbf34"
+          "initial_page": "page_acae9e0c873b"
         },
         "geometry": {
           "x": 64,
@@ -161,7 +161,7 @@
         },
         "children": [
           {
-            "id": "page_2761c3ddbf34",
+            "id": "page_acae9e0c873b",
             "kind": "page",
             "layout": "grid",
             "properties": {
@@ -176,7 +176,7 @@
             },
             "children": [
               {
-                "id": "label_58e68d64dcd4",
+                "id": "label_1336d95ecf81",
                 "kind": "label",
                 "layout": "vertical",
                 "properties": {
@@ -191,7 +191,7 @@
                 "children": []
               },
               {
-                "id": "text_input_eeb8517532ed",
+                "id": "text_input_a498133369ad",
                 "kind": "text_input",
                 "layout": "vertical",
                 "properties": {
@@ -208,7 +208,7 @@
                 "children": []
               },
               {
-                "id": "checkbox_08175e21b353",
+                "id": "checkbox_24b1b2021f8b",
                 "kind": "checkbox",
                 "layout": "vertical",
                 "properties": {
@@ -225,7 +225,7 @@
                 "children": []
               },
               {
-                "id": "button_b62d2d63b3bf",
+                "id": "button_6f0dfe29c8cf",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -241,7 +241,7 @@
                 "children": []
               },
               {
-                "id": "image_36e64495e97a",
+                "id": "image_afca7af3e01a",
                 "kind": "image",
                 "layout": "vertical",
                 "properties": {
@@ -258,7 +258,7 @@
                 "children": []
               },
               {
-                "id": "progress_9f94edd3446b",
+                "id": "progress_99caf1165c3e",
                 "kind": "progress",
                 "layout": "vertical",
                 "properties": {
@@ -274,7 +274,7 @@
                 "children": []
               },
               {
-                "id": "button_b84e9677adf1",
+                "id": "button_2ed44f957597",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -290,7 +290,7 @@
                 "children": []
               },
               {
-                "id": "button_a743f1e4fb2a",
+                "id": "button_31fe321da199",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -306,7 +306,7 @@
                 "children": []
               },
               {
-                "id": "button_a367d747d3ad",
+                "id": "button_dbcab720185b",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -322,7 +322,7 @@
                 "children": []
               },
               {
-                "id": "button_dab6824feb88",
+                "id": "button_7a97e475a08e",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -340,7 +340,7 @@
             ]
           },
           {
-            "id": "page_eb5edd3104ca",
+            "id": "page_4a6a5cd5b6e4",
             "kind": "page",
             "layout": "vertical",
             "properties": {
@@ -354,7 +354,7 @@
             },
             "children": [
               {
-                "id": "button_382eaa2de66d",
+                "id": "button_236475daa530",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -370,7 +370,7 @@
                 "children": []
               },
               {
-                "id": "button_0cf76299dc59",
+                "id": "button_397a9cce1451",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -386,7 +386,7 @@
                 "children": []
               },
               {
-                "id": "button_19cc81c43efd",
+                "id": "button_b46a3d366cf9",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -402,7 +402,7 @@
                 "children": []
               },
               {
-                "id": "output_80d6580490ab",
+                "id": "output_df64587b7feb",
                 "kind": "output",
                 "layout": "vertical",
                 "properties": {
@@ -420,7 +420,7 @@
             ]
           },
           {
-            "id": "page_aaf488fa749a",
+            "id": "page_97a8f25d80dd",
             "kind": "page",
             "layout": "vertical",
             "properties": {
@@ -434,7 +434,7 @@
             },
             "children": [
               {
-                "id": "terminal_66281898cdf6",
+                "id": "terminal_40b73fba5289",
                 "kind": "terminal",
                 "layout": "vertical",
                 "properties": {
@@ -452,7 +452,7 @@
                 "children": []
               },
               {
-                "id": "container_adb026a3a392",
+                "id": "container_afa817bc7049",
                 "kind": "container",
                 "layout": "horizontal",
                 "properties": {},
@@ -464,7 +464,7 @@
                 },
                 "children": [
                   {
-                    "id": "button_4451a5d44ebe",
+                    "id": "button_a261a35f19e6",
                     "kind": "button",
                     "layout": "vertical",
                     "properties": {
@@ -480,7 +480,7 @@
                     "children": []
                   },
                   {
-                    "id": "button_c2433601dd85",
+                    "id": "button_1fcca9ba1371",
                     "kind": "button",
                     "layout": "vertical",
                     "properties": {
@@ -496,7 +496,7 @@
                     "children": []
                   },
                   {
-                    "id": "button_11f5fa04f6a1",
+                    "id": "button_e347cb93693e",
                     "kind": "button",
                     "layout": "vertical",
                     "properties": {
@@ -516,7 +516,7 @@
             ]
           },
           {
-            "id": "page_3d15d5a62a0f",
+            "id": "page_f68c90121061",
             "kind": "page",
             "layout": "free",
             "properties": {
@@ -530,7 +530,7 @@
             },
             "children": [
               {
-                "id": "label_f15537b1afb2",
+                "id": "label_045e10068074",
                 "kind": "label",
                 "layout": "vertical",
                 "properties": {
@@ -545,7 +545,7 @@
                 "children": []
               },
               {
-                "id": "button_39287f947062",
+                "id": "button_092ef4e2d031",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -564,7 +564,7 @@
         ]
       },
       {
-        "id": "spacer_d741c8663193",
+        "id": "spacer_cf12549242f3",
         "kind": "spacer",
         "layout": "vertical",
         "properties": {
@@ -582,7 +582,7 @@
         "children": []
       },
       {
-        "id": "label_8faa567dfa57",
+        "id": "label_434db3a31c19",
         "kind": "label",
         "layout": "vertical",
         "properties": {
@@ -605,7 +605,7 @@
       "name": "On start",
       "event": {
         "kind": "start",
-        "component": "window_ab717f22a973"
+        "component": "window_e29588a0ec47"
       },
       "body": [
         {
@@ -641,7 +641,7 @@
         },
         {
           "op": "set_text",
-          "component": "label_8faa567dfa57",
+          "component": "label_434db3a31c19",
           "value": {
             "id": "block_007",
             "op": "literal",
@@ -656,7 +656,7 @@
       "name": "Click: Greet",
       "event": {
         "kind": "click",
-        "component": "button_b62d2d63b3bf"
+        "component": "button_6f0dfe29c8cf"
       },
       "body": [
         {
@@ -682,19 +682,21 @@
           "id": "block_004"
         },
         {
-          "op": "call",
-          "function": "register",
-          "value": {
-            "id": "block_005",
-            "op": "variable",
-            "name": "visits",
-            "scope": "project"
-          },
+          "op": "call_function",
+          "function": "fn_register",
+          "args": [
+            {
+              "id": "block_005",
+              "op": "variable",
+              "name": "visits",
+              "scope": "project"
+            }
+          ],
           "id": "block_006"
         },
         {
           "op": "set_text",
-          "component": "label_8faa567dfa57",
+          "component": "label_434db3a31c19",
           "value": {
             "id": "block_007",
             "op": "join",
@@ -706,7 +708,7 @@
             "right": {
               "id": "block_009",
               "op": "read",
-              "component": "text_input_eeb8517532ed",
+              "component": "text_input_a498133369ad",
               "attribute": "text"
             }
           },
@@ -714,7 +716,7 @@
         },
         {
           "op": "set_value",
-          "component": "progress_9f94edd3446b",
+          "component": "progress_99caf1165c3e",
           "value": {
             "id": "block_011",
             "op": "binary",
@@ -738,7 +740,7 @@
           "condition": {
             "id": "block_015",
             "op": "read",
-            "component": "checkbox_08175e21b353",
+            "component": "checkbox_24b1b2021f8b",
             "attribute": "checked"
           },
           "then": [
@@ -772,12 +774,12 @@
       "name": "Click: Get busy",
       "event": {
         "kind": "click",
-        "component": "button_b84e9677adf1"
+        "component": "button_2ed44f957597"
       },
       "body": [
         {
           "op": "go_state",
-          "state": "state_52728c7222c0",
+          "state": "state_54504773b2ef",
           "id": "block_001"
         }
       ]
@@ -787,7 +789,7 @@
       "name": "Click: Get ready",
       "event": {
         "kind": "click",
-        "component": "button_a743f1e4fb2a"
+        "component": "button_31fe321da199"
       },
       "body": [
         {
@@ -797,7 +799,7 @@
         },
         {
           "op": "set_enabled",
-          "component": "button_b62d2d63b3bf",
+          "component": "button_6f0dfe29c8cf",
           "value": {
             "id": "block_002",
             "op": "literal",
@@ -812,7 +814,7 @@
       "name": "Click: Count to 3",
       "event": {
         "kind": "click",
-        "component": "button_a367d747d3ad"
+        "component": "button_dbcab720185b"
       },
       "body": [
         {
@@ -874,22 +876,23 @@
       "name": "Click: Go to the terminal",
       "event": {
         "kind": "click",
-        "component": "button_dab6824feb88"
+        "component": "button_7a97e475a08e"
       },
       "body": [
         {
           "op": "show_page",
-          "component": "page_aaf488fa749a",
+          "component": "page_97a8f25d80dd",
           "id": "block_001"
         }
-      ]
+      ],
+      "module": "Terminal"
     },
     {
       "id": "flow_06_click",
       "name": "Click: System information",
       "event": {
         "kind": "click",
-        "component": "button_382eaa2de66d"
+        "component": "button_236475daa530"
       },
       "body": [
         {
@@ -913,14 +916,15 @@
           },
           "id": "block_004"
         }
-      ]
+      ],
+      "module": "Tasks"
     },
     {
       "id": "flow_07_click",
       "name": "Click: Run a script",
       "event": {
         "kind": "click",
-        "component": "button_0cf76299dc59"
+        "component": "button_397a9cce1451"
       },
       "body": [
         {
@@ -961,14 +965,15 @@
           },
           "id": "block_007"
         }
-      ]
+      ],
+      "module": "Tasks"
     },
     {
       "id": "flow_08_click",
       "name": "Click: Ask and confirm",
       "event": {
         "kind": "click",
-        "component": "button_19cc81c43efd"
+        "component": "button_b46a3d366cf9"
       },
       "body": [
         {
@@ -1006,19 +1011,20 @@
           },
           "id": "block_007"
         }
-      ]
+      ],
+      "module": "Tasks"
     },
     {
       "id": "flow_09_click",
       "name": "Click: Start",
       "event": {
         "kind": "click",
-        "component": "button_4451a5d44ebe"
+        "component": "button_a261a35f19e6"
       },
       "body": [
         {
           "op": "terminal_start",
-          "component": "terminal_66281898cdf6",
+          "component": "terminal_40b73fba5289",
           "program": {
             "id": "block_001",
             "op": "literal",
@@ -1031,19 +1037,20 @@
           },
           "id": "block_003"
         }
-      ]
+      ],
+      "module": "Terminal"
     },
     {
       "id": "flow_10_click",
       "name": "Click: Send command",
       "event": {
         "kind": "click",
-        "component": "button_c2433601dd85"
+        "component": "button_1fcca9ba1371"
       },
       "body": [
         {
           "op": "terminal_send",
-          "component": "terminal_66281898cdf6",
+          "component": "terminal_40b73fba5289",
           "value": {
             "id": "block_001",
             "op": "literal",
@@ -1051,128 +1058,250 @@
           },
           "id": "block_002"
         }
-      ]
+      ],
+      "module": "Terminal"
     },
     {
       "id": "flow_11_click",
       "name": "Click: Stop",
       "event": {
         "kind": "click",
-        "component": "button_11f5fa04f6a1"
+        "component": "button_e347cb93693e"
       },
       "body": [
         {
           "op": "terminal_stop",
-          "component": "terminal_66281898cdf6",
+          "component": "terminal_40b73fba5289",
           "id": "block_001"
         }
-      ]
+      ],
+      "module": "Terminal"
     },
     {
       "id": "flow_12_click",
       "name": "Click: About",
       "event": {
         "kind": "click",
-        "component": "button_1f9d7427e45e"
+        "component": "button_b6d3de9b5780"
       },
       "body": [
         {
           "op": "open_window",
-          "window": "window_622fc9c92e7b",
+          "window": "window_770c5d37a387",
           "close_current": false,
           "id": "block_001"
         }
-      ]
+      ],
+      "module": "Windows"
     },
     {
       "id": "flow_13_click",
       "name": "Click: Guide",
       "event": {
         "kind": "click",
-        "component": "button_3b6be86759ce"
+        "component": "button_f1529a201633"
       },
       "body": [
         {
           "op": "open_window",
-          "window": "window_e198b5c0716c",
+          "window": "window_bca7a18bdfb1",
           "close_current": false,
           "id": "block_001"
         }
-      ]
+      ],
+      "module": "Windows"
     },
     {
       "id": "flow_14_click",
       "name": "Click: Look",
       "event": {
         "kind": "click",
-        "component": "button_5a06fc01855f"
+        "component": "button_f683062af2e2"
       },
       "body": [
         {
           "op": "open_window",
-          "window": "window_1e9d4b95b870",
+          "window": "window_29aed6eb5a37",
           "close_current": false,
           "id": "block_001"
         }
-      ]
+      ],
+      "module": "Windows"
     },
     {
       "id": "flow_15_click",
       "name": "Click: Close",
       "event": {
         "kind": "click",
-        "component": "button_f85304a893eb"
+        "component": "button_d16102debf84"
       },
       "body": [
         {
           "op": "close_window",
           "id": "block_001"
         }
-      ]
+      ],
+      "module": "Windows"
     },
     {
       "id": "flow_16_click",
       "name": "Click: Dark",
       "event": {
         "kind": "click",
-        "component": "button_be8c4c459db3"
+        "component": "button_847ecf325a69"
       },
       "body": [
         {
-          "op": "call",
-          "function": "change_theme",
-          "value": {
-            "id": "block_001",
-            "op": "literal",
-            "value": "dark"
-          },
+          "op": "call_function",
+          "function": "fn_show_look",
+          "args": [
+            {
+              "id": "block_001",
+              "op": "literal",
+              "value": "Dark"
+            }
+          ],
           "id": "block_002"
         }
-      ]
+      ],
+      "module": "Windows"
     },
     {
       "id": "flow_17_click",
       "name": "Click: Light",
       "event": {
         "kind": "click",
-        "component": "button_f2a6846d657c"
+        "component": "button_8d21e1c79f49"
       },
       "body": [
         {
-          "op": "call",
-          "function": "change_theme",
-          "value": {
-            "id": "block_001",
-            "op": "literal",
-            "value": "light"
-          },
+          "op": "call_function",
+          "function": "fn_show_look",
+          "args": [
+            {
+              "id": "block_001",
+              "op": "literal",
+              "value": "Light"
+            }
+          ],
           "id": "block_002"
         }
-      ]
+      ],
+      "module": "Windows"
     }
   ],
   "metadata": {
     "logic_version": 1,
+    "programming": "blocks",
+    "functions": [
+      {
+        "id": "fn_register",
+        "name": "register",
+        "params": [
+          "visits"
+        ],
+        "body": [
+          {
+            "op": "log",
+            "value": {
+              "id": "block_001",
+              "op": "join",
+              "left": {
+                "id": "block_002",
+                "op": "join",
+                "left": {
+                  "id": "block_003",
+                  "op": "read",
+                  "component": "text_input_a498133369ad",
+                  "attribute": "text"
+                },
+                "right": {
+                  "id": "block_004",
+                  "op": "literal",
+                  "value": " · "
+                }
+              },
+              "right": {
+                "id": "block_005",
+                "op": "variable",
+                "name": "visits",
+                "scope": "local"
+              }
+            },
+            "id": "block_006"
+          },
+          {
+            "op": "return",
+            "value": {
+              "id": "block_007",
+              "op": "join",
+              "left": {
+                "id": "block_008",
+                "op": "join",
+                "left": {
+                  "id": "block_009",
+                  "op": "read",
+                  "component": "text_input_a498133369ad",
+                  "attribute": "text"
+                },
+                "right": {
+                  "id": "block_010",
+                  "op": "literal",
+                  "value": " · "
+                }
+              },
+              "right": {
+                "id": "block_011",
+                "op": "variable",
+                "name": "visits",
+                "scope": "local"
+              }
+            },
+            "id": "block_012"
+          }
+        ]
+      },
+      {
+        "id": "fn_show_look",
+        "name": "show_look",
+        "params": [
+          "mode"
+        ],
+        "body": [
+          {
+            "op": "set_text",
+            "component": "label_d4afc8ff2e94",
+            "value": {
+              "id": "block_001",
+              "op": "join",
+              "left": {
+                "id": "block_002",
+                "op": "literal",
+                "value": "Chosen mode: "
+              },
+              "right": {
+                "id": "block_003",
+                "op": "variable",
+                "name": "mode",
+                "scope": "local"
+              }
+            },
+            "id": "block_004"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_005",
+              "op": "variable",
+              "name": "mode",
+              "scope": "local"
+            },
+            "id": "block_006"
+          }
+        ],
+        "module": "Windows"
+      }
+    ],
     "example": "An example that uses every Makebench feature.",
     "debug_breakpoints": [
       {
@@ -1184,7 +1313,7 @@
   },
   "windows": [
     {
-      "id": "window_622fc9c92e7b",
+      "id": "window_770c5d37a387",
       "kind": "window",
       "layout": "vertical",
       "properties": {
@@ -1202,7 +1331,7 @@
       },
       "children": [
         {
-          "id": "label_b16aa7629f0b",
+          "id": "label_bebf7a72edae",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1217,7 +1346,7 @@
           "children": []
         },
         {
-          "id": "button_f85304a893eb",
+          "id": "button_d16102debf84",
           "kind": "button",
           "layout": "vertical",
           "properties": {
@@ -1235,7 +1364,7 @@
       ]
     },
     {
-      "id": "window_1e9d4b95b870",
+      "id": "window_29aed6eb5a37",
       "kind": "window",
       "layout": "vertical",
       "properties": {
@@ -1253,11 +1382,11 @@
       },
       "children": [
         {
-          "id": "label_b37601318571",
+          "id": "label_d4afc8ff2e94",
           "kind": "label",
           "layout": "vertical",
           "properties": {
-            "text": "Change this window's look with an own function."
+            "text": "Pick a mode; a block function shows the choice."
           },
           "geometry": {
             "x": 16,
@@ -1268,7 +1397,7 @@
           "children": []
         },
         {
-          "id": "button_be8c4c459db3",
+          "id": "button_847ecf325a69",
           "kind": "button",
           "layout": "vertical",
           "properties": {
@@ -1284,7 +1413,7 @@
           "children": []
         },
         {
-          "id": "button_f2a6846d657c",
+          "id": "button_8d21e1c79f49",
           "kind": "button",
           "layout": "vertical",
           "properties": {
@@ -1302,7 +1431,7 @@
       ]
     },
     {
-      "id": "window_e198b5c0716c",
+      "id": "window_bca7a18bdfb1",
       "kind": "window",
       "layout": "vertical",
       "properties": {
@@ -1318,7 +1447,7 @@
       },
       "children": [
         {
-          "id": "label_e2b538f7b395",
+          "id": "label_4c175bb1e963",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1333,7 +1462,7 @@
           "children": []
         },
         {
-          "id": "label_24feb5bf0ee1",
+          "id": "label_f6b8d668016c",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1348,7 +1477,7 @@
           "children": []
         },
         {
-          "id": "label_3c565e87b851",
+          "id": "label_328a2d136c00",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1363,7 +1492,7 @@
           "children": []
         },
         {
-          "id": "label_6d2d55af1b36",
+          "id": "label_86d8feeffc20",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1378,11 +1507,11 @@
           "children": []
         },
         {
-          "id": "label_f871e5e8257e",
+          "id": "label_c303e183d84a",
           "kind": "label",
           "layout": "vertical",
           "properties": {
-            "text": "5. Open Look and switch between Light and Dark; open About for the dark window."
+            "text": "5. Open Look and pick Light or Dark; open About for the dark window."
           },
           "geometry": {
             "x": 80,
@@ -1393,7 +1522,7 @@
           "children": []
         },
         {
-          "id": "label_4ec4c9d46f38",
+          "id": "label_c4ae48edaf42",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1411,22 +1540,22 @@
     }
   ],
   "states": {
-    "window_ab717f22a973": [
+    "window_e29588a0ec47": [
       {
-        "id": "state_52728c7222c0",
+        "id": "state_54504773b2ef",
         "name": "Busy",
         "overrides": {
-          "label_8faa567dfa57": {
+          "label_434db3a31c19": {
             "text": "Busy…"
           },
-          "button_b62d2d63b3bf": {
+          "button_6f0dfe29c8cf": {
             "enabled": false
           }
         }
       }
     ]
   },
-  "entry_window": "window_ab717f22a973",
+  "entry_window": "window_e29588a0ec47",
   "variables": [],
   "map_layout": {},
   "application": {
@@ -1436,9 +1565,5 @@
     "backend": "qt",
     "icon": "assets/c5514d90660b0cfd0a9bbdcf8412addfe2061bae51d85f35f2ce1c6f7d9b91f1.svg",
     "language": "en"
-  },
-  "python_files": [
-    "makebench_user/__init__.py",
-    "makebench_user/tools.py"
-  ]
+  }
 }

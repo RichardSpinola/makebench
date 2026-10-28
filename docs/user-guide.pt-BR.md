@@ -185,7 +185,7 @@ e idioma do aplicativo em **Aplicativo…**.
   `ctx.set_background(...)`.
 - **Exemplos completos:** *Oficina completa* usa todos os tipos
   de componente, várias janelas com aparências diferentes, um estado, uma tarefa, um
-  terminal, um módulo próprio e um ponto de parada. Abra a janela *Roteiro* dentro
+  terminal, funções e módulos de blocos e um ponto de parada. Abra a janela *Roteiro* dentro
   deles para um passeio curto.
 
 ## Preferências

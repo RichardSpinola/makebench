@@ -23,34 +23,6 @@ LOGO = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" width="1
 <path d="M30 70 L60 30 L90 70 Z" fill="#fff"/><circle cx="115" cy="50" r="22" fill="#e5a50a"/>
 </svg>"""
 
-TOOLS = '''"""Own module of the workshop: pure Python helpers, imported by actions."""
-
-
-def format_status(visits, name):
-    """Text shown in the status line."""
-    return "{} · {}".format(name or "{who}", visits)
-'''
-
-ACTIONS = '''"""Own functions of the workshop example."""
-
-from makebench_user.tools import format_status
-
-
-def register(ctx, visits):
-    """Called from the logic: logs the status line text and returns it."""
-    name = ctx.read("name_input", "text")
-    text = format_status(visits, name)
-    ctx.log(text)
-    return text
-
-
-def change_theme(ctx, mode):
-    """Switch the look of the current window while the application runs."""
-    ctx.set_theme(mode, "#26a269" if mode == "dark" else "")
-    ctx.set_background("#101820" if mode == "dark" else "")
-    return mode
-'''
-
 TEXT = {
     "pt": dict(
         name="Oficina completa",
@@ -83,7 +55,8 @@ TEXT = {
         about_text="Janela escura criada só com propriedades da janela.",
         close="Fechar",
         look_title="Aparência",
-        look_text="Troque a aparência desta janela com uma função própria.",
+        look_text="Escolha um modo; uma função de blocos mostra a escolha.",
+        look_is="Modo escolhido: ",
         dark="Escuro",
         light="Claro",
         busy_state="Ocupado",
@@ -105,7 +78,7 @@ TEXT = {
             "2. Clique em Ficar ocupado: o estado Ocupado muda o texto e desliga o botão.",
             "3. Na aba Tarefas, rode as tarefas e veja a saída.",
             "4. Na aba Terminal, inicie, envie um comando e pare.",
-            "5. Abra Aparência e troque entre Claro e Escuro; abra Sobre para ver a janela escura.",
+            "5. Abra Aparência e escolha Claro ou Escuro; abra Sobre para ver a janela escura.",
             "6. No editor, use F9 para depurar: há um ponto de parada no primeiro bloco do Cumprimentar.",
         ],
     ),
@@ -140,7 +113,8 @@ TEXT = {
         about_text="A dark window made only with window properties.",
         close="Close",
         look_title="Look",
-        look_text="Change this window's look with an own function.",
+        look_text="Pick a mode; a block function shows the choice.",
+        look_is="Chosen mode: ",
         dark="Dark",
         light="Light",
         busy_state="Busy",
@@ -162,7 +136,7 @@ TEXT = {
             "2. Click Get busy: the Busy state changes the text and disables the button.",
             "3. On the Tasks tab, run the tasks and read the output.",
             "4. On the Terminal tab, start it, send a command and stop it.",
-            "5. Open Look and switch between Light and Dark; open About for the dark window.",
+            "5. Open Look and pick Light or Dark; open About for the dark window.",
             "6. In the editor press F9 to debug: a breakpoint sits on the first block of Greet.",
         ],
     ),
@@ -189,6 +163,15 @@ def block_expr(e, ids):
         return {"id": ids("block"), "op": "literal", "value": e[1]}
     if kind == "var":
         return {"id": ids("block"), "op": "variable", "name": e[1], "scope": "project"}
+    if kind == "local":
+        return {"id": ids("block"), "op": "variable", "name": e[1], "scope": "local"}
+    if kind == "callv":
+        return {
+            "id": ids("block"),
+            "op": "call_function",
+            "function": e[1],
+            "args": [block_expr(x, ids) for x in e[2:]],
+        }
     if kind == "read":
         return {"id": ids("block"), "op": "read", "component": e[1], "attribute": e[2]}
     if kind == "bin":
@@ -227,7 +210,9 @@ def block_stmt(s, ids):
     elif op == "repeat":
         b.update(count=block_expr(s[1], ids), body=[block_stmt(x, ids) for x in s[2]])
     elif op == "call":
-        b.update(function=s[1], value=block_expr(s[2], ids))
+        b.update(op="call_function", function=s[1], args=[block_expr(x, ids) for x in s[2:]])
+    elif op == "return":
+        b["value"] = block_expr(s[1], ids)
     elif op in {"run", "script"}:
         b.update(admin=False, arguments=block_expr(s[2], ids))
         b["program" if op == "run" else "source"] = block_expr(s[1], ids)
@@ -375,7 +360,7 @@ def build(language, destination):
         ],
         (greet.id, "click"): [
             ("assign", "visits", ("bin", "+", visits, lit(1))),
-            ("call", "register", visits),
+            ("call", "fn_register", visits),
             ("set_text", status.id, ("join", lit(t["hello"]), c(name_input))),
             ("set_value", progress.id, ("bin", "*", visits, lit(20))),
             (
@@ -415,11 +400,60 @@ def build(language, destination):
         (guide_button.id, "click"): [("open_window", guide_root.id)],
         (look_button.id, "click"): [("open_window", look_root.id)],
         (close_button.id, "click"): [("close_window",)],
-        (dark_button.id, "click"): [("call", "change_theme", lit("dark"))],
-        (light_button.id, "click"): [("call", "change_theme", lit("light"))],
+        (dark_button.id, "click"): [("call", "fn_show_look", lit(t["dark"]))],
+        (light_button.id, "click"): [("call", "fn_show_look", lit(t["light"]))],
     }
     project.workflows = []
     project.metadata["logic_version"] = LOGIC_VERSION
+    project.metadata["programming"] = "blocks"
+    windows_module = "Janelas" if language == "pt" else "Windows"
+    status_text = ("join", ("join", c(name_input), lit(" · ")), ("local", "visits"))
+    functions = [
+        (
+            "fn_register",
+            "register",
+            ["visits"],
+            None,
+            [("log", status_text), ("return", status_text)],
+        ),
+        (
+            "fn_show_look",
+            "show_look",
+            ["mode"],
+            windows_module,
+            [
+                ("set_text", look_text.id, ("join", lit(t["look_is"]), ("local", "mode"))),
+                ("log", ("local", "mode")),
+            ],
+        ),
+    ]
+    project.metadata["functions"] = []
+    for function_id, name, params, module, steps_ in functions:
+        ids = Ids()
+        function = {
+            "id": function_id,
+            "name": name,
+            "params": params,
+            "body": [block_stmt(x, ids) for x in steps_],
+        }
+        if module:
+            function["module"] = module
+        project.metadata["functions"].append(function)
+    modules = {
+        **{
+            n.id: windows_module
+            for n in (
+                about_button,
+                look_button,
+                guide_button,
+                close_button,
+                dark_button,
+                light_button,
+            )
+        },
+        **{n.id: "Terminal" for n in (to_term, t_start, t_send, t_stop)},
+        **{n.id: ("Tarefas" if language == "pt" else "Tasks") for n in (info, script, ask)},
+    }
     names = {}
     owners = {
         n.id: n
@@ -462,6 +496,8 @@ def build(language, destination):
             body,
         )
         flow["id"] = f"flow_{len(project.workflows):02d}_{kind}"
+        if owner.id in modules:
+            flow["module"] = modules[owner.id]
         project.workflows.append(flow)
         names[owner.id] = flow["id"]
     # The logic uses the Portuguese-free function names below.
@@ -484,13 +520,7 @@ def build(language, destination):
     ]
     project.entry_window = root.id
     source = SourceBuffer()
-    source.text = SourceText(
-        ACTIONS.replace("{who}", "?"),
-        {
-            "makebench_user/__init__.py": "",
-            "makebench_user/tools.py": TOOLS.replace("{who}", "?"),
-        },
-    )
+    source.text = SourceText("")
     destination.mkdir(parents=True, exist_ok=True)
     save_workspace(project, source, assets, destination / "project.makebench.json")
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **Blocks or Python:** each project chooses how it is programmed when it is
+  created (format 9). Logic and Code are now one Logic area with Events,
+  Functions and Modules in the sidebar; block projects can show the generated
+  Python read-only, and **Convert to Python** keeps a copy of the blocks.
+- **Python events:** clicking “On click” in a Python project creates a named
+  function in the file and links the event to it, checked without running it.
+- **Block functions:** create functions with inputs and a return value, then
+  call them as a statement or a value. The Python call block left the palette.
+- **Modules:** group events and functions under a name in the Logic sidebar.
+- **Map:** the list shows each window's events and the functions they call.
+- **Removed:** the node editor. Projects made with it open with a clear message
+  to use 0.9.
+- The complete workshop examples use block functions and modules only.
+
 ## 0.9.0 — 2026-10-28
 
 - **Design at the real size:** the designed window has the width and height it
