@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.0 — 2026-10-28
+
+- **Design at the real size:** the designed window has the width and height it
+  opens with, a desktop title bar and a shadow, and resizes from its edges.
+- **Web view windows:** a window can show one HTML page instead of components,
+  with images as project assets. The official *Web view* plugin adds a template
+  and a page editor with live preview.
+- **Plugin API v2:** project templates, a command context with dialogs and
+  images, and refusals with a message. Official plugins ship turned off.
+- **Theme pack:** Catppuccin, Dracula, Gruvbox, Nord and Solarized, dark and
+  light, checked for legible contrast.
+- **Who is it for?:** publishing starts by asking who will use the application
+  (any Linux, Ubuntu/Debian, Fedora/openSUSE, isolated, programmers) and picks
+  the package, showing each file extension.
+- **Logic in one bar:** event, block tools and Blocks/Nodes share one row;
+  Versions, Duplicate and Remove wait in a menu.
+- **Calmer screens:** every menu entry has a symbol, the start page is quieter,
+  preference sections have symbols, dark check boxes are visible and map arrows
+  go around the cards.
+- **Fixed:** map thumbnails follow desktop palette changes, floating Design
+  panels hide in other areas, and tests no longer touch your real settings.
+- The README explains that AI helped build Makebench but is not inside it.
+
 ## 0.8.0 — 2026-10-26
 
 - **Version history:** every save can become a Git version; browse by day, name,
