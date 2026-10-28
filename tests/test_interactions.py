@@ -158,6 +158,45 @@ class InteractionTests(unittest.TestCase):
         self.assertEqual(self.window.project.to_dict(), before)
         self.assertEqual(frame.parentWidget().minimumSize(), minimum)
 
+    def test_moving_to_the_edge_stays_inside_the_window_and_never_widens_it(self):
+        project = Project.empty()
+        project.root.layout = LayoutKind.FREE
+        button = project.add(project.root.id, Kind.BUTTON)
+        self.load(project)
+        canvas = self.window.canvas
+        size = canvas.window_frame.size()
+        frame = canvas._frames[button.id]
+        origin = frame.mapToGlobal(QPoint(30, 20))
+        QTest.mousePress(frame, Qt.MouseButton.LeftButton, pos=QPoint(30, 20))
+        self.move_mouse(frame, origin + QPoint(40, 30))
+        self.move_mouse(frame, origin + QPoint(1500, 1200))
+        self.release_mouse(frame, origin + QPoint(1500, 1200))
+        geometry = self.window.project.find(button.id).geometry
+        self.assertEqual(geometry["x"] + geometry["width"], 640)
+        self.assertEqual(geometry["y"] + geometry["height"], 480)
+        self.app.processEvents()
+        self.assertEqual(self.window.canvas.window_frame.size(), size)
+
+    def test_window_grip_sets_the_opening_size_in_one_undoable_step(self):
+        project = Project.empty()
+        project.root.layout = LayoutKind.FREE
+        self.load(project)
+        canvas = self.window.canvas
+        self.assertEqual(canvas.window_frame.surface.size().width(), 640)
+        grip = next(g for g in canvas.window_grips if g.edge == "se")
+        self.assertTrue(grip.isVisible())
+        origin = grip.mapToGlobal(QPoint(9, 9))
+        QTest.mousePress(grip, Qt.MouseButton.LeftButton, pos=QPoint(9, 9))
+        self.move_mouse(grip, origin + QPoint(80, 40))
+        self.assertEqual(canvas.window_frame.surface.width(), 720)
+        self.assertFalse(self.window.history.dirty)
+        self.release_mouse(grip, origin + QPoint(160, 80))
+        root = self.window.project.root.properties
+        self.assertEqual((root["width"], root["height"]), (800, 560))
+        self.assertEqual(self.window.canvas.window_frame.surface.width(), 800)
+        self.window.undo()
+        self.assertEqual(self.window.project.root.properties.get("width", 640), 640)
+
     def test_duplicate_and_keyboard_nudge_are_saved_and_undoable(self):
         project = Project.empty()
         project.root.layout = LayoutKind.FREE

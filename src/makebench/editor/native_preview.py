@@ -311,6 +311,7 @@ class GtkDesignSurface(QWidget):
                 "rect": rect,
                 "edge": edge,
                 "free": parent.layout == LayoutKind.FREE,
+                "bounds": self.rectangles.get(parent.id, QRect(0, 0, 20000, 20000)).size(),
                 "transfer": bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier),
             }
         self.update()
@@ -350,14 +351,20 @@ class GtkDesignSurface(QWidget):
         geometry = dict(self.drag["geometry"])
         edge = self.drag["edge"]
         dx, dy = (round(v / self.canvas.snap) * self.canvas.snap for v in (delta.x(), delta.y()))
+        # Like the Qt canvas: controls stay inside the window instead of stretching it.
+        bounds = self.drag["bounds"]
         if not edge:
-            geometry["x"] = max(0, geometry["x"] + dx)
-            geometry["y"] = max(0, geometry["y"] + dy)
+            original = self.drag["geometry"]
+            geometry["x"] = max(0, min(bounds.width() - geometry["width"], geometry["x"] + dx))
+            geometry["y"] = max(0, min(bounds.height() - geometry["height"], geometry["y"] + dy))
+            dx, dy = geometry["x"] - original["x"], geometry["y"] - original["y"]
         else:
             if "e" in edge:
-                geometry["width"] = max(24, geometry["width"] + dx)
+                room = bounds.width() - geometry["x"]
+                geometry["width"] = max(24, min(room, geometry["width"] + dx))
             if "s" in edge:
-                geometry["height"] = max(24, geometry["height"] + dy)
+                room = bounds.height() - geometry["y"]
+                geometry["height"] = max(24, min(room, geometry["height"] + dy))
             if "w" in edge:
                 geometry["x"] = max(0, geometry["x"] + dx)
                 geometry["width"] = max(24, geometry["width"] - dx)

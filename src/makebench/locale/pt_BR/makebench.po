@@ -5720,6 +5720,14 @@ msgstr "Ícone da janela"
 msgid "Window title bar"
 msgstr "Barra de título da janela"
 
+#: src/makebench/editor/window_chrome.py
+msgid "Window size"
+msgstr "Tamanho da janela"
+
+#: src/makebench/editor/window_chrome.py
+msgid "Drag to change the size the window opens with."
+msgstr "Arraste para mudar o tamanho com que a janela abre."
+
 #: src/makebench/editor/map_connections.py
 msgid "Window {title} opens"
 msgstr "A janela {title} abrir"

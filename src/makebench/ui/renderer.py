@@ -127,12 +127,9 @@ def place_children(frame, node, render):
             rendered.setParent(frame)
             rendered.setGeometry(*(child.geometry[key] for key in ("x", "y", "width", "height")))
             rendered.setVisible(child.properties.get("visible", True))
-        width = max(
-            (c.geometry["x"] + c.geometry["width"] + 16 for c in node.children), default=300
-        )
-        height = max(
-            (c.geometry["y"] + c.geometry["height"] + 16 for c in node.children), default=200
-        )
+        # Exactly the children's extent: a control at the edge must not widen the window.
+        width = max((c.geometry["x"] + c.geometry["width"] for c in node.children), default=300)
+        height = max((c.geometry["y"] + c.geometry["height"] for c in node.children), default=200)
         frame.setMinimumSize(width, height)
         return
     if node.layout == LayoutKind.HORIZONTAL:

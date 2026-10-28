@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Composition tools, reversible conversion and canvas framing."""
 
-from PySide6.QtCore import Qt, QRectF, Signal
+from PySide6.QtCore import QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QAction, QColor, QKeySequence, QPen
 from PySide6.QtWidgets import (
     QGraphicsScene,
@@ -58,10 +58,12 @@ class ZoomView(QGraphicsView):
         project = self.canvas._project
         if project is None:
             return
-        root = project.root
+        # The window frame has a fixed size as soon as it is built, before any layout pass.
         size = self.canvas.minimumSizeHint()
-        width = max(root.properties.get("width", 640) + 40, size.width())
-        height = max(root.properties.get("height", 480) + 78, size.height())
+        frame = getattr(self.canvas, "window_frame", None)
+        if frame is not None:
+            size = size.expandedTo(frame.size() + QSize(40, 40))
+        width, height = size.width(), size.height()
         native = getattr(self.canvas, "native_size", None)
         if native and project.application.get("backend", "qt") == "gtk":
             width, height = native.width(), native.height()

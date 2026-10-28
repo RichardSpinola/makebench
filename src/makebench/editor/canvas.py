@@ -232,6 +232,7 @@ class PreviewCanvas(QFrame):
     image_dropped = Signal(str, str, int, object)
     context_requested = Signal(str, object)
     native_preview_ready = Signal()
+    window_resize_requested = Signal(int, int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Prepare selection, ephemeral page state and gesture control."""
@@ -254,6 +255,9 @@ class PreviewCanvas(QFrame):
         self._layout.setContentsMargins(20, 20, 20, 20)
         self._layout.setSpacing(10)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.native_preview_ready.connect(self.place_window_grips)
+        # The desk grid of the zoom view shows around the window.
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setStyleSheet(
             'QFrame[previewNode="true"] { border: 1px solid transparent; border-radius: 4px; }'
             'QFrame[previewNode="true"][selectedNode="true"] { border: 1px solid palette(highlight); }'
@@ -283,11 +287,10 @@ class PreviewCanvas(QFrame):
             if item.widget():
                 item.widget().hide()
                 item.widget().deleteLater()
-        from .window_chrome import QtWindowChrome
+        from .window_chrome import QtWindowChrome, WindowFrame, WindowGrip
 
         self.title_bar = QtWindowChrome(project.root)
         self._watch(self.title_bar, project.root.id)
-        self._layout.addWidget(self.title_bar)
         surface = self._render(project.root)
         from makebench.core.style import qt_stylesheet, window_style
 
@@ -298,9 +301,16 @@ class PreviewCanvas(QFrame):
         )
         native_look(self.title_bar)
         native_look(surface)
-        surface.setMinimumSize(surface.minimumSize().expandedTo(QSize(360, 320)))
-        surface.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self._layout.addWidget(surface, 1)
+        self.window_frame = WindowFrame(self.title_bar, surface)
+        native_look(self.window_frame)
+        self.window_frame.set_client_size(self.window_size())
+        self._layout.addWidget(
+            self.window_frame, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
+        if not hasattr(self, "window_grips"):
+            self.window_grips = [WindowGrip(edge, self) for edge in ("e", "s", "se")]
+            for grip in self.window_grips:
+                grip.resized.connect(self.window_resize_requested)
         if project.application.get("backend", "qt") == "gtk":
             if not hasattr(self, "gtk_surface"):
                 from .native_preview import GtkDesignSurface
@@ -311,12 +321,69 @@ class PreviewCanvas(QFrame):
             self.native_size = None
             if hasattr(self, "gtk_surface"):
                 self.gtk_surface.hide()
+        QTimer.singleShot(0, self.place_window_grips)
+
+    def window_size(self):
+        """The client size the application opens with, as declared on the window."""
+        root = self._project.root
+        return QSize(root.properties.get("width", 640), root.properties.get("height", 480))
+
+    def gtk_active(self):
+        """Whether the real GTK picture covers the canvas instead of Qt widgets."""
+        return (
+            self._project is not None
+            and self._project.application.get("backend", "qt") == "gtk"
+            and hasattr(self, "gtk_surface")
+            and self.gtk_surface.isVisible()
+        )
+
+    def window_rect(self):
+        """Where the designed window is drawn on the canvas."""
+        if self.gtk_active():
+            native = getattr(self, "native_size", None)
+            if native:
+                return QRect(20, 20, native.width() - 40, native.height() - 40)
+            return QRect(QPoint(20, 20), self.window_size())
+        frame = getattr(self, "window_frame", None)
+        return frame.geometry() if frame is not None else QRect()
+
+    def place_window_grips(self):
+        """Put the size grips on the window's right and bottom edges."""
+        rect = self.window_rect()
+        for grip in getattr(self, "window_grips", []):
+            if rect.isEmpty():
+                grip.hide()
+            else:
+                grip.place(rect)
+
+    def preview_window_size(self, size, grip):
+        """Show a new window size during the grip gesture, without editing the document."""
+        if self.gtk_active():
+            rect = self.window_rect()
+            # The GTK picture includes its header bar; only the client part changes.
+            header = rect.height() - self.window_size().height()
+            grip.show_outline(QRect(rect.topLeft(), QSize(size.width(), size.height() + header)))
+            return
+        self.window_frame.set_client_size(size)
+        self.resize(self.size().expandedTo(self.minimumSizeHint()))
+        self.place_window_grips()
+
+    def paintEvent(self, event):
+        """Draw the window's shadow on the desk behind it."""
+        super().paintEvent(event)
+        rect = self.window_rect()
+        if not rect.isEmpty() and not self.gtk_active():
+            from .window_chrome import paint_shadow
+
+            painter = QPainter(self)
+            paint_shadow(painter, rect)
 
     def resizeEvent(self, event):
         """Keep the GTK surface over the drawing area when zoom and size change."""
         super().resizeEvent(event)
         if hasattr(self, "gtk_surface"):
             self.gtk_surface.setGeometry(self.rect())
+        self.place_window_grips()
 
     def refresh_native_preview(self, force=False):
         """Update the visual appearance after editing properties, with no run events."""
@@ -500,7 +567,6 @@ class PreviewCanvas(QFrame):
                 "free": bool(free),
                 "edge": watched.property("resizeEdge") or "",
                 "transfer": bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier),
-                "parent_minimum": self._frames[parent.id].minimumSize() if parent else QSize(),
                 "changed": False,
             }
             return True
@@ -587,17 +653,19 @@ class PreviewCanvas(QFrame):
         x, y, width, height = (original[key] for key in ("x", "y", "width", "height"))
         snap = lambda value: round(value / self.snap) * self.snap
         edge = gesture["edge"]
+        bounds = frame.parentWidget().size() if gesture["free"] else QSize(20000, 20000)
         if not edge:
-            x, y = snap(x + delta.x()), snap(y + delta.y())
+            x = max(0, min(bounds.width() - width, snap(x + delta.x())))
+            y = max(0, min(bounds.height() - height, snap(y + delta.y())))
         else:
             minimum = (
                 frame.minimumSizeHint().expandedTo(frame.minimumSize()).expandedTo(QSize(24, 24))
             )
             right, bottom = x + width, y + height
             if "e" in edge:
-                width = max(minimum.width(), snap(width + delta.x()))
+                width = max(minimum.width(), min(bounds.width() - x, snap(width + delta.x())))
             if "s" in edge:
-                height = max(minimum.height(), snap(height + delta.y()))
+                height = max(minimum.height(), min(bounds.height() - y, snap(height + delta.y())))
             if "w" in edge:
                 x = max(0, min(right - minimum.width(), snap(x + delta.x())))
                 width = right - x
@@ -641,11 +709,8 @@ class PreviewCanvas(QFrame):
         rect = QRect(
             max(0, min(20000, x)), max(0, min(20000, y)), min(20000, width), min(20000, height)
         )
+        # The window keeps its size: moving a control never stretches it on one side.
         frame.setGeometry(rect)
-        frame.parentWidget().setMinimumSize(
-            max(frame.parentWidget().minimumWidth(), rect.right() + 17),
-            max(frame.parentWidget().minimumHeight(), rect.bottom() + 17),
-        )
         gesture["changed"] = True
 
     def keyPressEvent(self, event) -> None:
@@ -711,7 +776,6 @@ class PreviewCanvas(QFrame):
             self.clear_guides()
             frame = self._frames[gesture["id"]]
             frame.setGeometry(*(gesture["geometry"][key] for key in ("x", "y", "width", "height")))
-            frame.parentWidget().setMinimumSize(gesture["parent_minimum"])
             event.accept()
             return
         vectors = {

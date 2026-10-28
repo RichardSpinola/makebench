@@ -372,6 +372,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.canvas.can_drop = self._can_drop
         self.canvas.component_selected.connect(self._select)
         self.canvas.geometry_committed.connect(self._commit_geometry)
+        self.canvas.window_resize_requested.connect(self._resize_window)
         self.canvas.drop_requested.connect(self._on_drop)
         self.canvas.nudge_requested.connect(self.nudge_component)
         self.canvas.remove_requested.connect(self.remove_component)
@@ -1152,6 +1153,13 @@ class MainWindow(StudioMixin, QMainWindow):
             self.selected_id = node.id
 
         self._edit(apply)
+
+    def _resize_window(self, width: int, height: int) -> None:
+        """Store the size the window opens with, as one step in the history."""
+        identifier = self.project.root.id
+        self._edit(
+            lambda: self.project.find(identifier).properties.update(width=width, height=height)
+        )
 
     def _commit_geometry(self, node_id: str, geometry: dict) -> None:
         """Record a complete move/resize without fragmenting the history."""
