@@ -81,6 +81,30 @@ class PanelTests(unittest.TestCase):
         self.assertFalse(properties.isFloating())
         self.assertTrue(host.docks["layers"].isVisible())
 
+    def test_floating_panel_waits_for_the_design_area(self):
+        """A floating panel hides in other areas and keeps its place in the saved layout."""
+        from PySide6.QtCore import QSettings
+        from PySide6.QtWidgets import QWidget
+
+        from makebench.editor.panels import LAYOUT_KEY, LAYOUT_VERSION
+
+        host = self.window.design_host
+        properties = host.docks["properties"]
+        properties.setFloating(True)
+        self.app.processEvents()
+        self.window.set_mode("map")
+        self.app.processEvents()
+        self.assertFalse(properties.isVisible())
+        probe = type(host)(QWidget(), {n: QWidget() for n in host.docks})
+        probe.restoreState(QSettings("Makebench", "Makebench").value(LAYOUT_KEY), LAYOUT_VERSION)
+        self.assertTrue(probe.docks["properties"].isFloating())
+        self.assertFalse(probe.docks["properties"].isHidden())
+        probe.deleteLater()
+        self.window.set_mode("design")
+        self.app.processEvents()
+        self.assertTrue(properties.isVisible())
+        self.assertTrue(properties.isFloating())
+
     def test_panel_header_floats_and_closes(self):
         from makebench.editor.panels import DockTitle
 

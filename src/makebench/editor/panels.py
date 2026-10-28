@@ -103,6 +103,7 @@ class DesignHost(QMainWindow):
         )
         self.setCentralWidget(central)
         self.docks = {}
+        self._parked = []
         for name, title in panel_titles().items():
             dock = QDockWidget(title, self)
             dock.setObjectName(f"{name}_panel")
@@ -168,8 +169,20 @@ class DesignHost(QMainWindow):
         if not visible:
             docks[0 if side == "right" else 1].raise_()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        for dock in self._parked:
+            dock.show()
+        self._parked = []
+
     def hideEvent(self, event):
         self.save_layout()
+        if not event.spontaneous():
+            # Floating panels belong to the Design area; they wait for it in other areas.
+            self._parked = [d for d in self.docks.values() if d.isFloating() and d.isVisible()]
+            for dock in self._parked:
+                dock.hide()
+            self.save_timer.stop()
         super().hideEvent(event)
 
 
