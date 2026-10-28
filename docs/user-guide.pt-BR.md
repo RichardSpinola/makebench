@@ -70,12 +70,15 @@ No Design você monta cada janela com controles nativos.
 ## 3 · Lógica
 
 A Lógica diz o que acontece quando uma janela inicia ou um botão é clicado.
+Cada projeto é programado com **blocos** ou com **Python**; você escolhe ao
+criá-lo, e a Lógica abre o editor certo. A barra lateral lista os **Eventos**,
+as **Funções** e os **Módulos** do projeto.
 
 - **Blocos** (Blockly) funcionam como no Scratch: encaixe instruções, valores e
   condições. Campos de texto livre são sempre tratados como texto, nunca como
   Python.
-- O Python gerado aparece sempre ao lado do editor. Selecionar um bloco destaca
-  a linha correspondente.
+- **Ver Python** mostra o código gerado pelos blocos, só para leitura.
+  Selecionar um bloco destaca a linha correspondente.
 
 As ações disponíveis incluem mostrar janelas e páginas, ler e alterar
 componentes, mensagens e perguntas, registro de saída, chamar suas funções
@@ -86,9 +89,9 @@ senhas.
 
 ![Lógica](images/logic.png)
 
-## 4 · Código
+### Projetos em Python
 
-O Código guarda o seu Python: o arquivo `.actions.py` do projeto e os módulos em
+Um projeto em Python guarda o código: o arquivo `.actions.py` do projeto e os módulos em
 `makebench_user/`. Uma função é chamada pelos blocos como `funcao(ctx, valor)`,
 em que `ctx` dá acesso ao aplicativo (ler e alterar componentes, mostrar
 páginas, registrar saída, fazer perguntas, executar tarefas).
@@ -97,10 +100,10 @@ páginas, registrar saída, fazer perguntas, executar tarefas).
   análise é estática: o código é lido, nunca importado ou executado.
 - **Ctrl+Shift+F** busca em todos os arquivos Python do projeto, usando o que
   está aberto no editor, e não o que está no disco.
-- **Ctrl+Z** numa aba de código desfaz dentro daquele arquivo; nas outras áreas,
+- **Ctrl+Z** num arquivo de código desfaz dentro daquele arquivo; nas outras áreas,
   desfaz a última alteração do projeto. O menu Editar mostra o que será desfeito.
 
-![Código](images/code-dark.png)
+![Python](images/code-dark.png)
 
 ## Testar e depurar
 

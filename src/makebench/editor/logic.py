@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
     QSplitter,
     QStackedWidget,
     QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -126,12 +128,12 @@ class LogicPanel(QWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
         row = QHBoxLayout()
-        row.addWidget(QLabel(tr("When")))
+        # The sidebar shows the events; this combo stays as the selection model.
         self.events = QComboBox()
+        self.events.hide()
         self.events.setMinimumWidth(210)
         self.events.setMaximumWidth(460)
         self.events.currentIndexChanged.connect(self._switch_flow)
-        row.addWidget(self.events, 1)
         # The way to add an event sits next to the list it adds to.
         self.add_event = QPushButton(tr("+ Event…"))
         self.add_event.setToolTip(tr("Connect a click or a window opening to the logic."))
@@ -209,8 +211,15 @@ class LogicPanel(QWidget):
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.surfaces = QStackedWidget()
         self.surfaces.addWidget(self.placeholder)
+        self.outline = QTreeWidget()
+        self.outline.setHeaderHidden(True)
+        self.outline.setAccessibleName(tr("Events, functions and modules"))
+        self.outline.itemClicked.connect(self._outline_clicked)
+        self.outline.itemActivated.connect(self._outline_clicked)
+        self.splitter.addWidget(self.outline)
         self.splitter.addWidget(self.surfaces)
         code_box = QWidget()
+        self.code_box = code_box
         code_layout = QVBoxLayout(code_box)
         code_layout.setContentsMargins(0, 0, 0, 0)
         code_header = QHBoxLayout()
@@ -242,7 +251,14 @@ class LogicPanel(QWidget):
         code_layout.addWidget(self.code)
         self.code.cursorPositionChanged.connect(self._select_line)
         self.splitter.addWidget(code_box)
-        self.splitter.setSizes([850, 380])
+        self.splitter.setSizes([220, 850, 380])
+        code_box.hide()
+        self.view_python = QToolButton()
+        self.view_python.setText(tr("View Python"))
+        self.view_python.setCheckable(True)
+        self.view_python.setToolTip(tr("Show the Python generated from these blocks (read-only)"))
+        self.view_python.toggled.connect(code_box.setVisible)
+        row.insertWidget(row.indexOf(self.add_event) + 1, self.view_python)
         layout.addWidget(self.splitter, 1)
         self.diagnostics = QLabel()
         self.diagnostics.setWordWrap(True)
@@ -453,6 +469,7 @@ class LogicPanel(QWidget):
             self.flow_id,
         )
         self.name.setText(flow["name"] if flow else "")
+        self._sync_outline()
         self.surfaces.setCurrentWidget(self.view if self.view is not None else self.placeholder)
         self._sync_edit_text()
 
@@ -594,6 +611,28 @@ class LogicPanel(QWidget):
             self.context_label.setText(tr("Choose an event or connect a new one to start."))
         self.events.setToolTip(self.context_label.text())
         self.update_code()
+
+    def _sync_outline(self):
+        """Mirror the event list in the sidebar without emitting selection changes."""
+        self.outline.blockSignals(True)
+        self.outline.clear()
+        events = QTreeWidgetItem([tr("Events")])
+        events.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        self.outline.addTopLevelItem(events)
+        for index in range(self.events.count()):
+            item = QTreeWidgetItem([self.events.itemText(index)])
+            item.setData(0, Qt.ItemDataRole.UserRole, self.events.itemData(index))
+            events.addChild(item)
+            if self.events.itemData(index) == self.flow_id:
+                self.outline.setCurrentItem(item)
+        events.setExpanded(True)
+        self.outline.blockSignals(False)
+
+    def _outline_clicked(self, item, _column=0):
+        """Open the clicked event; group headings do nothing."""
+        flow = item.data(0, Qt.ItemDataRole.UserRole)
+        if flow:
+            self.events.setCurrentIndex(self.events.findData(flow))
 
     def _sync_edit_text(self):
         """The multi-line editor appears only while a block is selected in Blocks."""

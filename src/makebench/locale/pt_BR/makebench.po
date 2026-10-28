@@ -1734,17 +1734,9 @@ msgstr "Nome do arquivo"
 msgid "File name:"
 msgstr "Nome do arquivo:"
 
-#: src/makebench/editor/development.py
-msgid "File symbols"
-msgstr "Símbolos do arquivo"
-
 #: src/makebench/ui/dialogs.py
 msgid "File type:"
 msgstr "Tipo de arquivo:"
-
-#: src/makebench/editor/code_workspace.py
-msgid "Files"
-msgstr "Arquivos"
 
 #: src/makebench/editor/publish.py
 msgid "Files (*{suffix})"
@@ -5300,10 +5292,6 @@ msgstr "Bem-vindo! Seu painel está pronto."
 msgid "What is your name?"
 msgstr "Qual é seu nome?"
 
-#: src/makebench/editor/logic.py
-msgid "When"
-msgstr "Quando"
-
 #: src/makebench/editor/logic.py src/makebench/editor/map_connections.py
 msgid "When this happens"
 msgstr "Quando acontecer"
@@ -6859,3 +6847,27 @@ msgstr "Monte encaixando peças, sem digitar código."
 #: src/makebench/editor/projects.py
 msgid "Write the code, with help from the editor."
 msgstr "Escreva o código, com ajuda do editor."
+
+#: src/makebench/editor/logic.py
+msgid "Events"
+msgstr "Eventos"
+
+#: src/makebench/editor/logic.py
+msgid "Events, functions and modules"
+msgstr "Eventos, funções e módulos"
+
+#: src/makebench/editor/development.py
+msgid "Functions"
+msgstr "Funções"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Modules"
+msgstr "Módulos"
+
+#: src/makebench/editor/logic.py
+msgid "Show the Python generated from these blocks (read-only)"
+msgstr "Mostrar o Python gerado por estes blocos (só leitura)"
+
+#: src/makebench/editor/logic.py
+msgid "View Python"
+msgstr "Ver Python"

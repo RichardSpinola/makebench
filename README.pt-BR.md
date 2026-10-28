@@ -31,9 +31,10 @@ servidor e sem IA em tempo de execução.
 - **Design:** monte janelas com controles nativos: linhas, colunas, grades e
   posicionamento livre, páginas, imagens, terminais e mais. A prévia Qt usa o
   estilo do seu desktop; a prévia GTK é desenhada pelo próprio GTK.
-- **Lógica:** blocos no estilo Scratch (Blockly). O Python gerado fica sempre visível.
-- **Código:** suas funções e módulos Python, com sugestões, ir para a definição
-  (F12), diagnósticos e busca no projeto inteiro.
+- **Lógica:** blocos no estilo Scratch (Blockly) ou seu próprio Python, à escolha
+  em cada projeto. Projetos em blocos podem mostrar o Python gerado; projetos em
+  Python têm sugestões, ir para a definição (F12), diagnósticos e busca no
+  projeto inteiro.
 - **Testar e depurar** com F5 e F9: processo separado e supervisionado, saída ao
   vivo, tarefas com stdout/stderr, terminal interativo, pontos de parada em
   blocos ou linhas, e pilha e variáveis somente para leitura.

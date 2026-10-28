@@ -5,7 +5,7 @@ This is an overview for contributors. Package layout under `src/makebench/`:
 | Package | Role |
 |---|---|
 | `core/` | Project model, logic model, code generation, storage, packaging. **Never imports Qt.** |
-| `editor/` | The Qt workbench: Map, Design, Logic, Code, Export, preferences. |
+| `editor/` | The Qt workbench: Map, Design, Logic (blocks or Python), Export, preferences. |
 | `ui/` | Rendering shared by the Design canvas and the Qt runtime; dialogs; theme. |
 | `runtime/` | Running a project: worker process, supervised tasks, debugger, Qt window. |
 | `gtk_runtime/` | The same runtime contract on GTK 4, plus the GTK design preview. No Qt. |
@@ -45,7 +45,7 @@ Python files, then the project JSON (each through a temporary file, `fsync` and
 transactional, and the error says which files were written.
 
 `core/history.py` keeps labelled snapshots of interface and logic (200 by
-default). Code tabs use the text editor's own undo stack.
+default). Python files use the text editor's own undo stack.
 
 ## Logic
 

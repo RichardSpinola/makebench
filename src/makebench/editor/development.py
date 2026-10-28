@@ -63,7 +63,7 @@ class DevelopmentMixin:
         pane = QWidget()
         pl = QVBoxLayout(pane)
         pl.setContentsMargins(4, 4, 4, 4)
-        pl.addWidget(QLabel(tr("File symbols")))
+        pl.addWidget(QLabel(tr("Functions")))
         self.function_search = QLineEdit()
         self.function_search.setPlaceholderText(tr("Filter functions…"))
         self.function_search.setClearButtonEnabled(True)

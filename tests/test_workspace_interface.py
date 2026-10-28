@@ -140,6 +140,33 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         labels = [w.problems.item(i).text() for i in range(w.problems.count())]
         self.assertTrue(any("calls Python" in label for label in labels))
 
+    def test_logic_area_opens_blocks_or_python_by_project(self):
+        w = self.window
+        self.assertNotIn("code", w.mode_buttons)
+        w.project.metadata.update(programming="python")
+        w.set_mode("logic")
+        self.assertEqual(w.tabs.currentIndex(), 2)
+        self.assertTrue(w.mode_buttons["logic"].isChecked())
+        w.project.metadata.update(programming="blocks", logic_version=1)
+        w.project.workflows = [
+            {
+                "id": "flow-a",
+                "name": "Start",
+                "event": {"kind": "start", "component": w.project.root.id},
+                "body": [],
+                "workspace": {},
+            }
+        ]
+        w.set_mode("logic")
+        self.assertEqual(w.tabs.currentIndex(), 1)
+        w.logic.sync()
+        events = w.logic.outline.topLevelItem(0)
+        self.assertEqual(events.childCount(), 1)
+        self.assertEqual(events.child(0).data(0, 256), "flow-a")
+        self.assertFalse(w.logic.code_box.isVisibleTo(w.logic))
+        w.logic.view_python.setChecked(True)
+        self.assertTrue(w.logic.code_box.isVisibleTo(w.logic))
+
     def test_completion_enter_undo_and_component_suggestions(self):
         from PySide6.QtCore import Qt
         from PySide6.QtTest import QTest

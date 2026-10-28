@@ -66,12 +66,15 @@ Design is where you build each window with native controls.
 
 ## 3 · Logic
 
-Logic says what happens when a window starts or a button is clicked.
+Logic says what happens when a window starts or a button is clicked. Each
+project is programmed either with **blocks** or with **Python**; you choose when
+you create it, and Logic opens the right editor. The sidebar lists the project's
+**Events**, **Functions** and **Modules**.
 
 - **Blocks** (Blockly) work like Scratch: snap statements, values and conditions
   together. Free text fields are always treated as text, never as Python.
-- The generated Python is always shown next to the editor. Selecting a block
-  highlights its line.
+- **View Python** shows the code generated from the blocks, read-only.
+  Selecting a block highlights its line.
 
 Available actions include showing windows and pages, reading and changing
 components, messages and questions, logging, calling your own Python functions,
@@ -81,9 +84,9 @@ authentication dialog. It never asks for or stores passwords.
 
 ![Logic](images/logic.png)
 
-## 4 · Code
+### Python projects
 
-Code holds your own Python: the project's `.actions.py` file and any modules in
+A Python project keeps its code: the project's `.actions.py` file and any modules in
 `makebench_user/`. A function is called from blocks as `function(ctx, value)`,
 where `ctx` gives access to the application (read and change components, show
 pages, log, ask questions, run tasks).
@@ -92,10 +95,10 @@ pages, log, ask questions, run tasks).
   Analysis is static: your code is parsed, never imported or run.
 - **Ctrl+Shift+F** searches every Python file of the project, using what is
   open in the editor rather than what is on disk.
-- **Ctrl+Z** in a code tab undoes inside that file; elsewhere it undoes the
+- **Ctrl+Z** in a code file undoes inside that file; elsewhere it undoes the
   last change to the project. The Edit menu shows what will be undone.
 
-![Code](images/code-dark.png)
+![Python](images/code-dark.png)
 
 ## Testing and debugging
 

@@ -47,7 +47,7 @@ def register(api):
 - `api.add_command(name, function)` adds the command to the **Plugins** menu. The
   function receives a copy of the project; when it returns, the result replaces
   the project as **one undoable change**.
-- `api.add_snippet(name, code)` offers `code` in the Code area's suggestions
+- `api.add_snippet(name, code)` offers `code` in the Python editor's suggestions
   (Ctrl+Space) when you type the start of `name`.
 - `api.add_piece(piece)` adds a ready-made piece to **Edit › Insert piece**.
 

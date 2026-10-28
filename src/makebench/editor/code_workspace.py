@@ -43,7 +43,7 @@ class CodeWorkspaceMixin:
         controls = QWidget()
         row = QHBoxLayout(controls)
         row.setContentsMargins(0, 0, 0, 0)
-        row.addWidget(QLabel(tr("Files")), 1)
+        row.addWidget(QLabel(tr("Modules")), 1)
         for symbol, label, callback in [
             ("add", tr("New module"), self.new_module_dialog),
             ("edit", tr("Rename module"), self.rename_module_dialog),

@@ -31,9 +31,10 @@ server and no AI at run time.
 - **Design** windows with native controls: rows, columns, grids and free
   layouts, pages, images, terminals and more. Qt previews use your desktop
   style; GTK previews are rendered by GTK itself.
-- **Program behavior** with Scratch-like blocks (Blockly). The generated Python is always visible.
-- **Write your own Python** in project files and modules, with suggestions,
-  go-to-definition (F12), diagnostics and project-wide search.
+- **Program behavior** with Scratch-like blocks (Blockly) or with your own
+  Python, chosen per project. Block projects can show the generated Python;
+  Python projects get suggestions, go-to-definition (F12), diagnostics and
+  project-wide search.
 - **Test and debug** with F5 and F9: a separate supervised process, live output,
   tasks with stdout/stderr, an interactive terminal, breakpoints on blocks
   or lines, and a read-only view of the stack and variables.
@@ -41,9 +42,9 @@ server and no AI at run time.
   that include Python and the chosen toolkit. The editor itself can also be
   built as an AppImage.
 
-| Map | Logic | Code |
+| Map | Logic (blocks) | Logic (Python) |
 |---|---|---|
-| ![Map](docs/images/map.png) | ![Logic](docs/images/logic.png) | ![Code](docs/images/code-dark.png) |
+| ![Map](docs/images/map.png) | ![Logic](docs/images/logic.png) | ![Python](docs/images/code-dark.png) |
 
 ## Quick start (from source)
 

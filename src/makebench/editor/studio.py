@@ -286,7 +286,9 @@ class StudioMixin(
 
         self.mode_switcher = AreaBar(self)
         self.mode_switcher.hide()
-        for number, (mode, name) in enumerate(MODE_LABELS.items(), 1):
+        # Code is no longer an area: Logic shows blocks or Python, by project.
+        for number, mode in enumerate(("map", "design", "logic"), 1):
+            name = MODE_LABELS[mode]
             button = AreaButton()
             button.setIcon(icon(MODE_ICONS[mode]))
             button.setText(name)
@@ -451,6 +453,8 @@ class StudioMixin(
             self._compact_home = False
             self.setMinimumSize(980, 600)
             self.resize(1280, 800)
+        if mode == "logic" and self.project.programming == "python":
+            mode = "code"
         if self.project.metadata.get("empty_map") and mode in {"design", "logic", "code"}:
             mode = "map"
             self.statusBar().showMessage(
@@ -482,7 +486,7 @@ class StudioMixin(
         modes = ["design", "logic", "code", "map"]
         if 0 <= index < len(modes):
             self._mode = modes[index]
-            self.mode_buttons[self._mode].setChecked(True)
+            self.mode_buttons["logic" if self._mode == "code" else self._mode].setChecked(True)
         if hasattr(self, "zoom_actions"):
             for action in self.zoom_actions:
                 action.setVisible(True)
