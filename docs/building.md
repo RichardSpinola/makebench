@@ -95,7 +95,18 @@ To add a language, add its code and name to `LANGUAGES` in
 
 ## Bundled Blockly
 
-Blockly 13.4.0 is vendored under `src/makebench/web/vendor/blockly/` from the
-official npm package. `vendor/blockly/vendor-lock.json` records its URL, integrity hash,
-license and the copied files. See [`web/README.md`](../web/README.md) before
-updating it.
+Blockly 13.4.0 comes from the official `blockly` npm package, with its SHA-512
+integrity checked, and is vendored under `src/makebench/web/vendor/blockly/`.
+`vendor-lock.json` there records the URL, integrity, Apache-2.0 license and the
+copied files: the core and blocks bundles, the `en` and `pt-br` messages, and
+images and cursors. Sounds are disabled and not distributed. The original
+`LICENSE` and `package.json` are kept. There is no CDN, no download at run time and
+no Node.js needed to open the editor.
+
+The page (`index.html`, `index.pt_BR.html`, `logic.js`, `style.css`) exchanges only
+data with Python over Qt WebChannel; no bridge function runs Python or system commands.
+
+Updating Blockly requires reviewing the serialization API, the license and the
+tests in `checks/blockly_smoke.py`. Test block comments and the explicitly
+registered `WorkspaceCommentSerializer` for free comments in particular. Keep
+the neutral logic model, and migrate saved versions before changing the protocol.
