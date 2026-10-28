@@ -184,7 +184,9 @@ class PublishPanel(QWidget):
         self.audience = QButtonGroup(self)
         self.audience_buttons = {}
         for index, (key, title, line, recommended) in enumerate(audiences()):
-            text = title + (" · " + tr("recommended") if recommended else "")
+            text = f"{title} ({FORMATS[key][2]})" + (
+                " · " + tr("recommended") if recommended else ""
+            )
             button = QRadioButton(text)
             button.setAccessibleDescription(line)
             self.audience.addButton(button)
