@@ -701,6 +701,112 @@ class BlocklyTests(unittest.TestCase):
         )
         self.assertIn("ctx.log(fn_double(ctx, 21))", self.window.logic.generated.text)
 
+    def test_22_data_blocks_roundtrip_through_blockly(self):
+        """Record blocks keep collection, fields, filters and the for-each loop unchanged."""
+        self.window.project.metadata["collections"] = [
+            {
+                "id": "autores",
+                "name": "Autores",
+                "fields": [{"id": "nome", "name": "nome", "type": "text"}],
+            },
+            {
+                "id": "livros",
+                "name": "Livros",
+                "fields": [
+                    {"id": "titulo", "name": "titulo", "type": "text"},
+                    {"id": "paginas", "name": "paginas", "type": "number"},
+                    {"id": "autor", "name": "autor", "type": "ref", "target": "autores"},
+                ],
+            },
+        ]
+
+        def lit(identifier, value):
+            return {"id": identifier, "op": "literal", "value": value}
+
+        self.flow["body"] = [
+            {
+                "id": "add",
+                "op": "data_add",
+                "collection": "livros",
+                "values": [
+                    {"field": "titulo", "value": lit("v1", "A")},
+                    {"field": "autor", "value": {"id": "last", "op": "data_last_id"}},
+                ],
+            },
+            {
+                "id": "each",
+                "op": "for_each",
+                "name": "livro",
+                "scope": "local",
+                "source": {
+                    "id": "find",
+                    "op": "data_find",
+                    "collection": "livros",
+                    "field": "paginas",
+                    "operator": ">",
+                    "value": lit("n", 100),
+                    "order": "titulo",
+                    "descending": True,
+                },
+                "body": [
+                    {
+                        "id": "log",
+                        "op": "log",
+                        "value": {
+                            "id": "rf",
+                            "op": "record_field",
+                            "collection": "livros",
+                            "field": "titulo",
+                            "record": {
+                                "id": "lv",
+                                "op": "variable",
+                                "name": "livro",
+                                "scope": "local",
+                            },
+                        },
+                    },
+                    {
+                        "id": "del",
+                        "op": "data_delete",
+                        "collection": "livros",
+                        "record_id": lit("i", 1),
+                    },
+                    {
+                        "id": "upd",
+                        "op": "data_update",
+                        "collection": "livros",
+                        "record_id": lit("j", 1),
+                        "values": [{"field": "paginas", "value": lit("p", 9)}],
+                    },
+                ],
+            },
+            {
+                "id": "total",
+                "op": "log",
+                "value": {
+                    "id": "sum",
+                    "op": "data_sum",
+                    "collection": "livros",
+                    "sum": "paginas",
+                    "field": "autor",
+                    "operator": "=",
+                    "value": {
+                        "id": "nm",
+                        "op": "data_get",
+                        "collection": "autores",
+                        "record_id": lit("k", 1),
+                    },
+                },
+            },
+        ]
+        expected = json.loads(json.dumps(self.flow["body"]))
+        self.window._refresh()
+        self.window.logic.sync(self.flow["id"])
+        QTest.qWait(300)
+        compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
+        self.assertEqual(compiled["errors"], [])
+        self.assertEqual(compiled["body"], expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

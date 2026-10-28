@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 from makebench.core.codegen import generate
+from makebench.core.datamodel import collections_of
 from makebench.core.logic import (
     block_functions,
     editable,
@@ -583,7 +584,9 @@ class LogicPanel(QWidget):
         def collect(value):
             """Gather declared and implicit variables without evaluating expressions."""
             if isinstance(value, dict):
-                if value.get("op") in {"assign", "variable", "ask"} and value.get("name"):
+                if value.get("op") in {"assign", "variable", "ask", "for_each"} and value.get(
+                    "name"
+                ):
                     candidate = {"name": value["name"], "scope": value.get("scope", "project")}
                     if not any(
                         item["name"] == candidate["name"]
@@ -620,6 +623,7 @@ class LogicPanel(QWidget):
                 for item in functions
             ],
             "components": components,
+            "collections": collections_of(project.metadata),
             "functions": function_names(self.get_source())[0],
         }
         serialized = json.dumps(payload, ensure_ascii=False)

@@ -216,6 +216,30 @@ class EditorTests(unittest.TestCase):
         self.window.undo()
         self.assertEqual(len(self.window.project.metadata["collections"]), 1)
 
+    def test_field_usage_counts_blocks_that_cite_a_field(self):
+        collection = {
+            "id": "livros",
+            "name": "Livros",
+            "fields": [{"id": "titulo", "name": "titulo", "type": "text"}],
+        }
+        self.window.project.metadata["collections"] = [collection]
+        literal = {"id": "v", "op": "literal", "value": "A"}
+        self.window.project.workflows.append(
+            {
+                "body": [
+                    {
+                        "id": "a",
+                        "op": "data_add",
+                        "collection": "livros",
+                        "values": [{"field": "titulo", "value": literal}],
+                    }
+                ]
+            }
+        )
+        self.assertEqual(self.window.field_usage(collection, {"titulo"}), 1)
+        self.assertEqual(self.window.field_usage(collection, {"outro"}), 0)
+        self.window.project.workflows.pop()
+
     def test_clear_test_data_only_touches_the_test_database(self):
         from makebench.core.datastore import data_path
 

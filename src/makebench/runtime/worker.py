@@ -43,6 +43,7 @@ class Data:
     def __init__(self, open_store):
         """Open the database on first use, so projects without records never create a file."""
         self._open, self._store = open_store, None
+        self.last_id = None
 
     def _call(self, method, *args, **kwargs):
         if self._store is None:
@@ -59,7 +60,8 @@ class Data:
 
     def add(self, collection, /, **fields):
         """Add a record (fields by name) and return its id."""
-        return self._call("add", collection, **fields)
+        self.last_id = self._call("add", collection, **fields)
+        return self.last_id
 
     def update(self, collection, record_id, /, **fields):
         """Change fields of a record."""

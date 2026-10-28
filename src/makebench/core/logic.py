@@ -9,6 +9,7 @@ import keyword
 import math
 from typing import TYPE_CHECKING
 
+from .datamodel import find_collection, find_field
 from .menus import menu_items
 from .project import ComponentKind, ProjectError, new_id
 from makebench.i18n import tr
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from .project import Project
 
 LOGIC_VERSION = 1
+DATA_OPERATORS = {"=", "!=", "<", ">", "<=", ">=", "contains"}
 TEXT_KINDS = {
     ComponentKind.LABEL,
     ComponentKind.BUTTON,
@@ -501,6 +503,51 @@ def validate(project: Project) -> None:
                 for item in args:
                     visit(item, True, depth + 1)
 
+            def collection():
+                """Validate the collection a data block points to and return it."""
+                found = find_collection(project.metadata, value.get("collection"))
+                if found is None:
+                    raise ProjectError(tr("A block points to a collection that does not exist."))
+                return found
+
+            def data_field(key, owner, allow_id=False, optional=False, number=False):
+                """Validate a field of the collection, by id."""
+                name = value.get(key)
+                if name is None and optional:
+                    return
+                if allow_id and name == "id" and not number:
+                    return
+                found = find_field(owner, name) if isinstance(name, str) else None
+                if found is None or (number and found["type"] != "number"):
+                    raise ProjectError(tr("A block points to a missing or incompatible field."))
+
+            def data_filter(owner):
+                """Validate the optional 'where field operator value' part of a query."""
+                data_field("field", owner, allow_id=True, optional=True)
+                if value.get("field") is not None:
+                    if value.get("operator") not in DATA_OPERATORS:
+                        raise ProjectError(tr("Unknown operator."))
+                    expr("value")
+
+            def data_values(owner):
+                """Validate the field inputs of an add or change block."""
+                entries = value.get("values")
+                if not isinstance(entries, list):
+                    raise ProjectError(tr("Invalid field in block: {key}.").format(key="values"))
+                seen = set()
+                for entry in entries:
+                    name = entry.get("field") if isinstance(entry, dict) else None
+                    if (
+                        not isinstance(entry, dict)
+                        or set(entry) != {"field", "value"}
+                        or not isinstance(name, str)
+                        or find_field(owner, name) is None
+                        or name in seen
+                    ):
+                        raise ProjectError(tr("A block points to a missing or incompatible field."))
+                    seen.add(name)
+                    visit(entry["value"], True, depth + 1)
+
             if expression:
                 if op == "literal":
                     item = value.get("value")
@@ -557,6 +604,28 @@ def validate(project: Project) -> None:
                     expr("right")
                 elif op == "call_function":
                     call()
+                elif op == "data_find":
+                    owner = collection()
+                    data_filter(owner)
+                    data_field("order", owner, allow_id=True, optional=True)
+                    if type(value.get("descending", False)) is not bool:
+                        raise ProjectError(
+                            tr("Invalid field in block: {key}.").format(key="descending")
+                        )
+                elif op == "data_get" or op == "data_name":
+                    collection()
+                    expr("record_id")
+                elif op == "data_count":
+                    data_filter(collection())
+                elif op == "data_sum":
+                    owner = collection()
+                    data_field("sum", owner, number=True)
+                    data_filter(owner)
+                elif op == "record_field":
+                    data_field("field", collection(), allow_id=True)
+                    expr("record")
+                elif op == "data_last_id":
+                    pass
                 else:
                     raise ProjectError(tr("Unknown expression: {op}.").format(op=op))
             elif op in {"log", "message"}:
@@ -601,6 +670,20 @@ def validate(project: Project) -> None:
             elif op == "repeat":
                 expr("count")
                 body("body")
+            elif op == "for_each":
+                text("name")
+                expr("source")
+                if value.get("scope") != "local":
+                    raise ProjectError(tr("Invalid scope."))
+                body("body")
+            elif op == "data_add":
+                data_values(collection())
+            elif op == "data_update":
+                data_values(collection())
+                expr("record_id")
+            elif op == "data_delete":
+                collection()
+                expr("record_id")
             elif op == "call":
                 text("function", True)
                 expr("value")

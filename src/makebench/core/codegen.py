@@ -2,6 +2,7 @@
 """Readable Python from the neutral model, never running project content."""
 
 from dataclasses import dataclass, field
+from .datamodel import find_collection, find_field
 from .logic import (
     block_functions,
     editable,
@@ -89,10 +90,67 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                     return f"ctx.read({node['component']!r}, {node['attribute']!r})"
                 if op == "call_function":
                     return call(node)
+                if op.startswith("data_") or op == "record_field":
+                    return data_expression(node)
                 left, right = expression(node["left"]), expression(node["right"])
                 if op == "join":
                     return f"(str({left}) + str({right}))"
                 return f"({left} {node['operator']} {right})"
+
+            def data_name(node, key="field"):
+                """Collection and field names as the user declared them."""
+                owner = find_collection(project.metadata, node["collection"])
+                found = find_field(owner, node[key]) if node.get(key) not in {None, "id"} else None
+                return owner["name"], found["name"] if found else node.get(key)
+
+            def data_filter(node):
+                """The optional filter arguments of a query, as Python text."""
+                if node.get("field") is None:
+                    return ""
+                _, field = data_name(node)
+                return f", {field!r}, {node.get('operator', '=')!r}, {expression(node['value'])}"
+
+            def data_expression(node):
+                """Python for the expression blocks of the Data category."""
+                op = node["op"]
+                if op == "data_last_id":
+                    return "ctx.data.last_id"
+                if op == "record_field":
+                    _, field = data_name(node)
+                    return f"({expression(node['record'])} or {{}}).get({field!r})"
+                name = data_name(node, "order")[0]
+                if op in {"data_get", "data_name"}:
+                    method = "get" if op == "data_get" else "name"
+                    return f"ctx.data.{method}({name!r}, {expression(node['record_id'])})"
+                if op == "data_count":
+                    return f"ctx.data.count({name!r}{data_filter(node)})"
+                if op == "data_sum":
+                    summed = data_name(node, "sum")[1]
+                    if node.get("field") is None:
+                        return f"ctx.data.sum({name!r}, {summed!r})"
+                    _, field = data_name(node)
+                    return (
+                        f"ctx.data.sum({name!r}, {summed!r}, {field!r}, "
+                        f"{node.get('operator', '=')!r}, {expression(node['value'])})"
+                    )
+                order = ""
+                if node.get("order") is not None:
+                    order = f", order={data_name(node, 'order')[1]!r}"
+                    if node.get("descending"):
+                        order += ", descending=True"
+                if node.get("field") is None and not order:
+                    return f"ctx.data.find({name!r})"
+                if node.get("field") is None:
+                    return f"ctx.data.find({name!r}{order})"
+                return f"ctx.data.find({name!r}{data_filter(node)}{order})"
+
+            def data_values(node):
+                """Keyword arguments for the fields an add or change block fills in."""
+                return "".join(
+                    f", {data_name({'collection': node['collection'], 'field': entry['field']})[1]}="
+                    f"{expression(entry['value'])}"
+                    for entry in node["values"]
+                )
 
             def call(node):
                 """Call a block function by its generated name, inputs in order."""
@@ -206,6 +264,28 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         if node["else"]:
                             emit("else:", indent=indent)
                             body(node["else"], indent + 1)
+                    elif op == "for_each":
+                        emit(f"for _item in ({expression(node['source'])} or []):", node, indent)
+                        emit(f"local_variables[{node['name']!r}] = _item", indent=indent + 1)
+                        body(node["body"], indent + 1)
+                    elif op == "data_add":
+                        emit(
+                            f"ctx.data.add({data_name(node, 'x')[0]!r}{data_values(node)})",
+                            node,
+                            indent,
+                        )
+                    elif op == "data_update":
+                        emit(
+                            f"ctx.data.update({data_name(node, 'x')[0]!r}, {expression(node['record_id'])}{data_values(node)})",
+                            node,
+                            indent,
+                        )
+                    elif op == "data_delete":
+                        emit(
+                            f"ctx.data.delete({data_name(node, 'x')[0]!r}, {expression(node['record_id'])})",
+                            node,
+                            indent,
+                        )
                     elif op == "repeat":
                         emit(
                             f"for _ in range(max(0, int({expression(node['count'])}))):",

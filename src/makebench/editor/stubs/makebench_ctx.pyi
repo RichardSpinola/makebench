@@ -6,6 +6,9 @@ from typing import Any
 class Data:
     """Records of the collections declared in the Data panel, kept between runs."""
 
+    last_id: int | None
+    """The id returned by the latest add."""
+
     def add(self, collection: str, /, **fields: Any) -> int:
         """Add a record (fields by name) and return its id."""
     def update(self, collection: str, record_id: int, /, **fields: Any) -> None:

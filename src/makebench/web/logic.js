@@ -1,7 +1,7 @@
 /* Makebench: local blocks → neutral model. No system command in this view. */
 'use strict';
 // Interface language comes from the HTML entry (lang attribute); English is the source.
-const PT_BR = {"No component available": "Nenhum componente disponível", "%1 %2 do %3": "%1 %2 fazer %3", "Event": "Evento", "write to output %1": "registrar na saída %1", "show message %1": "mostrar mensagem %1", "set variable %1 to %2": "definir variável %1 como %2", "counter": "contador", "value of %1": "valor de %1", "if %1 then %2 else %3": "se %1 então %2 senão %3", "repeat %1 times %2": "repetir %1 vezes %2", "join %1 with %2": "juntar %1 com %2", "and": "e", "or": "ou", "run program %1 arguments %2 administrator %3": "executar programa %1 argumentos %2 administrador %3", "run Bash %1 arguments %2 administrator %3": "executar Bash %1 argumentos %2 administrador %3", "ask %1 %2 options %3 store in %4": "perguntar %1 %2 opções %3 guardar em %4", "text": "texto", "choice": "opção", "file": "arquivo", "folder": "pasta", "answer": "resposta", "confirm to continue %1": "confirmar para continuar %1", "call function %1 with %2": "chamar função %1 com %2", "greet": "saudacao", "start terminal": "iniciar terminal", "send to terminal": "enviar ao terminal", "stop terminal": "encerrar terminal", "program (empty = shell)": "programa (vazio = shell)", "arguments": "argumentos", "input": "entrada", "project-wide": "do projeto", "this window": "desta janela", "this flow": "deste fluxo", "Delete block": "Remover bloco", "Delete %1 blocks": "Remover %1 blocos", "Collapse block": "Recolher bloco", "Collapse all": "Recolher todos", "Expand block": "Expandir bloco", "Expand all": "Expandir todos", "go to state": "ir para estado", "open window": "abrir janela", "close this window": "fechar esta janela", "Default": "Padrão", "close this one": "fechar esta", "change text of": "alterar texto de", "enable component": "habilitar componente", "change value of": "alterar valor de", "change options of": "alterar opções de", "change rows of": "alterar linhas de", "add row in": "adicionar linha em", "selected row of": "linha selecionada de", "show page": "mostrar página", "text of": "texto de", "selection of": "seleção de", "value of": "valor de", "to": "para", "Text / script": "Texto / script", "Use Edit text or script to change several lines.": "Use Editar texto ou script para alterar várias linhas.", "Interface and navigation": "Interface e navegação", "New text": "Novo texto", "Hello!": "Olá!", "Variables and data": "Variáveis e dados", "Conditions": "Condições", "Loops": "Repetições", "Operations": "Operações", "Text": "Texto", "Hello, ": "Olá, ", "Events": "Eventos", "The current event sits at the top of the flow.": "O evento atual fica no topo do fluxo.", "Connect another event…": "Conectar outro evento…", "Tasks": "Tarefas", "printf \"Hello, Linux\\n\"": "printf \"Olá, Linux\\n\"", "All set": "Tudo pronto", "What is your name?": "Qual é o seu nome?", "Do you want to continue?": "Deseja continuar?", "Your functions": "Funções próprias", "Keep a single event in this flow.": "Mantenha um único evento neste fluxo.", "There are loose blocks. Connect them to the event or remove them.": "Há blocos soltos. Conecte-os ao evento ou remova-os.", "A value input is missing.": "Falta preencher uma entrada de valor.", "There is a disabled value. Enable it to generate code.": "Há um valor desativado. Ative-o para gerar código.", "Unknown value block: ": "Bloco de valor desconhecido: ", "Disabled block: enable or remove it to generate code.": "Bloco desativado: ative-o ou remova-o para gerar código.", "Unknown operation: ": "Operação desconhecida: ", "Could not recover the draft: ": "Não foi possível recuperar o rascunho: ", "Function missing from your file. Open Code to define it.": "Função ausente no arquivo próprio. Abra Código para defini-la.", "Asks for authorization through the system dialog. Makebench never receives passwords.": "Pede autorização pelo diálogo do sistema. O Makebench não recebe senhas.", "Runs a system program, with separate arguments.": "Executa programa do sistema, com argumentos separados.", "Go to Python": "Ir ao Python", "Open function": "Abrir função", "Project-wide": "Do projeto", "This window": "Desta janela", "This flow": "Deste fluxo", "Choose variable…": "Escolher variável…", "Toggle breakpoint": "Alternar ponto de parada", "Breakpoint": "Ponto de parada", "Function": "Função", "call %1": "chamar %1", "result of %1": "resultado de %1", "return %1": "retornar %1", "No function yet": "Nenhuma função ainda", "New function…": "Nova função…", "Choose a function to call.": "Escolha uma função para chamar.", "Keep a single function header here.": "Mantenha um único cabeçalho de função aqui.", "“Return” only works inside a function.": "“Retornar” só funciona dentro de uma função.", "Inputs are local variables of the function.": "As entradas são variáveis locais da função."};
+const PT_BR = {"No component available": "Nenhum componente disponível", "%1 %2 do %3": "%1 %2 fazer %3", "Event": "Evento", "write to output %1": "registrar na saída %1", "show message %1": "mostrar mensagem %1", "set variable %1 to %2": "definir variável %1 como %2", "counter": "contador", "value of %1": "valor de %1", "if %1 then %2 else %3": "se %1 então %2 senão %3", "repeat %1 times %2": "repetir %1 vezes %2", "join %1 with %2": "juntar %1 com %2", "and": "e", "or": "ou", "run program %1 arguments %2 administrator %3": "executar programa %1 argumentos %2 administrador %3", "run Bash %1 arguments %2 administrator %3": "executar Bash %1 argumentos %2 administrador %3", "ask %1 %2 options %3 store in %4": "perguntar %1 %2 opções %3 guardar em %4", "text": "texto", "choice": "opção", "file": "arquivo", "folder": "pasta", "answer": "resposta", "confirm to continue %1": "confirmar para continuar %1", "call function %1 with %2": "chamar função %1 com %2", "greet": "saudacao", "start terminal": "iniciar terminal", "send to terminal": "enviar ao terminal", "stop terminal": "encerrar terminal", "program (empty = shell)": "programa (vazio = shell)", "arguments": "argumentos", "input": "entrada", "project-wide": "do projeto", "this window": "desta janela", "this flow": "deste fluxo", "Delete block": "Remover bloco", "Delete %1 blocks": "Remover %1 blocos", "Collapse block": "Recolher bloco", "Collapse all": "Recolher todos", "Expand block": "Expandir bloco", "Expand all": "Expandir todos", "go to state": "ir para estado", "open window": "abrir janela", "close this window": "fechar esta janela", "Default": "Padrão", "close this one": "fechar esta", "change text of": "alterar texto de", "enable component": "habilitar componente", "change value of": "alterar valor de", "change options of": "alterar opções de", "change rows of": "alterar linhas de", "add row in": "adicionar linha em", "selected row of": "linha selecionada de", "show page": "mostrar página", "text of": "texto de", "selection of": "seleção de", "value of": "valor de", "to": "para", "Text / script": "Texto / script", "Use Edit text or script to change several lines.": "Use Editar texto ou script para alterar várias linhas.", "Interface and navigation": "Interface e navegação", "New text": "Novo texto", "Hello!": "Olá!", "Variables and data": "Variáveis e dados", "Conditions": "Condições", "Loops": "Repetições", "Operations": "Operações", "Text": "Texto", "Hello, ": "Olá, ", "Events": "Eventos", "The current event sits at the top of the flow.": "O evento atual fica no topo do fluxo.", "Connect another event…": "Conectar outro evento…", "Tasks": "Tarefas", "printf \"Hello, Linux\\n\"": "printf \"Olá, Linux\\n\"", "All set": "Tudo pronto", "What is your name?": "Qual é o seu nome?", "Do you want to continue?": "Deseja continuar?", "Your functions": "Funções próprias", "Keep a single event in this flow.": "Mantenha um único evento neste fluxo.", "There are loose blocks. Connect them to the event or remove them.": "Há blocos soltos. Conecte-os ao evento ou remova-os.", "A value input is missing.": "Falta preencher uma entrada de valor.", "There is a disabled value. Enable it to generate code.": "Há um valor desativado. Ative-o para gerar código.", "Unknown value block: ": "Bloco de valor desconhecido: ", "Disabled block: enable or remove it to generate code.": "Bloco desativado: ative-o ou remova-o para gerar código.", "Unknown operation: ": "Operação desconhecida: ", "Could not recover the draft: ": "Não foi possível recuperar o rascunho: ", "Function missing from your file. Open Code to define it.": "Função ausente no arquivo próprio. Abra Código para defini-la.", "Asks for authorization through the system dialog. Makebench never receives passwords.": "Pede autorização pelo diálogo do sistema. O Makebench não recebe senhas.", "Runs a system program, with separate arguments.": "Executa programa do sistema, com argumentos separados.", "Go to Python": "Ir ao Python", "Open function": "Abrir função", "Project-wide": "Do projeto", "This window": "Desta janela", "This flow": "Deste fluxo", "Choose variable…": "Escolher variável…", "Toggle breakpoint": "Alternar ponto de parada", "Breakpoint": "Ponto de parada", "Function": "Função", "call %1": "chamar %1", "result of %1": "resultado de %1", "return %1": "retornar %1", "No function yet": "Nenhuma função ainda", "New function…": "Nova função…", "Choose a function to call.": "Escolha uma função para chamar.", "Keep a single function header here.": "Mantenha um único cabeçalho de função aqui.", "“Return” only works inside a function.": "“Retornar” só funciona dentro de uma função.", "Inputs are local variables of the function.": "As entradas são variáveis locais da função.", "Choose a collection.": "Escolha uma coleção.", "Choose a field.": "Escolha um campo.", "No collection yet": "Nenhuma coleção ainda", "No field": "Nenhum campo", "add record to": "adicionar registro em", "all records": "todos os registros", "change record in": "mudar registro em", "contains": "contém", "count records of": "contar registros de", "delete record from": "apagar registro de", "descending": "decrescente", "do": "fazer", "field of": "campo de", "for each": "para cada", "id of the last added record": "id do último registro adicionado", "in": "em", "in record": "no registro", "item": "item", "name of record in": "nome do registro em", "no order": "sem ordem", "of": "de", "record id": "id do registro", "record of": "registro de", "records of": "registros de", "sorted by": "ordenados por", "total in": "total em", "where": "onde", "with id": "com id", "Records": "Registros"};
 const T = text => (document.documentElement.lang === 'pt-BR' && PT_BR[text]) || text;
 let context = {components: [], functions: []};
 let bridge, workspace, current = null, loading = false, timer = null, initialSnapshot = null, lastSnapshot = null;
@@ -111,6 +111,108 @@ Blockly.Blocks.mb_multiline = {
  saveExtraState(){return {text:this.text_};},
  loadExtraState(state){this.text_=String(state.text || '');this.setFieldValue(this.text_.split('\n')[0].slice(0,60) || T('Text / script'),'SUMMARY');}
 };
+// Data blocks: collections come from the project (context.collections); fields are cited by id.
+const collectionOf=id=>(context.collections||[]).find(c=>c.id===id);
+const collectionRows=()=>{const rows=(context.collections||[]).map(c=>[c.name,c.id]);return rows.length?rows:[[T('No collection yet'),'@missing']];};
+const fieldLabel=id=>{for(const c of context.collections||[]){const f=c.fields.find(item=>item.id===id);if(f)return f.name;}return id;};
+const compareOps=[['=','='],['≠','!='],['<','<'],['≤','<='],['>','>'],['≥','>='],[T('contains'),'contains']];
+const dependentFields=['field','order','sum'];
+function refreshFields(block){
+  for(const name of dependentFields){
+    const f=block.getField(name);if(!f)continue;
+    const rows=f.getOptions(false);
+    if(!rows.some(row=>row[1]===f.getValue()))f.setValue(rows[0][1]);
+  }
+}
+function collectionDropdown(){
+  return new Blockly.FieldDropdown(collectionRows,function(id){
+    const b=this.getSourceBlock();
+    if(b){b.collection_=id;refreshFields(b);if(b.syncFields_)b.syncFields_(id);}
+    return id;
+  });
+}
+function fieldDropdown(block,kinds,lead){
+  return new Blockly.FieldDropdown(()=>{
+    const c=collectionOf(block.collection_||block.getFieldValue('collection'));
+    const rows=(c?c.fields:[]).filter(f=>!kinds||kinds.includes(f.type)).map(f=>[f.name,f.id]);
+    const all=[...(lead||[]),...rows];
+    return all.length?all:[[T('No field'),'@missing']];
+  });
+}
+const filterLead=()=>[[T('all records'),'@all'],[T('record id'),'id']];
+function appendFilter(block){
+  block.appendDummyInput('FILTER').appendField(T('where')).appendField(fieldDropdown(block,null,filterLead()),'field').appendField(new Blockly.FieldDropdown(compareOps),'operator');
+  block.appendValueInput('VALUE');
+}
+Blockly.Blocks.mb_for_each={init(){
+  this.appendValueInput('SOURCE').appendField(T('for each')).appendField(new Blockly.FieldTextInput(T('item')),'NAME').appendField(T('in'));
+  this.appendStatementInput('BODY').appendField(T('do'));
+  this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(120);
+}};
+for(const type of ['data_add','data_update']){
+  Blockly.Blocks['mb_'+type]={init(){
+    this.fieldIds_=[];
+    this.appendDummyInput('HEAD').appendField(type==='data_add'?T('add record to'):T('change record in')).appendField(collectionDropdown(),'collection');
+    if(type==='data_update')this.appendValueInput('RECORD_ID').appendField(T('record id'));
+    this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(260);
+    this.syncFields_(this.getFieldValue('collection'));
+  },
+  // One value input per field of the chosen collection.
+  syncFields_(id){
+    const c=collectionOf(id);const wanted=c?c.fields:[];
+    for(const old of this.fieldIds_)if(!wanted.some(f=>f.id===old))this.removeInput('F_'+old,true);
+    for(const f of wanted){
+      const input=this.getInput('F_'+f.id)||this.appendValueInput('F_'+f.id).appendField('','L_'+f.id);
+      input.fieldRow.find(item=>item.name==='L_'+f.id)?.setValue(f.name);
+    }
+    this.fieldIds_=wanted.map(f=>f.id);
+  },
+  saveExtraState(){return {fields:this.fieldIds_};},
+  loadExtraState(state){
+    this.fieldIds_=state.fields||[];
+    for(const id of this.fieldIds_)if(!this.getInput('F_'+id))this.appendValueInput('F_'+id).appendField(fieldLabel(id),'L_'+id);
+  }};
+}
+Blockly.Blocks.mb_data_delete={init(){
+  this.appendDummyInput().appendField(T('delete record from')).appendField(collectionDropdown(),'collection');
+  this.appendValueInput('RECORD_ID').appendField(T('record id'));
+  this.setPreviousStatement(true);this.setNextStatement(true);this.setColour(260);
+}};
+Blockly.Blocks.mb_data_find={init(){
+  this.appendDummyInput().appendField(T('records of')).appendField(collectionDropdown(),'collection');
+  appendFilter(this);
+  this.appendDummyInput().appendField(T('sorted by')).appendField(fieldDropdown(this,null,[[T('no order'),'@none'],[T('record id'),'id']]),'order').appendField(new Blockly.FieldCheckbox('FALSE'),'descending').appendField(T('descending'));
+  this.setInputsInline(true);this.setOutput(true);this.setColour(260);refreshFields(this);
+}};
+Blockly.Blocks.mb_data_count={init(){
+  this.appendDummyInput().appendField(T('count records of')).appendField(collectionDropdown(),'collection');
+  appendFilter(this);
+  this.setInputsInline(true);this.setOutput(true);this.setColour(260);refreshFields(this);
+}};
+Blockly.Blocks.mb_data_sum={init(){
+  this.appendDummyInput().appendField(T('total in')).appendField(collectionDropdown(),'collection').appendField(T('of')).appendField(fieldDropdown(this,['number']),'sum');
+  appendFilter(this);
+  this.setInputsInline(true);this.setOutput(true);this.setColour(260);refreshFields(this);
+}};
+Blockly.Blocks.mb_data_get={init(){
+  this.appendDummyInput().appendField(T('record of')).appendField(collectionDropdown(),'collection');
+  this.appendValueInput('RECORD_ID').appendField(T('with id'));
+  this.setInputsInline(true);this.setOutput(true);this.setColour(260);
+}};
+Blockly.Blocks.mb_data_name={init(){
+  this.appendDummyInput().appendField(T('name of record in')).appendField(collectionDropdown(),'collection');
+  this.appendValueInput('RECORD_ID').appendField(T('with id'));
+  this.setInputsInline(true);this.setOutput(true);this.setColour(260);
+}};
+Blockly.Blocks.mb_record_field={init(){
+  this.appendDummyInput().appendField(T('field of')).appendField(collectionDropdown(),'collection').appendField(fieldDropdown(this,null,[[T('record id'),'id']]),'field');
+  this.appendValueInput('RECORD').appendField(T('in record'));
+  this.setInputsInline(true);this.setOutput(true);this.setColour(260);refreshFields(this);
+}};
+Blockly.Blocks.mb_data_last_id={init(){
+  this.appendDummyInput().appendField(T('id of the last added record'));
+  this.setOutput(true);this.setColour(260);
+}};
 const block = (type, inputs) => ({kind:'block', type, ...(inputs ? {inputs} : {})});
 const value = (type, fields) => ({shadow:{type,fields}});
 const emptyList=()=>({block:{type:'lists_create_with',extraState:{itemCount:0}}});
@@ -118,7 +220,7 @@ const toolbox = {kind:'categoryToolbox',contents:[
  {kind:'category',name:T('Interface and navigation'),colour:210,contents:[block('mb_set_text',{VALUE:value('text',{TEXT:T('New text')})}),block('mb_set_enabled',{VALUE:value('logic_boolean',{BOOL:'TRUE'})}),block('mb_set_value',{VALUE:value('math_number',{NUM:50})}),block('mb_set_options',{VALUE:emptyList()}),block('mb_set_rows',{VALUE:emptyList()}),block('mb_add_row',{VALUE:emptyList()}),block('mb_show_page'),block('mb_go_state'),block('mb_open_window'),block('mb_close_window'),block('mb_message',{VALUE:value('text',{TEXT:T('Hello!')})}),block('mb_read_text'),block('mb_read_checked'),block('mb_read_value'),block('mb_read_selected')]},
  {kind:'category',name:T('Variables and data'),colour:330,contents:[block('mb_assign',{VALUE:value('math_number',{NUM:0})}),block('mb_variable'),{kind:'block',type:'lists_create_with',extraState:{itemCount:0}}]},
  {kind:'category',name:T('Conditions'),colour:120,contents:[block('mb_if',{CONDITION:value('logic_boolean',{BOOL:'TRUE'})}),block('logic_boolean')]},
- {kind:'category',name:T('Loops'),colour:120,contents:[block('mb_repeat',{COUNT:value('math_number',{NUM:3})})]},
+ {kind:'category',name:T('Loops'),colour:120,contents:[block('mb_repeat',{COUNT:value('math_number',{NUM:3})}),block('mb_for_each',{SOURCE:emptyList()})]},
  {kind:'category',name:T('Operations'),colour:230,contents:[block('mb_binary',{LEFT:value('math_number',{NUM:0}),RIGHT:value('math_number',{NUM:0})}),block('math_number')]},
  {kind:'category',name:T('Text'),colour:160,contents:[block('text'),block('mb_multiline'),block('mb_join',{LEFT:value('text',{TEXT:T('Hello, ')}),RIGHT:value('text',{TEXT:'Linux'})})]},
  {kind:'category',name:T('Events'),colour:210,contents:[{kind:'label',text:T('The current event sits at the top of the flow.')},{kind:'button',text:T('Connect another event…'),callbackKey:'MAKEBENCH_EVENT'}]},
@@ -147,9 +249,29 @@ function compileWorkspace() {
    else if(b.type==='mb_variable') {n.op='variable'; n.name=b.getFieldValue('NAME');n.scope=b.getFieldValue('SCOPE')||'project';if(n.scope==='project')delete n.scope;}
    else if(b.type.startsWith('mb_read_')) {n.op='read'; n.attribute=b.type.slice(8); n.component=b.getFieldValue('COMPONENT');}
    else if(b.type==='mb_call_value') call(b,n);
+   else if(b.type.startsWith('mb_data_')||b.type==='mb_record_field') data(b,n);
    else if(['mb_binary','mb_join'].includes(b.type)) {n.op=b.type.slice(3);n.left=expr(b.getInputTargetBlock('LEFT'));n.right=expr(b.getInputTargetBlock('RIGHT'));if(n.op==='binary')n.operator=b.getFieldValue('OP');}
    else throw Error(T('Unknown value block: ') + b.type);
    return n;
+ }
+ function data(b,n) {
+   n.op=b.type.slice(3);
+   if(n.op==='data_last_id')return;
+   n.collection=b.getFieldValue('collection');
+   if(n.collection==='@missing')throw Error(T('Choose a collection.'));
+   if(['data_get','data_name'].includes(n.op))n.record_id=expr(b.getInputTargetBlock('RECORD_ID'));
+   if(n.op==='record_field'){n.field=b.getFieldValue('field');n.record=expr(b.getInputTargetBlock('RECORD'));}
+   if(['data_find','data_count','data_sum'].includes(n.op)){
+     if(n.op==='data_sum')n.sum=b.getFieldValue('sum');
+     const field=b.getFieldValue('field');
+     if(field&&field!=='@all'){n.field=field;n.operator=b.getFieldValue('operator');n.value=expr(b.getInputTargetBlock('VALUE'));}
+   }
+   if(n.op==='data_find'){
+     const order=b.getFieldValue('order');
+     if(order&&order!=='@none')n.order=order;
+     n.descending=b.getFieldValue('descending')==='TRUE';
+   }
+   if([n.field,n.sum,n.order].includes('@missing'))throw Error(T('Choose a field.'));
  }
  function call(b,n) {
    n.op='call_function';n.function=b.getFieldValue('FUNCTION');
@@ -175,6 +297,13 @@ function compileWorkspace() {
      else if(op==='confirm') n.prompt=expr(b.getInputTargetBlock('PROMPT'));
      else if(op==='if') {n.condition=expr(b.getInputTargetBlock('CONDITION'));n.then=chain(b.getInputTargetBlock('THEN'));n.else=chain(b.getInputTargetBlock('ELSE'));}
      else if(op==='repeat') {n.count=expr(b.getInputTargetBlock('COUNT'));n.body=chain(b.getInputTargetBlock('BODY'));}
+     else if(op==='for_each') {n.name=b.getFieldValue('NAME');n.scope='local';n.source=expr(b.getInputTargetBlock('SOURCE'));n.body=chain(b.getInputTargetBlock('BODY'));}
+     else if(['data_add','data_update','data_delete'].includes(op)) {
+       n.collection=b.getFieldValue('collection');
+       if(n.collection==='@missing')throw Error(T('Choose a collection.'));
+       if(op!=='data_delete'){n.values=[];for(const id of b.fieldIds_){const t=b.getInputTargetBlock('F_'+id);if(t)n.values.push({field:id,value:expr(t)});}}
+       if(op!=='data_add')n.record_id=expr(b.getInputTargetBlock('RECORD_ID'));
+     }
      else if(!['log','message','set_text','set_enabled','set_value','set_options','set_rows','add_row','show_page','assign','go_state','open_window','close_window','terminal_start','terminal_send','terminal_stop','call_function','return'].includes(op)) throw Error(T('Unknown operation: ') + b.type);
      items.push(n); b=b.getNextBlock();
    }
@@ -203,9 +332,19 @@ function stateFor(node, isValue=false) {
  if(node.op==='call_function'){node.args.forEach((item,index)=>inputs['ARG'+index]={block:stateFor(item,true)});}
  if(node.operator) fields.OP=node.operator;
  if(node.op==='read') type='mb_read_'+node.attribute;
- for(const [key,name] of [['value','VALUE'],['left','LEFT'],['right','RIGHT'],['condition','CONDITION'],['count','COUNT'],['program','PROGRAM'],['source','SOURCE'],['arguments','ARGUMENTS'],['prompt','PROMPT'],['options','OPTIONS']]) if(node[key] && typeof node[key]==='object') inputs[name]={block:stateFor(node[key],true)};
+ for(const [key,name] of [['value','VALUE'],['left','LEFT'],['right','RIGHT'],['condition','CONDITION'],['count','COUNT'],['program','PROGRAM'],['source','SOURCE'],['arguments','ARGUMENTS'],['prompt','PROMPT'],['record_id','RECORD_ID'],['record','RECORD'],['options','OPTIONS']]) if(node[key] && typeof node[key]==='object') inputs[name]={block:stateFor(node[key],true)};
  for(const [key,name] of [['then','THEN'],['else','ELSE'],['body','BODY']]) if(node[key]?.length) inputs[name]={block:chainState(node[key])};
+ if(node.op.startsWith('data_')||node.op==='record_field'){
+   if(node.collection)fields={collection:node.collection,...fields};
+   if(node.field!=null)fields.field=node.field;
+   else if(['data_find','data_count','data_sum'].includes(node.op))fields.field='@all';
+   if(node.operator)fields.operator=node.operator;
+   if(node.op==='data_sum')fields.sum=node.sum;
+   if(node.op==='data_find'){fields.order=node.order||'@none';fields.descending=node.descending?'TRUE':'FALSE';}
+   for(const entry of node.values||[])inputs['F_'+entry.field]={block:stateFor(entry.value,true)};
+ }
  const state={type,id:node.id,fields,inputs};
+ if(['data_add','data_update'].includes(node.op))state.extraState={fields:(collectionOf(node.collection)?.fields||[]).map(f=>f.id)};
  if(node.op==='literal' && typeof node.value==='string' && node.value.includes('\n')){state.type='mb_multiline';state.fields={};state.extraState={text:node.value};}
  if(node.op==='list')state.extraState={itemCount:node.items.length};
  if(node.op==='call_function'){state.extraState={count:node.args.length};if(isValue)state.type='mb_call_value';}

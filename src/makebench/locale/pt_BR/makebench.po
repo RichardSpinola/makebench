@@ -7411,3 +7411,15 @@ msgstr "Campo {field} desconhecido em {collection}."
 #: src/makebench/core/datastore.py
 msgid "{collection} has no record {id}."
 msgstr "{collection} não tem o registro {id}."
+
+#: src/makebench/core/logic.py
+msgid "A block points to a collection that does not exist."
+msgstr "Um bloco aponta para uma coleção que não existe."
+
+#: src/makebench/core/logic.py
+msgid "A block points to a missing or incompatible field."
+msgstr "Um bloco aponta para um campo ausente ou incompatível."
+
+#: src/makebench/editor/collections_ui.py
+msgid "Some removed fields are still used by blocks. Change the blocks first."
+msgstr "Alguns campos removidos ainda são usados por blocos. Mude os blocos primeiro."

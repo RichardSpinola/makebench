@@ -224,6 +224,143 @@ class LogicTests(unittest.TestCase):
         self.assertIn("ctx.log(fn_double(ctx, 21))", source)
         compile(source, "<actions>", "exec")
 
+    def data_project(self):
+        self.project.metadata["collections"] = [
+            {
+                "id": "autores",
+                "name": "Autores",
+                "fields": [{"id": "nome", "name": "nome", "type": "text"}],
+            },
+            {
+                "id": "livros",
+                "name": "Livros",
+                "fields": [
+                    {"id": "titulo", "name": "titulo", "type": "text"},
+                    {"id": "paginas", "name": "paginas", "type": "number"},
+                    {"id": "autor", "name": "autor", "type": "ref", "target": "autores"},
+                ],
+            },
+        ]
+
+    def test_data_blocks_validate_generate_python_and_survive_conversion(self):
+        from makebench.core.codegen import convert_to_python
+
+        self.data_project()
+        find = {
+            "id": "find",
+            "op": "data_find",
+            "collection": "livros",
+            "field": "paginas",
+            "operator": ">",
+            "value": literal("n", 100),
+            "order": "titulo",
+            "descending": True,
+        }
+        self.flow["body"] = [
+            {
+                "id": "add",
+                "op": "data_add",
+                "collection": "autores",
+                "values": [{"field": "nome", "value": literal("v1", "Ana")}],
+            },
+            {
+                "id": "add2",
+                "op": "data_add",
+                "collection": "livros",
+                "values": [
+                    {"field": "titulo", "value": literal("v2", "A")},
+                    {"field": "autor", "value": {"id": "last", "op": "data_last_id"}},
+                ],
+            },
+            {
+                "id": "each",
+                "op": "for_each",
+                "name": "livro",
+                "scope": "local",
+                "source": find,
+                "body": [
+                    {
+                        "id": "log",
+                        "op": "log",
+                        "value": {
+                            "id": "rf",
+                            "op": "record_field",
+                            "collection": "livros",
+                            "field": "titulo",
+                            "record": {
+                                "id": "lv",
+                                "op": "variable",
+                                "name": "livro",
+                                "scope": "local",
+                            },
+                        },
+                    },
+                    {
+                        "id": "del",
+                        "op": "data_delete",
+                        "collection": "livros",
+                        "record_id": literal("i", 1),
+                    },
+                    {
+                        "id": "upd",
+                        "op": "data_update",
+                        "collection": "livros",
+                        "record_id": literal("j", 1),
+                        "values": [{"field": "paginas", "value": literal("p", 9)}],
+                    },
+                ],
+            },
+            {
+                "id": "total",
+                "op": "log",
+                "value": {
+                    "id": "sum",
+                    "op": "data_sum",
+                    "collection": "livros",
+                    "sum": "paginas",
+                    "field": "autor",
+                    "operator": "=",
+                    "value": literal("a", 1),
+                },
+            },
+        ]
+        validate(self.project)
+        code = generate(self.project).text
+        self.assertIn("ctx.data.add('Autores', nome='Ana')", code)
+        self.assertIn("ctx.data.add('Livros', titulo='A', autor=ctx.data.last_id)", code)
+        self.assertIn(
+            "for _item in (ctx.data.find('Livros', 'paginas', '>', 100, order='titulo', descending=True) or []):",
+            code,
+        )
+        self.assertIn("local_variables['livro'] = _item", code)
+        self.assertIn("(local_variables.get('livro') or {}).get('titulo')", code)
+        self.assertIn("ctx.data.update('Livros', 1, paginas=9)", code)
+        self.assertIn("ctx.data.sum('Livros', 'paginas', 'autor', '=', 1)", code)
+        self.assertIn("local_variables = {}", code)
+        compile(code, "<generated>", "exec")
+        compile(convert_to_python(self.project, ""), "<actions>", "exec")
+
+    def test_data_blocks_reject_unknown_collections_and_fields(self):
+        self.data_project()
+        add = {"id": "a", "op": "data_add", "collection": "livros", "values": []}
+        self.flow["body"] = [add]
+        validate(self.project)
+        add["collection"] = "nada"
+        with self.assertRaisesRegex(ProjectError, "collection"):
+            validate(self.project)
+        add.update(collection="livros", values=[{"field": "x", "value": literal("v", 1)}])
+        with self.assertRaisesRegex(ProjectError, "field"):
+            validate(self.project)
+        self.flow["body"] = [
+            {
+                "id": "s",
+                "op": "log",
+                "value": {"id": "c", "op": "data_sum", "collection": "livros", "sum": "titulo"},
+            }
+        ]
+        with self.assertRaisesRegex(ProjectError, "field"):
+            validate(self.project)
+
     def test_generated_control_flow_is_valid_and_has_source_map(self):
         self.flow["body"] = [
             {

@@ -39,6 +39,22 @@ def uses_collection(value, collection_id, name) -> int:
     return 0
 
 
+def uses_fields(value, collection_id, name, field_ids) -> int:
+    """Count the neutral blocks of a collection that cite one of these fields."""
+    if isinstance(value, list):
+        return sum(uses_fields(child, collection_id, name, field_ids) for child in value)
+    if not isinstance(value, dict):
+        return 0
+    own = 0
+    if value.get("collection") in {collection_id, name}:
+        cited = [value.get(key) for key in ("field", "order", "sum")]
+        cited += [
+            entry.get("field") for entry in value.get("values", []) if isinstance(entry, dict)
+        ]
+        own = int(any(item in field_ids for item in cited))
+    return own + sum(uses_fields(child, collection_id, name, field_ids) for child in value.values())
+
+
 class CollectionMixin:
     """Declare record types; the stored records live only in the running app."""
 
@@ -73,6 +89,16 @@ class CollectionMixin:
             if field.get("target") == collection["id"]
         )
         return blocks, fields
+
+    def field_usage(self, collection, field_ids):
+        """Blocks that still cite fields of a collection that are about to disappear."""
+        units = [
+            *(flow.get("body") for flow in self.project.workflows),
+            *(function.get("body") for function in self.project.metadata.get("functions", [])),
+        ]
+        return sum(
+            uses_fields(unit, collection["id"], collection["name"], field_ids) for unit in units
+        )
 
     def collection_dialog(self, _checked=False, collection_id=None):
         """Create or change a collection: its name and its typed fields."""
@@ -168,6 +194,17 @@ class CollectionMixin:
                         "Use different names made of letters, digits and underscores (not “id”), "
                         "at least one field, and a collection to point to."
                     )
+                )
+                return
+
+            gone = (
+                {f["id"] for f in original["fields"]} - {f["id"] for f in fields}
+                if original
+                else set()
+            )
+            if gone and self.field_usage(original, gone):
+                error.setText(
+                    tr("Some removed fields are still used by blocks. Change the blocks first.")
                 )
                 return
 
