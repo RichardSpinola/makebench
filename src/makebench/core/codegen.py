@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass, field
 from .logic import (
+    block_functions,
     editable,
     function_names,
     is_draft,
@@ -54,7 +55,9 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
             tr("Reserved flows from another version were kept without conversion.")
         )
     else:
-        for index, flow in enumerate(project.workflows, 1):
+        blocks_defined = {item["id"]: item for item in block_functions(project)}
+        units = [(None, item) for item in blocks_defined.values()]
+        for index, flow in [*units, *enumerate(project.workflows, 1)]:
             flow_id = flow["id"]
             if "function" in flow:
                 lines.extend(
@@ -84,10 +87,18 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                     return f"{ {'project': 'variables', 'window': 'ctx.window_variables', 'local': 'local_variables'}[node.get('scope', 'project')] }.get({node['name']!r})"
                 if op == "read":
                     return f"ctx.read({node['component']!r}, {node['attribute']!r})"
+                if op == "call_function":
+                    return call(node)
                 left, right = expression(node["left"]), expression(node["right"])
                 if op == "join":
                     return f"(str({left}) + str({right}))"
                 return f"({left} {node['operator']} {right})"
+
+            def call(node):
+                """Call a block function by its generated name, inputs in order."""
+                target = blocks_defined[node["function"]]
+                args = "".join(", " + expression(item) for item in node["args"])
+                return f"fn_{target['name']}(ctx{args})"
 
             def emit(text, node=None, indent=1):
                 """Append a line and record where the statement's expressions came from."""
@@ -184,6 +195,11 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         )
                     elif op == "confirm":
                         emit(f"ctx.confirm({expression(node['prompt'])})", node, indent)
+                    elif op == "call_function":
+                        emit(call(node), node, indent)
+                    elif op == "return":
+                        value = expression(node["value"]) if "value" in node else "None"
+                        emit(f"return {value}", node, indent)
                     elif op == "if":
                         emit(f"if {expression(node['condition'])}:", node, indent)
                         body(node["then"], indent + 1)
@@ -198,6 +214,21 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                         )
                         body(node["body"], indent + 1)
 
+            if index is None:
+                params = flow["params"]
+                lines.extend(
+                    [
+                        "# " + tr("Function: {name}").format(name=flow["name"]),
+                        f"def fn_{flow['name']}({', '.join(['ctx', *params])}):",
+                        "    variables = ctx.variables",
+                        "    local_variables = {"
+                        + ", ".join(f"{name!r}: {name}" for name in params)
+                        + "}",
+                    ]
+                )
+                body(flow["body"])
+                lines.append("")
+                continue
             lines.extend(
                 [
                     f"# {flow['name'].replace(chr(10), ' ').replace(chr(13), ' ')}",
@@ -236,7 +267,8 @@ def convert_to_python(project: Project, source: str) -> str:
     """
     if not editable(project):
         raise ProjectError(tr("Reserved flows from another version cannot be converted."))
-    drafts = [flow["name"] for flow in project.workflows if is_draft(flow)]
+    functions = block_functions(project)
+    drafts = [flow["name"] for flow in [*functions, *project.workflows] if is_draft(flow)]
     if drafts:
         raise ProjectError(
             tr("Finish these flows before converting: {names}.").format(names=", ".join(drafts))
@@ -246,23 +278,39 @@ def convert_to_python(project: Project, source: str) -> str:
         raise ProjectError(tr("Fix the Python file before converting. {error}").format(error=error))
     generated = generate(project, source).text.splitlines()
     taken, chunks = set(names), []
-    for index, flow in enumerate(project.workflows, 1):
-        if is_python_event(flow):
-            continue
-        start = generated.index(f"def on_event_{index}(ctx):")
+    clashes = [f"fn_{item['name']}" for item in functions if f"fn_{item['name']}" in taken]
+    if clashes:
+        raise ProjectError(
+            tr("The Python file already defines {names}. Rename them first.").format(
+                names=", ".join(clashes)
+            )
+        )
+
+    def chunk_at(header):
+        """Cut a generated definition with the comments right above it."""
+        start = next(i for i, line in enumerate(generated) if line.startswith(header))
         head, end = start, start
         while head > 0 and generated[head - 1].startswith("#"):
             head -= 1
         while end < len(generated) and generated[end]:
             end += 1
+        return start - head, generated[head:end]
+
+    for item in functions:
+        taken.add(f"fn_{item['name']}")
+        chunks.append("\n".join(chunk_at(f"def fn_{item['name']}(")[1]))
+    for index, flow in enumerate(project.workflows, 1):
+        if is_python_event(flow):
+            continue
+        offset, chunk = chunk_at(f"def on_event_{index}(ctx):")
         name = suggest_function(project, flow["event"]["component"], taken)
         taken.add(name)
-        chunk = generated[head:end]
-        chunk[start - head] = f"def {name}(ctx):"
+        chunk[offset] = f"def {name}(ctx):"
         chunks.append("\n".join(chunk))
         kept = {key: flow[key] for key in ("id", "name", "event", "states") if key in flow}
         flow.clear()
         flow.update(kept, function=name)
+    project.metadata.pop("functions", None)
     project.metadata["programming"] = "python"
     text = source.rstrip("\n")
     if not chunks:

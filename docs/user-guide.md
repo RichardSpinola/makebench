@@ -77,10 +77,18 @@ you create it, and Logic opens the right editor. The sidebar lists the project's
   Selecting a block highlights its line.
 
 Available actions include showing windows and pages, reading and changing
-components, messages and questions, logging, calling your own Python functions,
-and running programs or Bash scripts as supervised tasks. A task can ask for
+components, messages and questions, logging, calling functions, and running
+programs or Bash scripts as supervised tasks. A task can ask for
 administrator rights; Makebench then uses Polkit and the system's own
 authentication dialog. It never asks for or stores passwords.
+
+**Functions** group blocks you use in more than one place. Choose **Your
+functions › New function…** in the palette (or the ⋯ menu), give it a Python
+name and, if you want, inputs separated by commas. Inside the function the
+inputs are local variables ("this flow"), and **return** sends a value back.
+Use **call** as a statement or **result of** as a value. A function that is
+still called cannot be removed, and the number of its inputs only changes after
+you remove its calls.
 
 ![Logic](images/logic.png)
 

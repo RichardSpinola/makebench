@@ -114,6 +114,60 @@ class LogicTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectError, "Finish"):
             convert_to_python(blocks, "")
 
+    def test_block_functions_take_inputs_return_values_and_convert(self):
+        from makebench.core.codegen import convert_to_python, generate
+        from makebench.core.logic import create_block_function, function_calls, guard_removal
+
+        double = create_block_function(self.project, "double", ["number"])
+        double["body"] = [
+            {
+                "id": "ret",
+                "op": "return",
+                "value": {
+                    "id": "times",
+                    "op": "binary",
+                    "operator": "*",
+                    "left": {"id": "arg", "op": "variable", "name": "number", "scope": "local"},
+                    "right": literal("two", 2),
+                },
+            }
+        ]
+        call = {"id": "call", "op": "call_function", "function": double["id"]}
+        self.flow["body"] = [
+            {"id": "log", "op": "log", "value": {**call, "args": [literal("n", 21)]}},
+            {**call, "id": "again", "args": [literal("m", 1)]},
+        ]
+        validate(self.project)
+        code = generate(self.project).text
+        self.assertIn("def fn_double(ctx, number):", code)
+        self.assertIn("local_variables = {'number': number}", code)
+        self.assertIn("ctx.log(fn_double(ctx, 21))", code)
+        self.assertIn("return (local_variables.get('number') * 2)", code)
+        compile(code, "<generated>", "exec")
+        self.assertEqual(function_calls(self.project, double["id"]), [self.flow["name"]])
+        with self.assertRaisesRegex(ProjectError, "Python name"):
+            create_block_function(self.project, "double")
+        with self.assertRaisesRegex(ProjectError, "inputs"):
+            create_block_function(self.project, "other", ["ctx"])
+        self.flow["body"][1]["args"] = []
+        with self.assertRaisesRegex(ProjectError, "number of inputs"):
+            validate(self.project)
+        self.flow["body"][1] = {"id": "ret2", "op": "return"}
+        with self.assertRaisesRegex(ProjectError, "inside a function"):
+            validate(self.project)
+        self.flow["body"].pop()
+        label = self.project.add(self.project.root.id, ComponentKind.LABEL)
+        double["body"].append(
+            {"id": "show", "op": "set_text", "component": label.id, "value": literal("t", "x")}
+        )
+        with self.assertRaises(ProjectError):
+            guard_removal(self.project, {label.id})
+        source = convert_to_python(self.project, "")
+        self.assertNotIn("functions", self.project.metadata)
+        self.assertIn("def fn_double(ctx, number):", source)
+        self.assertIn("ctx.log(fn_double(ctx, 21))", source)
+        compile(source, "<actions>", "exec")
+
     def test_generated_control_flow_is_valid_and_has_source_map(self):
         self.flow["body"] = [
             {

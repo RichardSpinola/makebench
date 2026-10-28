@@ -6910,3 +6910,75 @@ msgstr "Este projeto já é escrito em Python."
 
 msgid "{flow}: function {name}() not found in the actions file."
 msgstr "{flow}: função {name}() não encontrada no arquivo de ações."
+
+msgid "A block calls a function that does not exist."
+msgstr "Um bloco chama uma função que não existe."
+
+msgid "A block function cannot have an event."
+msgstr "Uma função de blocos não pode ter evento."
+
+msgid "A function call has the wrong number of inputs."
+msgstr "Uma chamada de função tem o número errado de entradas."
+
+msgid "Change function"
+msgstr "Alterar função"
+
+msgid "Could not change the function"
+msgstr "Não foi possível alterar a função"
+
+msgid "Could not create the function"
+msgstr "Não foi possível criar a função"
+
+msgid "Could not remove the function"
+msgstr "Não foi possível remover a função"
+
+msgid "Create function"
+msgstr "Criar função"
+
+msgid "Each function needs its own Python name."
+msgstr "Cada função precisa de um nome Python próprio."
+
+msgid "Function inputs must be up to 8 different Python names."
+msgstr "As entradas da função devem ser até 8 nomes Python diferentes."
+
+msgid "Function name and inputs…"
+msgstr "Nome e entradas da função…"
+
+msgid "Function result"
+msgstr "Resultado de função"
+
+msgid "Function {signature}"
+msgstr "Função {signature}"
+
+msgid "Function: {name}"
+msgstr "Função: {name}"
+
+msgid "Inputs, separated by commas (optional)"
+msgstr "Entradas, separadas por vírgulas (opcional)"
+
+msgid "Invalid function list (at most 512)."
+msgstr "Lista de funções inválida (no máximo 512)."
+
+msgid "Name (a Python name, like total_price)"
+msgstr "Nome (um nome Python, como preco_total)"
+
+msgid "New function…"
+msgstr "Nova função…"
+
+msgid "Remove the calls to this function before changing how many inputs it has."
+msgstr "Remova as chamadas desta função antes de mudar quantas entradas ela tem."
+
+msgid "Return from function"
+msgstr "Retornar da função"
+
+msgid "The Python file already defines {names}. Rename them first."
+msgstr "O arquivo Python já define {names}. Renomeie antes."
+
+msgid "This function is still called by: {names}."
+msgstr "Esta função ainda é chamada por: {names}."
+
+msgid "price, amount"
+msgstr "preco, quantidade"
+
+msgid "“Return” only works inside a function."
+msgstr "“Retornar” só funciona dentro de uma função."

@@ -187,6 +187,44 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         labels = [w.problems.item(i).text() for i in range(w.problems.count())]
         self.assertTrue(any("on_save_click() not found" in label for label in labels))
 
+    def test_block_functions_are_created_listed_and_protected_while_called(self):
+        w = self.window
+        w.project.metadata["programming"] = "blocks"
+        button = w.project.add(w.project.root.id, ComponentKind.BUTTON)
+        w._refresh()
+        w.save_block_function("", "total", ["price", "amount"])
+        function = w.project.metadata["functions"][0]
+        self.assertEqual(w.logic.flow_id, function["id"])
+        groups = [
+            w.logic.outline.topLevelItem(i) for i in range(w.logic.outline.topLevelItemCount())
+        ]
+        self.assertEqual(groups[-1].child(0).text(0), "total(price, amount)")
+        self.assertFalse(w.logic.state_filter.isEnabled())
+        from makebench.core.logic import create_flow
+
+        create_flow(w.project, button.id)["body"] = [
+            {
+                "id": "c",
+                "op": "call_function",
+                "function": function["id"],
+                "args": [
+                    {"id": "a", "op": "literal", "value": 2},
+                    {"id": "b", "op": "literal", "value": 3},
+                ],
+            }
+        ]
+        w.history.push(w.project)
+        with patch.object(w, "_show_error") as shown:
+            w.save_block_function(function["id"], "total", ["price"])
+            w.remove_flow(function["id"])
+        self.assertEqual(shown.call_count, 2)
+        w.save_block_function(function["id"], "sum_up", ["x", "y"])
+        self.assertEqual(function["name"], "sum_up")
+        self.assertIn("fn_sum_up(ctx, 2, 3)", w.logic.generated.text)
+        w.project.workflows.clear()
+        w.remove_flow(function["id"])
+        self.assertNotIn("functions", w.project.metadata)
+
     def test_convert_to_python_keeps_a_copy_of_the_blocks(self):
         w = self.window
         w.project.metadata["programming"] = "blocks"

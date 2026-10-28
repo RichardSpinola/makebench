@@ -81,11 +81,19 @@ as **Funções** e os **Módulos** do projeto.
   Selecionar um bloco destaca a linha correspondente.
 
 As ações disponíveis incluem mostrar janelas e páginas, ler e alterar
-componentes, mensagens e perguntas, registro de saída, chamar suas funções
-Python e executar programas ou scripts Bash como tarefas supervisionadas. Uma
+componentes, mensagens e perguntas, registro de saída, chamar funções e
+executar programas ou scripts Bash como tarefas supervisionadas. Uma
 tarefa pode pedir permissão de administrador; nesse caso o Makebench usa o
 Polkit e o diálogo de autenticação do próprio sistema. Ele nunca pede nem guarda
 senhas.
+
+As **Funções** juntam blocos que você usa em mais de um lugar. Escolha
+**Funções próprias › Nova função…** na paleta (ou no menu ⋯), dê um nome Python
+e, se quiser, entradas separadas por vírgulas. Dentro da função as entradas são
+variáveis locais ("deste fluxo"), e **retornar** devolve um valor. Use
+**chamar** como instrução ou **resultado de** como valor. Uma função que ainda é
+chamada não pode ser removida, e o número de entradas só muda depois que você
+remove as chamadas.
 
 ![Lógica](images/logic.png)
 

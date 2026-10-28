@@ -234,20 +234,21 @@ def main():
             if frame.filename in file_names or frame.filename == source_filename:
                 source_line = frame.lineno
                 source_file = file_names.get(frame.filename, "@actions")
-        block = next(
+        # The deepest generated line may sit in a block function called by the event.
+        origin = next(
             (
-                block
-                for (flow, block), number in (generated.lines.items() if generated else [])
-                if flow == flow_id and number == line
+                key
+                for key, number in (generated.lines.items() if generated else [])
+                if number == line
             ),
-            None,
+            (flow_id, None),
         )
         send(
             {
                 "type": "error",
                 "message": f"{type(exc).__name__}: {exc}",
-                "flow": flow_id,
-                "block": block,
+                "flow": origin[0],
+                "block": origin[1],
                 "line": line,
                 "source_line": source_line,
                 "source_file": source_file,

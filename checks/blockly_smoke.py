@@ -655,6 +655,52 @@ class BlocklyTests(unittest.TestCase):
         )
         self.assertIn("ctx.terminal_start(", self.window.logic.generated.text)
 
+    def test_21_block_functions_roundtrip_with_inputs_and_return(self):
+        """A function header, its return and a call with inputs survive Blockly unchanged."""
+        self.window.save_block_function("", "double", ["number"])
+        function = self.window.project.metadata["functions"][0]
+        function["body"] = [
+            {
+                "id": "ret",
+                "op": "return",
+                "value": {"id": "arg", "op": "variable", "name": "number", "scope": "local"},
+            }
+        ]
+        self.flow["body"] = [
+            {
+                "id": "out",
+                "op": "log",
+                "value": {
+                    "id": "call",
+                    "op": "call_function",
+                    "function": function["id"],
+                    "args": [{"id": "n", "op": "literal", "value": 21}],
+                },
+            },
+            {
+                "id": "again",
+                "op": "call_function",
+                "function": function["id"],
+                "args": [{"id": "m", "op": "literal", "value": 1}],
+            },
+        ]
+        expected_function = json.loads(json.dumps(function["body"]))
+        expected_flow = json.loads(json.dumps(self.flow["body"]))
+        self.window._refresh()
+        for unit, expected in ((function, expected_function), (self.flow, expected_flow)):
+            self.window.logic.sync(unit["id"])
+            QTest.qWait(200)
+            compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
+            self.assertEqual(compiled["errors"], [])
+            self.assertEqual(compiled["body"], expected)
+        self.assertEqual(
+            self.js(
+                "window.makebench.workspace.getBlockById('call').getInput('ARG0').fieldRow[0].getValue()"
+            ),
+            "number",
+        )
+        self.assertIn("ctx.log(fn_double(ctx, 21))", self.window.logic.generated.text)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -26,7 +26,15 @@ from PySide6.QtWidgets import (
 )
 
 from copy import deepcopy
-from makebench.core.logic import create_flow, create_python_event, editable, validate
+from makebench.core.logic import (
+    create_block_function,
+    create_flow,
+    create_python_event,
+    editable,
+    find_unit,
+    function_calls,
+    validate,
+)
 from makebench.core.source import ENTRY_FILE, SourceBuffer
 from makebench.editor.code import CodeEditor
 from makebench.editor.logic import LogicPanel
@@ -408,6 +416,7 @@ class MainWindow(StudioMixin, QMainWindow):
         self.logic.remove_requested.connect(self.remove_flow)
         self.logic.rename_requested.connect(self.rename_flow)
         self.logic.flow_changed.connect(self._receive_flow)
+        self.logic.function_edit_requested.connect(self.save_block_function)
         self.logic.error.connect(self._show_error)
         self.logic.save_requested.connect(self.save)
         self.logic.undo_requested.connect(self.undo)
@@ -1603,8 +1612,72 @@ class MainWindow(StudioMixin, QMainWindow):
         self._update_code()
         self._update_actions()
 
+    def save_block_function(self, function_id, name, params):
+        """Create a block function or change its name and inputs, keeping its calls valid."""
+        if not self.logic.flush():
+            return
+        if not function_id:
+            try:
+                function = create_block_function(self.project, name, params)
+            except ProjectError as exc:
+                self._show_error(exc, tr("Could not create the function"))
+                return
+            self.history.push(self.project, tr("Create function"))
+            self.logic.sync(function["id"])
+            self._update_code()
+            self._update_actions()
+            return
+        function = find_unit(self.project, function_id)
+        if function is None:
+            return
+        if len(params) != len(function["params"]) and function_calls(self.project, function_id):
+            self._show_error(
+                ProjectError(
+                    tr("Remove the calls to this function before changing how many inputs it has.")
+                ),
+                tr("Could not change the function"),
+            )
+            return
+        previous = deepcopy(function)
+        function.update(name=name, params=params)
+        try:
+            validate(self.project)
+        except ProjectError as exc:
+            function.clear()
+            function.update(previous)
+            self._show_error(exc, tr("Could not change the function"))
+            return
+        self.history.push(self.project, tr("Change function"))
+        self.logic.sync()
+        self._update_code()
+        self._update_actions()
+
     def remove_flow(self, flow_id):
         """Remove only the logic binding; undo restores blocks and comments."""
+        functions = self.project.metadata.get("functions", [])
+        if any(f["id"] == flow_id for f in functions):
+            callers = function_calls(self.project, flow_id)
+            if callers:
+                self._show_error(
+                    ProjectError(
+                        tr("This function is still called by: {names}.").format(
+                            names=", ".join(callers)
+                        )
+                    ),
+                    tr("Could not remove the function"),
+                )
+                return
+
+            def drop():
+                """Remove the function; the list goes away with its last item."""
+                remaining = [f for f in functions if f["id"] != flow_id]
+                if remaining:
+                    self.project.metadata["functions"] = remaining
+                else:
+                    self.project.metadata.pop("functions", None)
+
+            self._edit(drop)
+            return
         self._edit(
             lambda: setattr(
                 self.project, "workflows", [f for f in self.project.workflows if f["id"] != flow_id]
@@ -1623,7 +1696,7 @@ class MainWindow(StudioMixin, QMainWindow):
 
     def _receive_flow(self, data):
         """Validate the received neutral model; incomplete blocks stay as a draft."""
-        flow = next((f for f in self.project.workflows if f["id"] == data.get("flow")), None)
+        flow = find_unit(self.project, data.get("flow"))
         if flow is None or not isinstance(data.get("workspace"), dict):
             return
         if (

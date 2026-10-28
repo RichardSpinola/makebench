@@ -202,6 +202,38 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("From blocks", w.output.toPlainText())
         self.assertNotIn("no", w.output.toPlainText().split("From blocks")[-1])
 
+    def test_block_function_returns_a_value_to_the_event(self):
+        from makebench.core.logic import create_block_function
+
+        greet = create_block_function(self.project, "greet", ["who"])
+        greet["body"] = [
+            {
+                "id": "ret",
+                "op": "return",
+                "value": {
+                    "id": "join",
+                    "op": "join",
+                    "left": literal("hi", "Hello, "),
+                    "right": {"id": "who", "op": "variable", "name": "who", "scope": "local"},
+                },
+            }
+        ]
+        self.flow["body"] = [
+            {
+                "id": "out",
+                "op": "log",
+                "value": {
+                    "id": "call",
+                    "op": "call_function",
+                    "function": greet["id"],
+                    "args": [literal("name", "Ada")],
+                },
+            }
+        ]
+        w = self.window("")
+        self.click(w)
+        self.assertIn("Hello, Ada", w.output.toPlainText())
+
     def test_missing_event_function_reports_its_name(self):
         self.project.metadata["programming"] = "python"
         self.flow.pop("body")

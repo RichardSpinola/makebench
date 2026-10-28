@@ -74,6 +74,66 @@ def is_python_event(flow: dict) -> bool:
     return "function" in flow
 
 
+def block_functions(project: Project) -> list[dict]:
+    """Return the project's block functions, a list kept in the metadata."""
+    return project.metadata.get("functions", [])
+
+
+def find_unit(project: Project, unit_id: str | None) -> dict | None:
+    """Find an event flow or a block function by its identifier."""
+    return next(
+        (item for item in [*project.workflows, *block_functions(project)] if item["id"] == unit_id),
+        None,
+    )
+
+
+def create_block_function(project: Project, name: str, params: list[str] | None = None) -> dict:
+    """Add an empty block function; the name and parameters must be Python names."""
+    if not editable(project):
+        raise ProjectError(
+            tr(
+                "This project contains flows from another version. They were kept; editing requires migration."
+            )
+        )
+    function = {
+        "id": new_id("function"),
+        "name": name.strip(),
+        "params": list(params or []),
+        "body": [],
+        "workspace": {},
+    }
+    project.metadata["logic_version"] = LOGIC_VERSION
+    project.metadata.setdefault("functions", []).append(function)
+    try:
+        validate(project)
+    except ProjectError:
+        project.metadata["functions"].remove(function)
+        if not project.metadata["functions"]:
+            del project.metadata["functions"]
+        raise
+    return function
+
+
+def function_calls(project: Project, function_id: str) -> list[str]:
+    """Name the events and functions whose blocks call this function."""
+    found = []
+
+    def calls(item):
+        """Look for a call by structure, never by text."""
+        if isinstance(item, dict):
+            return (
+                item.get("op") == "call_function" and item.get("function") == function_id
+            ) or any(calls(child) for child in item.values())
+        if isinstance(item, list):
+            return any(calls(child) for child in item)
+        return False
+
+    for unit in [*project.workflows, *block_functions(project)]:
+        if unit["id"] != function_id and calls(unit.get("body")):
+            found.append(unit["name"])
+    return found
+
+
 def suggest_function(project: Project, component_id: str, taken) -> str:
     """Build a readable, unused Python name for an event's function."""
     import re
@@ -137,39 +197,79 @@ def validate(project: Project) -> None:
     if type(version) is not int or version != LOGIC_VERSION:
         raise ProjectError(tr("Unsupported logic version; use a compatible Makebench."))
     seen_flows, seen_events = set(), set()
-    for flow in project.workflows:
+    functions = project.metadata.get("functions", [])
+    if not isinstance(functions, list) or len(functions) > 512:
+        raise ProjectError(tr("Invalid function list (at most 512)."))
+    signatures, names = {}, set()
+    for function in functions:
+        if not isinstance(function, dict) or not isinstance(function.get("id"), str):
+            raise ProjectError(tr("Missing or repeated flow identifier."))
+        name, params = function.get("name"), function.get("params")
+        if (
+            not isinstance(name, str)
+            or not name.isidentifier()
+            or keyword.iskeyword(name)
+            or name.startswith("_")
+            or name in names
+        ):
+            raise ProjectError(tr("Each function needs its own Python name."))
+        if (
+            not isinstance(params, list)
+            or len(params) > 8
+            or len(set(map(str, params))) != len(params)
+            or any(
+                not isinstance(item, str)
+                or not item.isidentifier()
+                or keyword.iskeyword(item)
+                or item in {"ctx", "variables", "local_variables"}
+                for item in params
+            )
+        ):
+            raise ProjectError(tr("Function inputs must be up to 8 different Python names."))
+        names.add(name)
+        signatures[function["id"]] = len(params)
+    all_states = {"@default", *[s["id"] for items in project.states.values() for s in items]}
+    for flow in [*project.workflows, *functions]:
         if not isinstance(flow.get("id"), str) or not flow["id"] or flow["id"] in seen_flows:
             raise ProjectError(tr("Missing or repeated flow identifier."))
         seen_flows.add(flow["id"])
         if not isinstance(flow.get("name"), str):
             raise ProjectError(tr("The flow name must be text."))
-        event = flow.get("event", {})
-        if not isinstance(event, dict):
-            raise ProjectError(tr("Invalid event."))
-        node = project.find(event.get("component"))
-        expected = ComponentKind.WINDOW if event.get("kind") == "start" else ComponentKind.BUTTON
-        if event.get("kind") not in {"start", "click"} or node is None or node.kind != expected:
-            raise ProjectError(tr("The event must point to the window or an existing button."))
-        states = flow.get("states", [])
-        owner = project.window_of(node.id)
-        state_ids = {"@default", *[item["id"] for item in project.states.get(owner.id, [])]}
-        if (
-            not isinstance(states, list)
-            or any(not isinstance(item, str) or item not in state_ids for item in states)
-            or len(states) != len(set(states))
-        ):
-            raise ProjectError(tr("Invalid state filter."))
-        key = (event["kind"], node.id, tuple(sorted(states)))
-        if key in seen_events:
-            raise ProjectError(tr("There is more than one flow for the same event."))
-        seen_events.add(key)
-        if "function" in flow:
-            name = flow["function"]
-            if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
-                raise ProjectError(tr("The event function must be a Python name."))
-            if any(key in flow for key in ("body", "workspace")):
-                raise ProjectError(tr("A Python event cannot also have blocks."))
-            continue
+        in_function = any(flow is item for item in functions)
+        if in_function:
+            state_ids = all_states
+            if "function" in flow or "event" in flow:
+                raise ProjectError(tr("A block function cannot have an event."))
+        event = {} if in_function else flow.get("event", {})
+        if not in_function:
+            if not isinstance(event, dict):
+                raise ProjectError(tr("Invalid event."))
+            node = project.find(event.get("component"))
+            expected = (
+                ComponentKind.WINDOW if event.get("kind") == "start" else ComponentKind.BUTTON
+            )
+            if event.get("kind") not in {"start", "click"} or node is None or node.kind != expected:
+                raise ProjectError(tr("The event must point to the window or an existing button."))
+            states = flow.get("states", [])
+            owner = project.window_of(node.id)
+            state_ids = {"@default", *[item["id"] for item in project.states.get(owner.id, [])]}
+            if (
+                not isinstance(states, list)
+                or any(not isinstance(item, str) or item not in state_ids for item in states)
+                or len(states) != len(set(states))
+            ):
+                raise ProjectError(tr("Invalid state filter."))
+            key = (event["kind"], node.id, tuple(sorted(states)))
+            if key in seen_events:
+                raise ProjectError(tr("There is more than one flow for the same event."))
+            seen_events.add(key)
+            if "function" in flow:
+                name = flow["function"]
+                if not isinstance(name, str) or not name.isidentifier() or keyword.iskeyword(name):
+                    raise ProjectError(tr("The event function must be a Python name."))
+                if any(key in flow for key in ("body", "workspace")):
+                    raise ProjectError(tr("A Python event cannot also have blocks."))
+                continue
         if not isinstance(flow.get("workspace", {}), dict):
             raise ProjectError(tr("The visual state of the blocks must be an object."))
         if not isinstance(flow.get("errors", []), list) or any(
@@ -227,6 +327,16 @@ def validate(project: Project) -> None:
                 ):
                     raise ProjectError(tr("Invalid field in block: {key}.").format(key=key))
 
+            def call():
+                """Validate a call to a block function and its inputs."""
+                args = value.get("args")
+                if value.get("function") not in signatures:
+                    raise ProjectError(tr("A block calls a function that does not exist."))
+                if not isinstance(args, list) or len(args) != signatures[value["function"]]:
+                    raise ProjectError(tr("A function call has the wrong number of inputs."))
+                for item in args:
+                    visit(item, True, depth + 1)
+
             if expression:
                 if op == "literal":
                     item = value.get("value")
@@ -279,6 +389,8 @@ def validate(project: Project) -> None:
                 elif op == "join":
                     expr("left")
                     expr("right")
+                elif op == "call_function":
+                    call()
                 else:
                     raise ProjectError(tr("Unknown expression: {op}.").format(op=op))
             elif op in {"log", "message"}:
@@ -324,6 +436,13 @@ def validate(project: Project) -> None:
             elif op == "call":
                 text("function", True)
                 expr("value")
+            elif op == "call_function":
+                call()
+            elif op == "return":
+                if not in_function:
+                    raise ProjectError(tr("“Return” only works inside a function."))
+                if "value" in value:
+                    expr("value")
             elif op in {"run", "script"}:
                 expr("program" if op == "run" else "source")
                 expr("arguments")
@@ -359,7 +478,7 @@ def validate(project: Project) -> None:
 
 def referenced_components(flow: dict) -> set[str]:
     """Collect component references without confusing text with identifiers."""
-    result = {flow["event"]["component"]}
+    result = {flow["event"]["component"]} if "event" in flow else set()
 
     def walk(item):
         """Walk only the logic representation, ignoring the Blockly view."""
@@ -380,7 +499,7 @@ def guard_removal(project: Project, ids: set[str]) -> None:
     """Prevent deleting targets used by logic, explaining how to resolve the link."""
     if not editable(project) and project.workflows:
         raise ProjectError(tr("Reserved flows require reference validation before deleting."))
-    for flow in project.workflows:
+    for flow in [*project.workflows, *block_functions(project)]:
         if is_draft(flow) or ids & referenced_components(flow):
             raise ProjectError(
                 tr(

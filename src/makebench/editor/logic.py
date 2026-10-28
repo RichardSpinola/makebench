@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from makebench.core.codegen import generate
-from makebench.core.logic import editable, function_names
+from makebench.core.logic import block_functions, editable, find_unit, function_names
 from makebench.core.project import ComponentKind
 from makebench.i18n import language, tr
 
@@ -109,6 +109,7 @@ class LogicPanel(QWidget):
     function_requested = Signal(str)
     duplicate_requested = Signal(str)
     design_requested = Signal(str)
+    function_edit_requested = Signal(str, str, list)
 
     def __init__(self, project_getter, source_getter, parent=None):
         """Create native controls; WebEngine starts only when entering the Logic tab."""
@@ -175,6 +176,12 @@ class LogicPanel(QWidget):
             icon("duplicate"),
             tr("Duplicate flow…"),
             lambda: self.duplicate_requested.emit(self.flow_id) if self.flow_id else None,
+        )
+        menu.addAction(icon("add"), tr("New function…"), lambda: self.function_dialog())
+        self.edit_function = menu.addAction(
+            icon("code"),
+            tr("Function name and inputs…"),
+            lambda: self.function_dialog(self.flow_id),
         )
         menu.addSeparator()
         self.remove = menu.addAction(
@@ -439,14 +446,16 @@ class LogicPanel(QWidget):
         if flow_id is not None:
             self.flow_id = flow_id
         flows = project.workflows if editable(project) else []
-        if self.flow_id not in {f["id"] for f in flows}:
+        functions = block_functions(project) if editable(project) else []
+        if self.flow_id not in {f["id"] for f in [*flows, *functions]}:
             candidates = [
                 f
                 for f in flows
                 if not self._target_component or f["event"]["component"] == self._target_component
             ]
             self.flow_id = candidates[0]["id"] if candidates else None
-        flow = next((f for f in flows if f["id"] == self.flow_id), None)
+        function = next((f for f in functions if f["id"] == self.flow_id), None)
+        flow = function or next((f for f in flows if f["id"] == self.flow_id), None)
         from .controls import reconcile_combo
 
         reconcile_combo(
@@ -465,7 +474,8 @@ class LogicPanel(QWidget):
                     item["id"],
                 )
                 for item in flows
-            ],
+            ]
+            + [(self.signature(item), item["id"]) for item in functions],
             self.flow_id,
         )
         self.name.setText(flow["name"] if flow else "")
@@ -474,7 +484,9 @@ class LogicPanel(QWidget):
         self._sync_edit_text()
 
         owner = (
-            project.window_of(flow["event"]["component"])
+            project.root
+            if function
+            else project.window_of(flow["event"]["component"])
             if flow
             else project.window_of(self._target_component)
             if self._target_component and project.find(self._target_component)
@@ -493,7 +505,8 @@ class LogicPanel(QWidget):
         if filters not in [value for _, value in entries]:
             entries.append((tr("multiple-state filter"), filters))
         reconcile_combo(self.state_filter, entries, filters)
-        self.state_filter.setEnabled(flow is not None)
+        self.state_filter.setEnabled(flow is not None and not function)
+        self.edit_function.setEnabled(function is not None)
         self.name.setEnabled(flow is not None)
         self.remove.setEnabled(flow is not None)
         target = self._target_component or self.targets.currentData()
@@ -571,6 +584,8 @@ class LogicPanel(QWidget):
 
         if flow:
             collect(flow.get("body"))
+        if function:
+            variables.extend({"name": name, "scope": "local"} for name in function["params"])
         payload = {
             "variables": variables,
             "function_info": function_info,
@@ -582,7 +597,13 @@ class LogicPanel(QWidget):
                 *[{"id": s["id"], "name": s["name"]} for s in project.states.get(owner.id, [])],
             ],
             "project": project.id,
-            "flow": flow,
+            "flow": {**function, "kind": "function", "title": self.signature(function)}
+            if function
+            else flow,
+            "block_functions": [
+                {"id": item["id"], "name": item["name"], "params": item["params"]}
+                for item in functions
+            ],
             "components": components,
             "functions": function_names(self.get_source())[0],
         }
@@ -594,8 +615,12 @@ class LogicPanel(QWidget):
             self.pending_changed.emit()
             payload["token"] = self.token
             self.bridge.documentChanged.emit(json.dumps(payload, ensure_ascii=False))
-        self.show_origin_button.setVisible(bool(flow))
-        if flow:
+        self.show_origin_button.setVisible(bool(flow) and not function)
+        if function:
+            self.context_label.setText(
+                tr("Function {signature}").format(signature=self.signature(function))
+            )
+        elif flow:
             component = project.find(flow["event"]["component"])
             verb = (
                 tr("starting")
@@ -612,6 +637,54 @@ class LogicPanel(QWidget):
         self.events.setToolTip(self.context_label.text())
         self.update_code()
 
+    @staticmethod
+    def signature(function):
+        """Show a block function the way it is called: name(inputs)."""
+        return f"{function['name']}({', '.join(function['params'])})"
+
+    def _open_function(self, value):
+        """Open a Python function, or switch to the block function a call points to."""
+        if not value:
+            return
+        if value.startswith("@block:"):
+            target = value.removeprefix("@block:")
+            if any(f["id"] == target for f in block_functions(self.get_project())):
+                if self.before_switch() and self.flush():
+                    self.sync(target)
+            return
+        self.function_requested.emit(value)
+
+    def function_dialog(self, function_id=None):
+        """Ask for a function's Python name and its inputs, separated by commas."""
+        if function_id is None and not self.flush():
+            return
+        current = next(
+            (f for f in block_functions(self.get_project()) if f["id"] == function_id), None
+        )
+        dialog = QDialog(self)
+        dialog.setWindowTitle(tr("Function") if current else tr("New function"))
+        dialog.setFixedWidth(420)
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(QLabel(tr("Name (a Python name, like total_price)")))
+        name = QLineEdit(current["name"] if current else "")
+        layout.addWidget(name)
+        layout.addWidget(QLabel(tr("Inputs, separated by commas (optional)")))
+        params = QLineEdit(", ".join(current["params"]) if current else "")
+        params.setPlaceholderText(tr("price, amount"))
+        layout.addWidget(params)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.function_edit_requested.emit(
+                function_id or "",
+                name.text().strip(),
+                [item.strip() for item in params.text().split(",") if item.strip()],
+            )
+
     def _sync_outline(self):
         """Mirror the event list in the sidebar without emitting selection changes."""
         self.outline.blockSignals(True)
@@ -626,6 +699,25 @@ class LogicPanel(QWidget):
             if self.events.itemData(index) == self.flow_id:
                 self.outline.setCurrentItem(item)
         events.setExpanded(True)
+        functions = {f["id"] for f in block_functions(self.get_project())}
+        if functions:
+            group = QTreeWidgetItem([tr("Functions")])
+            group.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            self.outline.addTopLevelItem(group)
+            for index in reversed(range(events.childCount())):
+                child = events.child(index)
+                if child.data(0, Qt.ItemDataRole.UserRole) in functions:
+                    events.removeChild(child)
+                    group.insertChild(0, child)
+            group.setExpanded(True)
+            if self.flow_id in functions:
+                self.outline.setCurrentItem(
+                    next(
+                        group.child(i)
+                        for i in range(group.childCount())
+                        if group.child(i).data(0, Qt.ItemDataRole.UserRole) == self.flow_id
+                    )
+                )
         self.outline.blockSignals(False)
 
     def _outline_clicked(self, item, _column=0):
@@ -660,13 +752,14 @@ class LogicPanel(QWidget):
             ),
             None,
         )
-        start = next(
-            (i for i, line in enumerate(lines) if line.startswith(f"def on_event_{flow_index}(")),
-            None,
+        function = next(
+            (f for f in block_functions(self.get_project()) if f["id"] == self.flow_id), None
         )
+        header = f"def fn_{function['name']}(" if function else f"def on_event_{flow_index}("
+        start = next((i for i, line in enumerate(lines) if line.startswith(header)), None)
         if start is not None:
             end = next(
-                (i for i in range(start + 1, len(lines)) if lines[i].startswith("def on_event_")),
+                (i for i in range(start + 1, len(lines)) if lines[i].startswith("def ")),
                 len(lines),
             )
             while end > start and (not lines[end - 1].strip() or lines[end - 1].startswith("# ")):
@@ -748,13 +841,15 @@ class LogicPanel(QWidget):
             self.search_requested.emit()
         elif name == "new_event":
             self.new_event_dialog()
+        elif name == "new_function":
+            self.function_dialog()
         elif name == "python":
             self.full_code_requested.emit(self.code_start + self.code.textCursor().blockNumber())
         elif name == "function":
             if self.ready:
                 self.page.runJavaScript(
                     "window.makebench.selectedFunction()",
-                    lambda value: self.function_requested.emit(value) if value else None,
+                    self._open_function,
                 )
         else:
             {"save": self.save_requested, "undo": self.undo_requested, "redo": self.redo_requested}[
@@ -822,7 +917,7 @@ class LogicPanel(QWidget):
 
     def _change_filter(self):
         """Confirm the workspace before changing the event's declarative filter."""
-        if not self.flow_id or not self.flush():
+        if not self.flow_id or not self.state_filter.isEnabled() or not self.flush():
             return
         if self.state_filter.currentData() == "@choose":
             from PySide6.QtWidgets import QListWidget, QListWidgetItem
