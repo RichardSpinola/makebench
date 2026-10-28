@@ -425,6 +425,10 @@ class LogicPanel(QWidget):
 
     def _became_ready(self):
         """Send the initial context as soon as the channel is ready."""
+        from shiboken6 import isValid
+
+        if not isValid(self) or not isValid(self.events):
+            return  # Blockly finished loading after its window was closed and deleted
         self.ready = True
         self._had_ready = True
         self._payload = None
