@@ -37,6 +37,27 @@ class LookTests(unittest.TestCase):
     def menu_titles(self):
         return [action.text().replace("&", "") for action in self.window.menuBar().actions()]
 
+    def test_every_menu_entry_has_its_own_symbol(self):
+        """Each entry shows a drawn symbol, never the generic page fallback."""
+        from makebench.editor.commands import MENU_ICONS
+        from makebench.ui.icons import PATHS
+
+        self.assertFalse(set(MENU_ICONS.values()) - set(PATHS))
+        missing = []
+
+        def visit(menu):
+            for action in menu.actions():
+                if action.isSeparator():
+                    continue
+                if action.icon().isNull() or not action.property("makebenchIcon"):
+                    missing.append(action.text())
+                if action.menu():
+                    visit(action.menu())
+
+        for top in self.window.menuBar().actions():
+            visit(top.menu())
+        self.assertEqual(missing, [])
+
     def test_banner_tints_toward_the_accent_and_carries_the_search(self):
         from PySide6.QtGui import QPalette
 

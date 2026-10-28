@@ -140,8 +140,98 @@ def tidy_menus(window):
         menu.addActions(group)
 
 
+# Menu labels (English source text) and the symbol each one shows.
+MENU_ICONS = {
+    "Open example…": "example",
+    "Save as…": "save-as",
+    "Share project…": "share",
+    "Download from Git…": "git",
+    "Start window…": "start-window",
+    "Version history…": "history",
+    "Quit": "quit",
+    "Remove component": "trash",
+    "Duplicate": "duplicate",
+    "Move before": "move-up",
+    "Move after": "move-down",
+    "Add page": "pages",
+    "Align in the free area": "align-left",
+    "Left": "align-left",
+    "Center horizontally": "align-center",
+    "Right": "align-right",
+    "Top": "align-top",
+    "Center vertically": "align-middle",
+    "Bottom": "align-bottom",
+    "Search in project…": "search",
+    "Insert piece": "pieces",
+    "Manage pieces…": "settings",
+    "Save as reusable piece…": "piece-add",
+    "Left panel": "panel-left",
+    "Inspector": "panel-right",
+    "Output and problems": "output",
+    "Command palette…": "command",
+    "Preferences…": "settings",
+    "Cycle focus region": "focus",
+    "Panels": "panels",
+    "Layers": "layers",
+    "Components": "components",
+    "Data": "data",
+    "Properties": "properties",
+    "Restore layout": "restore",
+    "Snap to grid": "grid",
+    "New window…": "window-add",
+    "New state…": "state-add",
+    "Set window as initial": "flag",
+    "Set state as initial": "flag",
+    "Rename state…": "edit",
+    "Restore selection from Default": "restore",
+    "Remove state": "trash",
+    "Remove window": "trash",
+    "Application settings…": "app-settings",
+    "Debug application": "debug",
+    "Continue": "continue",
+    "Next step": "step-over",
+    "Step into function": "step-into",
+    "Step out of function": "step-out",
+    "Manage plugins…": "plugins",
+    "Themes…": "themes",
+    "About Makebench": "about",
+    "Getting started": "tips",
+    "Keyboard shortcuts": "keyboard",
+    "Environment diagnostics…": "diagnostics",
+    "User guide": "help",
+}
+
+
+def menu_icons(window):
+    """Give every menu entry a symbol; entries added later get one when the menu opens."""
+    names = {tr(label): name for label, name in MENU_ICONS.items()}
+
+    def visit(menu, inherited=None):
+        for action in menu.actions():
+            if action.isSeparator():
+                continue
+            name = action.property("makebenchIcon") or names.get(action.text().replace("&", ""))
+            # Saved pieces are listed by their own names under Insert piece.
+            name = name or inherited
+            if name:
+                action.setProperty("makebenchIcon", name)
+                action.setIcon(icon(name))
+            if action.menu():
+                visit(action.menu(), "pieces" if name == "pieces" else None)
+
+    for top in window.menuBar().actions():
+        menu = top.menu()
+        if menu is None:
+            continue
+        visit(menu)
+        if not menu.property("makebenchIcons"):
+            menu.setProperty("makebenchIcons", True)
+            menu.aboutToShow.connect(lambda menu=menu: visit(menu))
+
+
 def register(window):
     """Identify and decorate the window's real actions in a stable catalog."""
+    menu_icons(window)
     actions = []
     candidates = []
 

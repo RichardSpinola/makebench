@@ -169,6 +169,9 @@ class MainWindow(StudioMixin, QMainWindow):
         from .shell import install_shell
 
         install_shell(self, application_icon())
+        from .commands import menu_icons
+
+        menu_icons(self)
         self._refresh()
         self.remember_project()
 

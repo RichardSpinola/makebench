@@ -422,6 +422,14 @@ def icon(name):
         "search": "edit-find-symbolic",
         "add": "list-add-symbolic",
         "remove": "list-remove-symbolic",
+        "save-as": "document-save-as-symbolic",
+        "quit": "application-exit-symbolic",
+        "duplicate": "edit-copy-symbolic",
+        "move-up": "go-up-symbolic",
+        "move-down": "go-down-symbolic",
+        "about": "help-about-symbolic",
+        "help": "help-contents-symbolic",
+        "keyboard": "input-keyboard-symbolic",
     }
     themed = QIcon.fromTheme(aliases.get(name, name))
     if not themed.isNull():
