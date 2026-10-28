@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The complete workshop examples open, validate, generate Python and run."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import time
 import unittest

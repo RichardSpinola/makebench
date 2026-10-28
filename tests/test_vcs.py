@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Version history in Git: opt-in, non-destructive, offline-testable."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import json
 import os
 import tempfile

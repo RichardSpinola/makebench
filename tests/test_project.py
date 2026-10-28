@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Document integrity, compatibility and change history."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import unittest
 
 from makebench.core.history import History

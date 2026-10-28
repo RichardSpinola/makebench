@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The version history window and the record-on-save hook, headless."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import tempfile
 import time

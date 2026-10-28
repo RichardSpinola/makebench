@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Menu order, the command palette, empty lists and the example chooser."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import unittest
 

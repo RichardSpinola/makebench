@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The start window in the C layout, the emblem watermark and Download from Git."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import tempfile
 import time

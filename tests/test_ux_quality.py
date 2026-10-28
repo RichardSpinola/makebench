@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Usability guarantees: unique shortcuts, named controls and readable errors."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import errno
 import os
 import unittest

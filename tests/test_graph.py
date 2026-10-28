@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Free-graph semantics, compatibility and real transactions of the native editor."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 from copy import deepcopy
 import json
 from pathlib import Path

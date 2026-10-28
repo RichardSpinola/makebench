@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Regressions of real redesign flows: references, assets and text editing."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

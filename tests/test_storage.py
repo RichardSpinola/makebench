@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Real persistence and failure recovery without losing the previous file."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import json
 import tempfile
 import unittest

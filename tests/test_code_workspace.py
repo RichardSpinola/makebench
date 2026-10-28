@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Module contracts, inert editing, recovery and per-file debugging."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import json
 import os
 from pathlib import Path

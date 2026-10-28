@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Jedi suggestions and F12 through the real code editor, headless."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import unittest
 

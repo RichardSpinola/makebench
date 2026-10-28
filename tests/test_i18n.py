@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Interface language: English source strings, complete pt-BR catalog and switching."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import ast
 import json
 import os

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Contracts for isolated distribution, compatibility and the environment of external processes."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import ast
 import hashlib
 import json

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The .mbtheme format: strict validation and safe import."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import copy
 import json
 import shutil

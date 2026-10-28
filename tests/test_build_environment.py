@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Isolated preparation: wheel integrity, command limits and cancellation."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import hashlib
 import json
 import os

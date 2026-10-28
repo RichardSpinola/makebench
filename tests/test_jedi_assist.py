@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+import support  # noqa: F401  (first: isolates settings and data)
 import tempfile
 import unittest
 from pathlib import Path

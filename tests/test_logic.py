@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Portable block contract: references, generation and source preservation."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import ast
 from copy import deepcopy
 from pathlib import Path

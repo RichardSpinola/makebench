@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Qt editing journeys for Python files and common properties."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 from pathlib import Path
 import tempfile

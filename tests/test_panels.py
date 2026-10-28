@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Detachable Design panels: docking, floating, hiding and restoring the layout."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import tempfile
 from pathlib import Path
@@ -27,7 +28,7 @@ class PanelTests(unittest.TestCase):
         QSettings.setPath(
             QSettings.Format.NativeFormat,
             QSettings.Scope.UserScope,
-            str(Path.home() / ".config"),
+            str(support.CONFIG),
         )
         cls.config.cleanup()
 

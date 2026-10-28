@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Real execution of local fixtures, with no authentication or system changes."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 from pathlib import Path
 import shutil

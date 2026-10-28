@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Window shell: area bar, "where you are" strip, project corner and status items."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

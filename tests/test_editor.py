@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Real Qt editor flows in a headless environment, with no interface mocks."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import os
 import tempfile
 import unittest

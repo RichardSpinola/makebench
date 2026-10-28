@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Safe reorganization of subtrees, pages and format compatibility."""
 
+import support  # noqa: F401  (first: isolates settings and data)
 import unittest
 from pathlib import Path
 
