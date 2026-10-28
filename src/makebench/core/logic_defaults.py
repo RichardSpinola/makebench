@@ -14,6 +14,7 @@ OPS = [
     ("set_text", tr("Change text")),
     ("set_enabled", tr("Enable component")),
     ("set_value", tr("Change value")),
+    ("set_options", tr("Change options")),
     ("assign", tr("Set variable")),
     ("call", tr("Call Python function")),
     ("script", tr("Run Bash")),
@@ -40,9 +41,18 @@ def default_block(op, project, window):
     components = list(project.find(window).walk())
     if op in {"log", "message", "set_text", "assign", "call"}:
         node["value"] = literal(tr("Hello!"))
-    if op in {"set_text", "set_enabled", "set_value", "show_page"}:
+    if op in {"set_text", "set_enabled", "set_value", "set_options", "show_page"}:
         kinds = {
-            "set_text": {"label", "button", "text_input", "text_area", "checkbox", "output"},
+            "set_text": {
+                "label",
+                "button",
+                "text_input",
+                "text_area",
+                "choice",
+                "checkbox",
+                "output",
+            },
+            "set_options": {"choice"},
             "set_value": {"progress", "number", "slider"},
             "show_page": {"page"},
         }.get(op)
@@ -65,6 +75,12 @@ def default_block(op, project, window):
         node["value"] = literal(True)
     if op == "set_value":
         node["value"] = literal(50)
+    if op == "set_options":
+        node["value"] = {
+            "id": new_id("value"),
+            "op": "list",
+            "items": [literal(tr("Option 1")), literal(tr("Option 2"))],
+        }
     if op == "assign":
         node.update(name=default_names()["variable"], scope="project")
     if op == "call":

@@ -56,6 +56,19 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(number.properties["value"], 1)
         Project.from_dict(project.to_dict())
 
+    def test_choice_options_are_validated(self):
+        project = Project.empty("Choice")
+        choice = project.add(project.root.id, ComponentKind.CHOICE)
+        self.assertEqual(choice.properties["text"], "")
+        choice.properties.update(options=["a", "b"], text="b")
+        Project.from_dict(project.to_dict())
+        for bad in ({"text": "z"}, {"options": "ab"}, {"options": ["a", 3]}):
+            before = dict(choice.properties)
+            choice.properties.update(bad)
+            with self.assertRaises(ProjectError):
+                Project.from_dict(project.to_dict())
+            choice.properties = before
+
     def test_future_version_is_rejected_without_migrating_silently(self):
         data = Project.empty().to_dict()
         data["format_version"] = 99

@@ -48,6 +48,7 @@ class GtkView:
         self.hints = set()  # outputs still showing their starting text
         self.ranges = set()  # numbers and sliders
         self.areas = set()  # long text inputs
+        self.choices = set()  # choice lists
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
         self.provider = None
@@ -223,6 +224,12 @@ class GtkView:
             widget.connect("toggled", lambda _check: self.user_changed(node.id))
         elif k == ComponentKind.PROGRESS:
             widget = Gtk.ProgressBar(show_text=True, fraction=p.get("value", 0) / 100)
+        elif k == ComponentKind.CHOICE:
+            widget = Gtk.DropDown.new_from_strings([])
+            self.widgets[node.id] = widget
+            self.choices.add(node.id)
+            self.set_options(node.id, p.get("options", []), p.get("text", ""))
+            widget.connect("notify::selected", lambda *_: self.user_changed(node.id))
         elif k in RANGE_KINDS:
             r = {**RANGE_DEFAULTS, **p}
             adjustment = Gtk.Adjustment(
@@ -322,6 +329,11 @@ class GtkView:
         Gtk = self.Gtk
         if hasattr(w, "_makebench_label"):
             w._makebench_label.set_label(str(value))
+        elif isinstance(w, Gtk.DropDown):
+            options = [item.get_string() for item in w.get_model()]
+            if str(value) not in options:
+                raise ValueError(tr("This option is not in the list."))
+            w.set_selected(options.index(str(value)))
         elif isinstance(w, Gtk.TextView):
             w.get_buffer().set_text(str(value))
             if identifier not in self.areas:
@@ -332,6 +344,20 @@ class GtkView:
             w.set_text(str(value))
         else:
             raise ValueError(tr("This component has no text."))
+
+    def set_options(self, identifier, options, keep=None):
+        """Replace the options of a choice list, selecting `keep` when it is among them."""
+        widget = self.widgets[identifier]
+        if keep is None:
+            item = widget.get_selected_item()
+            keep = item.get_string() if item else ""
+        options = list(options)
+        self.programmatic = True
+        try:
+            widget.set_model(self.Gtk.StringList.new(options))
+            widget.set_selected(options.index(keep) if keep in options else 0)
+        finally:
+            self.programmatic = False
 
     def set_range(self, identifier, value):
         """Move a number or slider without telling the application the person did it."""
@@ -355,6 +381,9 @@ class GtkView:
             if isinstance(w, Gtk.TextView):
                 b = w.get_buffer()
                 return b.get_text(b.get_start_iter(), b.get_end_iter(), True)
+            if isinstance(w, Gtk.DropDown):
+                item = w.get_selected_item()
+                return item.get_string() if item else ""
             return w.get_text() if isinstance(w, Gtk.Entry) else w.get_label()
         if attribute == "checked":
             return w.get_active()

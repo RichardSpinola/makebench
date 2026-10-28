@@ -36,6 +36,7 @@ class ComponentKind(StrEnum):
     BUTTON = "button"
     TEXT_INPUT = "text_input"
     TEXT_AREA = "text_area"
+    CHOICE = "choice"
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     NUMBER = "number"
@@ -51,6 +52,7 @@ V10_KINDS = {
     ComponentKind.NUMBER,
     ComponentKind.SLIDER,
     ComponentKind.TEXT_AREA,
+    ComponentKind.CHOICE,
 }  # grows with each new 1.0 component
 RANGE_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}
 RANGE_DEFAULTS = {"value": 0, "minimum": 0, "maximum": 100, "step": 1, "decimals": 0}
@@ -85,6 +87,7 @@ KIND_LABELS = {
     ComponentKind.CHECKBOX: tr("Checkbox"),
     ComponentKind.PROGRESS: tr("Progress"),
     ComponentKind.TEXT_AREA: tr("Long text"),
+    ComponentKind.CHOICE: tr("Choice list"),
     ComponentKind.NUMBER: tr("Number"),
     ComponentKind.SLIDER: tr("Slider"),
     ComponentKind.OUTPUT: tr("Output panel"),
@@ -231,6 +234,20 @@ class Component:
             raise ProjectError(
                 tr("The selection of {id} must be true or false.").format(id=component_id)
             )
+        if kind == ComponentKind.CHOICE:
+            options = properties.get("options", [])
+            if (
+                not isinstance(options, list)
+                or len(options) > 256
+                or any(not isinstance(item, str) or len(item) > 200 for item in options)
+            ):
+                raise ProjectError(
+                    tr("The options of {id} must be up to 256 short texts.").format(id=component_id)
+                )
+            if properties.get("text", "") not in {"", *options}:
+                raise ProjectError(
+                    tr("The selected option of {id} is not in its list.").format(id=component_id)
+                )
         if kind in RANGE_KINDS:
             validate_range(kind, properties, component_id)
         elif "value" in properties and (
@@ -376,6 +393,7 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.CHECKBOX: {"text": tr("New option"), "checked": False},
         ComponentKind.PROGRESS: {"value": 0},
         ComponentKind.TEXT_AREA: {"text": "", "placeholder": tr("Type here")},
+        ComponentKind.CHOICE: {"options": [tr("Option 1"), tr("Option 2")], "text": ""},
         ComponentKind.NUMBER: dict(RANGE_DEFAULTS),
         ComponentKind.SLIDER: {k: v for k, v in RANGE_DEFAULTS.items() if k != "decimals"},
         ComponentKind.OUTPUT: {"text": tr("Task output will appear here.")},

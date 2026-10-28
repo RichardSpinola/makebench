@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
+    QComboBox,
     QDoubleSpinBox,
     QPlainTextEdit,
     QSlider,
@@ -28,7 +29,7 @@ from makebench.core.codegen import generate
 from makebench.core.project import Project, ProjectError
 from .session import RuntimeSession
 from makebench.core.project import ComponentKind
-from makebench.ui.renderer import range_value, set_range_value
+from makebench.ui.renderer import fill_choice, range_value, set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -332,6 +333,8 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     value = (
                         widget.toPlainText()
                         if isinstance(widget, QPlainTextEdit)
+                        else widget.currentText()
+                        if isinstance(widget, QComboBox)
                         else widget.text()
                     )
                 elif attribute == "checked":
@@ -348,9 +351,22 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
             elif method == "set_text":
                 if widget is None:
                     raise ValueError(tr("The component does not exist."))
-                widget.setPlainText(request["value"]) if isinstance(
-                    widget, QPlainTextEdit
-                ) else widget.setText(request["value"])
+                if isinstance(widget, QComboBox):
+                    index = widget.findText(request["value"])
+                    if index < 0:
+                        raise ValueError(tr("This option is not in the list."))
+                    widget.blockSignals(True)
+                    widget.setCurrentIndex(index)
+                    widget.blockSignals(False)
+                elif isinstance(widget, QPlainTextEdit):
+                    widget.setPlainText(request["value"])
+                else:
+                    widget.setText(request["value"])
+                self.session.reply(identifier)
+            elif method == "set_options":
+                if not isinstance(widget, QComboBox):
+                    raise ValueError(tr("The component does not exist."))
+                fill_choice(widget, request["value"], widget.currentText())
                 self.session.reply(identifier)
             elif method in {"set_theme", "set_background"}:
                 from makebench.core.style import THEMES, valid_color

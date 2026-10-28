@@ -4,6 +4,7 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDoubleSpinBox,
     QFrame,
     QLineEdit,
@@ -123,6 +124,10 @@ class RuntimeView(QFrame):
                 )
             if isinstance(widget, QCheckBox):
                 widget.clicked.connect(lambda _, identifier=node.id: self.changed.emit(identifier))
+            if isinstance(widget, QComboBox):
+                widget.activated.connect(
+                    lambda _, identifier=node.id: self.changed.emit(identifier)
+                )
             if isinstance(widget, TextArea):
                 widget.edited.connect(lambda identifier=node.id: self.changed.emit(identifier))
             if isinstance(widget, (QDoubleSpinBox, QSlider)):

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QDoubleSpinBox,
+    QPlainTextEdit,
     QSpinBox,
     QToolButton,
     QVBoxLayout,
@@ -34,6 +35,19 @@ from .theme import blend, icon, manager
 
 ROW_HEIGHT = 24
 LABEL_WIDTH = 104
+
+
+class _LinesEdit(QPlainTextEdit):
+    """A small multi-line field that reports its text once, when the focus leaves it."""
+
+    committed = Signal()
+
+    def focusOutEvent(self, event):
+        """Confirm what was typed as a single change."""
+        super().focusOutEvent(event)
+        if self.document().isModified():
+            self.document().setModified(False)
+            self.committed.emit()
 
 
 class SectionHeader(QToolButton):
@@ -274,8 +288,14 @@ class Inspector(QWidget):
             ("text", tr("Text")),
             ("placeholder", tr("Field hint")),
         ]:
+            if key == "text" and node.kind == ComponentKind.CHOICE:
+                label = tr("Selected option")
             if key in node.properties:
                 self._text_field(label, node.id, key, node.properties[key])
+        if node.kind == ComponentKind.CHOICE:
+            self._lines_field(
+                tr("Options (one per line)"), node.id, "options", node.properties.get("options", [])
+            )
         if node.kind == ComponentKind.BUTTON:
             self._text_field(tr("Tooltip"), node.id, "tooltip", node.properties.get("tooltip", ""))
             choose_icon = QPushButton(
@@ -559,6 +579,7 @@ class Inspector(QWidget):
             ComponentKind.BUTTON,
             ComponentKind.TEXT_INPUT,
             ComponentKind.TEXT_AREA,
+            ComponentKind.CHOICE,
             ComponentKind.CHECKBOX,
             *RANGE_KINDS,
         }:
@@ -679,6 +700,20 @@ class Inspector(QWidget):
             field.setEnabled(False)
         field.valueChanged.connect(lambda value: self.property_changed.emit(node_id, key, value))
         self._restore_menu(field, node_id, key)
+        self.fields.addRow(self._label(label, key), field)
+
+    def _lines_field(self, label, node_id, key, items):
+        """Edit a list of short texts, one per line, confirmed when leaving the field."""
+        field = _LinesEdit("\n".join(items))
+        field.setObjectName("property_" + key)
+        field.setAccessibleName(label)
+        field.setMaximumHeight(110)
+        field.setReadOnly(self.state_mode)
+        field.committed.connect(
+            lambda: self.property_changed.emit(
+                node_id, key, [line for line in field.toPlainText().splitlines() if line.strip()]
+            )
+        )
         self.fields.addRow(self._label(label, key), field)
 
     def _decimal_field(self, label, node_id, key, value, digits):

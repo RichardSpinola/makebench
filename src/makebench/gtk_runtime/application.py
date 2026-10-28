@@ -338,6 +338,8 @@ class GtkRuntime:
                 ComponentKind.OUTPUT,
             }:
                 view.set_text(node.id, p.get("text", ""))
+            if node.kind == ComponentKind.CHOICE:
+                view.set_options(node.id, p.get("options", []), p.get("text", ""))
             if node.kind == ComponentKind.CHECKBOX:
                 view.programmatic = True
                 widget.set_active(p.get("checked", False))
@@ -491,6 +493,8 @@ class GtkRuntime:
                 elif method == "set_enabled":
                     view.enabled[key] = r["value"]
                     widget.set_sensitive(r["value"])
+                elif method == "set_options" and key in view.choices:
+                    view.set_options(key, r["value"])
                 elif method == "set_value" and key in view.ranges:
                     view.set_range(key, r["value"])
                 elif method == "set_value":

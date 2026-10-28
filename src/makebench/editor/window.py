@@ -846,6 +846,11 @@ class MainWindow(StudioMixin, QMainWindow):
                 node.properties[key] = value
                 if node.kind in RANGE_KINDS:
                     clamp_range(node)
+                if node.kind == ComponentKind.CHOICE and node.properties.get("text") not in {
+                    "",
+                    *node.properties.get("options", []),
+                }:
+                    node.properties["text"] = ""
         try:
             Project.from_dict(self.project.to_dict())
         except ProjectError as exc:
@@ -871,6 +876,10 @@ class MainWindow(StudioMixin, QMainWindow):
             or (
                 key in {"value", "minimum", "maximum", "step", "decimals"}
                 and self.project.find(identifier).kind in RANGE_KINDS
+            )
+            or (
+                key in {"options", "text"}
+                and self.project.find(identifier).kind == ComponentKind.CHOICE
             )
             or key in {"width", "height", "resizable", "theme", "accent", "background"}
             or key == "icon"

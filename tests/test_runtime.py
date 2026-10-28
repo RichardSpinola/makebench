@@ -271,6 +271,42 @@ class RuntimeTests(unittest.TestCase):
         edit.insertPlainText("!")
         self.wait(lambda: "changed" in w.output.toPlainText())
 
+    def test_choice_selects_changes_options_and_fires_change_for_the_person(self):
+        from PySide6.QtWidgets import QComboBox
+
+        choice = self.project.add(self.project.root.id, ComponentKind.CHOICE)
+        choice.properties.update(options=["a", "b", "c"], text="b")
+        create_flow(self.project, choice.id)["body"] = [log("c", "changed")]
+
+        def read(name):
+            return {"id": name, "op": "read", "component": choice.id, "attribute": "text"}
+
+        self.flow["body"] = [
+            {"id": "l0", "op": "log", "value": read("r0")},
+            {"id": "s1", "op": "set_text", "component": choice.id, "value": literal("v", "c")},
+            {"id": "l1", "op": "log", "value": read("r1")},
+            {
+                "id": "o",
+                "op": "set_options",
+                "component": choice.id,
+                "value": {
+                    "id": "lst",
+                    "op": "list",
+                    "items": [literal("x", "c"), literal("y", "z")],
+                },
+            },
+            {"id": "l2", "op": "log", "value": read("r2")},
+        ]
+        w = self.window("")
+        combo = w.view.widgets[choice.id]
+        self.assertIsInstance(combo, QComboBox)
+        self.click(w)
+        self.assertEqual(w.output.toPlainText().split()[:3], ["b", "c", "c"])
+        self.assertEqual([combo.itemText(i) for i in range(combo.count())], ["c", "z"])
+        self.assertNotIn("changed", w.output.toPlainText())
+        combo.activated.emit(1)
+        self.wait(lambda: "changed" in w.output.toPlainText())
+
     def test_block_function_returns_a_value_to_the_event(self):
         from makebench.core.logic import create_block_function
 

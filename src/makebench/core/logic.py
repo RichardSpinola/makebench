@@ -21,6 +21,7 @@ TEXT_KINDS = {
     ComponentKind.BUTTON,
     ComponentKind.TEXT_INPUT,
     ComponentKind.TEXT_AREA,
+    ComponentKind.CHOICE,
     ComponentKind.CHECKBOX,
     ComponentKind.OUTPUT,
 }
@@ -35,6 +36,7 @@ EVENT_TARGETS = {
     "change": {
         ComponentKind.TEXT_INPUT,
         ComponentKind.TEXT_AREA,
+        ComponentKind.CHOICE,
         ComponentKind.CHECKBOX,
         ComponentKind.NUMBER,
         ComponentKind.SLIDER,
@@ -516,6 +518,9 @@ def validate(project: Project) -> None:
                 else:
                     raise ProjectError(tr("Unknown expression: {op}.").format(op=op))
             elif op in {"log", "message"}:
+                expr("value")
+            elif op == "set_options":
+                target(value.get("component"), {ComponentKind.CHOICE})
                 expr("value")
             elif op in {"set_text", "set_enabled", "set_value"}:
                 target(

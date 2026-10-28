@@ -7104,3 +7104,43 @@ msgstr "Texto longo"
 #: src/makebench/editor/catalog.py
 msgid "Receives several lines of text typed by the user."
 msgstr "Recebe várias linhas de texto digitadas pela pessoa."
+
+#: src/makebench/editor/catalog.py
+msgid "A list of options; the user picks one."
+msgstr "Lista de opções; a pessoa escolhe uma."
+
+#: src/makebench/core/logic_defaults.py src/makebench/editor/development.py
+msgid "Change options"
+msgstr "Mudar opções"
+
+#: src/makebench/core/project.py
+msgid "Choice list"
+msgstr "Lista de opções"
+
+#: src/makebench/core/logic_defaults.py src/makebench/core/project.py
+msgid "Option 1"
+msgstr "Opção 1"
+
+#: src/makebench/core/logic_defaults.py src/makebench/core/project.py
+msgid "Option 2"
+msgstr "Opção 2"
+
+#: src/makebench/editor/inspector.py
+msgid "Options (one per line)"
+msgstr "Opções (uma por linha)"
+
+#: src/makebench/editor/inspector.py
+msgid "Selected option"
+msgstr "Opção selecionada"
+
+#: src/makebench/core/project.py
+msgid "The options of {id} must be up to 256 short texts."
+msgstr "As opções de {id} devem ser até 256 textos curtos."
+
+#: src/makebench/core/project.py
+msgid "The selected option of {id} is not in its list."
+msgstr "A opção selecionada de {id} não está na lista."
+
+#: src/makebench/gtk_runtime/renderer.py src/makebench/runtime/window.py
+msgid "This option is not in the list."
+msgstr "Esta opção não está na lista."

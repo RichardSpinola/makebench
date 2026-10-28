@@ -96,6 +96,10 @@ class Context:
         """Update a progress bar (0–100), a number or a slider (within its limits)."""
         return self.request("set_value", component=component, value=value)
 
+    def set_options(self, component, options):
+        """Replace the options of a choice list, keeping the selection when it remains."""
+        return self.request("set_options", component=component, value=[str(x) for x in options])
+
     @property
     def window_variables(self):
         """Data of the current window, kept between its events."""

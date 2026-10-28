@@ -78,7 +78,7 @@ class CodeAssist(QObject):
         match = re.search(r"[\w.]+$", before)
         self.prefix = match.group() if match else ""
         component = re.search(
-            r"ctx\.(?:read|set_text|set_enabled|set_value|show_page|terminal_start|terminal_send|terminal_stop)\(\s*(['\"])([^'\"]*)$",
+            r"ctx\.(?:read|set_text|set_enabled|set_value|set_options|show_page|terminal_start|terminal_send|terminal_stop)\(\s*(['\"])([^'\"]*)$",
             before,
         )
         self.inserts = {}

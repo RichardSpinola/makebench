@@ -473,6 +473,7 @@ class DevelopmentMixin:
                 tr("Change component text"): "mb_set_text",
                 tr("Enable component"): "mb_set_enabled",
                 tr("Change value"): "mb_set_value",
+                tr("Change options"): "mb_set_options",
                 tr("Show page"): "mb_show_page",
                 tr("Read component text"): "mb_read_text",
                 tr("Read checkbox selection"): "mb_read_checked",

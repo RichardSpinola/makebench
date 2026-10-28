@@ -90,6 +90,7 @@ def main():
                             "button",
                             "text_input",
                             "text_area",
+                            "choice",
                             "checkbox",
                             "progress",
                             "number",

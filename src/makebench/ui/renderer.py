@@ -5,6 +5,7 @@ from PySide6.QtCore import QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
@@ -27,6 +28,17 @@ from makebench.i18n import tr
 def range_properties(node):
     """The limits and value of a number or slider, with the defaults filled in."""
     return {**RANGE_DEFAULTS, **node.properties}
+
+
+def fill_choice(widget, options, text):
+    """Set the options of a choice list and select `text` (the first one when it is absent)."""
+    blocked = widget.blockSignals(True)
+    try:
+        widget.clear()
+        widget.addItems(list(options))
+        widget.setCurrentIndex(max(widget.findText(text), 0) if widget.count() else -1)
+    finally:
+        widget.blockSignals(blocked)
 
 
 def set_range_value(widget, value):
@@ -143,6 +155,9 @@ def create_control(node, read_asset, editing=False):
         case ComponentKind.PROGRESS:
             widget = QProgressBar()
             widget.setValue(node.properties.get("value", 0))
+        case ComponentKind.CHOICE:
+            widget = QComboBox()
+            fill_choice(widget, node.properties.get("options", []), node.properties.get("text", ""))
         case ComponentKind.NUMBER:
             widget = QDoubleSpinBox()
             configure_range(widget, node)
