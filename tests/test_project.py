@@ -219,6 +219,71 @@ class ProjectTests(unittest.TestCase):
         self.assertIsNotNone(project.find(button.id))
 
 
+class CollectionTests(unittest.TestCase):
+    def project(self):
+        project = Project.empty("Library")
+        project.metadata["collections"] = [
+            {
+                "id": "authors",
+                "name": "Autores",
+                "fields": [
+                    {"id": "name", "name": "nome", "type": "text"},
+                    {"id": "born", "name": "nascimento", "type": "date"},
+                ],
+            },
+            {
+                "id": "books",
+                "name": "Livros",
+                "fields": [
+                    {"id": "title", "name": "titulo", "type": "text"},
+                    {"id": "pages", "name": "paginas", "type": "number"},
+                    {"id": "read", "name": "lido", "type": "bool"},
+                    {"id": "author", "name": "autor", "type": "ref", "target": "authors"},
+                ],
+            },
+        ]
+        return project
+
+    def test_collections_write_format_11_and_roundtrip(self):
+        project = self.project()
+        self.assertEqual(project.to_dict()["format_version"], 11)
+        again = Project.from_dict(project.to_dict())
+        self.assertEqual(again.metadata["collections"], project.metadata["collections"])
+        self.assertLess(Project.empty().to_dict()["format_version"], 11)
+
+    def test_collections_need_format_11(self):
+        data = self.project().to_dict()
+        data["format_version"] = 10
+        with self.assertRaises(ProjectError):
+            Project.from_dict(data)
+
+    def test_invalid_collections_are_refused(self):
+        def change(edit):
+            project = self.project()
+            edit(project.metadata["collections"])
+            with self.assertRaises(ProjectError):
+                Project.from_dict(project.to_dict())
+
+        change(lambda c: c[1]["fields"][3].update(target="nowhere"))
+        change(lambda c: c[1]["fields"][0].update(target="authors"))
+        change(lambda c: c[1]["fields"][3].pop("target"))
+        change(lambda c: c[1]["fields"][1].update(type="money"))
+        change(lambda c: c[1]["fields"][1].update(name="titulo"))
+        change(lambda c: c[1]["fields"][1].update(name="id"))
+        change(lambda c: c[1]["fields"][1].update(name="class"))
+        change(lambda c: c[1].update(name="Autores"))
+        change(lambda c: c[1].update(name="com espaço"))
+        change(lambda c: c[1].update(fields=[]))
+        change(lambda c: c.append(dict(c[0])))
+
+    def test_a_collection_may_point_to_itself(self):
+        project = self.project()
+        project.metadata["collections"][0]["fields"].append(
+            {"id": "mentor", "name": "mentor", "type": "ref", "target": "authors"}
+        )
+        Project.from_dict(project.to_dict())
+
+
 class HistoryLabelTests(unittest.TestCase):
     def test_labels_follow_undo_and_redo(self):
         project = Project.empty("Labels")

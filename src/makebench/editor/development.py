@@ -116,6 +116,7 @@ class DevelopmentMixin:
         actions = QHBoxLayout()
         for label, callback in [
             (tr("+ Variable"), self.variable_dialog),
+            (tr("+ Collection"), self.collection_dialog),
             (tr("Edit"), self.edit_data_item),
             (tr("Remove"), self.remove_variable),
         ]:
@@ -425,12 +426,18 @@ class DevelopmentMixin:
             self.variable_dialog(index=value)
         elif isinstance(value, dict) and value.get("kind") == "resource":
             self.edit_resource(value["path"])
+        elif isinstance(value, dict) and value.get("kind") == "collection":
+            self.collection_dialog(collection_id=value["id"])
         elif item.text().startswith(tr("Function") + " ·"):
             self.find_function_name(item.text().split("·", 1)[-1].strip().split("(")[0])
 
     def remove_variable(self):
         """Remove the declaration without deleting values or blocks; references stay visible."""
         item = self.data_list.currentItem()
+        data = item.data(Qt.ItemDataRole.UserRole) if item else None
+        if isinstance(data, dict) and data.get("kind") == "collection":
+            self.remove_collection(data["id"])
+            return
         if item and isinstance(item.data(Qt.ItemDataRole.UserRole), dict):
             self.remove_resource(item.data(Qt.ItemDataRole.UserRole)["path"])
             return

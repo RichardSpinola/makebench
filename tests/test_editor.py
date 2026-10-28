@@ -185,6 +185,37 @@ class EditorTests(unittest.TestCase):
             original_name,
         )
 
+    def test_collections_list_in_the_data_panel_and_removal_is_guarded(self):
+        collections = [
+            {
+                "id": "authors",
+                "name": "Autores",
+                "fields": [{"id": "name", "name": "nome", "type": "text"}],
+            },
+            {
+                "id": "books",
+                "name": "Livros",
+                "fields": [
+                    {"id": "title", "name": "titulo", "type": "text"},
+                    {"id": "author", "name": "autor", "type": "ref", "target": "authors"},
+                ],
+            },
+        ]
+        self.window._edit(lambda: self.window.project.metadata.update(collections=collections))
+        texts = [self.window.data_list.item(n).text() for n in range(self.window.data_list.count())]
+        self.assertTrue(any(t.startswith("Collection · Autores") for t in texts))
+        self.assertTrue(any(t.startswith("Collection · Livros") for t in texts))
+        authors = self.window.project.metadata["collections"][0]
+        self.assertEqual(self.window.collection_usage(authors), (0, 1))
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+            self.window.remove_collection("authors")
+            self.assertEqual(len(self.window.project.metadata["collections"]), 2)
+            self.window.remove_collection("books")
+            self.window.remove_collection("authors")
+        self.assertNotIn("collections", self.window.project.metadata)
+        self.window.undo()
+        self.assertEqual(len(self.window.project.metadata["collections"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

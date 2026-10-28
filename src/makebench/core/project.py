@@ -17,9 +17,10 @@ from pathlib import PurePosixPath
 from typing import Any, Iterator
 from uuid import uuid4
 from makebench.i18n import tr
+from .datamodel import validate_collections
 from .menus import validate_menus
 
-FORMAT_VERSION = 10
+FORMAT_VERSION = 11
 FORMAT_NAME = "makebench.project"
 
 
@@ -552,6 +553,10 @@ class Project:
             )
         )
 
+    def uses_v11(self) -> bool:
+        """Format 11 adds data collections."""
+        return "collections" in self.metadata
+
     def uses_v5(self) -> bool:
         """Keep writing v4 until a change requires the newer contract."""
 
@@ -812,6 +817,7 @@ class Project:
         result = {
             "format": FORMAT_NAME,
             "format_version": max(
+                11 if self.uses_v11() else 4,
                 10 if self.uses_v10() else 4,
                 9 if self.metadata.get("programming") else 4,
                 8 if self.python_files else 4,
@@ -893,6 +899,13 @@ class Project:
             )
         ):
             raise ProjectError(tr("Invalid breakpoint list."))
+        if "collections" in metadata:
+            if version < 11:
+                raise ProjectError(tr("Data collections require format 11 or later."))
+            try:
+                validate_collections(metadata["collections"])
+            except ValueError as exc:
+                raise ProjectError(str(exc)) from exc
         programming = metadata.get("programming")
         if programming is not None and (programming not in PROGRAMMING or version < 9):
             raise ProjectError(tr("Invalid programming choice; use blocks or python (format 9)."))

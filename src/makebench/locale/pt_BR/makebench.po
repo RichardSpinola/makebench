@@ -7275,3 +7275,83 @@ msgstr "Sem moldura"
 #: src/makebench/editor/projects.py
 msgid "{title} · Python"
 msgstr "{title} · Python"
+
+#: src/makebench/editor/development.py
+msgid "+ Collection"
+msgstr "+ Coleção"
+
+#: src/makebench/editor/collections_ui.py
+msgid "+ Field"
+msgstr "+ Campo"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Books"
+msgstr "Livros"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Collection"
+msgstr "Coleção"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Data collection"
+msgstr "Coleção de dados"
+
+#: src/makebench/core/project.py
+msgid "Data collections require format 11 or later."
+msgstr "Coleções de dados exigem o formato 11 ou posterior."
+
+#: src/makebench/editor/collections_ui.py
+msgid "Edit collection"
+msgstr "Editar coleção"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Fields"
+msgstr "Campos"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Fields (the first text field names each record)"
+msgstr "Campos (o primeiro campo de texto dá o nome de cada registro)"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Points to"
+msgstr "Aponta para"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Reference"
+msgstr "Referência"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Remove collection"
+msgstr "Remover coleção"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Remove field"
+msgstr "Remover campo"
+
+#: src/makebench/editor/collections_ui.py
+msgid "Remove the collection “{name}”? Records already stored by test runs stay on disk."
+msgstr "Remover a coleção “{name}”? Os registros já guardados em testes continuam no disco."
+
+#: src/makebench/core/datamodel.py
+msgid "The data collections are invalid."
+msgstr "As coleções de dados são inválidas."
+
+#: src/makebench/editor/collections_ui.py
+msgid "This collection is still used by blocks or by fields of other collections."
+msgstr "Esta coleção ainda é usada por blocos ou por campos de outras coleções."
+
+#: src/makebench/editor/collections_ui.py
+msgid "Use different names made of letters, digits and underscores (not “id”), at least one field, and a collection to point to."
+msgstr "Use nomes diferentes com letras, números e sublinhado (não “id”), ao menos um campo e uma coleção para apontar."
+
+#: src/makebench/editor/collections_ui.py
+msgid "Yes/No"
+msgstr "Sim/Não"
+
+#: src/makebench/editor/collections_ui.py
+msgid "{count} field"
+msgstr "{count} campo"
+
+#: src/makebench/editor/collections_ui.py
+msgid "{count} fields"
+msgstr "{count} campos"

@@ -35,6 +35,7 @@ from .designer import DesignerMixin
 from .development import DevelopmentMixin
 from .execution import ExecutionMixin
 from .resources import ResourceMixin
+from .collections_ui import CollectionMixin
 from makebench.i18n import tr
 from makebench.i18n import ntr
 
@@ -57,6 +58,7 @@ class StudioMixin(
     DevelopmentMixin,
     ExecutionMixin,
     ResourceMixin,
+    CollectionMixin,
 ):
     """Adapt the existing views without duplicating the document, generation or execution."""
 
@@ -534,6 +536,7 @@ class StudioMixin(
             for name in function_names(self.source.text)[0]:
                 self.data_list.addItem(tr("Function") + " · " + name + tr("(ctx, value)"))
             self.sync_variables()
+            self.sync_collections()
         self.sync_navigation()
         self.sync_problems()
         self.sync_outline()
