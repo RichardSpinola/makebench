@@ -5,7 +5,22 @@ from pathlib import Path
 
 from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, LayoutKind
 from makebench.core.web import WEB_PAGE, is_web, materialize
+from makebench.core.style import component_style
 from makebench.i18n import tr
+
+_COVER = []
+
+
+def cover_picture(Gtk):
+    """A picture that never asks for space, so a big background image cannot grow the window."""
+    if not _COVER:
+
+        class CoverPicture(Gtk.Picture):
+            def do_measure(self, orientation, for_size):
+                return 0, 0, -1, -1
+
+        _COVER.append(CoverPicture)
+    return _COVER[0]
 
 
 def layout_spec(node):
@@ -54,7 +69,10 @@ class GtkView:
         self.dates = set()  # date pickers
         self.charts = {}  # id -> chart state drawn by a Gtk.DrawingArea
         self.tables = {}  # id -> (Gio.ListStore, Gtk.SingleSelection)
+        self.styled = {}  # CSS class -> properties of a component with its own style
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
+        if not is_web(root) and root.properties.get("background_image"):
+            self.widget = self.background(root.properties["background_image"], self.widget)
         self.style_changes = {}
         self.provider = None
         self.css_class = "mb-window-" + str(id(self))
@@ -63,11 +81,20 @@ class GtkView:
 
     def apply_style(self):
         """One CssProvider per window, scoped by a class so other windows keep their look."""
-        from makebench.core.style import gtk_css, window_style
+        from makebench.core.style import gtk_component_css, gtk_css, window_style
 
         Gtk, Gdk = self.Gtk, self.Gdk
         style = window_style({**self.root.properties, **self.style_changes})
-        css = gtk_css(style, self.css_class)
+        css = "\n".join(
+            filter(
+                None,
+                [gtk_css(style, self.css_class)]
+                + [
+                    gtk_component_css(properties, self.css_class, name)
+                    for name, properties in self.styled.items()
+                ],
+            )
+        )
         for area in self.charts.values():
             area.state.accent = style["accent"]
             area.queue_draw()
@@ -84,6 +111,24 @@ class GtkView:
             Gtk.StyleContext.add_provider_for_display(
                 display, self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
+
+    def background(self, source, content):
+        """Put a picture that covers the window under the content."""
+        Gtk = self.Gtk
+        picture = cover_picture(Gtk)()
+        picture.set_can_shrink(True)
+        picture.set_content_fit(Gtk.ContentFit.COVER)
+        try:
+            picture.set_paintable(
+                self.Gdk.Texture.new_from_bytes(self.GLib.Bytes.new(self.read_asset(source)))
+            )
+        except (OSError, ValueError, self.GLib.Error):
+            return content
+        overlay = Gtk.Overlay()
+        overlay.set_child(picture)
+        overlay.add_overlay(content)
+        overlay.set_measure_overlay(content, True)
+        return overlay
 
     def change_style(self, **changes):
         """Used by ctx.set_theme/set_background while the application runs."""
@@ -315,6 +360,10 @@ class GtkView:
         self.frames[node.id] = widget
         self.widgets.setdefault(node.id, widget)
         self.enabled[node.id] = p.get("enabled", True)
+        if k != ComponentKind.WINDOW and component_style(p):
+            name = f"mb-c{len(self.styled)}"
+            self.styled[name] = p
+            widget.add_css_class(name)
         widget.set_visible(p.get("visible", True))
         widget.set_sensitive(p.get("enabled", True))
         if p.get("tooltip"):

@@ -30,7 +30,13 @@ from makebench.core.web import WEB_PAGE, is_web
 from makebench.editor.drag import mime_for, read_payload
 from makebench.i18n import tr
 from makebench.ui import web
-from makebench.ui.renderer import ImageLabel, create_control, place_children
+from makebench.ui.renderer import (
+    ImageLabel,
+    apply_component_style,
+    create_control,
+    place_children,
+    set_background_image,
+)
 
 EDGES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
 
@@ -303,6 +309,8 @@ class PreviewCanvas(QFrame):
         surface.setStyleSheet(
             qt_stylesheet(window_style(project.root.properties), "mbWindowPreview")
         )
+        if not web_window:
+            set_background_image(surface, project.root, self.read_asset)
         native_look(self.title_bar)
         native_look(surface)
         self.window_frame = WindowFrame(self.title_bar, surface)
@@ -1000,6 +1008,8 @@ class PreviewCanvas(QFrame):
             return frame
         if node.can_have_children:
             self._render_children(frame, node)
+            if node.kind != ComponentKind.WINDOW:
+                apply_component_style(frame, node, container=True)
             return frame
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(4, 4, 4, 4)

@@ -28,13 +28,13 @@ This is an overview for contributors. Package layout under `src/makebench/`:
 ## Document
 
 `core/project.py` defines `Project`, `Component`, component types and layouts,
-and the JSON format. The reader accepts formats 1–10, except projects that use
+and the JSON format. The reader accepts formats 1–12, except projects that use
 the node editor removed in 1.0. Format 9 adds `metadata.programming`: each
 project is written in `blocks` or `python`. For older projects,
 `infer_programming()` picks blocks when there are flows, Python when there are
 modules or an edited functions file, and nothing for an empty project, so the
 editor asks. Saving writes the lowest format that holds the
-features in use (6 terminal, 8 Python modules, 9 programming choice, 10 the 1.0 components and events) and never lowers a newer format
+features in use (6 terminal, 8 Python modules, 9 programming choice, 10 the 1.0 components and events, 11 data and charts, 12 appearance) and never lowers a newer format
 already declared. When a save upgrades the format, the previous file is kept as
 `.bak-vN`.
 
@@ -63,6 +63,14 @@ through it. Data is kept in `$XDG_DATA_HOME/<app-id>/data.sqlite` for exported
 apps and in a per-project test folder when run from the editor. Charts are
 drawn by shared geometry in `core/chart.py` (QPainter in `ui/chart.py`, cairo
 in `gtk_runtime/chart.py`).
+
+Format 12 adds the window `background_image` (an asset path, drawn in cover mode:
+a `BackgroundImage` child lowered under the controls in Qt, a `Gtk.Overlay` whose
+picture measures zero in GTK), the per-component `style_*` properties and the
+`set_theme`/`set_background` blocks. `core/style.py` validates style values
+(only `#rrggbb`, bounded integers and booleans), so they can never inject CSS.
+Qt scopes a component's rules with the `mbOwn` dynamic property; GTK adds an
+`mb-c<N>` class per styled component to the window's CSS provider.
 
 `core/history.py` keeps labelled snapshots of interface and logic (200 by
 default). Python files use the text editor's own undo stack.

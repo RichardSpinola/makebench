@@ -189,6 +189,14 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                     op = node["op"]
                     if op in {"log", "message"}:
                         emit(f"ctx.{op}({expression(node['value'])})", node, indent)
+                    elif op == "set_theme":
+                        emit(
+                            f"ctx.set_theme({node['theme']!r}, {expression(node['value'])})",
+                            node,
+                            indent,
+                        )
+                    elif op == "set_background":
+                        emit(f"ctx.set_background({expression(node['value'])})", node, indent)
                     elif op == "set_chart":
                         emit(
                             f"ctx.set_chart({node['component']!r}, {expression(node['labels'])}, {expression(node['value'])})",

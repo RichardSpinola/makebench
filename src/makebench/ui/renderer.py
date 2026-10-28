@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 from makebench.core.project import RANGE_DEFAULTS, ComponentKind, LayoutKind
 from makebench.core.storage import StorageError
+from makebench.core.style import component_qss
 from makebench.i18n import tr
 from .chart import ChartWidget
 
@@ -303,7 +304,66 @@ def create_control(node, read_asset, editing=False):
     widget.setToolTip(node.properties.get("tooltip", ""))
     widget.setObjectName(node.id)
     widget.setEnabled(node.properties.get("enabled", True))
+    apply_component_style(widget, node)
     return widget
+
+
+def apply_component_style(widget, node, container=False):
+    """Give one control or container its own color, font and corners."""
+    sheet = component_qss(node.properties, container)
+    if sheet:
+        widget.setProperty("mbOwn", True)
+        widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        widget.setStyleSheet(sheet)
+
+
+class BackgroundImage(QWidget):
+    """A window background picture that covers its parent, under every control."""
+
+    def __init__(self, data: bytes, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.image = QPixmap()
+        self.image.loadFromData(data)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setObjectName("mbBackgroundImage")
+        parent.installEventFilter(self)
+        self.setGeometry(parent.rect())
+        self.lower()
+        self.show()
+
+    def eventFilter(self, watched, event) -> bool:
+        """Follow the parent's size and stay below the controls added later."""
+        if watched is self.parent() and event.type() in (event.Type.Resize, event.Type.Show):
+            self.setGeometry(watched.rect())
+            self.lower()
+        return False
+
+    def paintEvent(self, event) -> None:
+        """Fill the area keeping proportions; the overflow is cropped at the center."""
+        if self.image.isNull():
+            return
+        size = self.image.size().scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatioByExpanding)
+        rect = QRect(QPoint(), size)
+        rect.moveCenter(self.rect().center())
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.drawPixmap(rect, self.image)
+
+
+def set_background_image(surface, node, read_asset):
+    """Add or replace the background picture of a window surface."""
+    old = surface.findChild(BackgroundImage, "mbBackgroundImage")
+    if old is not None:
+        old.setParent(None)
+        old.deleteLater()
+    source = node.properties.get("background_image", "")
+    if not source:
+        return None
+    try:
+        data = read_asset(source)
+    except (OSError, StorageError):
+        return None
+    return BackgroundImage(data, surface)
 
 
 def place_children(frame, node, render):

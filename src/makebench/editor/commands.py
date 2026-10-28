@@ -152,6 +152,8 @@ def menu_icon_names():
         tr("Quit"): "quit",
         tr("Remove component"): "trash",
         tr("Duplicate"): "duplicate",
+        tr("Copy style"): "style-copy",
+        tr("Paste style"): "style-paste",
         tr("Move before"): "move-up",
         tr("Move after"): "move-down",
         tr("Add page"): "pages",

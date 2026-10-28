@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from .datamodel import find_collection, find_field
 from .menus import menu_items
 from .project import ComponentKind, ProjectError, new_id
+from .style import THEMES
 from makebench.i18n import tr
 
 if TYPE_CHECKING:
@@ -633,6 +634,12 @@ def validate(project: Project) -> None:
                 else:
                     raise ProjectError(tr("Unknown expression: {op}.").format(op=op))
             elif op in {"log", "message"}:
+                expr("value")
+            elif op == "set_theme":
+                if value.get("theme") not in THEMES:
+                    raise ProjectError(tr("Invalid field in block: {key}.").format(key="theme"))
+                expr("value")
+            elif op == "set_background":
                 expr("value")
             elif op == "set_options":
                 target(value.get("component"), {ComponentKind.CHOICE})

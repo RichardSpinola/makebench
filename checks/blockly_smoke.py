@@ -886,6 +886,21 @@ class BlocklyTests(unittest.TestCase):
         self.assertEqual(compiled["errors"], [])
         self.assertEqual(compiled["body"], expected)
 
+    def test_26_theme_blocks_roundtrip_through_blockly(self):
+        """Theme and background blocks keep the theme and their values."""
+        lit = lambda i, v: {"id": i, "op": "literal", "value": v}  # noqa: E731
+        self.flow["body"] = [
+            {"id": "t", "op": "set_theme", "theme": "light", "value": lit("a", "#ff8800")},
+            {"id": "b", "op": "set_background", "value": lit("c", "#336699")},
+        ]
+        expected = json.loads(json.dumps(self.flow["body"]))
+        self.window._refresh()
+        self.window.logic.sync(self.flow["id"])
+        QTest.qWait(300)
+        compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
+        self.assertEqual(compiled["errors"], [])
+        self.assertEqual(compiled["body"], expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -74,6 +74,14 @@ No Design você monta cada janela com controles nativos.
   de `|`), **moldura** (normal, sem botões, sem moldura), **centralizada** e
   **sempre na frente**. O GTK 4 no Wayland ignora as duas últimas; a verificação
   da exportação avisa.
+- A aparência da janela pode ter uma **imagem de fundo**, que cobre a janela atrás
+  dos controles (ela é copiada para `assets/`).
+- Cada componente tem uma seção **Estilo**: cor do texto, cor de preenchimento,
+  tamanho da fonte, negrito, itálico e cantos arredondados. **Editar → Copiar
+  estilo** e **Colar estilo** (Ctrl+Alt+C / Ctrl+Alt+V) aplicam o estilo aos
+  componentes selecionados num só passo de desfazer.
+- Na Lógica, **Mudar tema da janela** e **Mudar fundo da janela** trocam o tema, o
+  destaque ou a cor de fundo enquanto o app roda.
 
 ![Design](images/design.png)
 

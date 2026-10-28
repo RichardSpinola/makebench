@@ -294,6 +294,25 @@ class LogicTests(unittest.TestCase):
         with self.assertRaises(ProjectError):
             validate(self.project)
 
+    def test_theme_blocks_validate_generate_python_and_bump_the_format(self):
+        lit = lambda i, v: {"id": i, "op": "literal", "value": v}  # noqa: E731
+        self.flow["body"] = [
+            {"id": "t", "op": "set_theme", "theme": "dark", "value": lit("a", "#ff8800")},
+            {"id": "b", "op": "set_background", "value": lit("c", "#336699")},
+        ]
+        validate(self.project)
+        code = generate(self.project).text
+        self.assertIn("ctx.set_theme('dark', '#ff8800')", code)
+        self.assertIn("ctx.set_background('#336699')", code)
+        self.assertEqual(self.project.to_dict()["format_version"], 12)
+        self.flow["body"][0]["theme"] = "neon"
+        with self.assertRaises(ProjectError):
+            validate(self.project)
+        self.flow["body"][0]["theme"] = "light"
+        del self.flow["body"][1]["value"]
+        with self.assertRaises(ProjectError):
+            validate(self.project)
+
     def test_chart_block_validates_and_generates_python(self):
         chart = self.project.add(self.project.root.id, ComponentKind.CHART)
         label = self.project.add(self.project.root.id, ComponentKind.LABEL)

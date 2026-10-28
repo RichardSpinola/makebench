@@ -18,6 +18,8 @@ OPS = [
     ("set_rows", tr("Change table rows")),
     ("add_row", tr("Add table row")),
     ("set_chart", tr("Change chart data")),
+    ("set_theme", tr("Change window theme")),
+    ("set_background", tr("Change window background")),
     ("assign", tr("Set variable")),
     ("call", tr("Call Python function")),
     ("script", tr("Run Bash")),
@@ -87,6 +89,10 @@ def default_block(op, project, window):
             )
         if op == "terminal_send":
             node["value"] = literal("help\n")
+    if op == "set_theme":
+        node.update(theme="dark", value=literal(""))
+    if op == "set_background":
+        node["value"] = literal("#336699")
     if op == "set_enabled":
         node["value"] = literal(True)
     if op == "set_value":

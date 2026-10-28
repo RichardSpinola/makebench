@@ -20,7 +20,13 @@ from makebench.core.project import ComponentKind
 from makebench.core.style import qt_stylesheet, window_style
 from makebench.core.web import WEB_PAGE, is_web
 from makebench.ui import web
-from makebench.ui.renderer import TextArea, create_control, place_children
+from makebench.ui.renderer import (
+    TextArea,
+    apply_component_style,
+    create_control,
+    place_children,
+    set_background_image,
+)
 from makebench.i18n import tr
 
 
@@ -49,6 +55,8 @@ class RuntimeView(QFrame):
         layout.setContentsMargins(12, 12, 12, 12)
         self._fill(layout)
         self.apply_style(window_style(self.window_root.properties))
+        if not is_web(self.window_root):
+            set_background_image(self, self.window_root, self.read_asset)
 
     def apply_style(self, style):
         """Scope the look to this window; other windows and the editor are untouched."""
@@ -112,6 +120,8 @@ class RuntimeView(QFrame):
             layout.addWidget(tabs)
         elif node.can_have_children:
             place_children(frame, node, self._render)
+            if node.kind != ComponentKind.WINDOW:
+                apply_component_style(frame, node, container=True)
         else:
             layout = QVBoxLayout(frame)
             layout.setContentsMargins(4, 4, 4, 4)

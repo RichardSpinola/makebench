@@ -167,6 +167,7 @@ class Inspector(QWidget):
     image_cleared = Signal(str)
     logic_requested = Signal(str)
     icon_requested = Signal(str)
+    background_image_requested = Signal(str)
     navigation_requested = Signal(dict)
     selection_command = Signal(str)
     layout_preview_requested = Signal(str, str)
@@ -545,6 +546,22 @@ class Inspector(QWidget):
             )
             self._color_field(tr("Accent color"), node.id, "accent", node.properties)
             self._color_field(tr("Background color"), node.id, "background", node.properties)
+            image = node.properties.get("background_image", "")
+            choose = QPushButton(
+                tr("Choose background image…") if not image else tr("Change background image…")
+            )
+            choose.setObjectName("property_background_image")
+            choose.setToolTip(image)
+            choose.setEnabled(not self.state_mode)
+            choose.clicked.connect(lambda: self.background_image_requested.emit(node.id))
+            self.fields.addRow(tr("Background image"), choose)
+            if image:
+                remove = QPushButton(tr("Remove background image"))
+                remove.setEnabled(not self.state_mode)
+                remove.clicked.connect(
+                    lambda: self.property_changed.emit(node.id, "background_image", "")
+                )
+                self.fields.addRow(remove)
         elif parent:
             for axis, label in (
                 []
@@ -600,6 +617,8 @@ class Inspector(QWidget):
                 hint.setWordWrap(True)
                 hint.setProperty("muted", True)
                 self.fields.addRow(hint)
+        if node.kind != ComponentKind.WINDOW:
+            self._style_fields(node)
         self.section(tr("State"))
         for key, label in [("visible", tr("Visible")), ("enabled", tr("Enabled"))]:
             self._boolean_field(label, node.id, key, node.properties.get(key, True))
@@ -854,6 +873,39 @@ class Inspector(QWidget):
         layout.addWidget(pick, 1)
         layout.addWidget(clear)
         self.fields.addRow(label, row)
+
+    def _style_fields(self, node):
+        """Color, font and corners of one component; Edit > Copy style reuses them."""
+        self.section(tr("Style"), False)
+        properties = node.properties
+        self._color_field(tr("Text color"), node.id, "style_color", properties)
+        self._color_field(tr("Fill color"), node.id, "style_background", properties)
+        self._number_field(
+            tr("Font size (pt)"),
+            node.id,
+            "style_font_size",
+            properties.get("style_font_size", 0),
+            0,
+            96,
+        )
+        self.findChild(QSpinBox, "property_style_font_size").setSpecialValueText(tr("Default"))
+        self._number_field(
+            tr("Rounded corners (px)"),
+            node.id,
+            "style_radius",
+            properties.get("style_radius", 0),
+            0,
+            48,
+        )
+        for key, label in (("style_bold", tr("Bold")), ("style_italic", tr("Italic"))):
+            field = QCheckBox(label)
+            field.setObjectName("property_" + key)
+            field.setChecked(properties.get(key, False))
+            field.setEnabled(not self.state_mode)
+            field.toggled.connect(
+                lambda value, key=key: self.property_changed.emit(node.id, key, value)
+            )
+            self.fields.addRow(field)
 
     def _choice_field(self, label, node_id, key, value, options):
         """Use stable internal values, independent of translated labels."""

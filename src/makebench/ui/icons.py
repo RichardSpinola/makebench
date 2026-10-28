@@ -72,6 +72,9 @@ PATHS = {
     "start-window": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M10 12l5 3-5 3z"/>',
     "quit": '<path d="M14 4H5v16h9M10 12h11M17 8l4 4-4 4"/>',
     "duplicate": '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/>',
+    "style-copy": '<path d="M14 4l6 6"/><path d="M17 7l-9 9-4 1 1-4 9-9"/>',
+    "style-paste": '<rect x="4" y="3" width="13" height="6" rx="1"/><path d="M17 6h3v6h-8v3"/>'
+    '<rect x="10" y="15" width="4" height="6" rx="1"/>',
     "move-up": '<path d="M12 20V4M6 10l6-6 6 6"/>',
     "move-down": '<path d="M12 4v16M6 14l6 6 6-6"/>',
     "align-middle": '<path d="M2 12h20M5 5h5v14H5zM14 8h5v8h-5z"/>',

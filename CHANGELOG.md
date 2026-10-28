@@ -31,6 +31,11 @@
 - **Chart:** bar, line and pie chart component (`ctx.set_chart`) in Qt and GTK.
 - **Map and Problems:** the Map lists collections with the flows that use them;
   Problems warns about a missing collection or field.
+- **Appearance:** a window can show a background image (cover, behind the
+  controls), each component has its own text color, fill, font size, bold,
+  italic and rounded corners, and **Edit → Copy style / Paste style** copies
+  them between components. Blocks change the window theme, accent and
+  background while the app runs. Format 12.
 - **Fixed:** a collection field called `name` no longer clashes in `ctx.data`.
 - The complete workshop examples use block functions and modules only. The
   welcome wizard, task center and terminal examples come in a blocks version

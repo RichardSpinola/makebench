@@ -20,8 +20,9 @@ from makebench.i18n import tr
 from .chart import CHART_TYPES
 from .datamodel import validate_collections
 from .menus import validate_menus
+from .style import component_style, style_error
 
-FORMAT_VERSION = 11
+FORMAT_VERSION = 12
 FORMAT_NAME = "makebench.project"
 
 
@@ -308,18 +309,22 @@ class Component:
         ):
             raise ProjectError(tr("The image path must be text."))
         if kind == ComponentKind.IMAGE and properties.get("source"):
-            source = properties["source"]
-            if not isinstance(source, str):
-                raise ProjectError(tr("The image path must be text."))
-            path = PurePosixPath(source)
-            if (
-                path.is_absolute()
-                or ".." in path.parts
-                or "\\" in source
-                or len(path.parts) < 2
-                or path.parts[0] != "assets"
-            ):
+            if not valid_asset(properties["source"]):
                 raise ProjectError(tr("The image must be in the project's assets folder."))
+        if properties.get("background_image") and (
+            kind != ComponentKind.WINDOW or not valid_asset(properties["background_image"])
+        ):
+            raise ProjectError(
+                tr("The background image of {id} must be in the project's assets folder.").format(
+                    id=component_id
+                )
+            )
+        if style_error(properties):
+            raise ProjectError(
+                tr("The style of {id} is invalid: {key}.").format(
+                    id=component_id, key=style_error(properties)
+                )
+            )
         for key in ("alt_text", "image_name"):
             if key in properties and not isinstance(properties[key], str):
                 raise ProjectError(tr("The image description and name must be text."))
@@ -373,6 +378,20 @@ class Component:
         if depth and node.kind == ComponentKind.WINDOW:
             raise ProjectError(tr("A window cannot be inside another component."))
         return node
+
+
+def valid_asset(source) -> bool:
+    """True for a relative path inside the project's assets folder."""
+    if not isinstance(source, str):
+        return False
+    path = PurePosixPath(source)
+    return not (
+        path.is_absolute()
+        or ".." in path.parts
+        or "\\" in source
+        or len(path.parts) < 2
+        or path.parts[0] != "assets"
+    )
 
 
 def valid_date(value) -> bool:
@@ -573,6 +592,21 @@ class Project:
         return "collections" in self.metadata or any(
             node.kind == ComponentKind.CHART for node in self.walk()
         )
+
+    def uses_v12(self) -> bool:
+        """Format 12 adds per-component style, window background images and theme blocks."""
+
+        def theme_block(value):
+            if isinstance(value, dict):
+                return value.get("op") in {"set_theme", "set_background"} or any(
+                    theme_block(item) for item in value.values()
+                )
+            return isinstance(value, list) and any(theme_block(item) for item in value)
+
+        return any(
+            node.properties.get("background_image") or component_style(node.properties)
+            for node in self.walk()
+        ) or theme_block([*self.workflows, *self.metadata.get("functions", [])])
 
     def uses_v5(self) -> bool:
         """Keep writing v4 until a change requires the newer contract."""
@@ -818,8 +852,9 @@ class Project:
                     if override.get("source"):
                         paths.add(override["source"])
         for node in self.walk():
-            if node.properties.get("icon"):
-                paths.add(node.properties["icon"])
+            for key in ("icon", "background_image"):
+                if node.properties.get(key):
+                    paths.add(node.properties[key])
             if isinstance(node.properties.get("web_page"), str):
                 from .web import page_assets
 
@@ -834,6 +869,7 @@ class Project:
         result = {
             "format": FORMAT_NAME,
             "format_version": max(
+                12 if self.uses_v12() else 4,
                 11 if self.uses_v11() else 4,
                 10 if self.uses_v10() else 4,
                 9 if self.metadata.get("programming") else 4,

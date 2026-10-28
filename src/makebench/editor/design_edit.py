@@ -22,6 +22,7 @@ from makebench.core.project import (
     ProjectError,
     clamp_range,
 )
+from makebench.core.style import STYLE_KEYS
 from makebench.i18n import ntr, tr
 
 
@@ -65,6 +66,8 @@ def undo_labels():
         "insert_behavior": tr("Insert behavior"),
         "_toggle_breakpoint": tr("Toggle breakpoint"),
         "choose_window_icon": tr("Choose window icon"),
+        "paste_style": tr("Paste style"),
+        "choose_background_image": tr("Choose background image"),
     }
 
 
@@ -189,6 +192,7 @@ class DesignEditMixin:
             or key == "menus"
             or (key == "headers" and self.project.find(identifier).kind == ComponentKind.TABLE)
             or key in {"width", "height", "resizable", "frame", "theme", "accent", "background"}
+            or key in {"background_image", *STYLE_KEYS}
             or key == "icon"
             and self.project.find(identifier).kind == ComponentKind.WINDOW
         ):
@@ -645,6 +649,56 @@ class DesignEditMixin:
             node.properties.update(source="", image_name="")
 
         self._edit(clear)
+
+    def copy_style(self) -> None:
+        """Remember the look of the selected component, including its defaults."""
+        node = self.project.find(self.selected_id)
+        if node is None or node.kind == ComponentKind.WINDOW:
+            return
+        self.copied_style = {key: node.properties.get(key) for key in STYLE_KEYS}
+        self.statusBar().showMessage(tr("Style copied."), 4000)
+        self._update_actions()
+
+    def paste_style(self) -> None:
+        """Give the copied look to every selected component, as one change."""
+        if self.copied_style is None or self.active_state != "@default":
+            return
+        ids = getattr(self, "selected_ids", set()) or {self.selected_id}
+        nodes = [
+            node
+            for node in (self.project.find(identifier) for identifier in ids)
+            if node is not None and node.kind != ComponentKind.WINDOW
+        ]
+        if not nodes:
+            return
+
+        def paste():
+            """Missing keys are removed, so the pasted look is exactly the copied one."""
+            for node in nodes:
+                for key, value in self.copied_style.items():
+                    if value in (None, "", 0, False):
+                        node.properties.pop(key, None)
+                    else:
+                        node.properties[key] = value
+
+        self._edit(paste)
+
+    def choose_background_image(self, node_id: str) -> None:
+        """Import a picture for the whole window; it covers the window area."""
+        filename, _ = QFileDialog.getOpenFileName(
+            self, tr("Background image"), "", tr("Images (*.png *.jpg *.jpeg *.webp)")
+        )
+        if not filename:
+            return
+
+        def choose_background_image():
+            source = self.assets.import_image(Path(filename))
+            self.project.find(node_id).properties["background_image"] = source
+
+        try:
+            self._edit(choose_background_image, label=undo_labels()["choose_background_image"])
+        except OSError as exc:
+            self._show_error(exc, tr("Could not use this image"))
 
     def remove_component(self) -> None:
         """Remove the selection, keeping the deletion available for undo."""

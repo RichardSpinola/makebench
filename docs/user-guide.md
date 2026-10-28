@@ -70,6 +70,13 @@ Design is where you build each window with native controls.
 - A window can have **menus** (one title per line, items indented, a shortcut after
   `|`), a **frame** (normal, without buttons, without frame), **centered** and
   **always on top**. GTK 4 on Wayland ignores the last two; the export check warns.
+- The window look can add a **background image**, which covers the window behind
+  the controls (it is copied into `assets/`).
+- Each component has a **Style** section: text color, fill color, font size, bold,
+  italic and rounded corners. **Edit → Copy style** and **Paste style**
+  (Ctrl+Alt+C / Ctrl+Alt+V) copy it to the selected components in one undo step.
+- In Logic, **Change window theme** and **Change window background** switch the
+  theme, accent or background color while the app runs.
 
 ![Design](images/design.png)
 

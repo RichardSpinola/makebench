@@ -7475,3 +7475,83 @@ msgstr "{flow}: coleção {name} não encontrada."
 #: src/makebench/editor/studio.py
 msgid "{flow}: field {field} not found in {collection}."
 msgstr "{flow}: campo {field} não encontrado em {collection}."
+
+#: src/makebench/editor/design_edit.py src/makebench/editor/inspector.py
+msgid "Background image"
+msgstr "Imagem de fundo"
+
+#: src/makebench/editor/inspector.py
+msgid "Bold"
+msgstr "Negrito"
+
+#: src/makebench/editor/inspector.py
+msgid "Change background image…"
+msgstr "Trocar imagem de fundo…"
+
+#: src/makebench/core/logic_defaults.py
+msgid "Change window background"
+msgstr "Mudar fundo da janela"
+
+#: src/makebench/core/logic_defaults.py
+msgid "Change window theme"
+msgstr "Mudar tema da janela"
+
+#: src/makebench/editor/design_edit.py
+msgid "Choose background image"
+msgstr "Escolher imagem de fundo"
+
+#: src/makebench/editor/inspector.py
+msgid "Choose background image…"
+msgstr "Escolher imagem de fundo…"
+
+#: src/makebench/editor/window.py
+msgid "Copy style"
+msgstr "Copiar estilo"
+
+#: src/makebench/editor/design_edit.py
+msgid "Could not use this image"
+msgstr "Não foi possível usar esta imagem"
+
+#: src/makebench/editor/inspector.py
+msgid "Fill color"
+msgstr "Cor de preenchimento"
+
+#: src/makebench/editor/inspector.py
+msgid "Font size (pt)"
+msgstr "Tamanho da fonte (pt)"
+
+#: src/makebench/editor/inspector.py
+msgid "Italic"
+msgstr "Itálico"
+
+#: src/makebench/editor/design_edit.py src/makebench/editor/window.py
+msgid "Paste style"
+msgstr "Colar estilo"
+
+#: src/makebench/editor/inspector.py
+msgid "Remove background image"
+msgstr "Remover imagem de fundo"
+
+#: src/makebench/editor/inspector.py
+msgid "Rounded corners (px)"
+msgstr "Cantos arredondados (px)"
+
+#: src/makebench/editor/inspector.py
+msgid "Style"
+msgstr "Estilo"
+
+#: src/makebench/editor/design_edit.py
+msgid "Style copied."
+msgstr "Estilo copiado."
+
+#: src/makebench/editor/inspector.py
+msgid "Text color"
+msgstr "Cor do texto"
+
+#: src/makebench/core/project.py
+msgid "The background image of {id} must be in the project's assets folder."
+msgstr "A imagem de fundo de {id} precisa estar na pasta assets do projeto."
+
+#: src/makebench/core/project.py
+msgid "The style of {id} is invalid: {key}."
+msgstr "O estilo de {id} é inválido: {key}."

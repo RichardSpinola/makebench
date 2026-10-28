@@ -83,6 +83,7 @@ class MainWindow(
         self.path = path.resolve() if path else None
         self.source = SourceBuffer.load(self.path)
         self.history = History(self.project)
+        self.copied_style = None  # look kept by Copy style for Paste style
         self._saved_document = self.project.to_dict() if self.path else None
         self.assets = AssetStore(path.parent if path else None)
         self.selected_id = self.project.root.id
@@ -235,6 +236,13 @@ class MainWindow(
         edit_menu.addActions(
             [self.duplicate_action, self.up_action, self.down_action, self.page_action]
         )
+        self.copy_style_action = QAction(tr("Copy style"), self)
+        self.copy_style_action.setShortcut(QKeySequence("Ctrl+Alt+C"))
+        self.copy_style_action.triggered.connect(self.copy_style)
+        self.paste_style_action = QAction(tr("Paste style"), self)
+        self.paste_style_action.setShortcut(QKeySequence("Ctrl+Alt+V"))
+        self.paste_style_action.triggered.connect(self.paste_style)
+        edit_menu.addActions([self.copy_style_action, self.paste_style_action])
         align_menu = edit_menu.addMenu(tr("Align in the free area"))
         self.align_actions = []
         for mode, label in (
@@ -356,6 +364,7 @@ class MainWindow(
         self.inspector.image_cleared.connect(self.clear_image)
         self.inspector.logic_requested.connect(self.edit_logic)
         self.inspector.icon_requested.connect(self.choose_component_icon)
+        self.inspector.background_image_requested.connect(self.choose_background_image)
         self.inspector.navigation_requested.connect(self.reveal_navigation)
         inspector_scroll.setWidget(self.inspector)
         right_layout.addWidget(inspector_scroll)
@@ -702,6 +711,11 @@ class MainWindow(
             interface_active and parent is not None and parent.children[-1] is not node
         )
         self.page_action.setEnabled(interface_active and self._page_group(node) is not None)
+        styleable = interface_active and node is not None and node.kind != ComponentKind.WINDOW
+        self.copy_style_action.setEnabled(styleable)
+        self.paste_style_action.setEnabled(
+            styleable and self.copied_style is not None and self.active_state == "@default"
+        )
         free = parent and parent.kind != ComponentKind.PAGES and parent.layout == LayoutKind.FREE
         for action in self.align_actions:
             action.setEnabled(interface_active and bool(free))
