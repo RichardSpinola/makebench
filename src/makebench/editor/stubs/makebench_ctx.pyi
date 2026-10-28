@@ -88,7 +88,21 @@ class Context:
     def message(self, value: Any) -> None:
         """Show a message and wait until it is closed."""
     def ask(self, kind: str, prompt: str, options: list[str] | None = None) -> Any:
-        """Ask the person for a value; Cancel ends the flow."""
+        """Ask the person for a value (kinds: text, choice, file, directory, save_file); Cancel ends the flow."""
+    def read_text(self, path: str) -> str:
+        """The whole text of a file (UTF-8)."""
+    def write_text(self, path: str, text: str) -> None:
+        """Replace a file with this text (UTF-8)."""
+    def read_csv(self, path: str, header: bool = True) -> list[list[str]]:
+        """Rows of a CSV file as lists of texts; the first line is skipped when header is True."""
+    def export_csv(self, path: str, headers: list[str], rows: list[list[Any]]) -> None:
+        """Write a CSV file (UTF-8) with a header line and one line per row."""
+    def export_records_csv(
+        self, path: str, collection: str, records: list[dict[str, Any]] | None = None
+    ) -> None:
+        """Export records of a collection (all by default); references show their names."""
+    def export_table_csv(self, path: str, component: str) -> None:
+        """Export what a table shows now."""
     def confirm(self, prompt: str) -> bool:
         """Continue only if the person answers Yes."""
     def run(

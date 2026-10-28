@@ -98,6 +98,20 @@ def selected_table_row(widget):
     ]
 
 
+def table_contents(widget):
+    """Headers and every row of a table, as texts (what a CSV export writes)."""
+    columns = range(widget.columnCount())
+    headers = []
+    for column in columns:
+        header = widget.horizontalHeaderItem(column)
+        headers.append(header.text() if header else "")
+    rows = [
+        [widget.item(row, column).text() if widget.item(row, column) else "" for column in columns]
+        for row in range(widget.rowCount())
+    ]
+    return {"headers": headers, "rows": rows}
+
+
 def set_date(widget, iso):
     """Show a YYYY-MM-DD date without telling the application the person did it."""
     blocked = widget.blockSignals(True)

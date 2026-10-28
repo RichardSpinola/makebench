@@ -628,6 +628,8 @@ def validate(project: Project) -> None:
                     expr("record")
                 elif op == "data_last_id":
                     pass
+                elif op in {"file_text", "csv_rows"}:
+                    expr("path")
                 else:
                     raise ProjectError(tr("Unknown expression: {op}.").format(op=op))
             elif op in {"log", "message"}:
@@ -635,6 +637,17 @@ def validate(project: Project) -> None:
             elif op == "set_options":
                 target(value.get("component"), {ComponentKind.CHOICE})
                 expr("value")
+            elif op == "write_file":
+                expr("path")
+                expr("value")
+            elif op == "export_records":
+                collection()
+                expr("path")
+                if "records" in value:
+                    expr("records")
+            elif op == "export_table":
+                target(value.get("component"), {ComponentKind.TABLE})
+                expr("path")
             elif op == "show_records":
                 target(value.get("component"), {ComponentKind.TABLE, ComponentKind.CHOICE})
                 collection()
@@ -709,7 +722,7 @@ def validate(project: Project) -> None:
                         tr("Administrative permission must be declared in the block.")
                     )
             elif op == "ask":
-                if value.get("kind") not in {"text", "choice", "file", "directory"}:
+                if value.get("kind") not in {"text", "choice", "file", "directory", "save_file"}:
                     raise ProjectError(tr("Unknown question type."))
                 text("name")
                 expr("prompt")

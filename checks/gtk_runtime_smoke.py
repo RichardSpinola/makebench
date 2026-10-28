@@ -95,6 +95,10 @@ def check_runtime():
     ctx.data.add('Livros', titulo='Um', autor=ana)
     ctx.show_records({table.id!r}, 'Livros')
     assert ctx.read({table.id!r}, 'record') is None
+    shown = ctx.read({table.id!r}, 'table')
+    assert shown['headers'] == ['titulo', 'autor'] and shown['rows'] == [['Um', 'Ana']], shown
+    ctx.export_table_csv({str(root / "livros.csv")!r}, {table.id!r})
+    assert ctx.read_csv({str(root / "livros.csv")!r}) == [['Um', 'Ana']]
     ctx.show_records({choice.id!r}, 'Autores')
     assert ctx.read({choice.id!r}, 'text') == 'Ana'
     assert ctx.read({choice.id!r}, 'record') == ana

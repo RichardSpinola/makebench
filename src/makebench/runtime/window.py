@@ -37,6 +37,7 @@ from makebench.ui.renderer import (
     configure_table,
     fill_choice,
     selected_table_record,
+    table_contents,
     selected_table_row,
     range_value,
     set_date,
@@ -363,6 +364,10 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     if not isinstance(widget, QTableWidget):
                         raise ValueError(tr("Unknown property."))
                     value = selected_table_row(widget)
+                elif attribute == "table":
+                    if not isinstance(widget, QTableWidget):
+                        raise ValueError(tr("Unknown property."))
+                    value = table_contents(widget)
                 elif attribute == "record":
                     if isinstance(widget, QTableWidget):
                         value = selected_table_record(widget)
@@ -510,14 +515,18 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     raise ValueError(tr("Provide a non-empty list of text options."))
                 dialog.setComboBoxItems(options)
                 dialog.setComboBoxEditable(False)
-        elif kind in {"file", "directory"}:
+        elif kind in {"file", "directory", "save_file"}:
             dialog = QFileDialog(parent, prompt, str(self.session.root))
             dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
             dialog.setFileMode(
                 QFileDialog.FileMode.Directory
                 if kind == "directory"
+                else QFileDialog.FileMode.AnyFile
+                if kind == "save_file"
                 else QFileDialog.FileMode.ExistingFile
             )
+            if kind == "save_file":
+                dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
         else:
             raise ValueError(tr("Unknown dialog type."))
         self.set_status(tr("Waiting for an answer…"))

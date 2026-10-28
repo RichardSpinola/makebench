@@ -838,6 +838,33 @@ class BlocklyTests(unittest.TestCase):
         self.assertEqual(compiled["errors"], [])
         self.assertEqual(compiled["body"], expected)
 
+    def test_24_file_and_csv_blocks_roundtrip_through_blockly(self):
+        """Writing files, reading text and CSV and exporting records or a table survive."""
+        table = self.window.project.add(self.window.project.root.id, ComponentKind.TABLE)
+        self.window.project.metadata["collections"] = [
+            {
+                "id": "autores",
+                "name": "Autores",
+                "fields": [{"id": "nome", "name": "nome", "type": "text"}],
+            }
+        ]
+        counter = iter(range(100))
+        path = lambda: {"id": f"p{next(counter)}", "op": "literal", "value": "a.csv"}  # noqa: E731
+        self.flow["body"] = [
+            {"id": "w", "op": "write_file", "path": path(), "value": path()},
+            {"id": "t", "op": "export_table", "component": table.id, "path": path()},
+            {"id": "r", "op": "export_records", "collection": "autores", "path": path()},
+            {"id": "c", "op": "log", "value": {"id": "x", "op": "csv_rows", "path": path()}},
+            {"id": "f", "op": "log", "value": {"id": "y", "op": "file_text", "path": path()}},
+        ]
+        expected = json.loads(json.dumps(self.flow["body"]))
+        self.window._refresh()
+        self.window.logic.sync(self.flow["id"])
+        QTest.qWait(300)
+        compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
+        self.assertEqual(compiled["errors"], [])
+        self.assertEqual(compiled["body"], expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

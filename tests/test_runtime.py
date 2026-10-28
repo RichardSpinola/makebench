@@ -295,6 +295,61 @@ class RuntimeTests(unittest.TestCase):
         widget.selectRow(1)
         self.wait(lambda: "2" in w.output.toPlainText().split("\n"))
 
+    def test_files_and_csv_round_trip_through_blocks(self):
+        import tempfile
+        from pathlib import Path
+
+        table = self.project.add(self.project.root.id, ComponentKind.TABLE)
+        self.project.metadata["collections"] = [
+            {
+                "id": "authors",
+                "name": "Autores",
+                "fields": [{"id": "n", "name": "nome", "type": "text"}],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            seen, shown, text = (str(Path(folder) / name) for name in ("a.csv", "b.csv", "t.txt"))
+            path = lambda name, value: {"id": name, "op": "literal", "value": value}  # noqa: E731
+            self.flow["body"] = [
+                {
+                    "id": "a1",
+                    "op": "data_add",
+                    "collection": "authors",
+                    "values": [{"field": "n", "value": path("v", 'Zé, o "bom"')}],
+                },
+                {"id": "s1", "op": "show_records", "component": table.id, "collection": "authors"},
+                {"id": "e1", "op": "export_table", "component": table.id, "path": path("p1", seen)},
+                {
+                    "id": "e2",
+                    "op": "export_records",
+                    "collection": "authors",
+                    "path": path("p2", shown),
+                },
+                {
+                    "id": "w1",
+                    "op": "write_file",
+                    "path": path("p3", text),
+                    "value": path("t", "olá"),
+                },
+                {
+                    "id": "l1",
+                    "op": "log",
+                    "value": {"id": "r1", "op": "csv_rows", "path": path("p4", seen)},
+                },
+                {
+                    "id": "l2",
+                    "op": "log",
+                    "value": {"id": "r2", "op": "file_text", "path": path("p5", text)},
+                },
+            ]
+            w = self.window("")
+            self.click(w)
+            self.wait(lambda: "olá" in w.output.toPlainText())
+            expected = 'nome\r\n"Zé, o ""bom"""\r\n'
+            self.assertEqual(Path(seen).read_bytes().decode(), expected)
+            self.assertEqual(Path(shown).read_bytes().decode(), expected)
+            self.assertIn("[['Zé, o \"bom\"']]", w.output.toPlainText())
+
     def test_change_timer_and_close_events_run_their_flows(self):
         field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
         window = self.project.root

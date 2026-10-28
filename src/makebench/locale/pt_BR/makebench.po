@@ -7427,3 +7427,11 @@ msgstr "Alguns campos removidos ainda são usados por blocos. Mude os blocos pri
 #: src/makebench/core/datastore.py
 msgid "Provide records as returned by the data blocks."
 msgstr "Informe registros como os devolvidos pelos blocos de dados."
+
+#: src/makebench/runtime/worker.py
+msgid "Cannot read {path}: {error}"
+msgstr "Não foi possível ler {path}: {error}"
+
+#: src/makebench/runtime/worker.py
+msgid "Cannot write {path}: {error}"
+msgstr "Não foi possível gravar {path}: {error}"

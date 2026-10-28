@@ -90,6 +90,9 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                     return f"ctx.read({node['component']!r}, {node['attribute']!r})"
                 if op == "call_function":
                     return call(node)
+                if op in {"file_text", "csv_rows"}:
+                    method = "read_text" if op == "file_text" else "read_csv"
+                    return f"ctx.{method}({expression(node['path'])})"
                 if op.startswith("data_") or op == "record_field":
                     return data_expression(node)
                 left, right = expression(node["left"]), expression(node["right"])
@@ -277,6 +280,25 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                     elif op == "data_update":
                         emit(
                             f"ctx.data.update({data_name(node, 'x')[0]!r}, {expression(node['record_id'])}{data_values(node)})",
+                            node,
+                            indent,
+                        )
+                    elif op == "write_file":
+                        emit(
+                            f"ctx.write_text({expression(node['path'])}, {expression(node['value'])})",
+                            node,
+                            indent,
+                        )
+                    elif op == "export_table":
+                        emit(
+                            f"ctx.export_table_csv({expression(node['path'])}, {node['component']!r})",
+                            node,
+                            indent,
+                        )
+                    elif op == "export_records":
+                        records = f", {expression(node['records'])}" if "records" in node else ""
+                        emit(
+                            f"ctx.export_records_csv({expression(node['path'])}, {data_name(node, 'x')[0]!r}{records})",
                             node,
                             indent,
                         )

@@ -7,6 +7,7 @@ output. This isolates editor crashes, but it is not a sandbox for untrusted code
 
 from __future__ import annotations
 
+import csv
 import io
 from copy import deepcopy
 import json
@@ -191,6 +192,53 @@ class Context:
         return self.request(
             "show_records", component=component, value=self.data.listing(collection, records)
         )
+
+    def read_text(self, path):
+        """The whole text of a file (UTF-8)."""
+        try:
+            return Path(path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise TaskError(tr("Cannot read {path}: {error}").format(path=path, error=exc)) from exc
+
+    def write_text(self, path, text):
+        """Replace a file with this text (UTF-8)."""
+        try:
+            Path(path).write_text(str(text), encoding="utf-8")
+        except OSError as exc:
+            raise TaskError(
+                tr("Cannot write {path}: {error}").format(path=path, error=exc)
+            ) from exc
+
+    def read_csv(self, path, header=True):
+        """The rows of a CSV file as lists of texts; the first line is skipped as the header."""
+        try:
+            with open(path, newline="", encoding="utf-8") as handle:
+                rows = [row for row in csv.reader(handle) if row]
+        except (OSError, UnicodeDecodeError, csv.Error) as exc:
+            raise TaskError(tr("Cannot read {path}: {error}").format(path=path, error=exc)) from exc
+        return rows[1:] if header else rows
+
+    def export_csv(self, path, headers, rows):
+        """Write a CSV file (UTF-8) with a header line and one line per row."""
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as handle:
+                writer = csv.writer(handle)
+                writer.writerow([str(name) for name in headers])
+                writer.writerows(table_rows(rows))
+        except (OSError, ValueError, TypeError) as exc:
+            raise TaskError(
+                tr("Cannot write {path}: {error}").format(path=path, error=exc)
+            ) from exc
+
+    def export_records_csv(self, path, collection, records=None):
+        """Export the records of a collection (all by default); references show their names."""
+        listing = self.data.listing(collection, records)
+        return self.export_csv(path, listing["headers"], listing["rows"])
+
+    def export_table_csv(self, path, component):
+        """Export what a table shows now."""
+        contents = self.read(component, "table")
+        return self.export_csv(path, contents["headers"], contents["rows"])
 
     @property
     def window_variables(self):

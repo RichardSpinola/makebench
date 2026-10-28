@@ -267,6 +267,33 @@ class LogicTests(unittest.TestCase):
         with self.assertRaises(ProjectError):
             validate(self.project)
 
+    def test_file_and_csv_blocks_validate_and_generate_python(self):
+        self.data_project()
+        table = self.project.add(self.project.root.id, ComponentKind.TABLE)
+        label = self.project.add(self.project.root.id, ComponentKind.LABEL)
+        counter = iter(range(100))
+        path = lambda: {"id": f"p{next(counter)}", "op": "literal", "value": "a.csv"}  # noqa: E731
+        self.flow["body"] = [
+            {"id": "w", "op": "write_file", "path": path(), "value": path()},
+            {"id": "t", "op": "export_table", "component": table.id, "path": path()},
+            {"id": "r", "op": "export_records", "collection": "livros", "path": path()},
+            {"id": "c", "op": "log", "value": {"id": "x", "op": "csv_rows", "path": path()}},
+            {"id": "f", "op": "log", "value": {"id": "y", "op": "file_text", "path": path()}},
+        ]
+        validate(self.project)
+        code = generate(self.project).text
+        for line in (
+            "ctx.write_text('a.csv', 'a.csv')",
+            f"ctx.export_table_csv('a.csv', '{table.id}')",
+            "ctx.export_records_csv('a.csv', 'Livros')",
+            "ctx.read_csv('a.csv')",
+            "ctx.read_text('a.csv')",
+        ):
+            self.assertIn(line, code)
+        self.flow["body"][1]["component"] = label.id
+        with self.assertRaises(ProjectError):
+            validate(self.project)
+
     def test_data_blocks_validate_generate_python_and_survive_conversion(self):
         from makebench.core.codegen import convert_to_python
 

@@ -421,6 +421,15 @@ class GtkView:
         finally:
             self.programmatic = False
 
+    def table_contents(self, identifier):
+        """Headers and every row of a table, as texts (what a CSV export writes)."""
+        store = self.tables[identifier][0]
+        columns = self.table_views[identifier].get_columns()
+        return {
+            "headers": [columns.get_item(i).get_title() for i in range(columns.get_n_items())],
+            "rows": [list(store.get_item(i).cells) for i in range(store.get_n_items())],
+        }
+
     def selected_row(self, identifier):
         store, selection, Row = self.tables[identifier]
         item = selection.get_selected_item()
@@ -512,6 +521,10 @@ class GtkView:
             if identifier in self.dates:
                 return w.get_label()
             return w.get_text() if isinstance(w, Gtk.Entry) else w.get_label()
+        if attribute == "table":
+            if identifier not in self.tables:
+                raise ValueError(tr("Unknown property."))
+            return self.table_contents(identifier)
         if attribute == "record":
             return self.selected_record(identifier)
         if attribute == "selected":

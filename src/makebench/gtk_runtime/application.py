@@ -585,12 +585,14 @@ class GtkRuntime:
         method = r["method"]
         kind = r.get("kind")
         prompt = str(r.get("prompt", ""))
-        if method == "ask" and kind in {"file", "directory"}:
+        if method == "ask" and kind in {"file", "directory", "save_file"}:
             dialog = Gtk.FileChooserNative(
                 title=prompt,
                 transient_for=parent,
                 action=Gtk.FileChooserAction.SELECT_FOLDER
                 if kind == "directory"
+                else Gtk.FileChooserAction.SAVE
+                if kind == "save_file"
                 else Gtk.FileChooserAction.OPEN,
                 accept_label=tr("Select"),
                 cancel_label=tr("Cancel"),
