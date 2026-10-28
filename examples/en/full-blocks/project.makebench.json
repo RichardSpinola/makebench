@@ -1,10 +1,10 @@
 {
   "format": "makebench.project",
-  "format_version": 10,
-  "id": "project_d79b75bef957",
+  "format_version": 11,
+  "id": "project_56e1517559fd",
   "name": "Complete workshop",
   "ui": {
-    "id": "window_2a2b92882bb7",
+    "id": "window_1d893f79d823",
     "kind": "window",
     "layout": "vertical",
     "properties": {
@@ -22,7 +22,7 @@
     },
     "children": [
       {
-        "id": "container_67d4f1c79bc4",
+        "id": "container_8d0864709cea",
         "kind": "container",
         "layout": "horizontal",
         "properties": {},
@@ -34,7 +34,7 @@
         },
         "children": [
           {
-            "id": "label_070437971e29",
+            "id": "label_07206705e2b2",
             "kind": "label",
             "layout": "vertical",
             "properties": {
@@ -50,7 +50,7 @@
             "children": []
           },
           {
-            "id": "spacer_45a91259a189",
+            "id": "spacer_a2921358fddf",
             "kind": "spacer",
             "layout": "vertical",
             "properties": {
@@ -68,7 +68,7 @@
             "children": []
           },
           {
-            "id": "button_78bc7f35051b",
+            "id": "button_58407e3a2a6d",
             "kind": "button",
             "layout": "vertical",
             "properties": {
@@ -84,7 +84,7 @@
             "children": []
           },
           {
-            "id": "button_f0cda92a529e",
+            "id": "button_8ad44bffc84d",
             "kind": "button",
             "layout": "vertical",
             "properties": {
@@ -100,7 +100,7 @@
             "children": []
           },
           {
-            "id": "button_a511233502e8",
+            "id": "button_6dea38f019a0",
             "kind": "button",
             "layout": "vertical",
             "properties": {
@@ -118,7 +118,7 @@
         ]
       },
       {
-        "id": "label_ddd38f66b2d5",
+        "id": "label_f98677b52d00",
         "kind": "label",
         "layout": "vertical",
         "properties": {
@@ -134,7 +134,7 @@
         "children": []
       },
       {
-        "id": "separator_b47845a073b3",
+        "id": "separator_de43bf6c7788",
         "kind": "separator",
         "layout": "vertical",
         "properties": {},
@@ -147,11 +147,11 @@
         "children": []
       },
       {
-        "id": "pages_ecb201914d77",
+        "id": "pages_d1189bfb6022",
         "kind": "pages",
         "layout": "vertical",
         "properties": {
-          "initial_page": "page_c4a61426b0bf"
+          "initial_page": "page_0a71858571fb"
         },
         "geometry": {
           "x": 64,
@@ -161,7 +161,7 @@
         },
         "children": [
           {
-            "id": "page_c4a61426b0bf",
+            "id": "page_0a71858571fb",
             "kind": "page",
             "layout": "grid",
             "properties": {
@@ -176,7 +176,7 @@
             },
             "children": [
               {
-                "id": "label_d9303319b057",
+                "id": "label_e8733757e62b",
                 "kind": "label",
                 "layout": "vertical",
                 "properties": {
@@ -191,7 +191,7 @@
                 "children": []
               },
               {
-                "id": "text_input_b09e5fb3a17a",
+                "id": "text_input_7ecbe2cf1a4f",
                 "kind": "text_input",
                 "layout": "vertical",
                 "properties": {
@@ -208,7 +208,7 @@
                 "children": []
               },
               {
-                "id": "checkbox_bd3783564c52",
+                "id": "checkbox_db918d536b6b",
                 "kind": "checkbox",
                 "layout": "vertical",
                 "properties": {
@@ -225,7 +225,7 @@
                 "children": []
               },
               {
-                "id": "button_45a89ce741d6",
+                "id": "button_79e3b8322571",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -241,7 +241,7 @@
                 "children": []
               },
               {
-                "id": "image_82d8d64e3e40",
+                "id": "image_cd04d465e3be",
                 "kind": "image",
                 "layout": "vertical",
                 "properties": {
@@ -258,7 +258,7 @@
                 "children": []
               },
               {
-                "id": "progress_abceff693ea0",
+                "id": "progress_69cad4e5d616",
                 "kind": "progress",
                 "layout": "vertical",
                 "properties": {
@@ -274,7 +274,7 @@
                 "children": []
               },
               {
-                "id": "button_2eed2db67e59",
+                "id": "button_a338cec66278",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -290,7 +290,7 @@
                 "children": []
               },
               {
-                "id": "button_06fcdbc79faf",
+                "id": "button_a0f943b4b694",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -306,7 +306,7 @@
                 "children": []
               },
               {
-                "id": "button_0f0c0dde82b0",
+                "id": "button_49b9166b749c",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -322,7 +322,7 @@
                 "children": []
               },
               {
-                "id": "button_1e8566dea466",
+                "id": "button_56e9eb36b9d4",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -340,7 +340,7 @@
             ]
           },
           {
-            "id": "page_46a8c6d27c7b",
+            "id": "page_c6c740c68146",
             "kind": "page",
             "layout": "vertical",
             "properties": {
@@ -354,7 +354,7 @@
             },
             "children": [
               {
-                "id": "button_5d5ad70fc2b1",
+                "id": "button_ba23f9a4627d",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -370,7 +370,7 @@
                 "children": []
               },
               {
-                "id": "button_2e3891686b99",
+                "id": "button_e2de78394d86",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -386,7 +386,7 @@
                 "children": []
               },
               {
-                "id": "button_f917062ec8e1",
+                "id": "button_d1c23e2c1745",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -402,7 +402,7 @@
                 "children": []
               },
               {
-                "id": "output_536526a682a0",
+                "id": "output_209495d01232",
                 "kind": "output",
                 "layout": "vertical",
                 "properties": {
@@ -420,7 +420,7 @@
             ]
           },
           {
-            "id": "page_3eec5b7ad43e",
+            "id": "page_68b2072a0eeb",
             "kind": "page",
             "layout": "vertical",
             "properties": {
@@ -434,7 +434,7 @@
             },
             "children": [
               {
-                "id": "terminal_8295d339e74f",
+                "id": "terminal_2fc71e9e44c0",
                 "kind": "terminal",
                 "layout": "vertical",
                 "properties": {
@@ -452,7 +452,7 @@
                 "children": []
               },
               {
-                "id": "container_1d327b1537ce",
+                "id": "container_eb888c403b25",
                 "kind": "container",
                 "layout": "horizontal",
                 "properties": {},
@@ -464,7 +464,7 @@
                 },
                 "children": [
                   {
-                    "id": "button_844a4b40d0d5",
+                    "id": "button_2915adff280f",
                     "kind": "button",
                     "layout": "vertical",
                     "properties": {
@@ -480,7 +480,7 @@
                     "children": []
                   },
                   {
-                    "id": "button_d44338a7fda7",
+                    "id": "button_c2ebb3c9ff0f",
                     "kind": "button",
                     "layout": "vertical",
                     "properties": {
@@ -496,7 +496,7 @@
                     "children": []
                   },
                   {
-                    "id": "button_d4e7c9f30257",
+                    "id": "button_1839c54ba74d",
                     "kind": "button",
                     "layout": "vertical",
                     "properties": {
@@ -516,7 +516,7 @@
             ]
           },
           {
-            "id": "page_5553edd12acb",
+            "id": "page_f05d5e2c6f9d",
             "kind": "page",
             "layout": "vertical",
             "properties": {
@@ -530,7 +530,7 @@
             },
             "children": [
               {
-                "id": "text_area_d909285da4e6",
+                "id": "text_area_b5a5bfc5be55",
                 "kind": "text_area",
                 "layout": "vertical",
                 "properties": {
@@ -547,7 +547,7 @@
                 "children": []
               },
               {
-                "id": "number_24cbfdf80177",
+                "id": "number_f7bd538d9a20",
                 "kind": "number",
                 "layout": "vertical",
                 "properties": {
@@ -567,7 +567,7 @@
                 "children": []
               },
               {
-                "id": "slider_1afd9751235c",
+                "id": "slider_0b91985da0df",
                 "kind": "slider",
                 "layout": "vertical",
                 "properties": {
@@ -586,7 +586,7 @@
                 "children": []
               },
               {
-                "id": "choice_8b252b2e1c56",
+                "id": "choice_41defbbce46d",
                 "kind": "choice",
                 "layout": "vertical",
                 "properties": {
@@ -606,7 +606,7 @@
                 "children": []
               },
               {
-                "id": "date_909dd2dafa95",
+                "id": "date_aebb7f6814db",
                 "kind": "date",
                 "layout": "vertical",
                 "properties": {
@@ -622,7 +622,7 @@
                 "children": []
               },
               {
-                "id": "table_96a07dc2e03b",
+                "id": "table_4c3157397b8c",
                 "kind": "table",
                 "layout": "vertical",
                 "properties": {
@@ -643,7 +643,7 @@
             ]
           },
           {
-            "id": "page_19ff00037548",
+            "id": "page_71fa0f4485b8",
             "kind": "page",
             "layout": "free",
             "properties": {
@@ -657,7 +657,7 @@
             },
             "children": [
               {
-                "id": "label_86ad26d75307",
+                "id": "label_21b6364928cd",
                 "kind": "label",
                 "layout": "vertical",
                 "properties": {
@@ -672,7 +672,7 @@
                 "children": []
               },
               {
-                "id": "button_92fc4a95a819",
+                "id": "button_584c02b09f55",
                 "kind": "button",
                 "layout": "vertical",
                 "properties": {
@@ -687,11 +687,109 @@
                 "children": []
               }
             ]
+          },
+          {
+            "id": "page_6f48cea57ce8",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Data"
+            },
+            "geometry": {
+              "x": 96,
+              "y": 96,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "container_22366f9ee063",
+                "kind": "container",
+                "layout": "horizontal",
+                "properties": {},
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 360,
+                  "height": 240
+                },
+                "children": [
+                  {
+                    "id": "button_d18e5321b3b2",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Add samples",
+                      "code_name": "samples_button"
+                    },
+                    "geometry": {
+                      "x": 16,
+                      "y": 16,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "button_1ff555541938",
+                    "kind": "button",
+                    "layout": "vertical",
+                    "properties": {
+                      "text": "Export CSV",
+                      "code_name": "csv_button"
+                    },
+                    "geometry": {
+                      "x": 32,
+                      "y": 32,
+                      "width": 220,
+                      "height": 44
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "table_67d890de1dfd",
+                "kind": "table",
+                "layout": "vertical",
+                "properties": {
+                  "headers": [
+                    "Column 1",
+                    "Column 2"
+                  ],
+                  "code_name": "books_table"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              },
+              {
+                "id": "chart_22328d53cf14",
+                "kind": "chart",
+                "layout": "vertical",
+                "properties": {
+                  "chart_type": "bar",
+                  "title": "Books per author",
+                  "code_name": "authors_chart"
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 360,
+                  "height": 140
+                },
+                "children": []
+              }
+            ]
           }
         ]
       },
       {
-        "id": "spacer_649b888ef84a",
+        "id": "spacer_81f4d4c4120b",
         "kind": "spacer",
         "layout": "vertical",
         "properties": {
@@ -709,7 +807,7 @@
         "children": []
       },
       {
-        "id": "label_5a5a00184573",
+        "id": "label_0296b1e74c99",
         "kind": "label",
         "layout": "vertical",
         "properties": {
@@ -728,62 +826,297 @@
   },
   "workflows": [
     {
-      "id": "flow_00_start",
+      "id": "flow_00_click",
+      "name": "Click: Add samples",
+      "event": {
+        "kind": "click",
+        "component": "button_d18e5321b3b2"
+      },
+      "body": [
+        {
+          "op": "data_add",
+          "collection": "authors",
+          "values": [
+            {
+              "field": "name",
+              "value": {
+                "id": "block_001",
+                "op": "literal",
+                "value": "Jane Austen"
+              }
+            }
+          ],
+          "id": "block_002"
+        },
+        {
+          "op": "assign",
+          "name": "author_a",
+          "scope": "project",
+          "value": {
+            "id": "block_003",
+            "op": "data_last_id"
+          },
+          "id": "block_004"
+        },
+        {
+          "op": "data_add",
+          "collection": "authors",
+          "values": [
+            {
+              "field": "name",
+              "value": {
+                "id": "block_005",
+                "op": "literal",
+                "value": "Mary Shelley"
+              }
+            }
+          ],
+          "id": "block_006"
+        },
+        {
+          "op": "assign",
+          "name": "author_b",
+          "scope": "project",
+          "value": {
+            "id": "block_007",
+            "op": "data_last_id"
+          },
+          "id": "block_008"
+        },
+        {
+          "op": "data_add",
+          "collection": "books",
+          "values": [
+            {
+              "field": "title",
+              "value": {
+                "id": "block_009",
+                "op": "literal",
+                "value": "Emma"
+              }
+            },
+            {
+              "field": "author",
+              "value": {
+                "id": "block_010",
+                "op": "variable",
+                "name": "author_a",
+                "scope": "project"
+              }
+            }
+          ],
+          "id": "block_011"
+        },
+        {
+          "op": "data_add",
+          "collection": "books",
+          "values": [
+            {
+              "field": "title",
+              "value": {
+                "id": "block_012",
+                "op": "literal",
+                "value": "Persuasion"
+              }
+            },
+            {
+              "field": "author",
+              "value": {
+                "id": "block_013",
+                "op": "variable",
+                "name": "author_a",
+                "scope": "project"
+              }
+            }
+          ],
+          "id": "block_014"
+        },
+        {
+          "op": "data_add",
+          "collection": "books",
+          "values": [
+            {
+              "field": "title",
+              "value": {
+                "id": "block_015",
+                "op": "literal",
+                "value": "Frankenstein"
+              }
+            },
+            {
+              "field": "author",
+              "value": {
+                "id": "block_016",
+                "op": "variable",
+                "name": "author_b",
+                "scope": "project"
+              }
+            }
+          ],
+          "id": "block_017"
+        },
+        {
+          "op": "show_records",
+          "component": "table_67d890de1dfd",
+          "collection": "books",
+          "id": "block_018"
+        },
+        {
+          "op": "set_chart",
+          "component": "chart_22328d53cf14",
+          "labels": {
+            "id": "block_019",
+            "op": "list",
+            "items": [
+              {
+                "id": "block_020",
+                "op": "literal",
+                "value": "Jane Austen"
+              },
+              {
+                "id": "block_021",
+                "op": "literal",
+                "value": "Mary Shelley"
+              }
+            ]
+          },
+          "value": {
+            "id": "block_022",
+            "op": "list",
+            "items": [
+              {
+                "id": "block_023",
+                "op": "data_count",
+                "collection": "books",
+                "field": "author",
+                "operator": "=",
+                "value": {
+                  "id": "block_024",
+                  "op": "variable",
+                  "name": "author_a",
+                  "scope": "project"
+                }
+              },
+              {
+                "id": "block_025",
+                "op": "data_count",
+                "collection": "books",
+                "field": "author",
+                "operator": "=",
+                "value": {
+                  "id": "block_026",
+                  "op": "variable",
+                  "name": "author_b",
+                  "scope": "project"
+                }
+              }
+            ]
+          },
+          "id": "block_027"
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Click: Export CSV",
+      "event": {
+        "kind": "click",
+        "component": "button_1ff555541938"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "save_file",
+          "name": "csv_path",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "Where should the CSV be saved?"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "export_table",
+          "component": "table_67d890de1dfd",
+          "path": {
+            "id": "block_004",
+            "op": "variable",
+            "name": "csv_path",
+            "scope": "project"
+          },
+          "id": "block_005"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_start",
       "name": "On start",
       "event": {
         "kind": "start",
-        "component": "window_2a2b92882bb7"
+        "component": "window_1d893f79d823"
       },
       "body": [
+        {
+          "op": "show_records",
+          "component": "table_67d890de1dfd",
+          "collection": "books",
+          "id": "block_001"
+        },
         {
           "op": "assign",
           "name": "visits",
           "scope": "project",
           "value": {
-            "id": "block_001",
+            "id": "block_002",
             "op": "literal",
             "value": 0
           },
-          "id": "block_002"
+          "id": "block_003"
         },
         {
           "op": "assign",
           "name": "step",
           "scope": "project",
           "value": {
-            "id": "block_003",
+            "id": "block_004",
             "op": "literal",
             "value": 0
           },
-          "id": "block_004"
+          "id": "block_005"
         },
         {
           "op": "log",
           "value": {
-            "id": "block_005",
+            "id": "block_006",
             "op": "literal",
             "value": "Workshop ready."
           },
-          "id": "block_006"
+          "id": "block_007"
         },
         {
           "op": "set_text",
-          "component": "label_5a5a00184573",
+          "component": "label_0296b1e74c99",
           "value": {
-            "id": "block_007",
+            "id": "block_008",
             "op": "literal",
             "value": "Ready."
           },
-          "id": "block_008"
+          "id": "block_009"
         }
       ]
     },
     {
-      "id": "flow_01_click",
+      "id": "flow_03_click",
       "name": "Click: Greet",
       "event": {
         "kind": "click",
-        "component": "button_45a89ce741d6"
+        "component": "button_79e3b8322571"
       },
       "body": [
         {
@@ -823,7 +1156,7 @@
         },
         {
           "op": "set_text",
-          "component": "label_5a5a00184573",
+          "component": "label_0296b1e74c99",
           "value": {
             "id": "block_007",
             "op": "join",
@@ -835,7 +1168,7 @@
             "right": {
               "id": "block_009",
               "op": "read",
-              "component": "text_input_b09e5fb3a17a",
+              "component": "text_input_7ecbe2cf1a4f",
               "attribute": "text"
             }
           },
@@ -843,7 +1176,7 @@
         },
         {
           "op": "set_value",
-          "component": "progress_abceff693ea0",
+          "component": "progress_69cad4e5d616",
           "value": {
             "id": "block_011",
             "op": "binary",
@@ -867,7 +1200,7 @@
           "condition": {
             "id": "block_015",
             "op": "read",
-            "component": "checkbox_bd3783564c52",
+            "component": "checkbox_db918d536b6b",
             "attribute": "checked"
           },
           "then": [
@@ -897,26 +1230,26 @@
       ]
     },
     {
-      "id": "flow_02_click",
+      "id": "flow_04_click",
       "name": "Click: Get busy",
       "event": {
         "kind": "click",
-        "component": "button_2eed2db67e59"
+        "component": "button_a338cec66278"
       },
       "body": [
         {
           "op": "go_state",
-          "state": "state_b5a0d90f9172",
+          "state": "state_6ec3d5fa7d7d",
           "id": "block_001"
         }
       ]
     },
     {
-      "id": "flow_03_click",
+      "id": "flow_05_click",
       "name": "Click: Get ready",
       "event": {
         "kind": "click",
-        "component": "button_06fcdbc79faf"
+        "component": "button_a0f943b4b694"
       },
       "body": [
         {
@@ -926,7 +1259,7 @@
         },
         {
           "op": "set_enabled",
-          "component": "button_45a89ce741d6",
+          "component": "button_79e3b8322571",
           "value": {
             "id": "block_002",
             "op": "literal",
@@ -937,11 +1270,11 @@
       ]
     },
     {
-      "id": "flow_04_click",
+      "id": "flow_06_click",
       "name": "Click: Count to 3",
       "event": {
         "kind": "click",
-        "component": "button_0f0c0dde82b0"
+        "component": "button_49b9166b749c"
       },
       "body": [
         {
@@ -999,27 +1332,27 @@
       ]
     },
     {
-      "id": "flow_05_click",
+      "id": "flow_07_click",
       "name": "Click: Go to the terminal",
       "event": {
         "kind": "click",
-        "component": "button_1e8566dea466"
+        "component": "button_56e9eb36b9d4"
       },
       "body": [
         {
           "op": "show_page",
-          "component": "page_3eec5b7ad43e",
+          "component": "page_68b2072a0eeb",
           "id": "block_001"
         }
       ],
       "module": "Terminal"
     },
     {
-      "id": "flow_06_click",
+      "id": "flow_08_click",
       "name": "Click: System information",
       "event": {
         "kind": "click",
-        "component": "button_5d5ad70fc2b1"
+        "component": "button_ba23f9a4627d"
       },
       "body": [
         {
@@ -1047,11 +1380,11 @@
       "module": "Tasks"
     },
     {
-      "id": "flow_07_click",
+      "id": "flow_09_click",
       "name": "Click: Run a script",
       "event": {
         "kind": "click",
-        "component": "button_2e3891686b99"
+        "component": "button_e2de78394d86"
       },
       "body": [
         {
@@ -1096,11 +1429,11 @@
       "module": "Tasks"
     },
     {
-      "id": "flow_08_click",
+      "id": "flow_10_click",
       "name": "Click: Ask and confirm",
       "event": {
         "kind": "click",
-        "component": "button_f917062ec8e1"
+        "component": "button_d1c23e2c1745"
       },
       "body": [
         {
@@ -1142,16 +1475,16 @@
       "module": "Tasks"
     },
     {
-      "id": "flow_09_click",
+      "id": "flow_11_click",
       "name": "Click: Start",
       "event": {
         "kind": "click",
-        "component": "button_844a4b40d0d5"
+        "component": "button_2915adff280f"
       },
       "body": [
         {
           "op": "terminal_start",
-          "component": "terminal_8295d339e74f",
+          "component": "terminal_2fc71e9e44c0",
           "program": {
             "id": "block_001",
             "op": "literal",
@@ -1168,16 +1501,16 @@
       "module": "Terminal"
     },
     {
-      "id": "flow_10_click",
+      "id": "flow_12_click",
       "name": "Click: Send command",
       "event": {
         "kind": "click",
-        "component": "button_d44338a7fda7"
+        "component": "button_c2ebb3c9ff0f"
       },
       "body": [
         {
           "op": "terminal_send",
-          "component": "terminal_8295d339e74f",
+          "component": "terminal_2fc71e9e44c0",
           "value": {
             "id": "block_001",
             "op": "literal",
@@ -1189,66 +1522,32 @@
       "module": "Terminal"
     },
     {
-      "id": "flow_11_click",
+      "id": "flow_13_click",
       "name": "Click: Stop",
       "event": {
         "kind": "click",
-        "component": "button_d4e7c9f30257"
+        "component": "button_1839c54ba74d"
       },
       "body": [
         {
           "op": "terminal_stop",
-          "component": "terminal_8295d339e74f",
+          "component": "terminal_2fc71e9e44c0",
           "id": "block_001"
         }
       ],
       "module": "Terminal"
     },
     {
-      "id": "flow_12_click",
+      "id": "flow_14_click",
       "name": "Click: About",
       "event": {
         "kind": "click",
-        "component": "button_78bc7f35051b"
+        "component": "button_58407e3a2a6d"
       },
       "body": [
         {
           "op": "open_window",
-          "window": "window_133beab3fc71",
-          "close_current": false,
-          "id": "block_001"
-        }
-      ],
-      "module": "Windows"
-    },
-    {
-      "id": "flow_13_click",
-      "name": "Click: Guide",
-      "event": {
-        "kind": "click",
-        "component": "button_a511233502e8"
-      },
-      "body": [
-        {
-          "op": "open_window",
-          "window": "window_0b5f93584602",
-          "close_current": false,
-          "id": "block_001"
-        }
-      ],
-      "module": "Windows"
-    },
-    {
-      "id": "flow_14_click",
-      "name": "Click: Look",
-      "event": {
-        "kind": "click",
-        "component": "button_f0cda92a529e"
-      },
-      "body": [
-        {
-          "op": "open_window",
-          "window": "window_2c9632429a9f",
+          "window": "window_f94977126ad8",
           "close_current": false,
           "id": "block_001"
         }
@@ -1257,10 +1556,44 @@
     },
     {
       "id": "flow_15_click",
+      "name": "Click: Guide",
+      "event": {
+        "kind": "click",
+        "component": "button_6dea38f019a0"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_c5dc11579b8c",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ],
+      "module": "Windows"
+    },
+    {
+      "id": "flow_16_click",
+      "name": "Click: Look",
+      "event": {
+        "kind": "click",
+        "component": "button_8ad44bffc84d"
+      },
+      "body": [
+        {
+          "op": "open_window",
+          "window": "window_fb651897c203",
+          "close_current": false,
+          "id": "block_001"
+        }
+      ],
+      "module": "Windows"
+    },
+    {
+      "id": "flow_17_click",
       "name": "Click: Close",
       "event": {
         "kind": "click",
-        "component": "button_c4334e9167e0"
+        "component": "button_a27abc22eea8"
       },
       "body": [
         {
@@ -1271,11 +1604,11 @@
       "module": "Windows"
     },
     {
-      "id": "flow_16_click",
+      "id": "flow_18_click",
       "name": "Click: Dark",
       "event": {
         "kind": "click",
-        "component": "button_222b88f5c840"
+        "component": "button_de24cafe09e9"
       },
       "body": [
         {
@@ -1294,11 +1627,11 @@
       "module": "Windows"
     },
     {
-      "id": "flow_17_click",
+      "id": "flow_19_click",
       "name": "Click: Light",
       "event": {
         "kind": "click",
-        "component": "button_0b23467e257d"
+        "component": "button_aa0eb83e9e29"
       },
       "body": [
         {
@@ -1318,6 +1651,36 @@
     }
   ],
   "metadata": {
+    "collections": [
+      {
+        "id": "authors",
+        "name": "Authors",
+        "fields": [
+          {
+            "id": "name",
+            "name": "name",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "books",
+        "name": "Books",
+        "fields": [
+          {
+            "id": "title",
+            "name": "title",
+            "type": "text"
+          },
+          {
+            "id": "author",
+            "name": "author",
+            "type": "ref",
+            "target": "authors"
+          }
+        ]
+      }
+    ],
     "logic_version": 1,
     "programming": "blocks",
     "functions": [
@@ -1339,7 +1702,7 @@
                 "left": {
                   "id": "block_003",
                   "op": "read",
-                  "component": "text_input_b09e5fb3a17a",
+                  "component": "text_input_7ecbe2cf1a4f",
                   "attribute": "text"
                 },
                 "right": {
@@ -1368,7 +1731,7 @@
                 "left": {
                   "id": "block_009",
                   "op": "read",
-                  "component": "text_input_b09e5fb3a17a",
+                  "component": "text_input_7ecbe2cf1a4f",
                   "attribute": "text"
                 },
                 "right": {
@@ -1397,7 +1760,7 @@
         "body": [
           {
             "op": "set_text",
-            "component": "label_f587ff1e14be",
+            "component": "label_cfb640d5f476",
             "value": {
               "id": "block_001",
               "op": "join",
@@ -1433,14 +1796,14 @@
     "debug_breakpoints": [
       {
         "file": "block",
-        "flow": "flow_01_click",
+        "flow": "flow_03_click",
         "block": "block_004"
       }
     ]
   },
   "windows": [
     {
-      "id": "window_133beab3fc71",
+      "id": "window_f94977126ad8",
       "kind": "window",
       "layout": "vertical",
       "properties": {
@@ -1458,7 +1821,7 @@
       },
       "children": [
         {
-          "id": "label_fe92021b3632",
+          "id": "label_8d9d8ef4f17a",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1473,7 +1836,7 @@
           "children": []
         },
         {
-          "id": "button_c4334e9167e0",
+          "id": "button_a27abc22eea8",
           "kind": "button",
           "layout": "vertical",
           "properties": {
@@ -1491,7 +1854,7 @@
       ]
     },
     {
-      "id": "window_2c9632429a9f",
+      "id": "window_fb651897c203",
       "kind": "window",
       "layout": "vertical",
       "properties": {
@@ -1509,7 +1872,7 @@
       },
       "children": [
         {
-          "id": "label_f587ff1e14be",
+          "id": "label_cfb640d5f476",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1524,7 +1887,7 @@
           "children": []
         },
         {
-          "id": "button_222b88f5c840",
+          "id": "button_de24cafe09e9",
           "kind": "button",
           "layout": "vertical",
           "properties": {
@@ -1540,7 +1903,7 @@
           "children": []
         },
         {
-          "id": "button_0b23467e257d",
+          "id": "button_aa0eb83e9e29",
           "kind": "button",
           "layout": "vertical",
           "properties": {
@@ -1558,7 +1921,7 @@
       ]
     },
     {
-      "id": "window_0b5f93584602",
+      "id": "window_c5dc11579b8c",
       "kind": "window",
       "layout": "vertical",
       "properties": {
@@ -1574,7 +1937,7 @@
       },
       "children": [
         {
-          "id": "label_0b5d72110b82",
+          "id": "label_a019147c3820",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1589,7 +1952,7 @@
           "children": []
         },
         {
-          "id": "label_c563795df079",
+          "id": "label_39d8d0507fdd",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1604,7 +1967,7 @@
           "children": []
         },
         {
-          "id": "label_ee75fd355879",
+          "id": "label_763a5d2ff345",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1619,7 +1982,7 @@
           "children": []
         },
         {
-          "id": "label_1f01f5772302",
+          "id": "label_5972d6688de7",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1634,7 +1997,7 @@
           "children": []
         },
         {
-          "id": "label_58995a1682ff",
+          "id": "label_16d64e12069d",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1649,7 +2012,7 @@
           "children": []
         },
         {
-          "id": "label_a64d29038d2e",
+          "id": "label_5c8e13f9ae57",
           "kind": "label",
           "layout": "vertical",
           "properties": {
@@ -1667,22 +2030,22 @@
     }
   ],
   "states": {
-    "window_2a2b92882bb7": [
+    "window_1d893f79d823": [
       {
-        "id": "state_b5a0d90f9172",
+        "id": "state_6ec3d5fa7d7d",
         "name": "Busy",
         "overrides": {
-          "label_5a5a00184573": {
+          "label_0296b1e74c99": {
             "text": "Busy…"
           },
-          "button_45a89ce741d6": {
+          "button_79e3b8322571": {
             "enabled": false
           }
         }
       }
     ]
   },
-  "entry_window": "window_2a2b92882bb7",
+  "entry_window": "window_1d893f79d823",
   "variables": [],
   "map_layout": {},
   "application": {

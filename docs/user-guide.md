@@ -134,6 +134,29 @@ and actions file are kept next to it with a `.bak-blocks` suffix.
 
 ![Python](images/code-dark.png)
 
+## Data and files
+
+Open **Data** in the sidebar to create *collections*, which are like tables:
+a name and fields of type text, number, date, yes/no or *reference* (a link to a
+record of another collection). A reference shows the first text field of the
+record it points to. A field or collection used by blocks cannot be removed.
+
+Blocks in the **Records** category add, change and delete records, search and
+count them, sum a number field and loop over a list with *for each*. *Show
+records* fills a table or choice list; *selected record* gives back its id.
+The **Chart** component (bars, line or pie) takes labels and values from two
+lists. Python projects use `ctx.data`, `ctx.show_records` and `ctx.set_chart`.
+
+Records live in a SQLite file in the application's data folder
+(`$XDG_DATA_HOME/<app id>/`); while testing in the editor they go to a separate
+test folder, which **Delete test data…** empties. Other blocks read and write text
+files, read CSV and export a table or records to CSV; *Ask* can also choose a
+file to save. Files are not sandboxed: the app reads and writes whatever the
+person running it can.
+
+The *Complete workshop* example has a Data page with authors, books, a table, a
+chart and CSV export.
+
 ## Testing and debugging
 
 - **F5** starts the application in a separate, supervised process. **Shift+F5**

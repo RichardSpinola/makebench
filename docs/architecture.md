@@ -51,6 +51,19 @@ item text by `core/menus.py` and kept when the text is edited), so flows still
 match events by equality. A change made through `ctx` never fires `change`:
 Qt blocks signals and GTK sets a `programmatic` flag. `close` does not cancel.
 
+Format 11 adds `metadata.collections` (`id`, `name`, `fields` of type `text`,
+`number`, `date`, `bool` or `ref` with a `target` collection) and the `chart`
+component. `core/datamodel.py` validates and looks up collections and fields.
+`core/datastore.py` keeps one SQLite table per collection (`c_<id>`, columns
+`f_<id>`), migrates by adding tables and columns and never drops data, and
+refuses to delete a record that other records still reference. The store lives
+in the worker process, so Qt and GTK share it: `ctx.data` (`add`, `update`,
+`delete`, `get`, `find`, `count`, `sum`, `name`) and `ctx.show_records` go
+through it. Data is kept in `$XDG_DATA_HOME/<app-id>/data.sqlite` for exported
+apps and in a per-project test folder when run from the editor. Charts are
+drawn by shared geometry in `core/chart.py` (QPainter in `ui/chart.py`, cairo
+in `gtk_runtime/chart.py`).
+
 `core/history.py` keeps labelled snapshots of interface and logic (200 by
 default). Python files use the text editor's own undo stack.
 

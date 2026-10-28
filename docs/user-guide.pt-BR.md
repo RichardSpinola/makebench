@@ -142,6 +142,30 @@ projeto e o arquivo de ações anteriores ficam ao lado, com o sufixo
 
 ![Python](images/code-dark.png)
 
+## Dados e arquivos
+
+Abra **Dados** na barra lateral para criar *coleções*, que são como tabelas:
+um nome e campos de texto, número, data, sim/não ou *referência* (ligação a um
+registro de outra coleção). A referência mostra o primeiro campo de texto do
+registro apontado. Campo ou coleção usado por blocos não pode ser removido.
+
+Os blocos da categoria **Registros** adicionam, mudam e apagam registros,
+buscam e contam, somam um campo numérico e percorrem listas com *para cada*.
+*Mostrar registros* preenche uma tabela ou lista de escolha; *registro
+selecionado* devolve o id. O componente **Gráfico** (barras, linha ou pizza)
+recebe rótulos e valores de duas listas. Projetos em Python usam `ctx.data`,
+`ctx.show_records` e `ctx.set_chart`.
+
+Os registros ficam num arquivo SQLite na pasta de dados do aplicativo
+(`$XDG_DATA_HOME/<id do app>/`); ao testar no editor vão para uma pasta de
+teste à parte, que **Apagar dados de teste…** esvazia. Outros blocos leem e
+gravam arquivos de texto, leem CSV e exportam uma tabela ou registros para CSV;
+*Perguntar* também escolhe um arquivo para salvar. Os arquivos não são isolados:
+o app lê e grava o que a pessoa que o executa pode.
+
+O exemplo *Oficina completa* tem uma página Dados com autores, livros, tabela,
+gráfico e exportação em CSV.
+
 ## Testar e depurar
 
 - **F5** inicia o aplicativo num processo separado e supervisionado.

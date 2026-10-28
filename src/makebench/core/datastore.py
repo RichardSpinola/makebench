@@ -160,7 +160,7 @@ class DataStore:
             )
         ]
 
-    def add(self, name, **fields):
+    def add(self, name, /, **fields):
         """Insert a record and return its id."""
         collection = self.collection(name)
         pairs = self.values(collection, fields)
@@ -175,7 +175,7 @@ class DataStore:
             )
         return cursor.lastrowid
 
-    def update(self, name, record_id, **fields):
+    def update(self, name, record_id, /, **fields):
         """Change fields of an existing record."""
         collection = self.collection(name)
         if self.get(name, record_id) is None:

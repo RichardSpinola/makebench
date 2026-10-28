@@ -72,6 +72,21 @@ TEXT = {
         arg_value="demo",
         script_src='printf "Argumento: %s\\n" "$1"',
         term_cmd="echo olá do terminal\n",
+        data="Dados",
+        authors="Autores",
+        books="Livros",
+        author_name="nome",
+        book_title="titulo",
+        book_author="autor",
+        add_samples="Adicionar exemplos",
+        export_csv="Exportar CSV",
+        csv_prompt="Onde salvar o CSV?",
+        author_a="Machado de Assis",
+        author_b="Clarice Lispector",
+        book_a1="Dom Casmurro",
+        book_a2="Quincas Borba",
+        book_b1="A hora da estrela",
+        chart_title="Livros por autor",
         guide="Roteiro",
         guide_title="Roteiro de testes",
         guide_steps=[
@@ -131,6 +146,21 @@ TEXT = {
         arg_value="demo",
         script_src='printf "Argument: %s\\n" "$1"',
         term_cmd="echo hello from the terminal\n",
+        data="Data",
+        authors="Authors",
+        books="Books",
+        author_name="name",
+        book_title="title",
+        book_author="author",
+        add_samples="Add samples",
+        export_csv="Export CSV",
+        csv_prompt="Where should the CSV be saved?",
+        author_a="Jane Austen",
+        author_b="Mary Shelley",
+        book_a1="Emma",
+        book_a2="Persuasion",
+        book_b1="Frankenstein",
+        chart_title="Books per author",
         guide="Guide",
         guide_title="Test guide",
         guide_steps=[
@@ -191,6 +221,17 @@ def block_expr(e, ids):
             "left": block_expr(e[1], ids),
             "right": block_expr(e[2], ids),
         }
+    if kind == "last_id":
+        return {"id": ids("block"), "op": "data_last_id"}
+    if kind == "count":
+        return {
+            "id": ids("block"),
+            "op": "data_count",
+            "collection": e[1],
+            "field": e[2],
+            "operator": "=",
+            "value": block_expr(e[3], ids),
+        }
     return {"id": ids("block"), "op": "list", "items": [block_expr(x, ids) for x in e[1]]}
 
 
@@ -231,6 +272,26 @@ def block_stmt(s, ids):
     elif op == "ask":
         b.update(
             kind="text",
+            name=s[1],
+            scope="project",
+            prompt=block_expr(s[2], ids),
+            options=block_expr(("list", []), ids),
+        )
+    elif op == "data_add":
+        b.update(
+            collection=s[1],
+            values=[{"field": f, "value": block_expr(v, ids)} for f, v in s[2]],
+        )
+    elif op == "show_records":
+        b.update(component=s[1], collection=s[2])
+    elif op == "set_chart":
+        b.update(component=s[1], labels=block_expr(s[2], ids), value=block_expr(s[3], ids))
+    elif op == "export_table":
+        b.update(component=s[1], path=block_expr(s[2], ids))
+    elif op == "ask_file":
+        b.update(
+            op="ask",
+            kind="save_file",
             name=s[1],
             scope="project",
             prompt=block_expr(s[2], ids),
@@ -290,6 +351,23 @@ def build(language, destination):
     free_page = project.add(pages.id, K.PAGE)
     free_page.properties["title"] = t["free"]
     free_page.layout = LayoutKind.FREE
+    data_page = project.add(pages.id, K.PAGE)
+    data_page.properties["title"] = t["data"]
+    project.metadata["collections"] = [
+        {
+            "id": "authors",
+            "name": t["authors"],
+            "fields": [{"id": "name", "name": t["author_name"], "type": "text"}],
+        },
+        {
+            "id": "books",
+            "name": t["books"],
+            "fields": [
+                {"id": "title", "name": t["book_title"], "type": "text"},
+                {"id": "author", "name": t["book_author"], "type": "ref", "target": "authors"},
+            ],
+        },
+    ]
 
     add(home, K.LABEL, text=t["name_ph"])
     name_input = add(home, K.TEXT_INPUT, "name_input", placeholder=t["name_ph"])
@@ -329,6 +407,13 @@ def build(language, destination):
     loose = add(free_page, K.BUTTON, text=t["free_button"])
     loose.geometry.update(x=260, y=70, width=160, height=36)
 
+    data_buttons = add(data_page, K.CONTAINER)
+    data_buttons.layout = LayoutKind.HORIZONTAL
+    samples = add(data_buttons, K.BUTTON, "samples_button", text=t["add_samples"])
+    csv_button = add(data_buttons, K.BUTTON, "csv_button", text=t["export_csv"])
+    books_table = add(data_page, K.TABLE, "books_table")
+    authors_chart = add(data_page, K.CHART, "authors_chart", title=t["chart_title"])
+
     add(root, K.SPACER)
     status = add(root, K.LABEL, "status", text=t["status_ready"])
 
@@ -365,8 +450,40 @@ def build(language, destination):
 
     c = lambda node, attr="text": ("read", node.id, attr)  # noqa: E731
     visits = ("var", "visits")
+    book = lambda title, owner: (  # noqa: E731
+        "data_add",
+        "books",
+        [("title", lit(title)), ("author", ("var", owner))],
+    )
     steps = {
+        (samples.id, "click"): [
+            ("data_add", "authors", [("name", lit(t["author_a"]))]),
+            ("assign", "author_a", ("last_id",)),
+            ("data_add", "authors", [("name", lit(t["author_b"]))]),
+            ("assign", "author_b", ("last_id",)),
+            book(t["book_a1"], "author_a"),
+            book(t["book_a2"], "author_a"),
+            book(t["book_b1"], "author_b"),
+            ("show_records", books_table.id, "books"),
+            (
+                "set_chart",
+                authors_chart.id,
+                ("list", [lit(t["author_a"]), lit(t["author_b"])]),
+                (
+                    "list",
+                    [
+                        ("count", "books", "author", ("var", "author_a")),
+                        ("count", "books", "author", ("var", "author_b")),
+                    ],
+                ),
+            ),
+        ],
+        (csv_button.id, "click"): [
+            ("ask_file", "csv_path", lit(t["csv_prompt"])),
+            ("export_table", books_table.id, ("var", "csv_path")),
+        ],
         (root.id, "start"): [
+            ("show_records", books_table.id, "books"),
             ("assign", "visits", lit(0)),
             ("assign", "step", lit(0)),
             ("log", lit(t["ready_msg"])),
@@ -474,6 +591,8 @@ def build(language, destination):
         for n in (
             root,
             greet,
+            samples,
+            csv_button,
             busy,
             ready,
             count,
@@ -524,7 +643,7 @@ def build(language, destination):
         language="pt_BR" if language == "pt" else "en",
     )
     project.metadata["example"] = t["subtitle"]
-    first = project.workflows[1]
+    first = next(f for f in project.workflows if f["event"]["component"] == greet.id)
     project.metadata["debug_breakpoints"] = [
         {
             "file": "block",

@@ -52,6 +52,21 @@ class DataStoreTests(unittest.TestCase):
         with self.assertRaises(DataError):
             self.store.listing("Livros", [{"titulo": "x"}])
 
+    def test_a_field_may_be_called_name(self):
+        store = DataStore(
+            ":memory:",
+            [
+                {
+                    "id": "p",
+                    "name": "People",
+                    "fields": [{"id": "n", "name": "name", "type": "text"}],
+                }
+            ],
+        )
+        record = store.add("People", name="Ana")
+        store.update("People", record, name="Bia")
+        self.assertEqual(store.get("People", record)["name"], "Bia")
+
     def test_records_roundtrip_with_types(self):
         self.assertEqual(
             self.store.get("Livros", self.dom),

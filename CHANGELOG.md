@@ -22,6 +22,16 @@
 - **Window:** application menus with shortcuts, a frame (normal, without
   buttons, without frame), centered and always on top (Qt only on Wayland).
 - **Format 10** holds all of the above; older formats still open.
+- **Data:** collections with text, number, date, yes/no and reference fields,
+  stored in SQLite (`ctx.data`), with blocks to add, change, delete, find,
+  count and sum records, a *for each* loop, and tables and choice lists that
+  show records. Format 11.
+- **Files and CSV:** read and write text files, read CSV, export tables and
+  records to CSV, and ask where to save a file.
+- **Chart:** bar, line and pie chart component (`ctx.set_chart`) in Qt and GTK.
+- **Map and Problems:** the Map lists collections with the flows that use them;
+  Problems warns about a missing collection or field.
+- **Fixed:** a collection field called `name` no longer clashes in `ctx.data`.
 - The complete workshop examples use block functions and modules only. The
   welcome wizard, task center and terminal examples come in a blocks version
   and a Python version.
