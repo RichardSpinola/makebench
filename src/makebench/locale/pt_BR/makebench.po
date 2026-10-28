@@ -7163,3 +7163,51 @@ msgstr "Visão web"
 #: src/makebench/editor/canvas.py
 msgid "Web view: edit the page with Plugins › Edit Web view page…"
 msgstr "Visão web: edite a página em Plugins › Editar página da Visão web…"
+
+#: src/makebench/editor/publish.py
+msgid "Any distribution, isolated"
+msgstr "Qualquer distribuição, isolado"
+
+#: src/makebench/editor/publish.py
+msgid "Anyone on Linux"
+msgstr "Qualquer pessoa no Linux"
+
+#: src/makebench/editor/publish.py
+msgid "Fedora or openSUSE"
+msgstr "Fedora ou openSUSE"
+
+#: src/makebench/editor/publish.py
+msgid "Installs with a menu entry."
+msgstr "Instala com atalho no menu."
+
+#: src/makebench/editor/publish.py
+msgid "One file that runs without installing."
+msgstr "Um arquivo que roda sem instalar."
+
+#: src/makebench/editor/publish.py
+msgid "Programmers"
+msgstr "Programadores"
+
+#: src/makebench/editor/publish.py
+msgid "Runs apart from the system."
+msgstr "Roda separado do sistema."
+
+#: src/makebench/editor/publish.py
+msgid "The Python code, to read and change."
+msgstr "O código Python, para ler e mudar."
+
+#: src/makebench/editor/publish.py
+msgid "Ubuntu, Debian or Mint"
+msgstr "Ubuntu, Debian ou Mint"
+
+#: src/makebench/editor/publish.py
+msgid "Who is it for"
+msgstr "Para quem é"
+
+#: src/makebench/editor/publish.py
+msgid "Who is it for?"
+msgstr "Para quem é?"
+
+#: src/makebench/editor/publish.py
+msgid "recommended"
+msgstr "recomendado"

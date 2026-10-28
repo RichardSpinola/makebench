@@ -257,6 +257,40 @@ class PortableInterfaceTests(unittest.TestCase):
                 window.close()
                 app.processEvents()
 
+    def test_choosing_who_the_app_is_for_picks_the_package(self):
+        """Each audience selects its format, and a format chosen elsewhere selects its audience."""
+        from PySide6.QtWidgets import QApplication
+        from makebench.editor.window import MainWindow
+
+        app = QApplication.instance() or QApplication([])
+        app.setQuitOnLastWindowClosed(False)
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.dict(os.environ, {"XDG_CONFIG_HOME": directory, "XDG_STATE_HOME": directory}),
+        ):
+            window = MainWindow(Project.empty())
+            window.recovery_timer.stop()
+            try:
+                panel = window.publish_panel
+                self.assertEqual(
+                    set(panel.audience_buttons), {"appimage", "deb", "rpm", "flatpak", "source"}
+                )
+                panel.audience_buttons["deb"].click()
+                self.assertEqual(panel.format.currentData(), "deb")
+                self.assertEqual(panel.build.text(), "Build DEB…")
+                panel.format.setCurrentIndex(panel.format.findData("flatpak"))
+                self.assertTrue(panel.audience_buttons["flatpak"].isChecked())
+                panel.product.setCurrentIndex(1)
+                self.assertTrue(panel.audience_box.isHidden())
+                panel.product.setCurrentIndex(0)
+                self.assertFalse(panel.audience_box.isHidden())
+                self.assertTrue(panel.audience_buttons["flatpak"].isChecked())
+            finally:
+                window.history.mark_saved()
+                window.source.mark_saved()
+                window.close()
+                app.processEvents()
+
     def test_close_waits_for_inflight_designer_preview(self):
         """Closing cancels the preview and keeps its QThread alive until the helper is cleaned up."""
         import threading

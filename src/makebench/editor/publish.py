@@ -7,6 +7,7 @@ from PySide6.QtCore import QThread, QUrl, Signal, Qt
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
+    QButtonGroup,
     QDialog,
     QDialogButtonBox,
     QLayout,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFormLayout,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QListWidget,
@@ -22,6 +24,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QProgressBar,
     QPushButton,
+    QRadioButton,
     QVBoxLayout,
     QWidget,
 )
@@ -36,7 +39,7 @@ from makebench.core.portable import (
 )
 from makebench.i18n import tr
 from .errors import describe
-from .look import header
+from .look import header, make_muted, make_title
 from .theme import icon
 
 
@@ -126,9 +129,20 @@ class PrepareJob(QThread):
             self.failed.emit(summary + ("\n" + details if details else ""))
 
 
+def audiences():
+    """Who the application is for, and the package that suits them best."""
+    return [
+        ("appimage", tr("Anyone on Linux"), tr("One file that runs without installing."), True),
+        ("deb", tr("Ubuntu, Debian or Mint"), tr("Installs with a menu entry."), False),
+        ("rpm", tr("Fedora or openSUSE"), tr("Installs with a menu entry."), False),
+        ("flatpak", tr("Any distribution, isolated"), tr("Runs apart from the system."), False),
+        ("source", tr("Programmers"), tr("The Python code, to read and change."), False),
+    ]
+
+
 def stage_text(active=None):
-    """Export steps, with the active one in bold (Format → Check → Build → Result)."""
-    names = [tr("Format"), tr("Verify"), tr("Build"), tr("Result")]
+    """Export steps, with the active one in bold (Who → Check → Build → Result)."""
+    names = [tr("Who is it for"), tr("Verify"), tr("Build"), tr("Result")]
     return "  →  ".join(
         f"<b>{number} {name}</b>" if number == active else f"{number} {name}"
         for number, name in enumerate(names, 1)
@@ -158,6 +172,35 @@ class PublishPanel(QWidget):
         edit.clicked.connect(window.application_settings)
         summary_row.addWidget(edit)
         layout.addLayout(summary_row)
+        # Choosing who the application is for picks the package; the format list stays
+        # underneath for code and checks that select a format directly.
+        self.audience_box = QWidget()
+        audience_layout = QVBoxLayout(self.audience_box)
+        audience_layout.setContentsMargins(0, 4, 0, 4)
+        audience_layout.addWidget(make_title(QLabel(tr("Who is it for?")), 1.1))
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(18)
+        grid.setVerticalSpacing(2)
+        self.audience = QButtonGroup(self)
+        self.audience_buttons = {}
+        for index, (key, title, line, recommended) in enumerate(audiences()):
+            text = title + (" · " + tr("recommended") if recommended else "")
+            button = QRadioButton(text)
+            button.setAccessibleDescription(line)
+            self.audience.addButton(button)
+            self.audience_buttons[key] = button
+            note = make_muted(QLabel(line))
+            note.setIndent(
+                button.style().pixelMetric(button.style().PixelMetric.PM_ExclusiveIndicatorWidth)
+                + 6
+            )
+            row, column = divmod(index, 2)
+            grid.addWidget(button, row * 2, column)
+            grid.addWidget(note, row * 2 + 1, column)
+            button.toggled.connect(
+                lambda on, key=key: on and self.format.setCurrentIndex(self.format.findData(key))
+            )
+        audience_layout.addLayout(grid)
         form = QFormLayout()
         self.destination_form = form
         self.product = QComboBox()
@@ -181,6 +224,7 @@ class PublishPanel(QWidget):
         self.environment.setMaximumWidth(360)
         form.addRow(tr("Build with"), self.environment)
         layout.addLayout(form)
+        layout.addWidget(self.audience_box)
         tools = QHBoxLayout()
         self.tool_status = QLabel()
         tools.addWidget(self.tool_status, 1)
@@ -318,6 +362,11 @@ class PublishPanel(QWidget):
         managed = ready(selected, is_editor)
         busy = bool(self.job and self.job.isRunning())
         self.destination_form.setRowVisible(self.environment, False)
+        self.destination_form.setRowVisible(self.format, False)
+        self.audience_box.setVisible(not is_editor)
+        chosen = self.audience_buttons.get(key)
+        if chosen is not None and not chosen.isChecked():
+            chosen.setChecked(True)
         self.prepare.setVisible(key != "source")
         self.recipe_only.setVisible(key != "source" and not is_editor)
         self.environment.setEnabled(key not in {"source", "flatpak"} and not busy)
