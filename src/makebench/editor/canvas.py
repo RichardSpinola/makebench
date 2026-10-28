@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
 )
 
 from makebench.core.project import Component, ComponentKind, LayoutKind, Project
+from makebench.core.web import WEB_PAGE, is_web
+from makebench.ui import web
 from makebench.ui.renderer import ImageLabel, create_control, place_children
 from makebench.editor.drag import mime_for, read_payload
 from makebench.i18n import tr
@@ -291,7 +293,8 @@ class PreviewCanvas(QFrame):
 
         self.title_bar = QtWindowChrome(project.root)
         self._watch(self.title_bar, project.root.id)
-        surface = self._render(project.root)
+        web_window = is_web(project.root)
+        surface = self._web_surface(project.root) if web_window else self._render(project.root)
         from makebench.core.style import qt_stylesheet, window_style
 
         surface.setObjectName("mbWindowPreview")
@@ -311,7 +314,8 @@ class PreviewCanvas(QFrame):
             self.window_grips = [WindowGrip(edge, self) for edge in ("e", "s", "se")]
             for grip in self.window_grips:
                 grip.resized.connect(self.window_resize_requested)
-        if project.application.get("backend", "qt") == "gtk":
+        # The page looks the same in both toolkits, so Qt shows it for GTK projects too.
+        if project.application.get("backend", "qt") == "gtk" and not web_window:
             if not hasattr(self, "gtk_surface"):
                 from .native_preview import GtkDesignSurface
 
@@ -322,6 +326,18 @@ class PreviewCanvas(QFrame):
             if hasattr(self, "gtk_surface"):
                 self.gtk_surface.hide()
         QTimer.singleShot(0, self.place_window_grips)
+
+    def _web_surface(self, root):
+        """A Web view window shows its page live; components cannot be added to it."""
+        surface = ComponentFrame(self, root.id)
+        surface.setAcceptDrops(False)
+        layout = QVBoxLayout(surface)
+        layout.setContentsMargins(0, 0, 0, 0)
+        page = web.web_widget(root.properties[WEB_PAGE], self.read_asset)
+        page.setToolTip(tr("Web view: edit the page with Plugins › Edit Web view page…"))
+        layout.addWidget(page)
+        self._frames[root.id] = surface
+        return surface
 
     def window_size(self):
         """The client size the application opens with, as declared on the window."""
@@ -389,7 +405,11 @@ class PreviewCanvas(QFrame):
         """Update the visual appearance after editing properties, with no run events."""
         if hasattr(self, "title_bar"):
             self.title_bar.update()
-        if hasattr(self, "gtk_surface") and self._project.application.get("backend", "qt") == "gtk":
+        if (
+            hasattr(self, "gtk_surface")
+            and self._project.application.get("backend", "qt") == "gtk"
+            and not is_web(self._project.root)
+        ):
             self.gtk_surface.request(force)
 
     def close_native_preview(self):
@@ -450,6 +470,7 @@ class PreviewCanvas(QFrame):
             or not node.can_have_children
             or node.kind == ComponentKind.PAGES
             or node.layout == LayoutKind.FREE
+            or is_web(node)
         ):
             return
         parent = self._frames[identifier]

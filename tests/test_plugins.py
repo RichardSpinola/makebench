@@ -55,7 +55,7 @@ class PluginTests(unittest.TestCase):
         self.assertIn("greet_user", again.snippets())
 
     def test_wrong_api_does_not_load(self):
-        write_plugin(self.folder, "old", "def register(api): pass\n", api=2)
+        write_plugin(self.folder, "old", "def register(api): pass\n", api=99)
         manager = PluginManager(self.folder)
         self.assertFalse(manager.enable("old"))
         self.assertTrue(manager.plugins["old"].error)

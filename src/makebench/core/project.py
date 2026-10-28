@@ -122,6 +122,8 @@ class Component:
         """Respect the page structure and forbid windows inside the interface."""
         if self.kind == ComponentKind.PAGES:
             return kind == ComponentKind.PAGE
+        if self.kind == ComponentKind.WINDOW and isinstance(self.properties.get("web_page"), str):
+            return False  # A Web view window shows only its page.
         return self.can_have_children and kind not in {ComponentKind.WINDOW, ComponentKind.PAGE}
 
     @property
@@ -221,6 +223,12 @@ class Component:
             type(properties["columns"]) is not int or not 1 <= properties["columns"] <= 12
         ):
             raise ProjectError(tr("The grid must have between 1 and 12 columns."))
+        if "web_page" in properties and (
+            kind != ComponentKind.WINDOW
+            or not isinstance(properties["web_page"], str)
+            or len(properties["web_page"]) > 2_000_000
+        ):
+            raise ProjectError(tr("Only a window can show a web page, as text up to 2 MB."))
         if kind == ComponentKind.TERMINAL:
             if not isinstance(
                 properties.get("terminal_program", ""), str
@@ -247,6 +255,8 @@ class Component:
             raise ProjectError(
                 tr("{kind} cannot contain other components.").format(kind=KIND_LABELS[node.kind])
             )
+        if node.children and "web_page" in node.properties:
+            raise ProjectError(tr("A Web view window shows only its page, without components."))
         if any(not node.accepts(child.kind) for child in node.children):
             raise ProjectError(tr("Pages must be inside a set of pages."))
         if kind == ComponentKind.PAGES:
@@ -607,6 +617,10 @@ class Project:
         for node in self.walk():
             if node.properties.get("icon"):
                 paths.add(node.properties["icon"])
+            if isinstance(node.properties.get("web_page"), str):
+                from .web import page_assets
+
+                paths |= page_assets(node.properties["web_page"])
         icon = self.application.get("icon")
         if icon:
             paths.add(icon)

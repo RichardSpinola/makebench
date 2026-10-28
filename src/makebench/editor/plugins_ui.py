@@ -25,7 +25,7 @@ from makebench.i18n import tr
 
 from .errors import show_error
 from .look import button_row, empty_hint, header, make_muted
-from .plugins import PluginManager
+from .plugins import CommandContext, PluginManager
 
 
 def warning() -> str:
@@ -39,16 +39,28 @@ def run_command(window, plugin_id: str, index: int) -> None:
     """Run a plugin command as one undoable change; failures only turn that plugin off."""
     manager = window.plugin_manager
     label = manager.plugins[plugin_id].commands[index][0]
-
-    def change():
-        result = manager.run_command(plugin_id, index, window.project)
-        window.project.__dict__.update(result.__dict__)
-
+    context = CommandContext(
+        window=getattr(window, "active_window", window.project.root.id),
+        parent=window,
+        read_asset=window.assets.read,
+        import_image=window.assets.import_image,
+    )
     try:
-        window._edit(change, label=label)
+        result = manager.run_command(plugin_id, index, window.project, context)
+        # A command that changed nothing (a cancelled dialog) leaves no step in the history.
+        if result.to_dict() != window.project.to_dict():
+            window._edit(lambda: window.project.__dict__.update(result.__dict__), label=label)
     except ProjectError as exc:
         show_error(window, exc, tr("Plugin command"))
     rebuild_menu(window)
+
+
+def template_models(window) -> list[tuple[str, str, str]]:
+    """The built-in templates followed by those of the plugins that are on."""
+    from makebench.core.templates import MODELS
+
+    manager = getattr(window, "plugin_manager", None)
+    return MODELS + (manager.templates() if manager else [])
 
 
 def rebuild_menu(window) -> None:
@@ -66,6 +78,8 @@ def rebuild_menu(window) -> None:
 
     if hasattr(window, "pieces_menu"):
         rebuild_pieces(window)
+    if hasattr(window, "fill_home_models"):
+        window.fill_home_models()
 
 
 def open_themes(window) -> None:
@@ -126,7 +140,10 @@ class PluginsDialog(QDialog):
         self.list.clear()
         for plugin in self.manager.plugins.values():
             state = tr("on") if plugin.enabled else tr("off")
-            item = QListWidgetItem(f"{plugin.name} {plugin.version} · {state}")
+            label = f"{plugin.name} {plugin.version} · {state}"
+            if plugin.official:
+                label += " · " + tr("Official")
+            item = QListWidgetItem(label)
             item.setData(256, plugin.id)
             self.list.addItem(item)
         self._show_details()
@@ -144,6 +161,8 @@ class PluginsDialog(QDialog):
             return
         self.toggle.setText(tr("Turn off") if plugin.enabled else tr("Turn on"))
         lines = [plugin.description, plugin.author]
+        if plugin.official:
+            lines.append(tr("Ships with Makebench. Its code is also an example of a plugin."))
         if plugin.error:
             lines.append(tr("Problem:") + " " + plugin.error)
         self.details.setText("\n".join(line for line in lines if line))

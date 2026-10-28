@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: MIT
 """Translation of the neutral model into real GTK4 controls."""
 
+from pathlib import Path
+
 from makebench.core.project import ComponentKind, LayoutKind
+from makebench.core.web import WEB_PAGE, is_web, materialize
 from makebench.i18n import tr
 
 
@@ -41,7 +44,7 @@ class GtkView:
         self.tabs = {}
         self.enabled = {}
         self.hints = set()  # outputs still showing their starting text
-        self.widget = self.render(root)
+        self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
         self.provider = None
         self.css_class = "mb-window-" + str(id(self))
@@ -72,6 +75,45 @@ class GtkView:
         """Used by ctx.set_theme/set_background while the application runs."""
         self.style_changes.update(changes)
         self.apply_style()
+
+    def web_page(self, root):
+        """Show the page with WebKitGTK; websites open in the browser, not in the window."""
+        Gtk = self.Gtk
+        try:
+            import gi
+
+            gi.require_version("WebKit", "6.0")
+            from gi.repository import Gio, WebKit
+        except (ImportError, ValueError):
+            label = Gtk.Label(label=tr("This window needs WebKitGTK 6 to show its page."))
+            label.set_wrap(True)
+            self.widgets[root.id] = self.frames[root.id] = label
+            return label
+        page = materialize(root.properties[WEB_PAGE], self.read_asset)
+        folder = page.parent
+
+        def decide(_view, decision, kind):
+            if kind != WebKit.PolicyDecisionType.NAVIGATION_ACTION:
+                return False
+            uri = decision.get_navigation_action().get_request().get_uri()
+            scheme = uri.split(":", 1)[0]
+            if scheme in {"http", "https", "mailto"}:
+                Gio.AppInfo.launch_default_for_uri(uri, None)
+                decision.ignore()
+            elif scheme == "file":
+                inside = Path(Gio.File.new_for_uri(uri).get_path()).resolve().is_relative_to(folder)
+                decision.use() if inside else decision.ignore()
+            elif scheme not in {"data", "about"}:
+                decision.ignore()
+            return True
+
+        view = WebKit.WebView()
+        view.connect("decide-policy", decide)
+        view.set_vexpand(True)
+        view.set_hexpand(True)
+        view.load_uri(page.as_uri())
+        self.widgets[root.id] = self.frames[root.id] = view
+        return view
 
     def render(self, node):
         """Map every basic type, layout and initial value to GTK."""

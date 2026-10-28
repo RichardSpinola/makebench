@@ -584,6 +584,13 @@ class MainWindow(StudioMixin, QMainWindow):
         root = self.project.effective_root(self.active_window, self.active_state)
         canvas_project = replace(self.project, root=root, windows=[])
         self.canvas.set_project(canvas_project)
+        from makebench.core.web import is_web
+
+        # A Web view window holds only its page, so the component library rests.
+        self.palette.setEnabled(not is_web(root))
+        self.palette.setToolTip(
+            tr("This window is a Web view: its content is the page.") if is_web(root) else ""
+        )
         if self.project.find(self.selected_id) is None:
             self.selected_id = self.project.root.id
         self._refreshing = False

@@ -7063,3 +7063,103 @@ msgstr "Uma paleta ártica e azulada, calma e limpa."
 
 msgid "Precise, balanced colors with fixed contrast in both modes."
 msgstr "Cores precisas e equilibradas, com o mesmo contraste nos dois modos."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "A Web view shows only its page. Use an empty window or add a new one."
+msgstr "Uma Visão web mostra só a página dela. Use uma janela vazia ou adicione uma nova."
+
+#: src/makebench/core/project.py
+msgid "A Web view window shows only its page, without components."
+msgstr "Uma janela de Visão web mostra só a página dela, sem componentes."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Change the text, the colors in the style block or add images."
+msgstr "Mude o texto, as cores no bloco de estilo ou adicione imagens."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Choose an image"
+msgstr "Escolha uma imagem"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Edit Web view page"
+msgstr "Editar página da Visão web"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Edit Web view page…"
+msgstr "Editar página da Visão web…"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Insert image…"
+msgstr "Inserir imagem…"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Make it yours"
+msgstr "Deixe do seu jeito"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "One window whose content is an HTML page you write."
+msgstr "Uma janela cujo conteúdo é uma página HTML escrita por você."
+
+#: src/makebench/core/project.py
+msgid "Only a window can show a web page, as text up to 2 MB."
+msgstr "Só uma janela pode mostrar uma página web, como texto de até 2 MB."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Open a Web view window in Design first."
+msgstr "Abra antes uma janela de Visão web no Design."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Page HTML"
+msgstr "HTML da página"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Run the application to try the buttons and links."
+msgstr "Execute o aplicativo para testar os botões e links."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Ships with Makebench. Its code is also an example of a plugin."
+msgstr "Vem com o Makebench. O código dele também serve de exemplo de plugin."
+
+#: src/makebench/editor/window.py
+msgid "This window is a Web view: its content is the page."
+msgstr "Esta janela é uma Visão web: o conteúdo dela é a página."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "This window is a web page. Edit it with Plugins › Edit Web view page…"
+msgstr "Esta janela é uma página web. Edite em Plugins › Editar página da Visão web…"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "This window is already a Web view."
+msgstr "Esta janela já é uma Visão web."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "This window is not a Web view."
+msgstr "Esta janela não é uma Visão web."
+
+#: src/makebench/ui/web.py
+msgid "This window needs Qt WebEngine to show its page."
+msgstr "Esta janela precisa do Qt WebEngine para mostrar a página."
+
+#: src/makebench/gtk_runtime/renderer.py
+msgid "This window needs WebKitGTK 6 to show its page."
+msgstr "Esta janela precisa do WebKitGTK 6 para mostrar a página."
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Turn this Web view back into a normal window"
+msgstr "Voltar esta Visão web a ser uma janela normal"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Turn this window into a Web view"
+msgstr "Transformar esta janela em Visão web"
+
+#: src/makebench/ui/web.py
+msgid "Web page"
+msgstr "Página web"
+
+#: src/makebench/pluginpack/webview/plugin.py
+msgid "Web view"
+msgstr "Visão web"
+
+#: src/makebench/editor/canvas.py
+msgid "Web view: edit the page with Plugins › Edit Web view page…"
+msgstr "Visão web: edite a página em Plugins › Editar página da Visão web…"

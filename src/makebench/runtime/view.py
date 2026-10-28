@@ -5,6 +5,8 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QPlainTextEdit, QPushButton, QTabWidget, QVBoxLayout
 from makebench.core.project import ComponentKind
 from makebench.core.style import qt_stylesheet, window_style
+from makebench.core.web import WEB_PAGE, is_web
+from makebench.ui import web
 from makebench.ui.renderer import create_control, place_children
 from makebench.i18n import tr
 
@@ -31,7 +33,7 @@ class RuntimeView(QFrame):
         }
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
-        layout.addWidget(self._render(window_root or project.root))
+        self._fill(layout)
         self.apply_style(window_style(self.window_root.properties))
 
     def apply_style(self, style):
@@ -59,8 +61,19 @@ class RuntimeView(QFrame):
         self.enabled = {}
         self.busy = False
         self.style_changes = {}
-        layout.addWidget(self._render(self.window_root))
+        self._fill(layout)
         self.apply_style(window_style(self.window_root.properties))
+
+    def _fill(self, layout):
+        """A Web view window is its page, edge to edge; any other window has components."""
+        if is_web(self.window_root):
+            layout.setContentsMargins(0, 0, 0, 0)
+            page = web.web_widget(self.window_root.properties[WEB_PAGE], self.read_asset)
+            self.widgets[self.window_root.id] = page
+            self.frames[self.window_root.id] = page
+            layout.addWidget(page)
+        else:
+            layout.addWidget(self._render(self.window_root))
 
     def _render(self, node):
         """Build containers/pages and connect clicks only in the running instance."""

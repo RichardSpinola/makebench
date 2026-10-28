@@ -58,7 +58,6 @@ class ProjectMixin:
         from PySide6.QtWidgets import QGridLayout, QToolButton, QScrollArea, QFrame, QSizePolicy
         from PySide6.QtCore import QSize
         from .theme import icon
-        from makebench.core.templates import MODELS
 
         from .startup import (
             CONTENT_WIDTH,
@@ -213,14 +212,7 @@ class ProjectMixin:
         self.home_models.setAccessibleName(tr("Templates"))
         self.home_models.setItemDelegate(LauncherDelegate(self.home_models))
         self.home_models.setMouseTracking(True)
-        from .startup import MODEL_ICONS, SYMBOL_ROLE
-
-        for key, label, description in MODELS:
-            item = QListWidgetItem(label)
-            item.setData(SYMBOL_ROLE, MODEL_ICONS.get(key, "new"))
-            item.setData(Qt.ItemDataRole.UserRole, key)
-            item.setData(Qt.ItemDataRole.UserRole + 1, description)
-            self.home_models.addItem(item)
+        self.fill_home_models()
         self.home_models.itemActivated.connect(
             lambda item: self.new_project_dialog(item.data(Qt.ItemDataRole.UserRole))
         )
@@ -586,9 +578,24 @@ class ProjectMixin:
             )
             self.refresh_recents()
 
+    def fill_home_models(self):
+        """List the templates on the home page, plugin templates included."""
+        from .plugins_ui import template_models
+        from .startup import SYMBOL_ROLE, model_icon
+
+        if not hasattr(self, "home_models"):
+            return
+        self.home_models.clear()
+        for key, label, description in template_models(self):
+            item = QListWidgetItem(label)
+            item.setData(SYMBOL_ROLE, model_icon(key))
+            item.setData(Qt.ItemDataRole.UserRole, key)
+            item.setData(Qt.ItemDataRole.UserRole + 1, description)
+            self.home_models.addItem(item)
+
     def new_project_dialog(self, template="blank"):
         """Create a folder only after validating the name, destination and pending changes."""
-        from makebench.core.templates import MODELS
+        from .plugins_ui import template_models
         from makebench.core.environment import gtk_support
         from .theme import manager
         from PySide6.QtCore import QSize
@@ -599,14 +606,15 @@ class ProjectMixin:
         dialog.setFixedWidth(560)
         form = QFormLayout(dialog)
         model = QComboBox()
-        for key, label, description in MODELS:
+        models = template_models(self)
+        for key, label, description in models:
             model.addItem(label, key)
         model.setCurrentIndex(max(0, model.findData(template)))
         form.addRow(tr("Template"), model)
         about = QLabel()
         about.setWordWrap(True)
         about.setEnabled(False)
-        descriptions = {key: description for key, _, description in MODELS}
+        descriptions = {key: description for key, _, description in models}
         model.currentIndexChanged.connect(
             lambda _: about.setText(descriptions.get(model.currentData(), ""))
         )
@@ -785,6 +793,8 @@ class ProjectMixin:
 
     def project_template(self, key, name):
         """Copy the shipped templates, keeping the original examples intact."""
+        if key.startswith("plugin:"):
+            return self.plugin_manager.make_template(key, name), SourceBuffer().text, AssetStore()
         if key != "tasks":
             from makebench.core.templates import make_template
 

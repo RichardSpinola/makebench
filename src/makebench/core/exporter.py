@@ -160,6 +160,9 @@ from makebench.ui.dialogs import install_translation
 def main():
     """Start Qt and run the exported project only when the application opens."""
     root=Path(__file__).resolve().parent
+    from PySide6.QtCore import Qt
+    # Web view windows use Qt WebEngine, which needs shared contexts set before the app.
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     app=QApplication(sys.argv)
     install_translation(app)
     path=root/'project.makebench.json'

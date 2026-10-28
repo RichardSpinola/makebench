@@ -1,9 +1,9 @@
 # Writing Makebench plugins
 
-Plugins add menu commands, reusable pieces and code snippets to the editor. They
-are plain Python, so a plugin runs **with your user's permissions**: Makebench
-ships with every plugin turned off, and asks before turning one on. Only install
-plugins from people you trust.
+Plugins add menu commands, project templates, reusable pieces and code snippets to
+the editor. They are plain Python, so a plugin runs **with your user's permissions**:
+Makebench ships with every plugin turned off, and asks before turning one on. Only
+install plugins from people you trust.
 
 ## Where plugins live
 
@@ -30,9 +30,9 @@ turn each plugin on or off. Nothing from a plugin is imported until you turn it 
 ```
 
 `id` must match the folder name (lowercase letters, digits, `-` and `_`). `api`
-must be `1`; any other value is shown as incompatible and never loaded.
+is `1` or `2`; any other value is shown as incompatible and never loaded.
 
-## plugin.py (API v1)
+## plugin.py
 
 ```python
 def register(api):
@@ -50,6 +50,34 @@ def register(api):
 - `api.add_snippet(name, code)` offers `code` in the Code area's suggestions
   (Ctrl+Space) when you type the start of `name`.
 - `api.add_piece(piece)` adds a ready-made piece to **Edit › Insert piece**.
+
+## API v2
+
+Plugins that declare `"api": 2` can also use:
+
+- `api.add_template(name, description, build)` adds a model to **New project** and to
+  the start screen. `build(name)` returns a new `Project`.
+- Commands that take two parameters, `function(project, context)`, receive a
+  `context` with `window` (the id of the window open in Design), `parent` (a widget
+  to open dialogs on), `read_asset(name)` and `import_image(path)`, which copies an
+  image into the project and returns its `assets/...` name.
+- `raise api.Refusal("message")` stops a command with a message for the person,
+  without turning the plugin off. Return without changes (a cancelled dialog) and
+  nothing is added to the history.
+
+## Official plugins
+
+Some plugins ship with Makebench. They are listed as **Official** in
+**Manage plugins…**, start turned off like any other, and live in
+`src/makebench/pluginpack/`. A plugin you install cannot reuse their ids.
+
+**Web view** (`pluginpack/webview`) is the reference for API v2. It adds a Web view
+template and commands to turn a window into a Web view, back into a normal window,
+and to edit its page with a live preview. A Web view window shows one HTML page,
+edge to edge, and holds no components; links to websites open in the browser.
+Makebench itself shows, saves and exports these windows, so projects made with the
+plugin keep working with it turned off. The exported Qt app needs Qt WebEngine, and
+the GTK runtime needs WebKitGTK 6.
 
 ## Safety and failures
 

@@ -1,0 +1,8 @@
+{
+  "id": "webview",
+  "name": "Web view",
+  "version": "1.0.0",
+  "api": 2,
+  "description": "Windows whose whole content is an HTML page, for welcome screens and guided tours. Adds a Web view template and commands to make and edit those windows.",
+  "author": "Makebench"
+}

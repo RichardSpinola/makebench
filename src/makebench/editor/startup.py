@@ -30,7 +30,6 @@ from PySide6.QtWidgets import (
 )
 
 from makebench import __version__
-from makebench.core.templates import MODELS
 from makebench.i18n import tr
 
 from .settings import preference
@@ -45,6 +44,13 @@ MODEL_ICONS = {
     "multi": "panels",
     "blank": "new",
 }
+
+
+def model_icon(key):
+    """Templates from plugins share the plugins symbol."""
+    return MODEL_ICONS.get(key, "plugins" if key.startswith("plugin:") else "new")
+
+
 RETRO_LOGO = Path(__file__).with_name("makebench-retro.svg")
 DETAIL_ROLE = Qt.ItemDataRole.UserRole + 1
 SWATCH_ROLE = Qt.ItemDataRole.UserRole + 2
@@ -674,11 +680,14 @@ class StartupDialog(QDialog):
         self.models.clear()
         recent = self.settings.value("projects/templates/recent", [], type=list)
         order = {key: i for i, key in enumerate(recent)}
+        from .plugins_ui import template_models
+
+        models = template_models(self.window)
         for key, label, description in sorted(
-            MODELS, key=lambda m: order.get(m[0], len(order) + MODELS.index(m))
+            models, key=lambda m: order.get(m[0], len(order) + models.index(m))
         ):
             item = QListWidgetItem(label)
-            item.setData(SYMBOL_ROLE, MODEL_ICONS.get(key, "new"))
+            item.setData(SYMBOL_ROLE, model_icon(key))
             item.setData(Qt.ItemDataRole.UserRole, key)
             item.setData(DETAIL_ROLE, description)
             self.models.addItem(item)
