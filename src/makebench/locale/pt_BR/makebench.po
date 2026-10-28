@@ -7423,3 +7423,7 @@ msgstr "Um bloco aponta para um campo ausente ou incompatível."
 #: src/makebench/editor/collections_ui.py
 msgid "Some removed fields are still used by blocks. Change the blocks first."
 msgstr "Alguns campos removidos ainda são usados por blocos. Mude os blocos primeiro."
+
+#: src/makebench/core/datastore.py
+msgid "Provide records as returned by the data blocks."
+msgstr "Informe registros como os devolvidos pelos blocos de dados."

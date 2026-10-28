@@ -576,6 +576,8 @@ def validate(project: Project) -> None:
                         if attribute == "value"
                         else {ComponentKind.TABLE}
                         if attribute == "selected"
+                        else {ComponentKind.TABLE, ComponentKind.CHOICE}
+                        if attribute == "record"
                         else set()
                     )
                     if not kinds:
@@ -633,6 +635,11 @@ def validate(project: Project) -> None:
             elif op == "set_options":
                 target(value.get("component"), {ComponentKind.CHOICE})
                 expr("value")
+            elif op == "show_records":
+                target(value.get("component"), {ComponentKind.TABLE, ComponentKind.CHOICE})
+                collection()
+                if "records" in value:
+                    expr("records")
             elif op in {"set_rows", "add_row"}:
                 target(value.get("component"), {ComponentKind.TABLE})
                 expr("value")

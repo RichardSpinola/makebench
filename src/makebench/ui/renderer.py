@@ -34,12 +34,15 @@ def range_properties(node):
     return {**RANGE_DEFAULTS, **node.properties}
 
 
-def fill_choice(widget, options, text):
-    """Set the options of a choice list and select `text` (the first one when it is absent)."""
+def fill_choice(widget, options, text, ids=None):
+    """Set the options of a choice list and select `text` (the first one when it is absent).
+
+    `ids` hides a record id behind each option."""
     blocked = widget.blockSignals(True)
     try:
         widget.clear()
-        widget.addItems(list(options))
+        for index, option in enumerate(options):
+            widget.addItem(option, ids[index] if ids else None)
         widget.setCurrentIndex(max(widget.findText(text), 0) if widget.count() else -1)
     finally:
         widget.blockSignals(blocked)
@@ -56,24 +59,33 @@ def configure_table(widget, columns):
     widget.verticalHeader().setVisible(False)
 
 
-def append_table_row(widget, row):
+def append_table_row(widget, row, record=None):
+    """Add a row of texts; `record` hides a record id in its first cell."""
     index = widget.rowCount()
     widget.insertRow(index)
     for column in range(widget.columnCount()):
-        widget.setItem(
-            index, column, QTableWidgetItem(str(row[column]) if column < len(row) else "")
-        )
+        item = QTableWidgetItem(str(row[column]) if column < len(row) else "")
+        if column == 0:
+            item.setData(Qt.ItemDataRole.UserRole, record)
+        widget.setItem(index, column, item)
 
 
-def set_table_rows(widget, rows):
+def set_table_rows(widget, rows, ids=None):
     """Replace every row without telling the application the person did it."""
     blocked = widget.blockSignals(True)
     try:
         widget.setRowCount(0)
-        for row in rows:
-            append_table_row(widget, row)
+        for index, row in enumerate(rows):
+            append_table_row(widget, row, ids[index] if ids else None)
     finally:
         widget.blockSignals(blocked)
+
+
+def selected_table_record(widget):
+    """The record id hidden in the selected row, or None."""
+    row = widget.currentRow() if widget.selectedItems() else -1
+    item = widget.item(row, 0) if row >= 0 else None
+    return item.data(Qt.ItemDataRole.UserRole) if item else None
 
 
 def selected_table_row(widget):

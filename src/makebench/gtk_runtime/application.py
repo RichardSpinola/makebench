@@ -560,6 +560,8 @@ class GtkRuntime:
                     view.set_rows(key, r["value"])
                 elif method == "add_row" and key in view.tables:
                     view.add_row(key, r["value"])
+                elif method == "show_records":
+                    view.show_records(key, r["value"])
                 elif method == "set_options" and key in view.choices:
                     view.set_options(key, r["value"])
                 elif method == "set_value" and key in view.ranges:

@@ -42,6 +42,16 @@ class DataStoreTests(unittest.TestCase):
             "Livros", titulo="Quincas Borba", paginas=300, lido=False, autor=self.machado
         )
 
+    def test_listing_shows_names_for_references_and_keeps_ids(self):
+        listing = self.store.listing("Livros", self.store.find("Livros", "lido", "=", True))
+        self.assertEqual(listing["headers"], ["titulo", "paginas", "lido", "autor"])
+        self.assertEqual(listing["rows"], [["Dom Casmurro", "256", "Yes", "Machado de Assis"]])
+        self.assertEqual(listing["ids"], [self.dom])
+        self.assertEqual(listing["names"], ["Dom Casmurro"])
+        self.assertEqual(len(self.store.listing("Livros")["rows"]), 2)
+        with self.assertRaises(DataError):
+            self.store.listing("Livros", [{"titulo": "x"}])
+
     def test_records_roundtrip_with_types(self):
         self.assertEqual(
             self.store.get("Livros", self.dom),

@@ -49,6 +49,8 @@ class GtkView:
         self.ranges = set()  # numbers and sliders
         self.areas = set()  # long text inputs
         self.choices = set()  # choice lists
+        self.choice_ids = {}  # record ids hidden behind the options of a choice list
+        self.table_views = {}  # the column view of each table
         self.dates = set()  # date pickers
         self.tables = {}  # id -> (Gio.ListStore, Gtk.SingleSelection)
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
@@ -345,13 +347,26 @@ class GtkView:
         from gi.repository import Gio
 
         class Row(GObject.Object):
-            def __init__(self, cells):
+            def __init__(self, cells, record=None):
                 super().__init__()
                 self.cells = cells
+                self.record = record
 
         store = Gio.ListStore.new(Row)
         selection = Gtk.SingleSelection(model=store, autoselect=False, can_unselect=True)
         view = Gtk.ColumnView(model=selection, hexpand=True, vexpand=True)
+        self.fill_columns(view, columns)
+        selection.connect("selection-changed", lambda *_: self.user_changed(identifier))
+        self.table_views[identifier] = view
+        scroller = Gtk.ScrolledWindow(min_content_height=100)
+        scroller.set_child(view)
+        self.widgets[identifier] = scroller
+        self.tables[identifier] = (store, selection, Row)
+        return scroller
+
+    def fill_columns(self, view, columns):
+        """Show one text column per header, reading each cell from the row's texts."""
+        Gtk = self.Gtk
         for index, title in enumerate(columns):
             factory = Gtk.SignalListItemFactory()
             factory.connect("setup", lambda _f, item: item.set_child(Gtk.Label(xalign=0)))
@@ -362,23 +377,41 @@ class GtkView:
                 ),
             )
             view.append_column(Gtk.ColumnViewColumn(title=title, factory=factory, expand=True))
-        selection.connect("selection-changed", lambda *_: self.user_changed(identifier))
-        scroller = Gtk.ScrolledWindow(min_content_height=100)
-        scroller.set_child(view)
-        self.widgets[identifier] = scroller
-        self.tables[identifier] = (store, selection, Row)
-        return scroller
 
-    def set_rows(self, identifier, rows):
+    def set_rows(self, identifier, rows, ids=None):
         """Replace the rows of a table without reporting a change."""
         store, selection, Row = self.tables[identifier]
         self.programmatic = True
         try:
             store.remove_all()
-            for row in rows:
-                store.append(Row([str(cell) for cell in row]))
+            for index, row in enumerate(rows):
+                store.append(Row([str(cell) for cell in row], ids[index] if ids else None))
         finally:
             self.programmatic = False
+
+    def show_records(self, identifier, listing):
+        """Show records in a table (columns = fields) or a choice list (names), keeping ids."""
+        if identifier in self.tables:
+            view = self.table_views[identifier]
+            for column in list(view.get_columns()):
+                view.remove_column(column)
+            self.fill_columns(view, listing["headers"])
+            self.set_rows(identifier, listing["rows"], listing["ids"])
+        elif identifier in self.choices:
+            self.set_options(identifier, listing["names"], ids=listing["ids"])
+        else:
+            raise ValueError(tr("The component does not exist."))
+
+    def selected_record(self, identifier):
+        """The record id behind the selected row or option, or None."""
+        if identifier in self.tables:
+            item = self.tables[identifier][1].get_selected_item()
+            return item.record if item else None
+        if identifier in self.choices:
+            ids = self.choice_ids.get(identifier)
+            index = self.widgets[identifier].get_selected()
+            return ids[index] if ids and 0 <= index < len(ids) else None
+        raise ValueError(tr("Unknown property."))
 
     def add_row(self, identifier, row):
         store, selection, Row = self.tables[identifier]
@@ -436,9 +469,10 @@ class GtkView:
         else:
             raise ValueError(tr("This component has no text."))
 
-    def set_options(self, identifier, options, keep=None):
+    def set_options(self, identifier, options, keep=None, ids=None):
         """Replace the options of a choice list, selecting `keep` when it is among them."""
         widget = self.widgets[identifier]
+        self.choice_ids[identifier] = ids
         if keep is None:
             item = widget.get_selected_item()
             keep = item.get_string() if item else ""
@@ -478,6 +512,8 @@ class GtkView:
             if identifier in self.dates:
                 return w.get_label()
             return w.get_text() if isinstance(w, Gtk.Entry) else w.get_label()
+        if attribute == "record":
+            return self.selected_record(identifier)
         if attribute == "selected":
             if identifier not in self.tables:
                 raise ValueError(tr("Unknown property."))

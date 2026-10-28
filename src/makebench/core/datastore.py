@@ -264,6 +264,40 @@ class DataStore:
         sql = f"SELECT COALESCE(SUM({self.column(target)}), 0) FROM {self.table(collection)}{condition}"
         return self.database.execute(sql, parameters).fetchone()[0]
 
+    def listing(self, name, records=None):
+        """Headers, text rows, ids and names of records, ready for a table or a choice list."""
+        collection = self.collection(name)
+        if records is None:
+            records = self.find(name)
+        shown = display_field(collection)
+        rows, ids, names = [], [], []
+        for record in records:
+            if not isinstance(record, dict) or not isinstance(record.get("id"), int):
+                raise DataError(tr("Provide records as returned by the data blocks."))
+            cells = []
+            for field in collection["fields"]:
+                value = record.get(field["name"])
+                if value is None:
+                    cells.append("")
+                elif field["type"] == "ref":
+                    cells.append(
+                        self.name(find_collection(self.metadata, field["target"])["name"], value)
+                    )
+                elif field["type"] == "bool":
+                    cells.append(tr("Yes") if value else tr("No"))
+                else:
+                    cells.append(str(value))
+            rows.append(cells)
+            ids.append(record["id"])
+            label = record.get(shown["name"]) if shown else None
+            names.append(str(label) if label is not None else str(record["id"]))
+        return {
+            "headers": [f["name"] for f in collection["fields"]],
+            "rows": rows,
+            "ids": ids,
+            "names": names,
+        }
+
     def name(self, collection_name, record_id):
         """The text that names a record in references; empty when it does not exist."""
         collection = self.collection(collection_name)

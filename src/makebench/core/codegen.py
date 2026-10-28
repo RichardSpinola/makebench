@@ -280,6 +280,13 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                             node,
                             indent,
                         )
+                    elif op == "show_records":
+                        records = f", {expression(node['records'])}" if "records" in node else ""
+                        emit(
+                            f"ctx.show_records({node['component']!r}, {data_name(node, 'x')[0]!r}{records})",
+                            node,
+                            indent,
+                        )
                     elif op == "data_delete":
                         emit(
                             f"ctx.data.delete({data_name(node, 'x')[0]!r}, {expression(node['record_id'])})",

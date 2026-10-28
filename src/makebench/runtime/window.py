@@ -34,7 +34,9 @@ from makebench.core.project import ComponentKind, valid_date
 from makebench.ui.renderer import (
     append_table_row,
     date_text,
+    configure_table,
     fill_choice,
+    selected_table_record,
     selected_table_row,
     range_value,
     set_date,
@@ -361,6 +363,13 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     if not isinstance(widget, QTableWidget):
                         raise ValueError(tr("Unknown property."))
                     value = selected_table_row(widget)
+                elif attribute == "record":
+                    if isinstance(widget, QTableWidget):
+                        value = selected_table_record(widget)
+                    elif isinstance(widget, QComboBox):
+                        value = widget.currentData()
+                    else:
+                        raise ValueError(tr("Unknown property."))
                 elif attribute == "checked":
                     value = widget.isChecked()
                 elif attribute == "value":
@@ -400,6 +409,16 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     blocked = widget.blockSignals(True)
                     append_table_row(widget, request["value"])
                     widget.blockSignals(blocked)
+                self.session.reply(identifier)
+            elif method == "show_records":
+                listing = request["value"]
+                if isinstance(widget, QTableWidget):
+                    configure_table(widget, listing["headers"])
+                    set_table_rows(widget, listing["rows"], listing["ids"])
+                elif isinstance(widget, QComboBox):
+                    fill_choice(widget, listing["names"], widget.currentText(), listing["ids"])
+                else:
+                    raise ValueError(tr("The component does not exist."))
                 self.session.reply(identifier)
             elif method == "set_options":
                 if not isinstance(widget, QComboBox):

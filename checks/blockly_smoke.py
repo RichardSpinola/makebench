@@ -807,6 +807,37 @@ class BlocklyTests(unittest.TestCase):
         self.assertEqual(compiled["errors"], [])
         self.assertEqual(compiled["body"], expected)
 
+    def test_23_show_records_and_selected_record_roundtrip_through_blockly(self):
+        """Showing records in a table or choice and reading the pick survive the editor."""
+        table = self.window.project.add(self.window.project.root.id, ComponentKind.TABLE)
+        self.window.project.metadata["collections"] = [
+            {
+                "id": "autores",
+                "name": "Autores",
+                "fields": [{"id": "nome", "name": "nome", "type": "text"}],
+            }
+        ]
+        self.flow["body"] = [
+            {
+                "id": "show",
+                "op": "show_records",
+                "component": table.id,
+                "collection": "autores",
+            },
+            {
+                "id": "log",
+                "op": "log",
+                "value": {"id": "pick", "op": "read", "component": table.id, "attribute": "record"},
+            },
+        ]
+        expected = json.loads(json.dumps(self.flow["body"]))
+        self.window._refresh()
+        self.window.logic.sync(self.flow["id"])
+        QTest.qWait(300)
+        compiled = json.loads(self.js("JSON.stringify(window.makebench.compileWorkspace())"))
+        self.assertEqual(compiled["errors"], [])
+        self.assertEqual(compiled["body"], expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

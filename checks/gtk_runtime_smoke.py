@@ -20,7 +20,23 @@ def check_runtime():
     """Exercise three states, two windows, a GTK question and a task with stdout/stderr."""
     with tempfile.TemporaryDirectory(prefix="makebench-gtk-runtime-test-") as directory:
         root = Path(directory)
+        os.environ["XDG_DATA_HOME"] = str(root / "data")  # test records never touch the real home
         p = welcome_template()
+        p.metadata["collections"] = [
+            {
+                "id": "authors",
+                "name": "Autores",
+                "fields": [{"id": "n", "name": "nome", "type": "text"}],
+            },
+            {
+                "id": "books",
+                "name": "Livros",
+                "fields": [
+                    {"id": "t", "name": "titulo", "type": "text"},
+                    {"id": "a", "name": "autor", "type": "ref", "target": "authors"},
+                ],
+            },
+        ]
         entry = p.add(p.root.id, ComponentKind.TEXT_INPUT)
         progress = p.add(p.root.id, ComponentKind.PROGRESS)
         number = p.add(p.root.id, ComponentKind.NUMBER)
@@ -75,6 +91,13 @@ def check_runtime():
     ctx.set_rows({table.id!r}, [['a', 1], ['b', 2]])
     ctx.add_row({table.id!r}, ['c', 3])
     assert ctx.read({table.id!r}, 'selected') == []
+    ana = ctx.data.add('Autores', nome='Ana')
+    ctx.data.add('Livros', titulo='Um', autor=ana)
+    ctx.show_records({table.id!r}, 'Livros')
+    assert ctx.read({table.id!r}, 'record') is None
+    ctx.show_records({choice.id!r}, 'Autores')
+    assert ctx.read({choice.id!r}, 'text') == 'Ana'
+    assert ctx.read({choice.id!r}, 'record') == ana
     ctx.set_value({number.id!r}, 2.5)
     assert ctx.read({number.id!r}, 'value') == 2.5
     ctx.set_value({slider.id!r}, 30)

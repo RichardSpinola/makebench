@@ -241,6 +241,60 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn("TaskError: Cannot delete: 1 record of Livros still points to it.", text)
         self.assertTrue(data_path(self.project, True).is_file())
 
+    def test_table_and_choice_show_records_and_read_the_selected_record(self):
+        from PySide6.QtWidgets import QComboBox, QTableWidget
+
+        table = self.project.add(self.project.root.id, ComponentKind.TABLE)
+        choice = self.project.add(self.project.root.id, ComponentKind.CHOICE)
+        self.project.metadata["collections"] = [
+            {
+                "id": "authors",
+                "name": "Autores",
+                "fields": [{"id": "n", "name": "nome", "type": "text"}],
+            },
+            {
+                "id": "books",
+                "name": "Livros",
+                "fields": [
+                    {"id": "t", "name": "titulo", "type": "text"},
+                    {"id": "a", "name": "autor", "type": "ref", "target": "authors"},
+                ],
+            },
+        ]
+        picked = {"id": "r0", "op": "read", "component": table.id, "attribute": "record"}
+        create_flow(self.project, table.id)["body"] = [{"id": "l1", "op": "log", "value": picked}]
+        add = lambda name, collection, values: {  # noqa: E731
+            "id": name,
+            "op": "data_add",
+            "collection": collection,
+            "values": [
+                {
+                    "field": field,
+                    "value": value if isinstance(value, dict) else literal(name + field, value),
+                }
+                for field, value in values.items()
+            ],
+        }
+        self.flow["body"] = [
+            add("a1", "authors", {"n": "Ana"}),
+            add("b1", "books", {"t": "Um", "a": {"id": "last", "op": "data_last_id"}}),
+            add("b2", "books", {"t": "Dois", "a": {"id": "last2", "op": "data_last_id"}}),
+            {"id": "s1", "op": "show_records", "component": table.id, "collection": "books"},
+            {"id": "s2", "op": "show_records", "component": choice.id, "collection": "authors"},
+        ]
+        w = self.window("")
+        widget, combo = w.view.widgets[table.id], w.view.widgets[choice.id]
+        self.assertIsInstance(widget, QTableWidget)
+        self.assertIsInstance(combo, QComboBox)
+        self.click(w)
+        self.assertEqual(widget.columnCount(), 2)
+        self.assertEqual(widget.horizontalHeaderItem(1).text(), "autor")
+        self.assertEqual([widget.item(r, 1).text() for r in range(2)], ["Ana", "Ana"])
+        self.assertEqual(combo.itemText(0), "Ana")
+        self.assertEqual(combo.currentData(), 1)
+        widget.selectRow(1)
+        self.wait(lambda: "2" in w.output.toPlainText().split("\n"))
+
     def test_change_timer_and_close_events_run_their_flows(self):
         field = self.project.add(self.project.root.id, ComponentKind.TEXT_INPUT)
         window = self.project.root

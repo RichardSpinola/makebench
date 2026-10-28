@@ -91,6 +91,10 @@ class Data:
         """The text that names a record, as shown in references."""
         return self._call("name", collection, record_id)
 
+    def listing(self, collection, records=None):
+        """Texts that show records in a table or a choice list, with their ids."""
+        return self._call("listing", collection, records)
+
 
 class Context:
     """Synchronous application API, with requests served by the UI process."""
@@ -181,6 +185,12 @@ class Context:
     def set_options(self, component, options):
         """Replace the options of a choice list, keeping the selection when it remains."""
         return self.request("set_options", component=component, value=[str(x) for x in options])
+
+    def show_records(self, component, collection, records=None):
+        """Show records (all of the collection by default) in a table or a choice list."""
+        return self.request(
+            "show_records", component=component, value=self.data.listing(collection, records)
+        )
 
     @property
     def window_variables(self):

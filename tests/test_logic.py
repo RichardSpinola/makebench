@@ -242,6 +242,31 @@ class LogicTests(unittest.TestCase):
             },
         ]
 
+    def test_show_records_and_selected_record_validate_and_generate_python(self):
+        self.data_project()
+        table = self.project.add(self.project.root.id, ComponentKind.TABLE)
+        label = self.project.add(self.project.root.id, ComponentKind.LABEL)
+        self.flow["body"] = [
+            {
+                "id": "show",
+                "op": "show_records",
+                "component": table.id,
+                "collection": "livros",
+            },
+            {
+                "id": "log",
+                "op": "log",
+                "value": {"id": "pick", "op": "read", "component": table.id, "attribute": "record"},
+            },
+        ]
+        validate(self.project)
+        code = generate(self.project).text
+        self.assertIn(f"ctx.show_records('{table.id}', 'Livros')", code)
+        self.assertIn(f"ctx.read('{table.id}', 'record')", code)
+        self.flow["body"][0]["component"] = label.id
+        with self.assertRaises(ProjectError):
+            validate(self.project)
+
     def test_data_blocks_validate_generate_python_and_survive_conversion(self):
         from makebench.core.codegen import convert_to_python
 
