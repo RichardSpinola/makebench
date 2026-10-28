@@ -91,6 +91,7 @@ def main():
                             "text_input",
                             "text_area",
                             "choice",
+                            "date",
                             "checkbox",
                             "progress",
                             "number",

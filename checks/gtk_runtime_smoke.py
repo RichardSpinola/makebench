@@ -29,6 +29,8 @@ def check_runtime():
         area = p.add(p.root.id, ComponentKind.TEXT_AREA)
         choice = p.add(p.root.id, ComponentKind.CHOICE)
         choice.properties.update(options=["um", "dois"], text="dois")
+        date = p.add(p.root.id, ComponentKind.DATE)
+        date.properties["text"] = "2026-03-04"
         output = p.add(p.root.id, ComponentKind.OUTPUT)
         launch = p.add(p.root.id, ComponentKind.BUTTON)
         launch.properties.update(text="API ctx", icon="assets/button.svg", tooltip="Testar API ctx")
@@ -54,6 +56,9 @@ def check_runtime():
     ctx.set_text({choice.id!r}, 'um')
     ctx.set_options({choice.id!r}, ['tres', 'um'])
     assert ctx.read({choice.id!r}, 'text') == 'um'
+    assert ctx.read({date.id!r}, 'text') == '2026-03-04'
+    ctx.set_text({date.id!r}, '2027-12-31')
+    assert ctx.read({date.id!r}, 'text') == '2027-12-31'
     ctx.set_value({number.id!r}, 2.5)
     assert ctx.read({number.id!r}, 'value') == 2.5
     ctx.set_value({slider.id!r}, 30)

@@ -4,7 +4,7 @@
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QMainWindow, QScrollArea
 from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, ProjectError
-from makebench.ui.renderer import fill_choice, set_range_value
+from makebench.ui.renderer import fill_choice, set_date, set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -98,6 +98,8 @@ class RuntimeNavigation:
                         widget.setPlainText(p.get("text", ""))
                     else:
                         widget.setText(p.get("text", ""))
+                if node.kind == ComponentKind.DATE:
+                    set_date(widget, p.get("text", ""))
                 if node.kind == ComponentKind.CHOICE:
                     fill_choice(widget, p.get("options", []), p.get("text", ""))
                 if node.kind == ComponentKind.CHECKBOX:

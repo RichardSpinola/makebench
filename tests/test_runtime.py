@@ -307,6 +307,36 @@ class RuntimeTests(unittest.TestCase):
         combo.activated.emit(1)
         self.wait(lambda: "changed" in w.output.toPlainText())
 
+    def test_date_reads_sets_and_fires_change_for_the_person(self):
+        from PySide6.QtCore import QDate
+        from PySide6.QtWidgets import QDateEdit
+
+        date = self.project.add(self.project.root.id, ComponentKind.DATE)
+        date.properties["text"] = "2026-03-04"
+        create_flow(self.project, date.id)["body"] = [log("c", "changed")]
+
+        def read(name):
+            return {"id": name, "op": "read", "component": date.id, "attribute": "text"}
+
+        self.flow["body"] = [
+            {"id": "l0", "op": "log", "value": read("r0")},
+            {
+                "id": "s1",
+                "op": "set_text",
+                "component": date.id,
+                "value": literal("v", "2027-12-31"),
+            },
+            {"id": "l1", "op": "log", "value": read("r1")},
+        ]
+        w = self.window("")
+        edit = w.view.widgets[date.id]
+        self.assertIsInstance(edit, QDateEdit)
+        self.click(w)
+        self.assertEqual(w.output.toPlainText().split()[:2], ["2026-03-04", "2027-12-31"])
+        self.assertNotIn("changed", w.output.toPlainText())
+        edit.setDate(QDate(2028, 1, 2))
+        self.wait(lambda: "changed" in w.output.toPlainText())
+
     def test_block_function_returns_a_value_to_the_event(self):
         from makebench.core.logic import create_block_function
 

@@ -69,6 +69,16 @@ class ProjectTests(unittest.TestCase):
                 Project.from_dict(project.to_dict())
             choice.properties = before
 
+    def test_date_must_be_a_real_iso_day(self):
+        project = Project.empty("Date")
+        date = project.add(project.root.id, ComponentKind.DATE)
+        date.properties["text"] = "2026-02-28"
+        Project.from_dict(project.to_dict())
+        for bad in ("2026-02-30", "28/02/2026", "", "20260228", 5):
+            date.properties["text"] = bad
+            with self.assertRaises(ProjectError):
+                Project.from_dict(project.to_dict())
+
     def test_future_version_is_rejected_without_migrating_silently(self):
         data = Project.empty().to_dict()
         data["format_version"] = 99

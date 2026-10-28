@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QComboBox,
+    QDateEdit,
     QDoubleSpinBox,
     QPlainTextEdit,
     QSlider,
@@ -28,8 +29,8 @@ from PySide6.QtWidgets import (
 from makebench.core.codegen import generate
 from makebench.core.project import Project, ProjectError
 from .session import RuntimeSession
-from makebench.core.project import ComponentKind
-from makebench.ui.renderer import fill_choice, range_value, set_range_value
+from makebench.core.project import ComponentKind, valid_date
+from makebench.ui.renderer import date_text, fill_choice, range_value, set_date, set_range_value
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -335,6 +336,8 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                         if isinstance(widget, QPlainTextEdit)
                         else widget.currentText()
                         if isinstance(widget, QComboBox)
+                        else date_text(widget)
+                        if isinstance(widget, QDateEdit)
                         else widget.text()
                     )
                 elif attribute == "checked":
@@ -351,7 +354,11 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
             elif method == "set_text":
                 if widget is None:
                     raise ValueError(tr("The component does not exist."))
-                if isinstance(widget, QComboBox):
+                if isinstance(widget, QDateEdit):
+                    if not valid_date(request["value"]):
+                        raise ValueError(tr("A date must be written as YYYY-MM-DD."))
+                    set_date(widget, request["value"])
+                elif isinstance(widget, QComboBox):
                     index = widget.findText(request["value"])
                     if index < 0:
                         raise ValueError(tr("This option is not in the list."))

@@ -11,7 +11,7 @@ const options = kinds => () => {
   return rows.length ? rows : [[T('No component available'), '@missing']];
 };
 const dropdown = kinds => new Blockly.FieldDropdown(options(kinds));
-const textKinds = ['label', 'button', 'text_input', 'text_area', 'choice', 'checkbox', 'output'];
+const textKinds = ['label', 'button', 'text_input', 'text_area', 'choice', 'date', 'checkbox', 'output'];
 const valueKinds = ['progress', 'number', 'slider'];
 const definitions = [
  {type:'mb_event', message0:T('%1 %2 do %3'), args0:[{type:'field_label_serializable',name:'TITLE',text:T('Event')},{type:'input_dummy'},{type:'input_statement',name:'DO'}],colour:30},

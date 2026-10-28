@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: MIT
 """Controls and layouts shared by editing and running Qt applications."""
 
-from PySide6.QtCore import QPoint, QRect, Qt, Signal
+from PySide6.QtCore import QDate, QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QDateEdit,
     QDoubleSpinBox,
     QGridLayout,
     QHBoxLayout,
@@ -39,6 +40,19 @@ def fill_choice(widget, options, text):
         widget.setCurrentIndex(max(widget.findText(text), 0) if widget.count() else -1)
     finally:
         widget.blockSignals(blocked)
+
+
+def set_date(widget, iso):
+    """Show a YYYY-MM-DD date without telling the application the person did it."""
+    blocked = widget.blockSignals(True)
+    try:
+        widget.setDate(QDate.fromString(iso, "yyyy-MM-dd"))
+    finally:
+        widget.blockSignals(blocked)
+
+
+def date_text(widget):
+    return widget.date().toString("yyyy-MM-dd")
 
 
 def set_range_value(widget, value):
@@ -158,6 +172,11 @@ def create_control(node, read_asset, editing=False):
         case ComponentKind.CHOICE:
             widget = QComboBox()
             fill_choice(widget, node.properties.get("options", []), node.properties.get("text", ""))
+        case ComponentKind.DATE:
+            widget = QDateEdit()
+            widget.setDisplayFormat("yyyy-MM-dd")
+            widget.setCalendarPopup(True)
+            set_date(widget, node.properties.get("text", ""))
         case ComponentKind.NUMBER:
             widget = QDoubleSpinBox()
             configure_range(widget, node)

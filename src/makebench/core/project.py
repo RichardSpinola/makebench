@@ -7,7 +7,9 @@ separate files and is never rewritten when the interface is regenerated.
 
 from __future__ import annotations
 
+import datetime
 import math
+import re
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -37,6 +39,7 @@ class ComponentKind(StrEnum):
     TEXT_INPUT = "text_input"
     TEXT_AREA = "text_area"
     CHOICE = "choice"
+    DATE = "date"
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     NUMBER = "number"
@@ -53,6 +56,7 @@ V10_KINDS = {
     ComponentKind.SLIDER,
     ComponentKind.TEXT_AREA,
     ComponentKind.CHOICE,
+    ComponentKind.DATE,
 }  # grows with each new 1.0 component
 RANGE_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}
 RANGE_DEFAULTS = {"value": 0, "minimum": 0, "maximum": 100, "step": 1, "decimals": 0}
@@ -88,6 +92,7 @@ KIND_LABELS = {
     ComponentKind.PROGRESS: tr("Progress"),
     ComponentKind.TEXT_AREA: tr("Long text"),
     ComponentKind.CHOICE: tr("Choice list"),
+    ComponentKind.DATE: tr("Date"),
     ComponentKind.NUMBER: tr("Number"),
     ComponentKind.SLIDER: tr("Slider"),
     ComponentKind.OUTPUT: tr("Output panel"),
@@ -248,6 +253,10 @@ class Component:
                 raise ProjectError(
                     tr("The selected option of {id} is not in its list.").format(id=component_id)
                 )
+        if kind == ComponentKind.DATE and not valid_date(properties.get("text", "")):
+            raise ProjectError(
+                tr("The date of {id} must be written as YYYY-MM-DD.").format(id=component_id)
+            )
         if kind in RANGE_KINDS:
             validate_range(kind, properties, component_id)
         elif "value" in properties and (
@@ -330,6 +339,17 @@ class Component:
         return node
 
 
+def valid_date(value) -> bool:
+    """True for a real calendar date written as YYYY-MM-DD."""
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        return False
+    try:
+        datetime.date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
+
+
 def validate_range(kind, properties, component_id):
     """Check the value, limits, step and decimals of a number or slider."""
     values = {**RANGE_DEFAULTS, **properties}
@@ -394,6 +414,7 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.PROGRESS: {"value": 0},
         ComponentKind.TEXT_AREA: {"text": "", "placeholder": tr("Type here")},
         ComponentKind.CHOICE: {"options": [tr("Option 1"), tr("Option 2")], "text": ""},
+        ComponentKind.DATE: {"text": datetime.date.today().isoformat()},
         ComponentKind.NUMBER: dict(RANGE_DEFAULTS),
         ComponentKind.SLIDER: {k: v for k, v in RANGE_DEFAULTS.items() if k != "decimals"},
         ComponentKind.OUTPUT: {"text": tr("Task output will appear here.")},

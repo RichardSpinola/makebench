@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Contextual inspector by scope, with collapsible sections and accessible fields."""
 
-from PySide6.QtCore import QRect, Qt, Signal, QEvent, QTimer
+from PySide6.QtCore import QDate, QRect, Qt, Signal, QEvent, QTimer
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QPushButton,
     QSizePolicy,
+    QDateEdit,
     QDoubleSpinBox,
     QPlainTextEdit,
     QSpinBox,
@@ -290,7 +291,10 @@ class Inspector(QWidget):
         ]:
             if key == "text" and node.kind == ComponentKind.CHOICE:
                 label = tr("Selected option")
-            if key in node.properties:
+            if key == "text" and node.kind == ComponentKind.DATE:
+                label = tr("Date")
+                self._date_field(label, node.id, key, node.properties[key])
+            elif key in node.properties:
                 self._text_field(label, node.id, key, node.properties[key])
         if node.kind == ComponentKind.CHOICE:
             self._lines_field(
@@ -580,6 +584,7 @@ class Inspector(QWidget):
             ComponentKind.TEXT_INPUT,
             ComponentKind.TEXT_AREA,
             ComponentKind.CHOICE,
+            ComponentKind.DATE,
             ComponentKind.CHECKBOX,
             *RANGE_KINDS,
         }:
@@ -714,6 +719,21 @@ class Inspector(QWidget):
                 node_id, key, [line for line in field.toPlainText().splitlines() if line.strip()]
             )
         )
+        self.fields.addRow(self._label(label, key), field)
+
+    def _date_field(self, label, node_id, key, value):
+        """Edit a date; the document keeps it as YYYY-MM-DD."""
+        field = QDateEdit(QDate.fromString(value, "yyyy-MM-dd"))
+        field.setObjectName("property_" + key)
+        field.setDisplayFormat("yyyy-MM-dd")
+        field.setCalendarPopup(True)
+        field.setAccessibleName(label)
+        if self.state_mode:
+            field.setEnabled(False)
+        field.dateChanged.connect(
+            lambda date: self.property_changed.emit(node_id, key, date.toString("yyyy-MM-dd"))
+        )
+        self._restore_menu(field, node_id, key)
         self.fields.addRow(self._label(label, key), field)
 
     def _decimal_field(self, label, node_id, key, value, digits):

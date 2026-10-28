@@ -22,6 +22,7 @@ TEXT_KINDS = {
     ComponentKind.TEXT_INPUT,
     ComponentKind.TEXT_AREA,
     ComponentKind.CHOICE,
+    ComponentKind.DATE,
     ComponentKind.CHECKBOX,
     ComponentKind.OUTPUT,
 }
@@ -37,6 +38,7 @@ EVENT_TARGETS = {
         ComponentKind.TEXT_INPUT,
         ComponentKind.TEXT_AREA,
         ComponentKind.CHOICE,
+        ComponentKind.DATE,
         ComponentKind.CHECKBOX,
         ComponentKind.NUMBER,
         ComponentKind.SLIDER,

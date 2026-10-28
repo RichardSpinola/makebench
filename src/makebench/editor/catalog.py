@@ -22,6 +22,7 @@ COMPONENTS = {
     "text_input": ("input", tr("Receives text typed by the user.")),
     "text_area": ("input", tr("Receives several lines of text typed by the user.")),
     "choice": ("input", tr("A list of options; the user picks one.")),
+    "date": ("input", tr("A calendar date the user picks.")),
     "checkbox": ("input", tr("An option that can be checked or unchecked.")),
     "terminal": (
         "feedback",

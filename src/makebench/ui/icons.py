@@ -51,6 +51,7 @@ PATHS = {
     "text_input": '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 12h5M15 9v6"/>',
     "text_area": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/>',
     "choice": '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="m14 11 3 3 3-3"/>',
+    "date": '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     "checkbox": '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="m7 12 3 3 7-7"/>',
     "number": '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="m14 11 2 2 2-2"/><path d="M7 12h3"/>',
     "slider": '<path d="M4 12h16"/><circle cx="14" cy="12" r="3"/>',

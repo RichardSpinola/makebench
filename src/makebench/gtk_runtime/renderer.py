@@ -49,6 +49,7 @@ class GtkView:
         self.ranges = set()  # numbers and sliders
         self.areas = set()  # long text inputs
         self.choices = set()  # choice lists
+        self.dates = set()  # date pickers
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
         self.provider = None
@@ -224,6 +225,17 @@ class GtkView:
             widget.connect("toggled", lambda _check: self.user_changed(node.id))
         elif k == ComponentKind.PROGRESS:
             widget = Gtk.ProgressBar(show_text=True, fraction=p.get("value", 0) / 100)
+        elif k == ComponentKind.DATE:
+            calendar = Gtk.Calendar()
+            widget = Gtk.MenuButton(hexpand=True)
+            popover = Gtk.Popover()
+            popover.set_child(calendar)
+            widget.set_popover(popover)
+            widget._makebench_calendar = calendar
+            self.widgets[node.id] = widget
+            self.dates.add(node.id)
+            self._set_text(node.id, text)
+            calendar.connect("day-selected", lambda _calendar: self._date_picked(node.id))
         elif k == ComponentKind.CHOICE:
             widget = Gtk.DropDown.new_from_strings([])
             self.widgets[node.id] = widget
@@ -324,10 +336,32 @@ class GtkView:
         finally:
             self.programmatic = False
 
+    def _date_picked(self, identifier):
+        """The person chose a day: show it and report the change."""
+        w = self.widgets[identifier]
+        if self.programmatic:
+            return
+        w.set_label(w._makebench_calendar.get_date().format("%Y-%m-%d"))
+        self.user_changed(identifier)
+
     def _set_text(self, identifier, value):
         w = self.widgets[identifier]
         Gtk = self.Gtk
-        if hasattr(w, "_makebench_label"):
+        if identifier in self.dates:
+            from makebench.core.project import valid_date
+
+            if not valid_date(str(value)):
+                raise ValueError(tr("A date must be written as YYYY-MM-DD."))
+            year, month, day = (int(part) for part in str(value).split("-"))
+            was, self.programmatic = self.programmatic, True
+            try:
+                w._makebench_calendar.select_day(
+                    self.GLib.DateTime.new_local(year, month, day, 0, 0, 0)
+                )
+            finally:
+                self.programmatic = was
+            w.set_label(str(value))
+        elif hasattr(w, "_makebench_label"):
             w._makebench_label.set_label(str(value))
         elif isinstance(w, Gtk.DropDown):
             options = [item.get_string() for item in w.get_model()]
@@ -384,6 +418,8 @@ class GtkView:
             if isinstance(w, Gtk.DropDown):
                 item = w.get_selected_item()
                 return item.get_string() if item else ""
+            if identifier in self.dates:
+                return w.get_label()
             return w.get_text() if isinstance(w, Gtk.Entry) else w.get_label()
         if attribute == "checked":
             return w.get_active()

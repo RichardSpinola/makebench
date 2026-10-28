@@ -49,6 +49,7 @@ def default_block(op, project, window):
                 "text_input",
                 "text_area",
                 "choice",
+                "date",
                 "checkbox",
                 "output",
             },

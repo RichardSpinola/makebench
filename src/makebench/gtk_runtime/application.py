@@ -338,6 +338,8 @@ class GtkRuntime:
                 ComponentKind.OUTPUT,
             }:
                 view.set_text(node.id, p.get("text", ""))
+            if node.kind == ComponentKind.DATE:
+                view.set_text(node.id, p.get("text", ""))
             if node.kind == ComponentKind.CHOICE:
                 view.set_options(node.id, p.get("options", []), p.get("text", ""))
             if node.kind == ComponentKind.CHECKBOX:

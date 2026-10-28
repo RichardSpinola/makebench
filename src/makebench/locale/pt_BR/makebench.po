@@ -7144,3 +7144,19 @@ msgstr "A opção selecionada de {id} não está na lista."
 #: src/makebench/gtk_runtime/renderer.py src/makebench/runtime/window.py
 msgid "This option is not in the list."
 msgstr "Esta opção não está na lista."
+
+#: src/makebench/editor/catalog.py
+msgid "A calendar date the user picks."
+msgstr "Uma data de calendário escolhida pela pessoa."
+
+#: src/makebench/gtk_runtime/renderer.py src/makebench/runtime/window.py
+msgid "A date must be written as YYYY-MM-DD."
+msgstr "Uma data deve ser escrita como AAAA-MM-DD."
+
+#: src/makebench/core/project.py src/makebench/editor/inspector.py
+msgid "Date"
+msgstr "Data"
+
+#: src/makebench/core/project.py
+msgid "The date of {id} must be written as YYYY-MM-DD."
+msgstr "A data de {id} deve ser escrita como AAAA-MM-DD."
