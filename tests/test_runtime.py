@@ -337,6 +337,53 @@ class RuntimeTests(unittest.TestCase):
         edit.setDate(QDate(2028, 1, 2))
         self.wait(lambda: "changed" in w.output.toPlainText())
 
+    def test_table_sets_adds_and_reads_rows_and_fires_change_for_the_person(self):
+        from PySide6.QtWidgets import QTableWidget
+
+        table = self.project.add(self.project.root.id, ComponentKind.TABLE)
+        table.properties["headers"] = ["Name", "Age"]
+        create_flow(self.project, table.id)["body"] = [log("c", "picked")]
+
+        def rows(name, *cells):
+            return {
+                "id": name,
+                "op": "list",
+                "items": [
+                    {
+                        "id": f"{name}{i}",
+                        "op": "list",
+                        "items": [literal(f"{name}{i}{j}", c) for j, c in enumerate(row)],
+                    }
+                    for i, row in enumerate(cells)
+                ],
+            }
+
+        selected = {"id": "r0", "op": "read", "component": table.id, "attribute": "selected"}
+        self.flow["body"] = [
+            {"id": "l0", "op": "log", "value": selected},
+            {
+                "id": "op_set",
+                "op": "set_rows",
+                "component": table.id,
+                "value": rows("a", ["Ann", "3"], ["Bob", "5"]),
+            },
+            {
+                "id": "op_add",
+                "op": "add_row",
+                "component": table.id,
+                "value": rows("b", ["Cy", 7])["items"][0],
+            },
+        ]
+        w = self.window("")
+        widget = w.view.widgets[table.id]
+        self.assertIsInstance(widget, QTableWidget)
+        self.click(w)
+        self.assertEqual(widget.rowCount(), 3)
+        self.assertEqual(widget.item(2, 1).text(), "7")
+        self.assertNotIn("picked", w.output.toPlainText())
+        widget.selectRow(1)
+        self.wait(lambda: "picked" in w.output.toPlainText())
+
     def test_block_function_returns_a_value_to_the_event(self):
         from makebench.core.logic import create_block_function
 

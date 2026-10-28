@@ -29,6 +29,8 @@ def check_runtime():
         area = p.add(p.root.id, ComponentKind.TEXT_AREA)
         choice = p.add(p.root.id, ComponentKind.CHOICE)
         choice.properties.update(options=["um", "dois"], text="dois")
+        table = p.add(p.root.id, ComponentKind.TABLE)
+        table.properties["headers"] = ["A", "B"]
         date = p.add(p.root.id, ComponentKind.DATE)
         date.properties["text"] = "2026-03-04"
         output = p.add(p.root.id, ComponentKind.OUTPUT)
@@ -59,6 +61,9 @@ def check_runtime():
     assert ctx.read({date.id!r}, 'text') == '2026-03-04'
     ctx.set_text({date.id!r}, '2027-12-31')
     assert ctx.read({date.id!r}, 'text') == '2027-12-31'
+    ctx.set_rows({table.id!r}, [['a', 1], ['b', 2]])
+    ctx.add_row({table.id!r}, ['c', 3])
+    assert ctx.read({table.id!r}, 'selected') == []
     ctx.set_value({number.id!r}, 2.5)
     assert ctx.read({number.id!r}, 'value') == 2.5
     ctx.set_value({slider.id!r}, 30)

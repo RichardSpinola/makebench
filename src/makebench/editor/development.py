@@ -474,10 +474,13 @@ class DevelopmentMixin:
                 tr("Enable component"): "mb_set_enabled",
                 tr("Change value"): "mb_set_value",
                 tr("Change options"): "mb_set_options",
+                tr("Change table rows"): "mb_set_rows",
+                tr("Add table row"): "mb_add_row",
                 tr("Show page"): "mb_show_page",
                 tr("Read component text"): "mb_read_text",
                 tr("Read checkbox selection"): "mb_read_checked",
                 tr("Read value"): "mb_read_value",
+                tr("Read selected table row"): "mb_read_selected",
                 tr("Join texts"): "mb_join",
                 tr("Compare or calculate"): "mb_binary",
             }

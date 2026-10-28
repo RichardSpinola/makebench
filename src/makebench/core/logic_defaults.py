@@ -15,6 +15,8 @@ OPS = [
     ("set_enabled", tr("Enable component")),
     ("set_value", tr("Change value")),
     ("set_options", tr("Change options")),
+    ("set_rows", tr("Change table rows")),
+    ("add_row", tr("Add table row")),
     ("assign", tr("Set variable")),
     ("call", tr("Call Python function")),
     ("script", tr("Run Bash")),
@@ -41,7 +43,15 @@ def default_block(op, project, window):
     components = list(project.find(window).walk())
     if op in {"log", "message", "set_text", "assign", "call"}:
         node["value"] = literal(tr("Hello!"))
-    if op in {"set_text", "set_enabled", "set_value", "set_options", "show_page"}:
+    if op in {
+        "set_text",
+        "set_enabled",
+        "set_value",
+        "set_options",
+        "set_rows",
+        "add_row",
+        "show_page",
+    }:
         kinds = {
             "set_text": {
                 "label",
@@ -54,6 +64,8 @@ def default_block(op, project, window):
                 "output",
             },
             "set_options": {"choice"},
+            "set_rows": {"table"},
+            "add_row": {"table"},
             "set_value": {"progress", "number", "slider"},
             "show_page": {"page"},
         }.get(op)
@@ -81,6 +93,14 @@ def default_block(op, project, window):
             "id": new_id("value"),
             "op": "list",
             "items": [literal(tr("Option 1")), literal(tr("Option 2"))],
+        }
+    if op == "set_rows":
+        node["value"] = {"id": new_id("value"), "op": "list", "items": []}
+    if op == "add_row":
+        node["value"] = {
+            "id": new_id("value"),
+            "op": "list",
+            "items": [literal(tr("Cell 1")), literal(tr("Cell 2"))],
         }
     if op == "assign":
         node.update(name=default_names()["variable"], scope="project")

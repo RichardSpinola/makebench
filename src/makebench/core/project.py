@@ -40,6 +40,7 @@ class ComponentKind(StrEnum):
     TEXT_AREA = "text_area"
     CHOICE = "choice"
     DATE = "date"
+    TABLE = "table"
     CHECKBOX = "checkbox"
     PROGRESS = "progress"
     NUMBER = "number"
@@ -57,6 +58,7 @@ V10_KINDS = {
     ComponentKind.TEXT_AREA,
     ComponentKind.CHOICE,
     ComponentKind.DATE,
+    ComponentKind.TABLE,
 }  # grows with each new 1.0 component
 RANGE_KINDS = {ComponentKind.NUMBER, ComponentKind.SLIDER}
 RANGE_DEFAULTS = {"value": 0, "minimum": 0, "maximum": 100, "step": 1, "decimals": 0}
@@ -93,6 +95,7 @@ KIND_LABELS = {
     ComponentKind.TEXT_AREA: tr("Long text"),
     ComponentKind.CHOICE: tr("Choice list"),
     ComponentKind.DATE: tr("Date"),
+    ComponentKind.TABLE: tr("Table"),
     ComponentKind.NUMBER: tr("Number"),
     ComponentKind.SLIDER: tr("Slider"),
     ComponentKind.OUTPUT: tr("Output panel"),
@@ -252,6 +255,16 @@ class Component:
             if properties.get("text", "") not in {"", *options}:
                 raise ProjectError(
                     tr("The selected option of {id} is not in its list.").format(id=component_id)
+                )
+        if kind == ComponentKind.TABLE:
+            columns = properties.get("headers", [])
+            if (
+                not isinstance(columns, list)
+                or not 1 <= len(columns) <= 64
+                or any(not isinstance(item, str) or len(item) > 200 for item in columns)
+            ):
+                raise ProjectError(
+                    tr("The columns of {id} must be 1 to 64 short texts.").format(id=component_id)
                 )
         if kind == ComponentKind.DATE and not valid_date(properties.get("text", "")):
             raise ProjectError(
@@ -414,6 +427,7 @@ def create_component(kind: ComponentKind) -> Component:
         ComponentKind.PROGRESS: {"value": 0},
         ComponentKind.TEXT_AREA: {"text": "", "placeholder": tr("Type here")},
         ComponentKind.CHOICE: {"options": [tr("Option 1"), tr("Option 2")], "text": ""},
+        ComponentKind.TABLE: {"headers": [tr("Column 1"), tr("Column 2")]},
         ComponentKind.DATE: {"text": datetime.date.today().isoformat()},
         ComponentKind.NUMBER: dict(RANGE_DEFAULTS),
         ComponentKind.SLIDER: {k: v for k, v in RANGE_DEFAULTS.items() if k != "decimals"},
@@ -429,7 +443,12 @@ def create_component(kind: ComponentKind) -> Component:
         node.geometry.update(width=360, height=240)
     elif kind == ComponentKind.IMAGE:
         node.geometry.update(width=240, height=160)
-    elif kind in {ComponentKind.OUTPUT, ComponentKind.TERMINAL, ComponentKind.TEXT_AREA}:
+    elif kind in {
+        ComponentKind.OUTPUT,
+        ComponentKind.TERMINAL,
+        ComponentKind.TEXT_AREA,
+        ComponentKind.TABLE,
+    }:
         node.geometry.update(width=360, height=140)
     if kind == ComponentKind.PAGES:
         page = create_component(ComponentKind.PAGE)

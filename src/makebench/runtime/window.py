@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QComboBox,
     QDateEdit,
+    QTableWidget,
     QDoubleSpinBox,
     QPlainTextEdit,
     QSlider,
@@ -30,7 +31,16 @@ from makebench.core.codegen import generate
 from makebench.core.project import Project, ProjectError
 from .session import RuntimeSession
 from makebench.core.project import ComponentKind, valid_date
-from makebench.ui.renderer import date_text, fill_choice, range_value, set_date, set_range_value
+from makebench.ui.renderer import (
+    append_table_row,
+    date_text,
+    fill_choice,
+    selected_table_row,
+    range_value,
+    set_date,
+    set_range_value,
+    set_table_rows,
+)
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -340,6 +350,10 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                         if isinstance(widget, QDateEdit)
                         else widget.text()
                     )
+                elif attribute == "selected":
+                    if not isinstance(widget, QTableWidget):
+                        raise ValueError(tr("Unknown property."))
+                    value = selected_table_row(widget)
                 elif attribute == "checked":
                     value = widget.isChecked()
                 elif attribute == "value":
@@ -369,6 +383,16 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     widget.setPlainText(request["value"])
                 else:
                     widget.setText(request["value"])
+                self.session.reply(identifier)
+            elif method in {"set_rows", "add_row"}:
+                if not isinstance(widget, QTableWidget):
+                    raise ValueError(tr("The component does not exist."))
+                if method == "set_rows":
+                    set_table_rows(widget, request["value"])
+                else:
+                    blocked = widget.blockSignals(True)
+                    append_table_row(widget, request["value"])
+                    widget.blockSignals(blocked)
                 self.session.reply(identifier)
             elif method == "set_options":
                 if not isinstance(widget, QComboBox):

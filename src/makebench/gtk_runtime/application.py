@@ -495,6 +495,10 @@ class GtkRuntime:
                 elif method == "set_enabled":
                     view.enabled[key] = r["value"]
                     widget.set_sensitive(r["value"])
+                elif method == "set_rows" and key in view.tables:
+                    view.set_rows(key, r["value"])
+                elif method == "add_row" and key in view.tables:
+                    view.add_row(key, r["value"])
                 elif method == "set_options" and key in view.choices:
                     view.set_options(key, r["value"])
                 elif method == "set_value" and key in view.ranges:

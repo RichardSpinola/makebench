@@ -33,9 +33,9 @@ class GtkView:
         import gi
 
         gi.require_version("Gtk", "4.0")
-        from gi.repository import Gtk, Gdk, GLib
+        from gi.repository import Gtk, Gdk, GLib, GObject
 
-        self.Gtk, self.Gdk, self.GLib = Gtk, Gdk, GLib
+        self.Gtk, self.Gdk, self.GLib, self.GObject = Gtk, Gdk, GLib, GObject
         self.root = root
         self.read_asset = read_asset
         self.clicked = clicked
@@ -50,6 +50,7 @@ class GtkView:
         self.areas = set()  # long text inputs
         self.choices = set()  # choice lists
         self.dates = set()  # date pickers
+        self.tables = {}  # id -> (Gio.ListStore, Gtk.SingleSelection)
         self.widget = self.web_page(root) if is_web(root) else self.render(root)
         self.style_changes = {}
         self.provider = None
@@ -225,6 +226,8 @@ class GtkView:
             widget.connect("toggled", lambda _check: self.user_changed(node.id))
         elif k == ComponentKind.PROGRESS:
             widget = Gtk.ProgressBar(show_text=True, fraction=p.get("value", 0) / 100)
+        elif k == ComponentKind.TABLE:
+            widget = self.table(node.id, p.get("headers", []))
         elif k == ComponentKind.DATE:
             calendar = Gtk.Calendar()
             widget = Gtk.MenuButton(hexpand=True)
@@ -336,6 +339,60 @@ class GtkView:
         finally:
             self.programmatic = False
 
+    def table(self, identifier, columns):
+        """A column view over a list store of rows; each row keeps its cells as texts."""
+        Gtk, GObject = self.Gtk, self.GObject
+        from gi.repository import Gio
+
+        class Row(GObject.Object):
+            def __init__(self, cells):
+                super().__init__()
+                self.cells = cells
+
+        store = Gio.ListStore.new(Row)
+        selection = Gtk.SingleSelection(model=store, autoselect=False, can_unselect=True)
+        view = Gtk.ColumnView(model=selection, hexpand=True, vexpand=True)
+        for index, title in enumerate(columns):
+            factory = Gtk.SignalListItemFactory()
+            factory.connect("setup", lambda _f, item: item.set_child(Gtk.Label(xalign=0)))
+            factory.connect(
+                "bind",
+                lambda _f, item, index=index: item.get_child().set_label(
+                    item.get_item().cells[index] if index < len(item.get_item().cells) else ""
+                ),
+            )
+            view.append_column(Gtk.ColumnViewColumn(title=title, factory=factory, expand=True))
+        selection.connect("selection-changed", lambda *_: self.user_changed(identifier))
+        scroller = Gtk.ScrolledWindow(min_content_height=100)
+        scroller.set_child(view)
+        self.widgets[identifier] = scroller
+        self.tables[identifier] = (store, selection, Row)
+        return scroller
+
+    def set_rows(self, identifier, rows):
+        """Replace the rows of a table without reporting a change."""
+        store, selection, Row = self.tables[identifier]
+        self.programmatic = True
+        try:
+            store.remove_all()
+            for row in rows:
+                store.append(Row([str(cell) for cell in row]))
+        finally:
+            self.programmatic = False
+
+    def add_row(self, identifier, row):
+        store, selection, Row = self.tables[identifier]
+        self.programmatic = True
+        try:
+            store.append(Row([str(cell) for cell in row]))
+        finally:
+            self.programmatic = False
+
+    def selected_row(self, identifier):
+        store, selection, Row = self.tables[identifier]
+        item = selection.get_selected_item()
+        return list(item.cells) if item else []
+
     def _date_picked(self, identifier):
         """The person chose a day: show it and report the change."""
         w = self.widgets[identifier]
@@ -421,6 +478,10 @@ class GtkView:
             if identifier in self.dates:
                 return w.get_label()
             return w.get_text() if isinstance(w, Gtk.Entry) else w.get_label()
+        if attribute == "selected":
+            if identifier not in self.tables:
+                raise ValueError(tr("Unknown property."))
+            return self.selected_row(identifier)
         if attribute == "checked":
             return w.get_active()
         if attribute == "value":

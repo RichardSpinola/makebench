@@ -6,6 +6,7 @@ from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QAbstractItemView,
     QDateEdit,
     QDoubleSpinBox,
     QGridLayout,
@@ -17,6 +18,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QSlider,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QFrame,
     QWidget,
@@ -40,6 +43,47 @@ def fill_choice(widget, options, text):
         widget.setCurrentIndex(max(widget.findText(text), 0) if widget.count() else -1)
     finally:
         widget.blockSignals(blocked)
+
+
+def configure_table(widget, columns):
+    """Show the columns of a table; rows are added later by the application."""
+    widget.setColumnCount(len(columns))
+    widget.setHorizontalHeaderLabels(list(columns))
+    widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+    widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+    widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+    widget.horizontalHeader().setStretchLastSection(True)
+    widget.verticalHeader().setVisible(False)
+
+
+def append_table_row(widget, row):
+    index = widget.rowCount()
+    widget.insertRow(index)
+    for column in range(widget.columnCount()):
+        widget.setItem(
+            index, column, QTableWidgetItem(str(row[column]) if column < len(row) else "")
+        )
+
+
+def set_table_rows(widget, rows):
+    """Replace every row without telling the application the person did it."""
+    blocked = widget.blockSignals(True)
+    try:
+        widget.setRowCount(0)
+        for row in rows:
+            append_table_row(widget, row)
+    finally:
+        widget.blockSignals(blocked)
+
+
+def selected_table_row(widget):
+    row = widget.currentRow() if widget.selectedItems() else -1
+    if row < 0:
+        return []
+    return [
+        widget.item(row, column).text() if widget.item(row, column) else ""
+        for column in range(widget.columnCount())
+    ]
 
 
 def set_date(widget, iso):
@@ -172,6 +216,10 @@ def create_control(node, read_asset, editing=False):
         case ComponentKind.CHOICE:
             widget = QComboBox()
             fill_choice(widget, node.properties.get("options", []), node.properties.get("text", ""))
+        case ComponentKind.TABLE:
+            widget = QTableWidget()
+            configure_table(widget, node.properties.get("headers", []))
+            widget.setMinimumHeight(70)
         case ComponentKind.DATE:
             widget = QDateEdit()
             widget.setDisplayFormat("yyyy-MM-dd")

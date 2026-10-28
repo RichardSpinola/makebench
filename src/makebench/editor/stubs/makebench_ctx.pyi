@@ -23,6 +23,10 @@ class Context:
         """Set a progress bar (0 to 100), a number or a slider (within its limits)."""
     def set_options(self, component: str, options: list[str]) -> None:
         """Replace the options of a choice list; the selection stays when it remains."""
+    def set_rows(self, component: str, rows: list[list[Any]]) -> None:
+        """Replace all rows of a table; each row is a list of cells."""
+    def add_row(self, component: str, row: list[Any]) -> None:
+        """Append one row (a list of cells) to a table."""
     def show_page(self, component: str) -> None:
         """Show a page and the pages that contain it."""
     def go_state(self, state: str) -> None:

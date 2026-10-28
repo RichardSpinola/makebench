@@ -69,6 +69,16 @@ class ProjectTests(unittest.TestCase):
                 Project.from_dict(project.to_dict())
             choice.properties = before
 
+    def test_table_columns_are_validated(self):
+        project = Project.empty("Table")
+        table = project.add(project.root.id, ComponentKind.TABLE)
+        self.assertEqual(len(table.properties["headers"]), 2)
+        Project.from_dict(project.to_dict())
+        for bad in ([], "ab", ["a", 3], ["x"] * 65):
+            table.properties["headers"] = bad
+            with self.assertRaises(ProjectError):
+                Project.from_dict(project.to_dict())
+
     def test_date_must_be_a_real_iso_day(self):
         project = Project.empty("Date")
         date = project.add(project.root.id, ComponentKind.DATE)

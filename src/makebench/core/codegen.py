@@ -128,7 +128,7 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
                     op = node["op"]
                     if op in {"log", "message"}:
                         emit(f"ctx.{op}({expression(node['value'])})", node, indent)
-                    elif op.startswith("set_"):
+                    elif op.startswith("set_") or op == "add_row":
                         emit(
                             f"ctx.{op}({node['component']!r}, {expression(node['value'])})",
                             node,

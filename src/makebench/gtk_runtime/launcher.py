@@ -92,6 +92,7 @@ def main():
                             "text_area",
                             "choice",
                             "date",
+                            "table",
                             "checkbox",
                             "progress",
                             "number",
@@ -103,6 +104,8 @@ def main():
                                 if node.kind.value == "checkbox"
                                 else "value"
                                 if node.kind.value in {"progress", "number", "slider"}
+                                else "selected"
+                                if node.kind.value == "table"
                                 else "text"
                             )
                             controls[identifier] = view.read(identifier, attribute)

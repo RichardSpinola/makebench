@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDateEdit,
+    QTableWidget,
     QDoubleSpinBox,
     QFrame,
     QLineEdit,
@@ -125,6 +126,10 @@ class RuntimeView(QFrame):
                 )
             if isinstance(widget, QCheckBox):
                 widget.clicked.connect(lambda _, identifier=node.id: self.changed.emit(identifier))
+            if isinstance(widget, QTableWidget):
+                widget.itemSelectionChanged.connect(
+                    lambda identifier=node.id: self.changed.emit(identifier)
+                )
             if isinstance(widget, QDateEdit):
                 widget.dateChanged.connect(
                     lambda _, identifier=node.id: self.changed.emit(identifier)

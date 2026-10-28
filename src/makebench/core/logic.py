@@ -42,6 +42,7 @@ EVENT_TARGETS = {
         ComponentKind.CHECKBOX,
         ComponentKind.NUMBER,
         ComponentKind.SLIDER,
+        ComponentKind.TABLE,
     },
 }
 EVENT_SUFFIX = {
@@ -489,6 +490,8 @@ def validate(project: Project) -> None:
                         if attribute == "checked"
                         else VALUE_KINDS
                         if attribute == "value"
+                        else {ComponentKind.TABLE}
+                        if attribute == "selected"
                         else set()
                     )
                     if not kinds:
@@ -523,6 +526,9 @@ def validate(project: Project) -> None:
                 expr("value")
             elif op == "set_options":
                 target(value.get("component"), {ComponentKind.CHOICE})
+                expr("value")
+            elif op in {"set_rows", "add_row"}:
+                target(value.get("component"), {ComponentKind.TABLE})
                 expr("value")
             elif op in {"set_text", "set_enabled", "set_value"}:
                 target(

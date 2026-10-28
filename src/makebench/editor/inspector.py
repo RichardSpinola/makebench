@@ -296,6 +296,10 @@ class Inspector(QWidget):
                 self._date_field(label, node.id, key, node.properties[key])
             elif key in node.properties:
                 self._text_field(label, node.id, key, node.properties[key])
+        if node.kind == ComponentKind.TABLE:
+            self._lines_field(
+                tr("Columns (one per line)"), node.id, "headers", node.properties.get("headers", [])
+            )
         if node.kind == ComponentKind.CHOICE:
             self._lines_field(
                 tr("Options (one per line)"), node.id, "options", node.properties.get("options", [])
@@ -585,6 +589,7 @@ class Inspector(QWidget):
             ComponentKind.TEXT_AREA,
             ComponentKind.CHOICE,
             ComponentKind.DATE,
+            ComponentKind.TABLE,
             ComponentKind.CHECKBOX,
             *RANGE_KINDS,
         }:

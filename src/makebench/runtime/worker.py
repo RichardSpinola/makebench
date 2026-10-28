@@ -29,6 +29,13 @@ class TaskError(Exception):
     """External task failure; later actions are not run."""
 
 
+def table_rows(rows):
+    """Rows as lists of texts, the only shape tables accept."""
+    if isinstance(rows, (str, bytes)) or any(isinstance(row, (str, bytes)) for row in rows):
+        raise ValueError("Table rows must be lists of cells.")
+    return [[str(cell) for cell in row] for row in rows]
+
+
 class Context:
     """Synchronous application API, with requests served by the UI process."""
 
@@ -95,6 +102,14 @@ class Context:
     def set_value(self, component, value):
         """Update a progress bar (0–100), a number or a slider (within its limits)."""
         return self.request("set_value", component=component, value=value)
+
+    def set_rows(self, component, rows):
+        """Replace all rows of a table; each row is a list of cells."""
+        return self.request("set_rows", component=component, value=table_rows(rows))
+
+    def add_row(self, component, row):
+        """Append one row (a list of cells) to a table."""
+        return self.request("add_row", component=component, value=table_rows([row])[0])
 
     def set_options(self, component, options):
         """Replace the options of a choice list, keeping the selection when it remains."""
