@@ -4,10 +4,15 @@
 import json
 import os
 from pathlib import Path
+import sys
 import tempfile
 import time
 import unittest
 from unittest.mock import patch
+
+# Same throwaway settings and data folders as the unit tests.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
+import support  # noqa: E402, F401
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu")
