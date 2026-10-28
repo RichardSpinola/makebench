@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QMessageBox,
 )
-from makebench.core.logic import is_draft
+from makebench.core.logic import block_functions, called_functions, is_draft
 from makebench.core.navigation import (
     navigation_edges,
     find_navigation_block,
@@ -63,6 +63,9 @@ def edge_path(source, target):
     path = QPainterPath(start)
     path.cubicTo(QPointF(start.x() + 35, lane), QPointF(end.x() - 35, lane), end)
     return path
+
+
+LOGIC_ROLE = Qt.ItemDataRole.UserRole + 1
 
 
 class MapPanel(QWidget):
@@ -193,6 +196,10 @@ class MapPanel(QWidget):
             "positions": project.map_layout,
             "entry": project.entry_window,
             "edges": edges,
+            "logic": [
+                (u["id"], u["name"], u.get("function"), called_functions(u))
+                for u in [*project.editable_flows, *block_functions(project)]
+            ],
             "collapsed": sorted(self.collapsed),
             "empty": empty,
             "theme": manager().tokens,
@@ -306,6 +313,7 @@ class MapPanel(QWidget):
                     node.thumbnail, node.preview_error = thumbnails[key]
                 scene.addItem(node)
                 self.nodes[key] = node
+            self._add_logic_items(tree_root, root.id)
             tree_root.setExpanded(True)
             members = [node for key, node in self.nodes.items() if key.startswith(root.id + "|")]
             bounds = members[0].sceneBoundingRect()
@@ -328,6 +336,14 @@ class MapPanel(QWidget):
             )
             scene.addItem(header)
             header.setPos(bounds.left() + 12, bounds.top() + 10)
+        functions = block_functions(project)
+        if functions:
+            group = QTreeWidgetItem([tr("Functions")])
+            group.setIcon(0, icon("code"))
+            self.outline.addTopLevelItem(group)
+            for function in functions:
+                group.addChild(self._logic_item(function, function))
+            group.setExpanded(True)
         for edge in edges:
             self.add_edge(edge)
         scene.setSceneRect(scene.itemsBoundingRect().adjusted(-70, -70, 70, 70))
@@ -346,6 +362,31 @@ class MapPanel(QWidget):
             )
             if line:
                 line.setSelected(True)
+
+    def _logic_item(self, unit, function=None):
+        """One event or block function in the list; activating it opens it in Logic."""
+        label = (
+            f"{function['name']}({', '.join(function['params'])})"
+            if function
+            else unit["name"] + (f" → {unit['function']}()" if "function" in unit else "")
+        )
+        item = QTreeWidgetItem([label])
+        item.setIcon(0, icon("code" if function else "logic"))
+        item.setData(0, LOGIC_ROLE, unit["id"])
+        return item
+
+    def _add_logic_items(self, tree_root, owner):
+        """List the window's events and, under each, the block functions it calls."""
+        project = self.window.project
+        functions = {f["id"]: f for f in block_functions(project)}
+        for flow in project.editable_flows:
+            if project.window_of(flow["event"]["component"]).id != owner:
+                continue
+            item = self._logic_item(flow)
+            for target in called_functions(flow):
+                if target in functions:
+                    item.addChild(self._logic_item(functions[target], functions[target]))
+            tree_root.addChild(item)
 
     def node_for(self, owner, state):
         """Collapsed states use the representative card, keeping real IDs in the inspector."""
@@ -517,6 +558,8 @@ class MapPanel(QWidget):
         key = item.data(0, Qt.ItemDataRole.UserRole)
         if key:
             self.activate(key)
+        elif item.data(0, LOGIC_ROLE):
+            self.window.navigate_to_item("flow", item.data(0, LOGIC_ROLE))
 
     def outline_menu(self, point):
         """Keyboard/mouse alternative to gestures in the graphics area."""

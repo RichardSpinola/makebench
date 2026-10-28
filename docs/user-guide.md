@@ -47,6 +47,8 @@ for the transitions between them.
   real "show window" or "change state" action inside the logic, not a drawing.
 - Select a line to see and change which event triggers it.
 - Card thumbnails are rendered from the design without running anything.
+- The list on the left shows each window's events and, under each event, the
+  block functions it calls. Double-click one to open it in Logic.
 
 ![Map](images/map.png)
 

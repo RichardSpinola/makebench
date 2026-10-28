@@ -998,7 +998,12 @@ class StudioMixin(
             self.set_mode("design")
             return
         if kind == "flow":
-            flow = next(f for f in self.project.editable_flows if f["id"] == identifier)
+            flow = next((f for f in self.project.editable_flows if f["id"] == identifier), None)
+            if flow is None:
+                # Block functions have no event: they open in Logic as they are.
+                self.set_mode("logic")
+                self.logic.sync(identifier)
+                return
             window = self.project.window_of(flow["event"]["component"])
             self.activate_window(window.id, (flow.get("states") or ["@default"])[0])
             self._select(flow["event"]["component"])

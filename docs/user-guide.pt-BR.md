@@ -50,6 +50,8 @@ as transições entre eles.
   desenho.
 - Selecione uma linha para ver e mudar o evento que a dispara.
 - As miniaturas dos cartões são desenhadas a partir do design, sem executar nada.
+- A lista à esquerda mostra os eventos de cada janela e, abaixo de cada evento,
+  as funções de blocos que ele chama. Clique duas vezes para abrir na Lógica.
 
 ![Mapa](images/map.png)
 

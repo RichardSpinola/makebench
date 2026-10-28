@@ -254,6 +254,46 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.move_to_module(flow["id"], "")
         self.assertNotIn("module", flow)
 
+    def test_map_lists_events_and_the_functions_they_call(self):
+        w = self.window
+        w.project.metadata["programming"] = "blocks"
+        button = w.project.add(w.project.root.id, ComponentKind.BUTTON)
+        w._refresh()
+        w.save_block_function("", "greet", ["name"])
+        function = w.project.metadata["functions"][0]
+        from makebench.core.logic import create_flow
+
+        flow = create_flow(w.project, button.id)
+        flow["body"] = [
+            {
+                "id": "c",
+                "op": "call_function",
+                "function": function["id"],
+                "args": [{"id": "a", "op": "literal", "value": "Ada"}],
+            }
+        ]
+        w.history.push(w.project)
+        w.set_mode("map")
+        w.map_panel.sync()
+        outline = w.map_panel.outline
+        window_item = outline.topLevelItem(0)
+        from makebench.editor.map_panel import LOGIC_ROLE
+
+        event = next(
+            window_item.child(i)
+            for i in range(window_item.childCount())
+            if window_item.child(i).data(0, LOGIC_ROLE) == flow["id"]
+        )
+        self.assertEqual(event.child(0).text(0), "greet(name)")
+        functions = outline.topLevelItem(outline.topLevelItemCount() - 1)
+        self.assertEqual(functions.text(0), "Functions")
+        w.map_panel.outline_open(event.child(0))
+        self.assertEqual(w._mode, "logic")
+        self.assertEqual(w.logic.flow_id, function["id"])
+        w.set_mode("map")
+        w.map_panel.outline_open(event)
+        self.assertEqual(w.logic.flow_id, flow["id"])
+
     def test_convert_to_python_keeps_a_copy_of_the_blocks(self):
         w = self.window
         w.project.metadata["programming"] = "blocks"

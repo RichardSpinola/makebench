@@ -160,6 +160,25 @@ def function_calls(project: Project, function_id: str) -> list[str]:
     return found
 
 
+def called_functions(unit: dict) -> list[str]:
+    """List, once each and in order, the block functions a flow or function calls."""
+    found = []
+
+    def visit(item):
+        """Walk the block tree by structure, never by text."""
+        if isinstance(item, dict):
+            if item.get("op") == "call_function" and item.get("function") not in found:
+                found.append(item.get("function"))
+            for child in item.values():
+                visit(child)
+        elif isinstance(item, list):
+            for child in item:
+                visit(child)
+
+    visit(unit.get("body"))
+    return found
+
+
 def suggest_function(project: Project, component_id: str, taken) -> str:
     """Build a readable, unused Python name for an event's function."""
     import re
