@@ -92,9 +92,6 @@ def undo_labels():
         "change_flow_filter": tr("Change state filter"),
         "variable_dialog": tr("Edit variable"),
         "remove_variable": tr("Remove variable"),
-        "change_behavior_editor": tr("Switch behavior editor"),
-        "restore_behavior_dialog": tr("Recover behavior"),
-        "receive_graph": tr("Edit nodes"),
         "duplicate_flow_dialog": tr("Duplicate flow"),
         "insert_behavior": tr("Insert behavior"),
         "_toggle_breakpoint": tr("Toggle breakpoint"),
@@ -687,8 +684,6 @@ class MainWindow(StudioMixin, QMainWindow):
         active = self.runtime_window is not None and not self.runtime_window.session.closed
         self.debug_action.setEnabled(not home and not self.project.metadata.get("empty_map"))
         self.sync_breakpoints()
-        if hasattr(self, "behavior_templates"):
-            self.behavior_templates.setVisible(self.logic.editor_kind.currentData() != "nodes")
         self.run_action.setEnabled(not home and not self.project.metadata.get("empty_map"))
         self.run_action.setText(tr("Restart test") if active else tr("Test application"))
         self.run_action.setToolTip(self.run_action.text() + " · F5")
@@ -1604,11 +1599,7 @@ class MainWindow(StudioMixin, QMainWindow):
     def _receive_flow(self, data):
         """Validate the received neutral model; incomplete blocks stay as a draft."""
         flow = next((f for f in self.project.workflows if f["id"] == data.get("flow")), None)
-        if (
-            flow is None
-            or flow.get("editor") == "nodes"
-            or not isinstance(data.get("workspace"), dict)
-        ):
+        if flow is None or not isinstance(data.get("workspace"), dict):
             return
         if (
             data.get("body") == flow.get("body")

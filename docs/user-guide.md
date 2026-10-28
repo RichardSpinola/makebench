@@ -66,15 +66,10 @@ Design is where you build each window with native controls.
 
 ## 3 · Logic
 
-Logic says what happens when a window starts or a button is clicked. Each
-behavior can be written with **blocks** or with **nodes**.
+Logic says what happens when a window starts or a button is clicked.
 
 - **Blocks** (Blockly) work like Scratch: snap statements, values and conditions
   together. Free text fields are always treated as text, never as Python.
-- **Nodes** are a graph with execution and value ports, wires, loops and
-  conditions. Node positions do not change what the graph does.
-- You can switch a behavior between blocks and nodes; Makebench keeps a
-  recoverable copy of the previous version.
 - The generated Python is always shown next to the editor. Selecting a block
   highlights its line.
 
@@ -108,8 +103,8 @@ pages, log, ask questions, run tasks).
   stops it, together with the tasks it started.
 - The drawer at the bottom (**Ctrl+J**) shows output, problems, tasks with their
   stdout and stderr, an interactive terminal, and search results.
-- When something fails, **Go to error** opens the block, node or line that caused it.
-- **F9** starts debugging. Set breakpoints on blocks, nodes or Python lines
+- When something fails, **Go to error** opens the block or line that caused it.
+- **F9** starts debugging. Set breakpoints on blocks or Python lines
   (click the code margin or use a block's menu). While paused you can see the
   stack and a read-only copy of the variables, then continue, step over, step
   into or step out.
@@ -157,7 +152,7 @@ version, icon and language with **Application…**.
 - **Window look:** select a window and choose its theme (System, Light, Dark),
   accent colour and background colour. From the logic use `ctx.set_theme(...)` and
   `ctx.set_background(...)`.
-- **Complete examples:** *Complete workshop — Nodes* and *— Blocks* use every
+- **Complete examples:** *Complete workshop* uses every
   component kind, several windows with different looks, a state, a task, a terminal,
   an own module and a breakpoint. Open the *Guide* window inside them for a short tour.
 

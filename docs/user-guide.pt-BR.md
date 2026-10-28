@@ -69,16 +69,11 @@ No Design você monta cada janela com controles nativos.
 
 ## 3 · Lógica
 
-A Lógica diz o que acontece quando uma janela inicia ou um botão é clicado. Cada
-comportamento pode ser escrito com **blocos** ou com **nós**.
+A Lógica diz o que acontece quando uma janela inicia ou um botão é clicado.
 
 - **Blocos** (Blockly) funcionam como no Scratch: encaixe instruções, valores e
   condições. Campos de texto livre são sempre tratados como texto, nunca como
   Python.
-- **Nós** formam um grafo com portas de execução e de valor, fios, repetições e
-  condições. A posição dos nós não muda o que o grafo faz.
-- Você pode trocar um comportamento entre blocos e nós; o Makebench guarda uma
-  cópia recuperável da versão anterior.
 - O Python gerado aparece sempre ao lado do editor. Selecionar um bloco destaca
   a linha correspondente.
 
@@ -114,7 +109,7 @@ páginas, registrar saída, fazer perguntas, executar tarefas).
 - A gaveta inferior (**Ctrl+J**) mostra saída, problemas, tarefas com stdout e
   stderr, um terminal interativo e os resultados da busca.
 - Quando algo falha, **Ir ao erro** abre o bloco, o nó ou a linha que causou o erro.
-- **F9** inicia a depuração. Coloque pontos de parada em blocos, nós ou linhas de
+- **F9** inicia a depuração. Coloque pontos de parada em blocos ou linhas de
   Python (clique na margem do código ou use o menu do bloco). Enquanto pausado,
   você vê a pilha e uma cópia somente leitura das variáveis, e pode continuar,
   ir ao próximo passo, entrar ou sair de uma função.
@@ -162,7 +157,7 @@ e idioma do aplicativo em **Aplicativo…**.
 - **Aparência da janela:** selecione uma janela e escolha tema (Sistema, Claro,
   Escuro), cor de destaque e cor de fundo. Na lógica use `ctx.set_theme(...)` e
   `ctx.set_background(...)`.
-- **Exemplos completos:** *Oficina completa — Nós* e *— Blocos* usam todos os tipos
+- **Exemplos completos:** *Oficina completa* usa todos os tipos
   de componente, várias janelas com aparências diferentes, um estado, uma tarefa, um
   terminal, um módulo próprio e um ponto de parada. Abra a janela *Roteiro* dentro
   deles para um passeio curto.

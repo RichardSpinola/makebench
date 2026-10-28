@@ -6,8 +6,8 @@
 **Crie aplicativos Linux visualmente — e continue com o código.**
 
 O Makebench é um editor visual de aplicativos nativos para Linux. Você monta
-janelas com controles reais Qt ou GTK 4, descreve o comportamento com blocos ou
-nós, escreve seu próprio Python onde quiser e exporta um aplicativo executável
+janelas com controles reais Qt ou GTK 4, descreve o comportamento com
+blocos, escreve seu próprio Python onde quiser e exporta um aplicativo executável
 ou pacotes DEB, RPM, AppImage e Flatpak. Tudo roda localmente: sem conta, sem
 servidor e sem IA em tempo de execução.
 
@@ -31,13 +31,12 @@ servidor e sem IA em tempo de execução.
 - **Design:** monte janelas com controles nativos: linhas, colunas, grades e
   posicionamento livre, páginas, imagens, terminais e mais. A prévia Qt usa o
   estilo do seu desktop; a prévia GTK é desenhada pelo próprio GTK.
-- **Lógica:** blocos no estilo Scratch (Blockly) ou um grafo de nós com fios,
-  repetições e condições. O Python gerado fica sempre visível.
+- **Lógica:** blocos no estilo Scratch (Blockly). O Python gerado fica sempre visível.
 - **Código:** suas funções e módulos Python, com sugestões, ir para a definição
   (F12), diagnósticos e busca no projeto inteiro.
 - **Testar e depurar** com F5 e F9: processo separado e supervisionado, saída ao
   vivo, tarefas com stdout/stderr, terminal interativo, pontos de parada em
-  blocos, nós ou linhas, e pilha e variáveis somente para leitura.
+  blocos ou linhas, e pilha e variáveis somente para leitura.
 - **Exportar** em fonte Python ou construir pacotes DEB, RPM, AppImage e Flatpak
   com Python e o toolkit escolhido incluídos. O próprio editor também pode ser
   construído como AppImage.

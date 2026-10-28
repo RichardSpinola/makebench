@@ -59,10 +59,33 @@ def quote(text: str) -> str:
     return '"' + escaped.replace("\n", "\\n") + '"'
 
 
+def block_msgid(block: str) -> str | None:
+    """Read the msgid of one catalog entry, joining continuation lines."""
+    parts, reading = [], False
+    for line in block.splitlines():
+        if line.startswith("msgid "):
+            reading = True
+            parts.append(line[6:])
+        elif reading and line.startswith('"'):
+            parts.append(line)
+        elif reading:
+            break
+    return "".join(ast.literal_eval(part) for part in parts) if parts else None
+
+
+def prune(po: Path, unused: set[str]) -> int:
+    """Drop entries whose msgid is no longer used; keeps the header and order."""
+    blocks = po.read_text(encoding="utf-8").split("\n\n")
+    kept = [b for b in blocks if not block_msgid(b) or block_msgid(b) not in unused]
+    po.write_text("\n\n".join(kept), encoding="utf-8")
+    return len(blocks) - len(kept)
+
+
 def main() -> int:
     """Report catalog coverage and optionally append missing entries."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--update", action="store_true", help="append missing msgids")
+    parser.add_argument("--prune", action="store_true", help="remove unused msgids")
     args = parser.parse_args()
     sys.path.insert(0, str(ROOT / "src"))
     from makebench.i18n import read_po
@@ -76,6 +99,8 @@ def main() -> int:
         print(
             f"{po.relative_to(ROOT)}: {len(catalog)} entries, {len(missing)} missing, {len(unused)} unused"
         )
+        if unused and args.prune:
+            print("  removed", prune(po, set(unused)), "unused entries")
         for msgid in missing[:50]:
             print("  missing:", repr(msgid))
         if missing and args.update:

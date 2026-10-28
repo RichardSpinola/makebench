@@ -382,9 +382,6 @@ class StudioMixin(
         self.install_navigation_editor()
         self.install_designer()
         self.install_development()
-        self.logic.editor_requested.connect(self.change_behavior_editor)
-        self.logic.restore_requested.connect(self.restore_behavior_dialog)
-        self.logic.graph_changed.connect(self.receive_graph)
         self.install_execution()
         from .publish import ExportDialog
 

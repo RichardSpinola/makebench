@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: MIT
-"""Generate the "complete workshop" examples (blocks and nodes, Portuguese and English).
+"""Generate the "complete workshop" example (blocks, Portuguese and English).
 
 Run from the repository root: PYTHONPATH=src .venv/bin/python checks/build_full_examples.py
-Both variants share one description of the behavior, compiled into blocks or into a node graph.
 """
 
 import sys
@@ -109,7 +108,6 @@ TEXT = {
             "5. Abra Aparência e troque entre Claro e Escuro; abra Sobre para ver a janela escura.",
             "6. No editor, use F9 para depurar: há um ponto de parada no primeiro bloco do Cumprimentar.",
         ],
-        comment="A ordem vem dos fios, não da posição.",
     ),
     "en": dict(
         name="Complete workshop",
@@ -167,7 +165,6 @@ TEXT = {
             "5. Open Look and switch between Light and Dark; open About for the dark window.",
             "6. In the editor press F9 to debug: a breakpoint sits on the first block of Greet.",
         ],
-        comment="Order comes from the wires, not from the position.",
     ),
 }
 
@@ -258,143 +255,17 @@ def block_stmt(s, ids):
     return b
 
 
-class Graph:
-    def __init__(self, ids):
-        self.ids, self.nodes, self.edges, self.layout = ids, [], [], {}
-        self.rows = {}
-
-    def place(self, node_id, depth):
-        row = self.rows.get(depth, 0)
-        self.rows[depth] = row + 1
-        self.layout[node_id] = [20 + depth * 310, 40 + row * 190]
-
-    def expr(self, e, depth):
-        """Return an input: a literal or a wire to a new value node."""
-        kind = e[0]
-        if kind == "lit":
-            return {"value": e[1]}
-        if kind == "list" and all(x[0] == "lit" for x in e[1]):
-            return {"value": [x[1] for x in e[1]]}
-        node = {"id": self.ids("node"), "inputs": {}, "parameters": {}}
-        if kind == "var":
-            node.update(op="variable", parameters={"name": e[1], "scope": "project"})
-        elif kind == "read":
-            node.update(op="read", parameters={"component": e[1], "attribute": e[2]})
-        elif kind == "bin":
-            node.update(op="binary", parameters={"operator": e[1]})
-            node["inputs"] = {
-                "left": self.expr(e[2], depth + 1),
-                "right": self.expr(e[3], depth + 1),
-            }
-        elif kind == "join":
-            node.update(op="join")
-            node["inputs"] = {
-                "left": self.expr(e[1], depth + 1),
-                "right": self.expr(e[2], depth + 1),
-            }
-        self.nodes.append(node)
-        self.place(node["id"], depth)
-        return {"node": node["id"], "port": "value"}
-
-    def stmts(self, steps, source, port, depth):
-        """Chain statements after (source, port); return the last (node, port) to continue from."""
-        for s in steps:
-            node = self.stmt(s, depth)
-            self.edges.append({"from": source, "out": port, "to": node["id"]})
-            if s[0] == "if":
-                return None
-            source, port = node["id"], "done" if s[0] == "repeat" else "next"
-            depth += 1
-        return source, port
-
-    def stmt(self, s, depth):
-        op = s[0]
-        node = {"id": self.ids("node"), "op": op, "parameters": {}, "inputs": {}}
-        p, i = node["parameters"], node["inputs"]
-        if op in {"log", "message"}:
-            i["value"] = self.expr(s[1], depth)
-        elif op in {"set_text", "set_enabled", "set_value"}:
-            p["component"] = s[1]
-            i["value"] = self.expr(s[2], depth)
-        elif op == "assign":
-            p.update(name=s[1], scope="project")
-            i["value"] = self.expr(s[2], depth)
-        elif op == "if":
-            i["condition"] = self.expr(s[1], depth)
-        elif op == "repeat":
-            i["count"] = self.expr(s[1], depth)
-        elif op == "call":
-            p["function"] = s[1]
-            i["value"] = self.expr(s[2], depth)
-        elif op in {"run", "script"}:
-            p["admin"] = False
-            i["program" if op == "run" else "source"] = self.expr(s[1], depth)
-            i["arguments"] = self.expr(s[2], depth)
-        elif op == "terminal_start":
-            p["component"] = s[1]
-            i["program"] = self.expr(s[2], depth)
-            i["arguments"] = self.expr(s[3], depth)
-        elif op == "terminal_send":
-            p["component"] = s[1]
-            i["value"] = self.expr(s[2], depth)
-        elif op in {"terminal_stop", "show_page"}:
-            p["component"] = s[1]
-        elif op == "go_state":
-            p["state"] = s[1]
-        elif op == "open_window":
-            p.update(window=s[1], close_current=False)
-        elif op == "ask":
-            p.update(kind="text", name=s[1], scope="project")
-            i["prompt"] = self.expr(s[2], depth)
-            i["options"] = {"value": []}
-        elif op == "confirm":
-            i["prompt"] = self.expr(s[1], depth)
-        self.nodes.append(node)
-        self.place(node["id"], depth)
-        if op == "if":
-            self.stmts(s[2], node["id"], "true", depth + 1)
-            self.stmts(s[3], node["id"], "false", depth + 1)
-        elif op == "repeat":
-            self.stmts(s[2], node["id"], "body", depth + 1)
-        return node
-
-
-def make_flow(name, event, steps, editor, comment=None):
+def make_flow(name, event, steps):
     ids = Ids()
     flow = {"id": "flow_" + event["component"].split("_", 1)[-1][:10] + name[:0], "name": name}
     flow["event"] = event
-    if editor == "blocks":
-        flow["body"] = [block_stmt(s, ids) for s in steps]
-        return flow
-    entry = "event_" + event["component"]
-    graph = Graph(ids)
-    graph.nodes.append({"id": entry, "op": "event", "parameters": {}, "inputs": {}})
-    graph.place(entry, 0)
-    graph.stmts(steps, entry, "next", 1)
-    flow.update(
-        body=[],
-        workspace={},
-        editor="nodes",
-        graph={
-            "graph_version": 1,
-            "entry": entry,
-            "nodes": graph.nodes,
-            "edges": graph.edges,
-        },
-        graph_layout=graph.layout,
-    )
-    if comment:
-        flow["graph_comments"] = [{"id": "comment-main", "text": comment, "position": [20, -140]}]
+    flow["body"] = [block_stmt(s, ids) for s in steps]
     return flow
 
 
-def build(language, editor, destination):
+def build(language, destination):
     t = TEXT[language]
-    project = Project.empty(
-        f"{t['name']} — {'Nós' if language == 'pt' else 'Nodes'}"
-        if editor == "nodes"
-        else f"{t['name']} — {'Blocos' if language == 'pt' else 'Blocks'}"
-    )
+    project = Project.empty(t["name"])
     root = project.root
     root.properties.update(title=t["title"], width=720, height=560, padding=16, spacing=10)
     assets = AssetStore()
@@ -589,15 +460,13 @@ def build(language, editor, destination):
             label,
             {"kind": kind, "component": owner.id},
             body,
-            editor,
-            t["comment"] if kind == "start" else None,
         )
         flow["id"] = f"flow_{len(project.workflows):02d}_{kind}"
         project.workflows.append(flow)
         names[owner.id] = flow["id"]
     # The logic uses the Portuguese-free function names below.
     project.application.update(
-        id="org.makebench.workshop" + (".nodes" if editor == "nodes" else ".blocks"),
+        id="org.makebench.workshop",
         name=project.name,
         version="0.1.0",
         backend="qt",
@@ -610,9 +479,7 @@ def build(language, editor, destination):
         {
             "file": "block",
             "flow": first["id"],
-            "block": (
-                first["body"][0]["id"] if editor == "blocks" else first["graph"]["nodes"][1]["id"]
-            ),
+            "block": first["body"][0]["id"],
         }
     ]
     project.entry_window = root.id
@@ -630,6 +497,5 @@ def build(language, editor, destination):
 
 if __name__ == "__main__":
     for language, base in (("pt", ROOT / "examples"), ("en", ROOT / "examples" / "en")):
-        for editor, folder in (("nodes", "full-nodes"), ("blocks", "full-blocks")):
-            build(language, editor, base / folder)
-            print("wrote", base / folder, file=sys.stderr)
+        build(language, base / "full-blocks")
+        print("wrote", base / "full-blocks", file=sys.stderr)

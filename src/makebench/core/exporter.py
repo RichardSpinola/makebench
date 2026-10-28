@@ -43,18 +43,7 @@ def effects(project):
                 visit(child)
 
     for flow in project.editable_flows:
-        if flow.get("editor") == "nodes":
-            for node in flow["graph"]["nodes"]:
-                if node["op"] in {"run", "script"}:
-                    admin = admin or node.get("parameters", {}).get("admin", False)
-                    key = "program" if node["op"] == "run" else "source"
-                    binding = node.get("inputs", {}).get(key, {})
-                    if node["op"] == "script":
-                        programs.add("/bin/bash")
-                    elif isinstance(binding.get("value"), str):
-                        programs.add(binding["value"])
-        else:
-            visit(flow.get("body"))
+        visit(flow.get("body"))
     return sorted(programs), admin
 
 

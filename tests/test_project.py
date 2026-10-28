@@ -31,6 +31,13 @@ class ProjectTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectError, "Unsupported project version"):
             Project.from_dict(data)
 
+    def test_node_editor_projects_are_refused_with_a_clear_message(self):
+        data = Project.empty().to_dict()
+        data["format_version"] = 7
+        data["workflows"] = [{"id": "f", "name": "Old", "editor": "nodes", "graph": {}}]
+        with self.assertRaisesRegex(ProjectError, "node editor"):
+            Project.from_dict(data)
+
     def test_duplicate_component_ids_are_rejected(self):
         project = Project.empty()
         project.add(project.root.id, ComponentKind.BUTTON)

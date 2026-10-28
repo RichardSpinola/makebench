@@ -82,7 +82,7 @@ LAYOUT_LABELS = {
 
 
 def has_graph(flow):
-    """Detect an active or recoverable graph without assuming validated data."""
+    """Detect logic from the removed node editor without assuming validated data."""
     backups = flow.get("behavior_backups", [])
     return (
         flow.get("editor") == "nodes"
@@ -632,7 +632,6 @@ class Project:
             "format": FORMAT_NAME,
             "format_version": max(
                 8 if self.python_files else 4,
-                7 if any(has_graph(f) for f in self.workflows) else 4,
                 6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4,
                 self.format_version,
                 5 if self.uses_v5() else 4,
@@ -736,8 +735,13 @@ class Project:
         )
         if version < 6 and any(n.kind == ComponentKind.TERMINAL for n in project.walk()):
             raise ProjectError(tr("The Terminal component requires format 6 or later."))
-        if version < 7 and any(has_graph(f) for f in project.workflows):
-            raise ProjectError(tr("Free graphs require format 7 or later."))
+        if any(has_graph(f) for f in project.workflows):
+            raise ProjectError(
+                tr(
+                    "This project uses the node editor, which was removed in Makebench 1.0. "
+                    "Open it in Makebench 0.9."
+                )
+            )
         from .navigation import validate_navigation
 
         validate_navigation(project)

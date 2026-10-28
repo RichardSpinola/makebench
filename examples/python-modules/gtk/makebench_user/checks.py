@@ -33,7 +33,7 @@ def validate_runtime(ctx, valor):
         "host_visible": Path("/home/qa/makebench-host-sentinel").exists(),
         "worker_pid": os.getpid(),
         "gui_pid": os.getppid(),
-        "terminal_pid": ctx.variables["terminal_pid"],
+        "terminal_pid": ctx.variables.get("terminal_pid"),
     }
     destination = os.environ.get("MAKEBENCH_QA_OUTPUT")
     if destination:

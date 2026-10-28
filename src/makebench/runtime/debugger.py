@@ -117,8 +117,6 @@ class Debugger:
             flow, block = self.lines.get(frame.f_lineno, (self.flow, None))
             if block is None and frame.f_code.co_name == "_value":
                 block = frame.f_locals.get("identifier")
-            if block is None and "_pc" in frame.f_locals:
-                block = frame.f_locals.get("_pc") or self.context.graph_node
             if block is None:
                 preceding = [
                     (number, key[1])

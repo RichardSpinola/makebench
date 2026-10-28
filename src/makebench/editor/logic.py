@@ -11,7 +11,6 @@ from uuid import uuid4
 from PySide6.QtCore import QEventLoop, QObject, Qt, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (
-    QButtonGroup,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -92,9 +91,6 @@ class LogicPanel(QWidget):
     """Select events, keep the Blockly session and show the matching Python."""
 
     breakpoint_requested = Signal(str, str)
-    editor_requested = Signal(str, str)
-    restore_requested = Signal(str)
-    graph_changed = Signal(dict)
     add_requested = Signal(str)
     remove_requested = Signal(str)
     rename_requested = Signal(str, str)
@@ -155,37 +151,6 @@ class LogicPanel(QWidget):
         self.top_row = row
         self.tools_index = row.count()
         row.addStretch(1)
-        self.editor_kind = QComboBox()
-        self.editor_kind.addItem(tr("Blocks"), "blocks")
-        self.editor_kind.addItem(tr("Nodes"), "nodes")
-        self.editor_kind.setAccessibleName(tr("Editor for this behavior"))
-        self.editor_kind.currentIndexChanged.connect(
-            lambda _: (
-                self.editor_requested.emit(self.flow_id, self.editor_kind.currentData())
-                if self.flow_id
-                else None
-            )
-        )
-        # Blocks and Nodes side by side; the hidden list keeps the current choice.
-        self.editor_kind.hide()
-        self.kind_buttons = QButtonGroup(self)
-        for index, label in enumerate((tr("Blocks"), tr("Nodes"))):
-            button = QToolButton()
-            button.setText(label)
-            button.setCheckable(True)
-            button.setObjectName("segment")
-            button.setStyleSheet(
-                "QToolButton#segment { background: transparent; color: palette(text);"
-                " border: 1px solid palette(mid); border-radius: 4px; padding: 2px 8px; }"
-                " QToolButton#segment:checked { background: palette(highlight);"
-                " color: palette(highlighted-text); border-color: palette(highlight); }"
-            )
-            button.clicked.connect(lambda _=False, i=index: self.editor_kind.setCurrentIndex(i))
-            self.kind_buttons.addButton(button, index)
-            row.addWidget(button)
-        self.editor_kind.currentIndexChanged.connect(lambda _: self._sync_kind_buttons())
-        self._sync_kind_buttons()
-
         self.name = QLineEdit()
         self.name.setPlaceholderText(tr("Flow name"))
         self.name.editingFinished.connect(self._rename)
@@ -204,11 +169,6 @@ class LogicPanel(QWidget):
         more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         more.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         menu = QMenu(more)
-        self.versions = menu.addAction(tr("Versions…"))
-        self.versions.setToolTip(tr("Recover the behavior from before the editor switch"))
-        self.versions.triggered.connect(
-            lambda: self.restore_requested.emit(self.flow_id) if self.flow_id else None
-        )
         menu.addAction(
             icon("duplicate"),
             tr("Duplicate flow…"),
@@ -249,13 +209,6 @@ class LogicPanel(QWidget):
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.surfaces = QStackedWidget()
         self.surfaces.addWidget(self.placeholder)
-        from .graph import GraphPanel
-
-        self.graph_panel = GraphPanel(self.get_source, self)
-        self.surfaces.addWidget(self.graph_panel)
-        self.graph_panel.changed.connect(self.graph_changed)
-        self.graph_panel.error.connect(self.error)
-        self.graph_panel.breakpoint_requested.connect(self.breakpoint_requested)
         self.splitter.addWidget(self.surfaces)
         code_box = QWidget()
         code_layout = QVBoxLayout(code_box)
@@ -500,19 +453,7 @@ class LogicPanel(QWidget):
             self.flow_id,
         )
         self.name.setText(flow["name"] if flow else "")
-        nodes = bool(flow and flow.get("editor") == "nodes")
-        self.editor_kind.blockSignals(True)
-        self.editor_kind.setCurrentIndex(1 if nodes else 0)
-        self.editor_kind.setEnabled(flow is not None)
-        self.editor_kind.blockSignals(False)
-        self._sync_kind_buttons()
-        for button in self.kind_buttons.buttons():
-            button.setEnabled(flow is not None)
-        self.versions.setEnabled(bool(flow and flow.get("behavior_backups")))
-        self.surfaces.setCurrentWidget(
-            self.graph_panel if nodes else self.view if self.view is not None else self.placeholder
-        )
-        self.graph_panel.sync(project, flow if nodes else None)
+        self.surfaces.setCurrentWidget(self.view if self.view is not None else self.placeholder)
         self._sync_edit_text()
 
         owner = (
@@ -629,7 +570,7 @@ class LogicPanel(QWidget):
             "functions": function_names(self.get_source())[0],
         }
         serialized = json.dumps(payload, ensure_ascii=False)
-        if self.ready and not nodes and serialized != self._payload:
+        if self.ready and serialized != self._payload:
             self._payload = serialized
             self.token = uuid4().hex
             self.pending = False
@@ -654,14 +595,9 @@ class LogicPanel(QWidget):
         self.events.setToolTip(self.context_label.text())
         self.update_code()
 
-    def _sync_kind_buttons(self):
-        button = self.kind_buttons.button(max(0, self.editor_kind.currentIndex()))
-        if button is not None and not button.isChecked():
-            button.setChecked(True)
-
     def _sync_edit_text(self):
         """The multi-line editor appears only while a block is selected in Blocks."""
-        visible = self.editor_kind.currentData() != "nodes" and bool(self.selected_block)
+        visible = bool(self.selected_block)
         if self.edit_text_action is not None:
             self.edit_text_action.setVisible(visible)
         else:
@@ -705,11 +641,7 @@ class LogicPanel(QWidget):
             self.code.setPlainText(text)
         self.diagnostics.setText(
             "\n".join(self.generated.diagnostics)
-            or (
-                tr("Graph saved. F5 runs; F9 debugs the snapshot.")
-                if self.editor_kind.currentData() == "nodes"
-                else tr("Blocks saved. Press F5 to test the application and follow its output.")
-            )
+            or tr("Blocks saved. Press F5 to test the application and follow its output.")
         )
 
     def _select_block(self, flow, block):
@@ -745,12 +677,6 @@ class LogicPanel(QWidget):
 
     def focus_block(self, flow, block, attempt=0):
         """Reveal an error's origin as soon as the requested workspace is available."""
-        target = next((f for f in self.get_project().editable_flows if f["id"] == flow), None)
-        if target and target.get("editor") == "nodes":
-            if self.flow_id != flow:
-                self.sync(flow)
-            self.graph_panel.focus_node(block)
-            return
         self._select_block(flow, block)
         if attempt >= 30:
             return
@@ -800,11 +726,6 @@ class LogicPanel(QWidget):
         """Ignore messages from an old session and deliver a validatable update."""
         try:
             data = json.loads(payload)
-            current = next(
-                (f for f in self.get_project().editable_flows if f["id"] == self.flow_id), None
-            )
-            if current and current.get("editor") == "nodes":
-                return
             if (
                 not isinstance(data, dict)
                 or data.get("token") != self.token
@@ -823,13 +744,6 @@ class LogicPanel(QWidget):
         The JavaScript return value avoids depending on the channel's debounce. On
         failure it does not authorize an operation that could lose unconfirmed changes.
         """
-        flow = next((f for f in self.get_project().editable_flows if f["id"] == self.flow_id), None)
-        if flow and flow.get("editor") == "nodes":
-            if self.graph_panel.layout_timer.isActive():
-                self.graph_panel.layout_timer.stop()
-                self.graph_panel.commit_layout()
-            self.graph_panel.flush()
-            return True
         if self.view is None or self._flushing:
             return True
         if not self.ready:

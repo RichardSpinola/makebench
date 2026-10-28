@@ -848,18 +848,12 @@ class ProjectMixin:
                 "script-center",
                 "app.makebench.json",
             ),
-            (tr("Node graph — wires, loops and a terminal"), "free-graph", "qt.makebench.json"),
             (
                 tr("Terminal and debugging — breakpoints, step by step"),
                 "terminal-debug",
                 "qt.makebench.json",
             ),
             (tr("Python modules — several files"), "python-modules/qt", "project.makebench.json"),
-            (
-                tr("Complete workshop — every component, logic in nodes"),
-                "full-nodes",
-                "project.makebench.json",
-            ),
             (
                 tr("Complete workshop — every component, logic in blocks"),
                 "full-blocks",

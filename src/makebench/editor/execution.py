@@ -269,10 +269,7 @@ class ExecutionMixin:
         }
         self.source_editor.numbers.update()
         self.generated_editor.numbers.update()
-        self.logic.graph_panel.breakpoints = blocks
-        for card in self.logic.graph_panel.cards.values():
-            card.update()
-        if self.logic.ready and self.logic.editor_kind.currentData() != "nodes":
+        if self.logic.ready:
             self.logic.page.runJavaScript(
                 "window.makebench.setBreakpoints(" + __import__("json").dumps(list(blocks)) + ")"
             )
@@ -291,10 +288,6 @@ class ExecutionMixin:
             if flow:
                 message["flow_label"] = flow["name"]
         self.debug_panel.changed(message)
-        if message.get("state") != "paused":
-            for card in self.logic.graph_panel.cards.values():
-                card.active = False
-                card.update()
         if message.get("state") == "paused":
             self.test_status.setText(tr("Paused"))
             self.drawer.show()
@@ -446,9 +439,6 @@ class ExecutionMixin:
     def runtime_stopped(self):
         """Record the end with the real duration, without mixing in editing diagnostics."""
         self.debug_panel.changed({"state": "stopped"})
-        for card in self.logic.graph_panel.cards.values():
-            card.active = False
-            card.update()
         elapsed = time.monotonic() - self.test_started if self.test_started else 0
         for key in list(self.task_running):
             if key.startswith(str(self.run_number) + ":"):

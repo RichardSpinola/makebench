@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1] / "examples"
 PATHS = [
     ROOT / name / folder / "project.makebench.json"
     for name in ("", "en")
-    for folder in ("full-nodes", "full-blocks")
+    for folder in ("full-blocks",)
 ]
 
 

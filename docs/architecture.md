@@ -28,10 +28,11 @@ This is an overview for contributors. Package layout under `src/makebench/`:
 ## Document
 
 `core/project.py` defines `Project`, `Component`, component types and layouts,
-and the JSON format. The reader accepts formats 1–8. Saving writes the lowest
-format that holds the features in use (6 terminal, 7 node graph, 8 Python
-modules) and never lowers a newer format already declared. When a save upgrades
-the format, the previous file is kept as `.bak-vN`.
+and the JSON format. The reader accepts formats 1–8, except projects that use
+the node editor removed in 1.0. Saving writes the lowest format that holds the
+features in use (6 terminal, 8 Python modules) and never lowers a newer format
+already declared. When a save upgrades the format, the previous file is kept as
+`.bak-vN`.
 
 `core/storage.py` has a single save path, `save_workspace()`, used by both the
 headless `Document` and the editor window. It validates, writes assets and
@@ -52,8 +53,6 @@ Limits: 48 levels and 5000 nodes per flow.
 - `web/logic.js` translates Blockly blocks to and from this model. On opening, it
   compiles the saved workspace and rebuilds the blocks from the model if they
   disagree. Free text fields are never treated as Python.
-- `core/graph.py` is the alternative node-graph source, with execution and value
-  ports compiled into a state machine. Positions do not affect semantics.
 - `core/codegen.py` generates deterministic handlers against the `ctx` API.
   Values are escaped with `repr`, operators come from an allow list, and
   `GeneratedCode.lines` maps `(flow_id, block_id)` to a line for highlighting,
@@ -91,7 +90,7 @@ content. `core/code_index.py`, `editor/code_assist.py` and
   only by explicit script actions, with arguments passed as positional parameters.
 - Administrative tasks use `pkexec --disable-internal-agent` and stay supervised
   even if the worker dies. Makebench never collects passwords.
-- `runtime/debugger.py` provides breakpoints by block/node id or file/line and a
+- `runtime/debugger.py` provides breakpoints by block id or file/line and a
   bounded, read-only snapshot of the stack and variables.
 - `gtk_runtime/` implements the same `ctx` operations for GTK 4;
   `runtime/gtk_bridge.py` supervises it from Qt.

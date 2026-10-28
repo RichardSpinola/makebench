@@ -81,303 +81,95 @@
         "component": "window_51b4f60d9c2b",
         "kind": "start"
       },
-      "body": [],
-      "workspace": {},
-      "behavior_backups": [
+      "body": [
         {
-          "id": "flow_92b0cd60b0be",
-          "name": "Click: Run flow",
-          "event": {
-            "kind": "click",
-            "component": "button_a6ccf2386965"
+          "id": "initial",
+          "op": "assign",
+          "name": "steps",
+          "scope": "project",
+          "value": {
+            "id": "value_01",
+            "op": "literal",
+            "value": 0
+          }
+        },
+        {
+          "id": "terminal",
+          "op": "terminal_start",
+          "component": "terminal_ab1d3a9f0a5a",
+          "program": {
+            "id": "value_02",
+            "op": "literal",
+            "value": "/bin/sh"
           },
-          "body": [],
-          "workspace": {}
-        }
-      ],
-      "editor": "nodes",
-      "graph": {
-        "graph_version": 1,
-        "entry": "node_a83e9174b350",
-        "nodes": [
-          {
-            "id": "node_a83e9174b350",
-            "op": "event",
-            "parameters": {},
-            "inputs": {}
+          "arguments": {
+            "id": "value_03",
+            "op": "list",
+            "items": []
+          }
+        },
+        {
+          "id": "repeat",
+          "op": "repeat",
+          "count": {
+            "id": "value_04",
+            "op": "literal",
+            "value": 3
           },
-          {
-            "id": "initial",
-            "op": "assign",
-            "parameters": {
-              "name": "steps",
-              "scope": "project"
-            },
-            "inputs": {
+          "body": [
+            {
+              "id": "send",
+              "op": "terminal_send",
+              "component": "terminal_ab1d3a9f0a5a",
               "value": {
-                "value": 0
-              }
-            }
-          },
-          {
-            "id": "terminal",
-            "op": "terminal_start",
-            "parameters": {
-              "component": "terminal_ab1d3a9f0a5a"
-            },
-            "inputs": {
-              "program": {
-                "value": "/bin/sh"
-              },
-              "arguments": {
-                "value": []
-              }
-            }
-          },
-          {
-            "id": "three",
-            "op": "constant",
-            "parameters": {
-              "value": 3
-            },
-            "inputs": {}
-          },
-          {
-            "id": "count",
-            "op": "variable",
-            "parameters": {
-              "name": "steps",
-              "scope": "project"
-            },
-            "inputs": {}
-          },
-          {
-            "id": "repeat",
-            "op": "repeat",
-            "parameters": {},
-            "inputs": {
-              "count": {
-                "node": "three",
-                "port": "value"
-              }
-            }
-          },
-          {
-            "id": "send",
-            "op": "terminal_send",
-            "parameters": {
-              "component": "terminal_ab1d3a9f0a5a"
-            },
-            "inputs": {
-              "value": {
+                "id": "value_05",
+                "op": "literal",
                 "value": "printf 'STEP\\n'\n"
               }
-            }
-          },
-          {
-            "id": "plus",
-            "op": "binary",
-            "parameters": {
-              "operator": "+"
             },
-            "inputs": {
-              "left": {
-                "node": "count",
-                "port": "value"
-              },
-              "right": {
-                "value": 1
-              }
-            }
-          },
-          {
-            "id": "increment",
-            "op": "assign",
-            "parameters": {
+            {
+              "id": "increment",
+              "op": "assign",
               "name": "steps",
-              "scope": "project"
-            },
-            "inputs": {
+              "scope": "project",
               "value": {
-                "node": "plus",
-                "port": "value"
+                "id": "value_06",
+                "op": "binary",
+                "operator": "+",
+                "left": {
+                  "id": "value_07",
+                  "op": "variable",
+                  "name": "steps",
+                  "scope": "project"
+                },
+                "right": {
+                  "id": "value_08",
+                  "op": "literal",
+                  "value": 1
+                }
               }
             }
-          },
-          {
-            "id": "call",
-            "op": "call",
-            "parameters": {
-              "function": "confirm"
-            },
-            "inputs": {
-              "value": {
-                "node": "count",
-                "port": "value"
-              }
-            }
-          },
-          {
-            "id": "condition",
-            "op": "if",
-            "parameters": {},
-            "inputs": {
-              "condition": {
-                "node": "call",
-                "port": "value"
-              }
-            }
-          },
-          {
-            "id": "open",
-            "op": "open_window",
-            "parameters": {
-              "window": "window_2d9b6a46e327",
-              "close_current": true
-            },
-            "inputs": {}
-          },
-          {
-            "id": "error",
-            "op": "log",
-            "parameters": {},
-            "inputs": {
-              "value": {
-                "value": "Condition not met"
-              }
-            }
-          },
-          {
-            "id": "node_33ff16168ee5",
-            "op": "assign",
-            "parameters": {
-              "name": "terminal_pid"
-            },
-            "inputs": {
-              "value": {
-                "node": "terminal",
-                "port": "value"
-              }
-            }
-          }
-        ],
-        "edges": [
-          {
-            "from": "node_a83e9174b350",
-            "out": "next",
-            "to": "initial"
-          },
-          {
-            "from": "initial",
-            "out": "next",
-            "to": "terminal"
-          },
-          {
-            "from": "terminal",
-            "out": "next",
-            "to": "node_33ff16168ee5"
-          },
-          {
-            "from": "repeat",
-            "out": "body",
-            "to": "send"
-          },
-          {
-            "from": "repeat",
-            "out": "done",
-            "to": "call"
-          },
-          {
-            "from": "send",
-            "out": "next",
-            "to": "increment"
-          },
-          {
-            "from": "call",
-            "out": "next",
-            "to": "condition"
-          },
-          {
-            "from": "condition",
-            "out": "true",
-            "to": "open"
-          },
-          {
-            "from": "condition",
-            "out": "false",
-            "to": "error"
-          },
-          {
-            "from": "node_33ff16168ee5",
-            "out": "next",
-            "to": "repeat"
-          }
-        ]
-      },
-      "graph_layout": {
-        "node_a83e9174b350": [
-          20,
-          100
-        ],
-        "initial": [
-          330,
-          100
-        ],
-        "terminal": [
-          640,
-          100
-        ],
-        "repeat": [
-          950,
-          100
-        ],
-        "send": [
-          1260,
-          0
-        ],
-        "increment": [
-          1570,
-          0
-        ],
-        "call": [
-          1260,
-          290
-        ],
-        "condition": [
-          1570,
-          290
-        ],
-        "open": [
-          1880,
-          240
-        ],
-        "error": [
-          1880,
-          450
-        ],
-        "three": [
-          640,
-          420
-        ],
-        "count": [
-          950,
-          600
-        ],
-        "plus": [
-          1260,
-          600
-        ]
-      },
-      "graph_comments": [
-        {
-          "id": "comment-main",
-          "text": "The order comes from the wires, not the position.\nRepeat returns to the body three times.\nThe result of your own function feeds the condition.",
-          "position": [
-            20,
-            450
           ]
+        },
+        {
+          "id": "call",
+          "op": "call",
+          "function": "confirm",
+          "value": {
+            "id": "value_09",
+            "op": "variable",
+            "name": "steps",
+            "scope": "project"
+          }
+        },
+        {
+          "id": "open",
+          "op": "open_window",
+          "window": "window_2d9b6a46e327",
+          "close_current": true
         }
-      ]
+      ],
+      "workspace": {}
     },
     {
       "id": "flow_166a7e325781",

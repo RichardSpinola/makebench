@@ -40,10 +40,6 @@ msgstr "(cópia)"
 msgid "(ctx, value)"
 msgstr "(ctx, valor)"
 
-#: 
-msgid "+ Add the first node…"
-msgstr "+ Adicionar o primeiro nó…"
-
 #: src/makebench/editor/logic.py
 msgid "+ Event…"
 msgstr "+ Evento…"
@@ -51,10 +47,6 @@ msgstr "+ Evento…"
 #: src/makebench/editor/development.py
 msgid "+ New function"
 msgstr "+ Nova função"
-
-#: src/makebench/editor/graph.py
-msgid "+ Node…"
-msgstr "+ Nó…"
 
 #: src/makebench/editor/inspector.py
 msgid "+ On click"
@@ -144,14 +136,6 @@ msgstr "Já existe uma função com esse nome."
 msgid "A module and a package have the same name."
 msgstr "Há um módulo e um pacote com o mesmo nome."
 
-#: src/makebench/core/graph.py
-msgid "A node comment must be text."
-msgstr "Comentário de nó precisa ser texto."
-
-#: src/makebench/core/graph.py
-msgid "A node points to a missing or incompatible component."
-msgstr "Nó aponta para componente inexistente ou incompatível."
-
 #: src/makebench/editor/catalog.py
 msgid "A page that belongs to a set of tabs."
 msgstr "Uma página que pertence a um conjunto de abas."
@@ -159,10 +143,6 @@ msgstr "Uma página que pertence a um conjunto de abas."
 #: src/makebench/editor/settings.py
 msgid "A result is marked as built only after passing through the tool and the verification."
 msgstr "O resultado só é marcado como construído depois de passar pela ferramenta e pela verificação."
-
-#: src/makebench/core/graph.py
-msgid "A sequence accepts between 2 and 8 outputs."
-msgstr "Sequência aceita entre 2 e 8 saídas."
 
 #: src/makebench/core/project.py
 msgid "A set of pages needs at least one page."
@@ -183,10 +163,6 @@ msgstr "Já existe uma tarefa em execução."
 #: src/makebench/editor/window.py
 msgid "A task is in progress. Restarting ends the test and the ordinary processes."
 msgstr "Uma tarefa está em andamento. Reiniciar encerra o teste e os processos comuns."
-
-#: src/makebench/core/graph.py
-msgid "A value connection points to a port that does not exist."
-msgstr "Conexão de valor aponta para porta inexistente."
 
 #: src/makebench/core/logic.py
 msgid "A value list accepts up to 256 items."
@@ -231,14 +207,6 @@ msgstr "Adicionar componente"
 #: src/makebench/editor/window.py
 msgid "Add components in the Default state."
 msgstr "Adicione componentes no estado Padrão."
-
-#: src/makebench/editor/graph.py
-msgid "Add node"
-msgstr "Adicionar nó"
-
-#: src/makebench/editor/graph.py
-msgid "Add node…"
-msgstr "Adicionar nó…"
 
 #: src/makebench/editor/window.py
 msgid "Add page"
@@ -546,10 +514,6 @@ msgstr "Base"
 msgid "Behavior"
 msgstr "Comportamento"
 
-#: src/makebench/editor/graph.py
-msgid "Behavior graph"
-msgstr "Grafo de comportamento"
-
 #: src/makebench/editor/inspector.py
 msgid "Between elements"
 msgstr "Entre elementos"
@@ -593,10 +557,6 @@ msgstr "Base"
 #: src/makebench/editor/inspector.py
 msgid "bottom"
 msgstr "inferior"
-
-#: src/makebench/editor/graph.py
-msgid "Breakpoint"
-msgstr "Ponto de parada"
 
 #: src/makebench/editor/debug.py
 msgid "breakpoint"
@@ -786,10 +746,6 @@ msgstr "Escolha um bloco"
 msgid "Choose a new or empty folder."
 msgstr "Escolha uma pasta nova ou vazia."
 
-#: src/makebench/editor/graph.py
-msgid "Choose a type from the list or refine the search."
-msgstr "Escolha um tipo da lista ou refine a pesquisa."
-
 #: src/makebench/core/assets.py
 msgid "Choose a valid PNG, JPEG, WebP or SVG file."
 msgstr "Escolha PNG, JPEG, WebP ou SVG válido."
@@ -797,10 +753,6 @@ msgstr "Escolha PNG, JPEG, WebP ou SVG válido."
 #: src/makebench/editor/assets.py
 msgid "Choose a valid PNG, JPEG, WebP or SVG image."
 msgstr "Escolha uma imagem PNG, JPEG, WebP ou SVG válida."
-
-#: src/makebench/core/graph.py
-msgid "Choose an available node type."
-msgstr "Escolha um tipo de nó disponível."
 
 #: src/makebench/core/bundle.py
 msgid "Choose an empty folder to extract the project."
@@ -898,10 +850,6 @@ msgstr "clicar em {name}"
 msgid "Close"
 msgstr "Fechar"
 
-#: src/makebench/editor/graph.py
-msgid "Close current window"
-msgstr "Fechar janela atual"
-
 #: src/makebench/editor/code.py
 msgid "Close search"
 msgstr "Fechar busca"
@@ -970,14 +918,6 @@ msgstr "Paleta de comandos…"
 msgid "Commands"
 msgstr "Comandos"
 
-#: src/makebench/editor/graph.py
-msgid "Comment"
-msgstr "Comentário"
-
-#: src/makebench/editor/graph.py
-msgid "Comment…"
-msgstr "Comentário…"
-
 #: src/makebench/editor/inspector.py
 msgid "Common properties"
 msgstr "Propriedades comuns"
@@ -1010,10 +950,6 @@ msgstr "Complete o rascunho desse evento antes de adicionar uma transição."
 msgid "Completed"
 msgstr "Concluído"
 
-#: src/makebench/editor/graph.py
-msgid "Component"
-msgstr "Componente"
-
 #: src/makebench/editor/studio.py
 msgid "Component category"
 msgstr "Categoria de componentes"
@@ -1038,10 +974,6 @@ msgstr "Compactar {path}"
 msgid "Condition"
 msgstr "Condição"
 
-#: src/makebench/editor/graph.py
-msgid "Configure…"
-msgstr "Configurar…"
-
 #: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
 msgid "Confirm"
 msgstr "Confirmar"
@@ -1062,10 +994,6 @@ msgstr "Conectar"
 msgid "Connect a click or a window opening to the logic."
 msgstr "Conectar um clique ou a abertura de uma janela à lógica."
 
-#: src/makebench/editor/graph.py
-msgid "Connect an output to an input of the same type."
-msgstr "Conecte uma saída a uma entrada do mesmo tipo."
-
 #: src/makebench/editor/logic.py
 msgid "Connect event"
 msgstr "Conectar evento"
@@ -1074,21 +1002,9 @@ msgstr "Conectar evento"
 msgid "Connect interfaces"
 msgstr "Conectar interfaces"
 
-#: src/makebench/editor/graph.py
-msgid "Connected to node {node}"
-msgstr "Conectado ao nó {node}"
-
 #: src/makebench/editor/map_panel.py
 msgid "Connect…"
 msgstr "Conectar…"
-
-#: src/makebench/core/graph.py
-msgid "Constant"
-msgstr "Constante"
-
-#: src/makebench/core/graph.py
-msgid "Constant exceeds 12 levels."
-msgstr "Constante excede 12 níveis."
 
 #: src/makebench/core/project.py
 msgid "Container"
@@ -1266,10 +1182,6 @@ msgstr "Não foi possível iniciar o teste"
 msgid "Could not use this icon"
 msgstr "Não foi possível usar este ícone"
 
-#: src/makebench/editor/graph.py
-msgid "Count"
-msgstr "Quantidade"
-
 #: src/makebench/editor/development.py
 msgid "counter"
 msgstr "contador"
@@ -1334,10 +1246,6 @@ msgstr "Ctrl+Espaço: sugestões · Ctrl+Shift+Espaço: parâmetros · F12: defi
 msgid "Customize tools and preferences whenever you like."
 msgstr "Personalize as ferramentas e preferências quando quiser."
 
-#: src/makebench/core/graph.py
-msgid "Cycle between values. Use a variable to represent memory."
-msgstr "Ciclo entre valores. Use uma variável para representar memória."
-
 #: src/makebench/editor/studio.py
 msgid "Cycle focus region"
 msgstr "Alternar região de foco"
@@ -1397,10 +1305,6 @@ msgstr "Excluir módulo"
 #: src/makebench/editor/code_workspace.py
 msgid "Delete module?"
 msgstr "Excluir módulo?"
-
-#: src/makebench/editor/graph.py
-msgid "Delete node"
-msgstr "Excluir nó"
 
 #: src/makebench/editor/settings.py
 msgid "Dependencies"
@@ -1466,10 +1370,6 @@ msgstr "Descartar recuperação"
 msgid "Discard unsaved Python edits and reread the project files?"
 msgstr "Descartar as edições Python não salvas e reler os arquivos do projeto?"
 
-#: src/makebench/editor/graph.py
-msgid "Disconnect"
-msgstr "Desconectar"
-
 #: src/makebench/core/navigation.py
 msgid "Discover the system"
 msgstr "Conheça o sistema"
@@ -1494,10 +1394,6 @@ msgstr "Distribuir verticalmente"
 msgid "Do you want to continue?"
 msgstr "Deseja continuar?"
 
-#: src/makebench/editor/graph.py
-msgid "Double-click configures · drag connectors to create wires"
-msgstr "Duplo clique configura · arraste conectores para criar fios"
-
 #: src/makebench/editor/map_panel.py
 msgid "Double-click opens the Designer."
 msgstr "Duplo clique abre o Designer."
@@ -1521,14 +1417,6 @@ msgstr "Arraste um componente para a interface ou dê duplo clique para adiciona
 #: src/makebench/editor/window.py
 msgid "Drag components onto the screen. In free areas, move and resize through the selection."
 msgstr "Arraste componentes para a tela. Em áreas livres, mova e redimensione pela seleção."
-
-#: src/makebench/editor/graph.py
-msgid "Drag connectors · double-click configures · middle button moves the field"
-msgstr "Arraste conectores · duplo clique configura · botão central move o campo"
-
-#: src/makebench/editor/graph.py
-msgid "drag to connect; right-click disconnects"
-msgstr "arraste para conectar; botão direito desconecta"
 
 #: src/makebench/editor/canvas.py
 msgid "Drag to resize. Esc cancels the gesture."
@@ -1582,10 +1470,6 @@ msgstr "Cada interface adicional precisa ser uma janela."
 msgid "Each component must be an object."
 msgstr "Cada componente precisa ser um objeto."
 
-#: src/makebench/core/graph.py
-msgid "Each execution output accepts one connection. Use Sequence to branch."
-msgstr "Cada saída de execução aceita uma conexão. Use Sequência para ramificar."
-
 #: src/makebench/editor/development.py
 msgid "Edit"
 msgstr "Editar"
@@ -1605,10 +1489,6 @@ msgstr "Editar lógica"
 #: src/makebench/editor/designer.py
 msgid "Edit logic…"
 msgstr "Editar lógica…"
-
-#: 
-msgid "Edit nodes"
-msgstr "Editar nós"
 
 #: src/makebench/editor/map_panel.py
 msgid "Edit on start"
@@ -1657,10 +1537,6 @@ msgstr "Prévia de edição · Ctrl+arraste transfere componentes livres para ou
 #: src/makebench/editor/settings.py
 msgid "Editor"
 msgstr "Editor"
-
-#: src/makebench/editor/logic.py
-msgid "Editor for this behavior"
-msgstr "Editor deste comportamento"
 
 #: src/makebench/editor/publish.py
 msgid "Editor runtime ready."
@@ -1761,10 +1637,6 @@ msgstr "Erro na execução. Consulte a saída."
 #: src/makebench/editor/execution.py
 msgid "Errors"
 msgstr "Erros"
-
-#: src/makebench/core/graph.py
-msgid "Event"
-msgstr "Evento"
 
 #: src/makebench/editor/studio.py
 msgid "Event:"
@@ -1882,10 +1754,6 @@ msgstr "Arquivos (*{suffix})"
 msgid "Fill"
 msgstr "Preencher"
 
-#: src/makebench/core/graph.py
-msgid "Fill in every value input of the node."
-msgstr "Preencha todas as entradas de valor do nó."
-
 #: src/makebench/core/behaviors.py
 msgid "Fill in the field before continuing."
 msgstr "Preencha o campo antes de continuar."
@@ -1913,10 +1781,6 @@ msgstr "Conclua o assistente para abrir seu painel."
 #: src/makebench/editor/catalog.py
 msgid "Fires a click event and its actions."
 msgstr "Dispara um evento de clique e suas ações."
-
-#: src/makebench/editor/graph.py
-msgid "Fit"
-msgstr "Enquadrar"
 
 #: src/makebench/editor/map_panel.py
 msgid "Fit all"
@@ -2005,10 +1869,6 @@ msgstr "Formato"
 #: src/makebench/core/project.py
 msgid "Free"
 msgstr "Livre"
-
-#: src/makebench/core/project.py
-msgid "Free graphs require format 7 or later."
-msgstr "Grafos livres requerem formato 7 ou posterior."
 
 #: src/makebench/editor/window.py
 msgid "Free software: editor under the GNU GPL 3 or later, runtime under the MIT license."
@@ -2101,14 +1961,6 @@ msgstr "Ir ao bloco de origem · F4"
 #: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
 msgid "Go to state"
 msgstr "Ir para estado"
-
-#: src/makebench/editor/logic.py
-msgid "Graph saved. F5 runs; F9 debugs the snapshot."
-msgstr "Grafo salvo. F5 executa; F9 depura o snapshot."
-
-#: src/makebench/runtime/worker.py
-msgid "Graph stopped after 100,000 steps in event {flow}."
-msgstr "Grafo interrompido após 100 mil passos no evento {flow}."
 
 #: src/makebench/core/project.py
 msgid "Grid"
@@ -2278,14 +2130,6 @@ msgstr "Inclui o editor, QtWebEngine e os recursos para criar e testar aplicativ
 msgid "Includes the functions file and the project's assets. Different sources at the destination are preserved."
 msgstr "Inclui o arquivo de funções e os recursos do projeto. Fontes diferentes no destino são preservadas."
 
-#: src/makebench/core/graph.py
-msgid "Incompatible execution ports."
-msgstr "Portas de execução incompatíveis."
-
-#: src/makebench/core/graph.py
-msgid "Incompatible types on input {port}: {expected} expected."
-msgstr "Tipos incompatíveis na entrada {port}: {expected} esperado."
-
 #: src/makebench/runtime/session.py
 msgid "Incomplete reply exceeded the limit."
 msgstr "Resposta incompleta excedeu o limite."
@@ -2326,10 +2170,6 @@ msgstr "Selecionada inicialmente"
 msgid "Inner margins"
 msgstr "Margens internas"
 
-#: src/makebench/editor/graph.py
-msgid "Input"
-msgstr "Entrada"
-
 #: src/makebench/editor/catalog.py
 msgid "Input and actions"
 msgstr "Entrada e ações"
@@ -2349,10 +2189,6 @@ msgstr "Inserir um modelo de comportamento com blocos reais"
 #: src/makebench/core/logic_defaults.py
 msgid "Insert a compatible component before creating this action."
 msgstr "Insira um componente compatível antes de criar esta ação."
-
-#: src/makebench/core/graph.py
-msgid "Insert a compatible component in this window before creating this node."
-msgstr "Insira um componente compatível nesta janela antes de criar este nó."
 
 #: src/makebench/core/logic_defaults.py
 msgid "Insert a Terminal component in this window."
@@ -2474,10 +2310,6 @@ msgstr "Distribuição inválida."
 msgid "Invalid event."
 msgstr "Evento inválido."
 
-#: src/makebench/core/graph.py
-msgid "Invalid execution connection."
-msgstr "Conexão de execução inválida."
-
 #: src/makebench/runtime/session.py
 msgid "Invalid execution protocol: {error}"
 msgstr "Protocolo de execução inválido: {error}"
@@ -2486,10 +2318,6 @@ msgstr "Protocolo de execução inválido: {error}"
 msgid "Invalid field in block: {key}."
 msgstr "Campo inválido no bloco: {key}."
 
-#: src/makebench/core/graph.py
-msgid "Invalid free graph comments."
-msgstr "Comentários livres do grafo inválidos."
-
 #: src/makebench/core/project.py
 msgid "Invalid geometry in {id}."
 msgstr "Geometria inválida em {id}."
@@ -2497,14 +2325,6 @@ msgstr "Geometria inválida em {id}."
 #: src/makebench/core/project.py
 msgid "Invalid geometry in {id}: {key}."
 msgstr "Geometria inválida em {id}: {key}."
-
-#: src/makebench/core/graph.py
-msgid "Invalid graph execution state."
-msgstr "Estado de execução do grafo inválido."
-
-#: src/makebench/core/graph.py
-msgid "Invalid graph version."
-msgstr "Versão de grafo inválida."
 
 #: src/makebench/runtime/gtk_bridge.py
 msgid "Invalid GTK protocol: {error}"
@@ -2517,10 +2337,6 @@ msgstr "Ícone inválido: {error}"
 #: src/makebench/core/navigation.py
 msgid "Invalid initial size."
 msgstr "Tamanho inicial inválido."
-
-#: src/makebench/editor/graph.py
-msgid "Invalid JSON value: {error}"
-msgstr "Valor JSON inválido: {error}"
 
 #: src/makebench/core/logic.py
 msgid "Invalid literal value."
@@ -2538,21 +2354,9 @@ msgstr "Lista de módulos inválida (máximo 256 arquivos, sem repetição)."
 msgid "Invalid module path."
 msgstr "Caminho de módulo inválido."
 
-#: src/makebench/core/graph.py
-msgid "Invalid node question."
-msgstr "Pergunta de nó inválida."
-
-#: src/makebench/core/graph.py
-msgid "Invalid node variable."
-msgstr "Variável de nó inválida."
-
 #: src/makebench/core/navigation.py
 msgid "Invalid or repeated code name."
 msgstr "Nome no código inválido ou repetido."
-
-#: src/makebench/core/graph.py
-msgid "Invalid own function in node."
-msgstr "Função própria de nó inválida."
 
 #: src/makebench/gtk_runtime/application.py
 msgid "Invalid program/arguments."
@@ -2573,14 +2377,6 @@ msgstr "Dependência Python inválida: {name}"
 #: src/makebench/core/source.py
 msgid "Invalid Python file or larger than 8 MiB."
 msgstr "Arquivo Python inválido ou maior que 8 MiB."
-
-#: src/makebench/core/graph.py
-msgid "Invalid read property."
-msgstr "Propriedade de leitura inválida."
-
-#: src/makebench/core/logic.py
-msgid "Invalid recoverable behavior versions."
-msgstr "Versões recuperáveis do comportamento inválidas."
 
 #: src/makebench/editor/settings_fields.py
 msgid "Invalid requirement. Use a name and version, for example requests>=2.32."
@@ -2618,10 +2414,6 @@ msgstr "Sobrescritas de estado inválidas."
 msgid "Invalid states, variables or map positions."
 msgstr "Estados, variáveis ou posições do mapa inválidos."
 
-#: src/makebench/core/graph.py
-msgid "Invalid task permission."
-msgstr "Permissão de tarefa inválida."
-
 #: src/makebench/core/project.py
 msgid "Invalid terminal autostart."
 msgstr "Início automático do terminal inválido."
@@ -2630,17 +2422,9 @@ msgstr "Início automático do terminal inválido."
 msgid "Invalid terminal program."
 msgstr "Programa de terminal inválido."
 
-#: src/makebench/core/graph.py
-msgid "Invalid value port identifier."
-msgstr "Identificador de porta de valor inválido."
-
 #: src/makebench/core/navigation.py
 msgid "Invalid variable scope."
 msgstr "Escopo da variável inválido."
-
-#: src/makebench/core/graph.py
-msgid "Invalid visual node position."
-msgstr "Posição visual de nó inválida."
 
 #: src/makebench/core/portable.py
 msgid "Invalid wheel cache."
@@ -2653,14 +2437,6 @@ msgstr "Lista de janelas inválida (máximo 128)."
 #: src/makebench/core/graph.py src/makebench/editor/development.py
 msgid "Join texts"
 msgstr "Juntar textos"
-
-#: src/makebench/editor/graph.py
-msgid "JSON constant"
-msgstr "Constante JSON"
-
-#: src/makebench/core/graph.py
-msgid "Keep a single event node as the entry."
-msgstr "Mantenha um único nó de evento como entrada."
 
 #: src/makebench/core/project.py
 msgid "Keep at least one page in this set."
@@ -2710,10 +2486,6 @@ msgstr "Licença"
 msgid "Light"
 msgstr "Claro"
 
-#: src/makebench/core/graph.py
-msgid "Limit of 1000 recoverable versions reached."
-msgstr "Limite de 1000 versões recuperáveis atingido."
-
 #: src/makebench/editor/code_tools.py src/makebench/editor/debug.py
 msgid "Line"
 msgstr "Linha"
@@ -2733,10 +2505,6 @@ msgstr "Lista"
 #: src/makebench/editor/development.py
 msgid "List of values"
 msgstr "Lista de valores"
-
-#: src/makebench/editor/graph.py
-msgid "Local"
-msgstr "Local"
 
 #: src/makebench/editor/code_assist.py
 msgid "Local definition not found."
@@ -2829,10 +2597,6 @@ msgstr "Mapa das janelas e estados do aplicativo"
 #: 
 msgid "Match case"
 msgstr "Diferenciar maiúsculas"
-
-#: src/makebench/core/graph.py
-msgid "Message"
-msgstr "Mensagem"
 
 #: src/makebench/editor/inspector.py
 msgid "middle"
@@ -3154,26 +2918,6 @@ msgstr "Nenhum teste iniciado"
 msgid "No version"
 msgstr "Sem versão"
 
-#: 
-msgid "Node graph — wires, loops and a terminal"
-msgstr "Grafo de nós — fios, repetições e terminal"
-
-#: src/makebench/core/graph.py
-msgid "Node state does not exist."
-msgstr "Estado de nó inexistente."
-
-#: src/makebench/core/graph.py
-msgid "Node without a unique ID or a recognized operation."
-msgstr "Nó sem ID único ou operação reconhecida."
-
-#: src/makebench/editor/development.py src/makebench/editor/logic.py
-msgid "Nodes"
-msgstr "Nós"
-
-#: src/makebench/core/graph.py
-msgid "Non-finite numeric constant."
-msgstr "Constante numérica não finita."
-
 #: src/makebench/editor/projects.py src/makebench/editor/settings.py
 msgid "none"
 msgstr "nenhum"
@@ -3294,10 +3038,6 @@ msgstr "Abrir {area}"
 msgid "Open…"
 msgstr "Abrir…"
 
-#: src/makebench/core/graph.py
-msgid "Operation"
-msgstr "Operação"
-
 #: src/makebench/runtime/window.py
 msgid "Operation cancelled by the user."
 msgstr "Operação cancelada pelo usuário."
@@ -3309,18 +3049,6 @@ msgstr "Operação cancelada."
 #: src/makebench/editor/publish.py
 msgid "Operation interrupted · see the diagnostics"
 msgstr "Operação interrompida · consulte o diagnóstico"
-
-#: src/makebench/editor/graph.py
-msgid "Operator"
-msgstr "Operador"
-
-#: src/makebench/editor/graph.py
-msgid "Options"
-msgstr "Opções"
-
-#: 
-msgid "Or right-click the empty area to add nodes and comments"
-msgstr "Ou clique com o botão direito na área vazia para adicionar nós e comentários"
 
 #: src/makebench/editor/execution.py
 msgid "Ordinary"
@@ -3353,14 +3081,6 @@ msgstr "A saída aparece aqui ao testar o aplicativo."
 #: src/makebench/core/project.py
 msgid "Output panel"
 msgstr "Painel de saída"
-
-#: src/makebench/editor/graph.py
-msgid "Outputs"
-msgstr "Saídas"
-
-#: src/makebench/core/graph.py
-msgid "Own function"
-msgstr "Função própria"
 
 #: src/makebench/core/project.py src/makebench/editor/canvas.py src/makebench/editor/inspector.py src/makebench/gtk_runtime/renderer.py src/makebench/runtime/view.py
 msgid "Page"
@@ -3530,17 +3250,9 @@ msgstr "Resultado anterior"
 msgid "Previous session available."
 msgstr "Sessão anterior disponível."
 
-#: src/makebench/editor/development.py
-msgid "Previous version"
-msgstr "Versão anterior"
-
 #: src/makebench/core/logic_defaults.py
 msgid "printf \"Hello, Linux\\n\""
 msgstr "printf \"Olá, Linux\\n\""
-
-#: src/makebench/core/graph.py
-msgid "printf \"Hello\\n\""
-msgstr "printf \"Olá\\n\""
 
 #: src/makebench/editor/studio.py
 msgid "Problems"
@@ -3549,10 +3261,6 @@ msgstr "Problemas"
 #: src/makebench/editor/studio.py
 msgid "Problems ({count})"
 msgstr "Problemas ({count})"
-
-#: src/makebench/editor/graph.py
-msgid "Program"
-msgstr "Programa"
 
 #: src/makebench/editor/inspector.py
 msgid "Program (empty = shell)"
@@ -3658,10 +3366,6 @@ msgstr "Projetos"
 msgid "Properties"
 msgstr "Propriedades"
 
-#: src/makebench/editor/graph.py
-msgid "Property"
-msgstr "Propriedade"
-
 #: src/makebench/core/project.py
 msgid "Property {key} of {id} must be text."
 msgstr "A propriedade {key} de {id} precisa ser texto."
@@ -3734,10 +3438,6 @@ msgstr "Fonte Python, DEB, RPM e AppImage executam com as permissões do usuári
 msgid "Qt — desktop controls"
 msgstr "Qt — controles do desktop"
 
-#: src/makebench/editor/graph.py
-msgid "Question"
-msgstr "Pergunta"
-
 #: src/makebench/runtime/window.py
 msgid "Question answered or cancelled."
 msgstr "Pergunta respondida ou cancelada."
@@ -3749,10 +3449,6 @@ msgstr "Sair"
 #: src/makebench/editor/development.py
 msgid "Read checkbox selection"
 msgstr "Ler seleção da caixa"
-
-#: src/makebench/core/graph.py
-msgid "Read component"
-msgstr "Ler componente"
 
 #: src/makebench/editor/development.py
 msgid "Read component text"
@@ -3805,14 +3501,6 @@ msgstr "receita solicitada"
 #: src/makebench/editor/projects.py src/makebench/editor/startup.py
 msgid "Recover"
 msgstr "Recuperar"
-
-#: src/makebench/editor/development.py
-msgid "Recover behavior"
-msgstr "Recuperar comportamento"
-
-#: src/makebench/editor/logic.py
-msgid "Recover the behavior from before the editor switch"
-msgstr "Recuperar o comportamento anterior à troca de editor"
 
 #: src/makebench/editor/window.py
 msgid "Redo"
@@ -4018,10 +3706,6 @@ msgstr "Restaurar padrões desta página"
 msgid "Result"
 msgstr "Resultado"
 
-#: src/makebench/core/graph.py
-msgid "Return"
-msgstr "Retornar"
-
 #: src/makebench/core/build_environment.py
 msgid "Reusing tools already prepared."
 msgstr "Reutilizando ferramentas já preparadas."
@@ -4097,10 +3781,6 @@ msgstr "Executar tarefa"
 #: 
 msgid "Run the application in a separate test window"
 msgstr "Executa o aplicativo em uma janela de teste separada"
-
-#: src/makebench/runtime/worker.py
-msgid "Run the producer node before reading its result: {node}"
-msgstr "Execute o nó produtor antes de ler seu resultado: {node}"
 
 #: src/makebench/editor/execution.py
 msgid "Run {number} · ended · {seconds} s"
@@ -4266,10 +3946,6 @@ msgstr "Buscar atalhos"
 msgid "Search shortcuts…"
 msgstr "Buscar atalhos…"
 
-#: src/makebench/editor/graph.py
-msgid "Search type"
-msgstr "Pesquisar tipo"
-
 #: src/makebench/editor/settings.py
 msgid "See docs/user-guide.md in the Makebench folder."
 msgstr "Consulte docs/user-guide.pt-BR.md na pasta do Makebench."
@@ -4342,10 +4018,6 @@ msgstr "Selecione a janela ou um botão para criar um evento."
 msgid "Select this event's origin in the Designer"
 msgstr "Selecionar a origem deste evento no Designer"
 
-#: src/makebench/editor/graph.py
-msgid "Selection"
-msgstr "Seleção"
-
 #: src/makebench/core/graph.py src/makebench/core/logic_defaults.py src/makebench/editor/development.py
 msgid "Send to terminal"
 msgstr "Enviar ao terminal"
@@ -4353,10 +4025,6 @@ msgstr "Enviar ao terminal"
 #: src/makebench/core/project.py
 msgid "Separator"
 msgstr "Separador"
-
-#: src/makebench/core/graph.py
-msgid "Sequence"
-msgstr "Sequência"
 
 #: src/makebench/editor/map_panel.py
 msgid "Set as initial"
@@ -4666,14 +4334,6 @@ msgstr "Guardar valor em variável"
 msgid "Structure"
 msgstr "Estrutura"
 
-#: 
-msgid "Switch behavior editor"
-msgstr "Trocar editor do comportamento"
-
-#: src/makebench/editor/development.py
-msgid "Switch this behavior's editor?"
-msgstr "Trocar editor deste comportamento?"
-
 #: src/makebench/editor/settings.py
 msgid "System"
 msgstr "Sistema"
@@ -4810,10 +4470,6 @@ msgstr "Testar executará funções Python e scripts com suas permissões. O pro
 msgid "Text"
 msgstr "Texto"
 
-#: src/makebench/core/graph.py
-msgid "Text constant is too long."
-msgstr "Constante textual muito extensa."
-
 #: src/makebench/core/project.py
 msgid "Text field"
 msgstr "Campo de texto"
@@ -4893,10 +4549,6 @@ msgstr "Dica do componente precisa ser texto."
 #: src/makebench/gtk_runtime/application.py
 msgid "The component's window is not open."
 msgstr "A janela do componente não está aberta."
-
-#: src/makebench/editor/development.py
-msgid "The current behavior will be kept in Versions. The new representation starts with an empty event. There is no automatic conversion between blocks and nodes."
-msgstr "O comportamento atual será guardado em Versões. A nova representação começa com um evento vazio. Não há conversão automática entre blocos e nós."
 
 #: src/makebench/core/packages.py
 msgid "The declared Python dependencies will be resolved in the isolated environment during Prepare tools."
@@ -4989,10 +4641,6 @@ msgstr "O fluxo terminou com erro."
 #: src/makebench/core/logic.py
 msgid "The flow name must be text."
 msgstr "O nome do fluxo precisa ser texto."
-
-#: src/makebench/core/graph.py
-msgid "The graph accepts up to 5000 nodes and 40000 connections."
-msgstr "O grafo aceita até 5000 nós e 40000 conexões."
 
 #: src/makebench/core/project.py
 msgid "The grid must have between 1 and 12 columns."
@@ -5270,10 +4918,6 @@ msgstr "Há mais de um fluxo para o mesmo evento."
 msgid "There is no free space left on the disk."
 msgstr "Não há espaço livre no disco."
 
-#: src/makebench/core/graph.py
-msgid "There is no previous behavior to restore."
-msgstr "Não há comportamento anterior para restaurar."
-
 #: src/makebench/editor/resources.py
 msgid "This asset is still used by the application."
 msgstr "Este recurso ainda é usado pelo aplicativo."
@@ -5285,10 +4929,6 @@ msgstr "Este componente não possui texto."
 #: src/makebench/core/project.py
 msgid "This destination does not accept that type of component."
 msgstr "Este destino não aceita esse tipo de componente."
-
-#: src/makebench/core/navigation.py
-msgid "This event uses Nodes. Add and connect the navigation in the Nodes editor to choose the execution path."
-msgstr "Esse evento usa Nós. Adicione e conecte a navegação no editor de Nós para escolher o caminho de execução."
 
 #: src/makebench/editor/code_workspace.py
 msgid "This file has unsaved changes."
@@ -5442,14 +5082,6 @@ msgstr "Tipo de diálogo desconhecido."
 msgid "Unknown expression: {op}."
 msgstr "Expressão desconhecida: {op}."
 
-#: src/makebench/core/graph.py
-msgid "Unknown input port."
-msgstr "Porta de entrada desconhecida."
-
-#: src/makebench/core/graph.py
-msgid "Unknown node operator."
-msgstr "Operador de nó desconhecido."
-
 #: src/makebench/gtk_runtime/application.py
 msgid "Unknown operation."
 msgstr "Operação desconhecida."
@@ -5510,10 +5142,6 @@ msgstr "Use um ícone PNG ou SVG."
 msgid "Use a valid Python name, with no spaces and not starting with an underscore."
 msgstr "Use um nome Python válido, sem espaços e sem iniciar por sublinhado."
 
-#: src/makebench/core/graph.py
-msgid "Use a valid, bounded JSON constant."
-msgstr "Use uma constante JSON válida e limitada."
-
 #: src/makebench/editor/settings.py
 msgid "Use a version such as 0.1.0."
 msgstr "Use uma versão como 0.1.0."
@@ -5550,14 +5178,6 @@ msgstr "Validar entrada"
 msgid "Value"
 msgstr "Valor"
 
-#: src/makebench/core/graph.py
-msgid "Value dependencies exceed 100 levels."
-msgstr "Dependência de valores excede 100 níveis."
-
-#: src/makebench/core/graph.py
-msgid "Value producer does not exist."
-msgstr "Produtor de valor inexistente."
-
 #: src/makebench/editor/debug.py src/makebench/editor/development.py
 msgid "Variable"
 msgstr "Variável"
@@ -5585,10 +5205,6 @@ msgstr "Versão"
 #: src/makebench/editor/window.py
 msgid "Version {version}"
 msgstr "Versão {version}"
-
-#: src/makebench/editor/logic.py
-msgid "Versions…"
-msgstr "Versões…"
 
 #: src/makebench/editor/inspector.py
 msgid "Vertical center"
@@ -6537,10 +6153,6 @@ msgid "Complete workshop — every component, logic in blocks"
 msgstr "Oficina completa — todos os componentes, lógica em blocos"
 
 #: src/makebench/editor/projects.py
-msgid "Complete workshop — every component, logic in nodes"
-msgstr "Oficina completa — todos os componentes, lógica em nós"
-
-#: src/makebench/editor/projects.py
 msgid "Create a new one or open an example to get started."
 msgstr "Crie um novo ou abra um exemplo para começar."
 
@@ -7211,3 +6823,7 @@ msgstr "Para quem é?"
 #: src/makebench/editor/publish.py
 msgid "recommended"
 msgstr "recomendado"
+
+#: src/makebench/core/project.py
+msgid "This project uses the node editor, which was removed in Makebench 1.0. Open it in Makebench 0.9."
+msgstr "Este projeto usa o editor de nós, que saiu no Makebench 1.0. Abra-o no Makebench 0.9."

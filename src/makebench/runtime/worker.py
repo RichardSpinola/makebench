@@ -43,7 +43,6 @@ class Context:
         self.sequence = 0
         self.receive_response = None
         self.debugger = None
-        self.graph_node = None
 
     def request(self, method, **values):
         """Wait for the matching reply, aborting on cancellation/failure."""
@@ -58,28 +57,6 @@ class Context:
         if not reply.get("ok"):
             raise TaskError(reply.get("error", tr("The task failed.")))
         return reply.get("value")
-
-    def graph_checkpoint(self, flow, node, steps):
-        """Limit each event to 100,000 steps and yield the CPU in execution loops."""
-        self.graph_node = node
-        if self.debugger:
-            self.debugger.checkpoint()
-        if steps > 100000:
-            raise RuntimeError(
-                tr("Graph stopped after 100,000 steps in event {flow}.").format(flow=flow)
-            )
-        if steps % 128 == 0:
-            import time
-
-            time.sleep(0.001)
-
-    def graph_result(self, values, node):
-        """Require the producer to run first; a value wire never triggers actions by itself."""
-        if node not in values:
-            raise RuntimeError(
-                tr("Run the producer node before reading its result: {node}").format(node=node)
-            )
-        return values[node]
 
     def terminal_start(self, component, program=None, arguments=None):
         """Start the PTY of a Terminal component during the explicit run."""
@@ -258,8 +235,6 @@ def main():
             ),
             None,
         )
-        if block is None:
-            block = context.graph_node
         send(
             {
                 "type": "error",
@@ -336,7 +311,6 @@ def main():
             )
             send({"type": "busy", "flow": flow_id})
             outcome = "success"
-            context.graph_node = None
             try:
                 if debugger.enabled:
                     sys.settrace(debugger.trace)

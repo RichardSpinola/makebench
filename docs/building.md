@@ -44,7 +44,7 @@ them:
 |---|---|
 | `capture_ui.py OUT` | Screenshots of every area at several sizes (used for the README images). |
 | `gtk_runtime_smoke.py` | The GTK 4 runtime: dialogs, `ctx` API, tasks, errors, exported source. Needs PyGObject and GTK 4. |
-| `terminal_debug_acceptance.py`, `graph_acceptance.py`, `workspace_acceptance.py` | Terminal, debugger, node graph and code workspace end to end. |
+| `terminal_debug_acceptance.py`, `workspace_acceptance.py` | Terminal, debugger and code workspace end to end. |
 | `python_compatibility.py OUT --minor 12\|13` | The full suite on Python 3.12 or 3.13 inside a container, using already prepared wheels. |
 | `build_portable_examples.py OUT --backend qt\|gtk [--prepare] [--editor]` | Builds the examples (or the editor) in every package format. `--prepare` downloads and verifies the tools first. |
 | `polkit/` | Real Polkit authorisation in a disposable container; see its README. |

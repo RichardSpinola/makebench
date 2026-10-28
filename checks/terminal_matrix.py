@@ -17,7 +17,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument(
-        "--check", choices=("terminal", "graph", "distribution", "workspace"), default="terminal"
+        "--check", choices=("terminal", "distribution", "workspace"), default="terminal"
     )
     args = parser.parse_args()
     output = args.output.resolve()
@@ -127,8 +127,6 @@ def main():
                                         if args.check == "workspace"
                                         else "checks/distribution_visual.py"
                                         if args.check == "distribution"
-                                        else "checks/graph_acceptance.py"
-                                        if args.check == "graph"
                                         else "checks/terminal_debug_acceptance.py",
                                         "--backend",
                                         backend,

@@ -220,10 +220,7 @@ class DevelopmentMixin:
 
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                count = sum(
-                    uses(f.get("graph") if f.get("editor") == "nodes" else f.get("body"), node.name)
-                    for f in self.project.workflows
-                )
+                count = sum(uses(f.get("body"), node.name) for f in self.project.workflows)
                 signature = (
                     tr("class") + " " + node.name
                     if isinstance(node, ast.ClassDef)
@@ -417,15 +414,6 @@ class DevelopmentMixin:
                 continue
             visit(flow.get("body"))
             visit(flow.get("workspace"))
-            if flow.get("editor") == "nodes":
-                for node in flow["graph"]["nodes"]:
-                    parameters = node.get("parameters", {})
-                    if (
-                        node["op"] in {"variable", "assign", "ask"}
-                        and parameters.get("name") == old["name"]
-                        and parameters.get("scope", "project") == old.get("scope", "project")
-                    ):
-                        parameters.update(name=new["name"], scope=new["scope"])
 
     def edit_data_item(self):
         """Edit the selected variable; functions open the Code mode."""
@@ -450,82 +438,8 @@ class DevelopmentMixin:
             index = item.data(Qt.ItemDataRole.UserRole)
             self._edit(lambda: self.project.variables.pop(index))
 
-    def change_behavior_editor(self, identifier, editor):
-        """Replace the representation by explicit choice, keeping a recoverable copy."""
-        flow = next((f for f in self.project.editable_flows if f["id"] == identifier), None)
-        if not flow or flow.get("editor", "blocks") == editor:
-            return
-        if not self.logic.flush():
-            self.logic.sync()
-            return
-        from PySide6.QtWidgets import QMessageBox
-
-        result = QMessageBox.question(
-            self,
-            tr("Switch this behavior's editor?"),
-            tr(
-                "The current behavior will be kept in Versions. The new representation starts with an empty event. There is no automatic conversion between blocks and nodes."
-            ),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel,
-        )
-        if result != QMessageBox.StandardButton.Yes:
-            self.logic.sync()
-            return
-        from makebench.core.graph import replace_editor
-
-        self._edit(lambda: replace_editor(flow, editor))
-
-    def restore_behavior_dialog(self, identifier):
-        """Recover a previous representation by the user's choice, with history."""
-        flow = next((f for f in self.project.editable_flows if f["id"] == identifier), None)
-        backups = flow.get("behavior_backups", []) if flow else []
-        if not backups:
-            return
-        labels = [
-            str(index + 1)
-            + " · "
-            + (tr("Nodes") if item.get("editor") == "nodes" else tr("Blocks"))
-            + " · "
-            + item["name"]
-            for index, item in enumerate(backups)
-        ]
-        choice, ok = QInputDialog.getItem(
-            self, tr("Recover behavior"), tr("Previous version"), labels, len(labels) - 1, False
-        )
-        if ok:
-            from makebench.core.graph import restore_behavior
-
-            self._edit(lambda: restore_behavior(flow, labels.index(choice)))
-
-    def receive_graph(self, data):
-        """Confirm graph/positions as a document transaction, never touching your own Python."""
-        flow = next(
-            (
-                f
-                for f in self.project.editable_flows
-                if f["id"] == data.get("flow") and f.get("editor") == "nodes"
-            ),
-            None,
-        )
-        if flow is None:
-            return
-        if all(
-            flow.get(key, [] if key == "graph_comments" else {}) == data[key]
-            for key in ("graph", "graph_layout", "graph_comments")
-        ):
-            return
-        self._edit(
-            lambda: flow.update(
-                {key: deepcopy(data[key]) for key in ("graph", "graph_layout", "graph_comments")}
-            )
-        )
-
     def search_block(self):
         """Search the available types and insert a real draft into Blockly."""
-        if self.logic.editor_kind.currentData() == "nodes":
-            self.logic.graph_panel.add_dialog()
-            return
         if not self.logic.ready:
             return
         entries = {
@@ -661,19 +575,6 @@ class DevelopmentMixin:
         def copy():
             """Duplicate data and references, keeping the original."""
             clone = create_flow(self.project, target.id, states=filters)
-            if flow.get("editor") == "nodes":
-                from makebench.core.graph import duplicate_graph
-
-                clone.update(
-                    editor="nodes",
-                    graph=deepcopy(flow["graph"]),
-                    graph_layout=deepcopy(flow.get("graph_layout", {})),
-                    graph_comments=deepcopy(flow.get("graph_comments", [])),
-                )
-                duplicate_graph(clone, {})
-                self.logic.flow_id = clone["id"]
-                self.logic._target_component = None
-                return
             clone["body"] = deepcopy(flow["body"])
             clone["workspace"] = {
                 "workspaceComments": deepcopy(
@@ -720,9 +621,6 @@ class DevelopmentMixin:
                 (f for f in self.project.editable_flows if f["id"] == self.logic.flow_id), None
             )
         if flow is None:
-            return
-        if flow.get("editor") == "nodes":
-            self.logic.graph_panel.add_dialog()
             return
         from makebench.core.behaviors import behavior_template, append_behavior
 

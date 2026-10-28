@@ -49,17 +49,6 @@ def generate(project: Project, source: str = "") -> GeneratedCode:
     else:
         for index, flow in enumerate(project.workflows, 1):
             flow_id = flow["id"]
-            if flow.get("editor") == "nodes":
-                from .graph import compile_graph
-
-                graph_lines, origins, diagnostics = compile_graph(flow, index, functions)
-                offset = len(lines)
-                result.lines.update(
-                    {(flow_id, node): line + offset for node, line in origins.items()}
-                )
-                result.diagnostics.extend(diagnostics)
-                lines.extend(graph_lines)
-                continue
             if flow.get("body") is None:
                 result.diagnostics.extend(
                     f"{flow['name']}: {e}"
