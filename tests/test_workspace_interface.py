@@ -122,6 +122,24 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.go_to_problem(item)
         self.assertIs(w.active_code_editor(), w.module_editors["makebench_user/helpers.py"])
 
+    def test_blocks_project_flags_python_calls_in_problems(self):
+        w = self.window
+        w.project.metadata.update(programming="blocks", logic_version=1)
+        w.project.workflows = [
+            {
+                "id": "flow-a",
+                "name": "Start",
+                "event": {"kind": "start", "component": w.project.root.id},
+                "body": [{"id": "call-a", "op": "call", "function": "greet", "value": None}],
+                "workspace": {},
+            }
+        ]
+        w.sync_problems()
+        targets = [w.problems.item(i).data(256) for i in range(w.problems.count())]
+        self.assertIn({"flow": "flow-a", "block": "call-a"}, targets)
+        labels = [w.problems.item(i).text() for i in range(w.problems.count())]
+        self.assertTrue(any("calls Python" in label for label in labels))
+
     def test_completion_enter_undo_and_component_suggestions(self):
         from PySide6.QtCore import Qt
         from PySide6.QtTest import QTest

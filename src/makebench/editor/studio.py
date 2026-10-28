@@ -550,6 +550,7 @@ class StudioMixin(
             json.dumps(self.project.workflows, sort_keys=True),
             tuple((r.id, r.properties.get("title")) for r in self.project.roots),
             self.project.entry_window,
+            self.project.programming,
         )
         if signature == getattr(self, "_problems_signature", None):
             return
@@ -571,11 +572,19 @@ class StudioMixin(
         from makebench.core.logic import function_names
 
         names = set(function_names(self.source.text)[0])
+        blocks = self.project.programming == "blocks"
 
         def visit(value, flow):
             """Walk structured data without running project content."""
             if isinstance(value, dict):
-                if value.get("op") == "call" and value.get("function") not in names:
+                if value.get("op") == "call" and blocks:
+                    self._add_problem(
+                        tr(
+                            "{flow}: this block calls Python. Convert the project to Python or use a block function."
+                        ).format(flow=flow.get("name", tr("Flow"))),
+                        {"flow": flow["id"], "block": value["id"]},
+                    )
+                elif value.get("op") == "call" and value.get("function") not in names:
                     self._add_problem(
                         tr("Missing function: {name}").format(name=value.get("function", "")),
                         {"flow": flow["id"], "block": value["id"]},

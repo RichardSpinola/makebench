@@ -38,6 +38,37 @@ class ProjectTests(unittest.TestCase):
         with self.assertRaisesRegex(ProjectError, "node editor"):
             Project.from_dict(data)
 
+    def test_programming_choice_writes_format_9_and_is_validated(self):
+        project = Project.empty()
+        self.assertIsNone(project.programming)
+        self.assertLess(project.to_dict()["format_version"], 9)
+        project.metadata["programming"] = "python"
+        data = project.to_dict()
+        self.assertEqual(data["format_version"], 9)
+        self.assertEqual(Project.from_dict(data).programming, "python")
+        data["metadata"]["programming"] = "nodes"
+        with self.assertRaisesRegex(ProjectError, "programming"):
+            Project.from_dict(data)
+        data["metadata"]["programming"] = "blocks"
+        data["format_version"] = 8
+        with self.assertRaisesRegex(ProjectError, "programming"):
+            Project.from_dict(data)
+
+    def test_old_projects_infer_blocks_python_or_ask(self):
+        from makebench.core.project import infer_programming
+        from makebench.core.source import DEFAULT_SOURCES
+
+        project = Project.empty()
+        self.assertIsNone(infer_programming(project, DEFAULT_SOURCES["pt_BR"]))
+        self.assertIsNone(infer_programming(project, ""))
+        self.assertEqual(infer_programming(project, "def salvar(ctx):\n    pass\n"), "python")
+        project.python_files = ["tools"]
+        self.assertEqual(infer_programming(project), "python")
+        project.workflows = [{"id": "f", "name": "Start", "body": None}]
+        self.assertEqual(infer_programming(project, "def salvar(ctx):\n    pass\n"), "blocks")
+        project.metadata["programming"] = "python"
+        self.assertEqual(infer_programming(project), "python")
+
     def test_duplicate_component_ids_are_rejected(self):
         project = Project.empty()
         project.add(project.root.id, ComponentKind.BUTTON)

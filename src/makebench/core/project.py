@@ -15,7 +15,7 @@ from typing import Any, Iterator
 from uuid import uuid4
 from makebench.i18n import tr
 
-FORMAT_VERSION = 8
+FORMAT_VERSION = 9
 FORMAT_NAME = "makebench.project"
 
 
@@ -89,6 +89,29 @@ def has_graph(flow):
         or isinstance(backups, list)
         and any(isinstance(item, dict) and item.get("editor") == "nodes" for item in backups)
     )
+
+
+PROGRAMMING = ("blocks", "python")
+
+
+def infer_programming(project, source="") -> str | None:
+    """Pick blocks or Python for a project saved before the choice existed.
+
+    Flows mean blocks; Python modules or an edited functions file mean Python.
+    Returns None for an empty project so the editor can ask.
+    """
+    if project.metadata.get("programming") in PROGRAMMING:
+        return project.metadata["programming"]
+    if project.workflows:
+        return "blocks"
+    from .source import DEFAULT_SOURCES
+
+    text = str(source).strip()
+    if project.python_files or getattr(source, "modules", None):
+        return "python"
+    if text and text not in {item.strip() for item in DEFAULT_SOURCES.values()}:
+        return "python"
+    return None
 
 
 def new_id(prefix: str) -> str:
@@ -337,6 +360,12 @@ class Project:
         from .logic import editable
 
         return self.workflows if editable(self) else []
+
+    @property
+    def programming(self) -> str | None:
+        """Return "blocks", "python" or None when the project has not chosen yet."""
+        value = self.metadata.get("programming")
+        return value if value in PROGRAMMING else None
 
     @property
     def roots(self) -> list[Component]:
@@ -631,6 +660,7 @@ class Project:
         result = {
             "format": FORMAT_NAME,
             "format_version": max(
+                9 if self.metadata.get("programming") else 4,
                 8 if self.python_files else 4,
                 6 if any(n.kind == ComponentKind.TERMINAL for n in self.walk()) else 4,
                 self.format_version,
@@ -661,7 +691,7 @@ class Project:
         if not isinstance(value, dict) or value.get("format") != FORMAT_NAME:
             raise ProjectError(tr("This file is not a Makebench project."))
         version = value.get("format_version")
-        if type(version) is not int or version not in (1, 2, 3, 4, 5, 6, 7, FORMAT_VERSION):
+        if type(version) is not int or not 1 <= version <= FORMAT_VERSION:
             raise ProjectError(
                 tr(
                     "Unsupported project version: {version}. Open it with a compatible version of Makebench."
@@ -710,6 +740,9 @@ class Project:
             )
         ):
             raise ProjectError(tr("Invalid breakpoint list."))
+        programming = metadata.get("programming")
+        if programming is not None and (programming not in PROGRAMMING or version < 9):
+            raise ProjectError(tr("Invalid programming choice; use blocks or python (format 9)."))
         from .source import validate_manifest, validate_module_name
 
         files = validate_manifest(value.get("python_files", []))

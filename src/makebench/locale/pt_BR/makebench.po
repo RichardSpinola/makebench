@@ -6827,3 +6827,11 @@ msgstr "recomendado"
 #: src/makebench/core/project.py
 msgid "This project uses the node editor, which was removed in Makebench 1.0. Open it in Makebench 0.9."
 msgstr "Este projeto usa o editor de nós, que saiu no Makebench 1.0. Abra-o no Makebench 0.9."
+
+#: src/makebench/core/project.py
+msgid "Invalid programming choice; use blocks or python (format 9)."
+msgstr "Escolha de programação inválida; use blocks ou python (formato 9)."
+
+#: src/makebench/editor/studio.py
+msgid "{flow}: this block calls Python. Convert the project to Python or use a block function."
+msgstr "{flow}: este bloco chama Python. Converta o projeto para Python ou use uma função de blocos."

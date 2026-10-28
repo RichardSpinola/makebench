@@ -28,9 +28,13 @@ This is an overview for contributors. Package layout under `src/makebench/`:
 ## Document
 
 `core/project.py` defines `Project`, `Component`, component types and layouts,
-and the JSON format. The reader accepts formats 1–8, except projects that use
-the node editor removed in 1.0. Saving writes the lowest format that holds the
-features in use (6 terminal, 8 Python modules) and never lowers a newer format
+and the JSON format. The reader accepts formats 1–9, except projects that use
+the node editor removed in 1.0. Format 9 adds `metadata.programming`: each
+project is written in `blocks` or `python`. For older projects,
+`infer_programming()` picks blocks when there are flows, Python when there are
+modules or an edited functions file, and nothing for an empty project, so the
+editor asks. Saving writes the lowest format that holds the
+features in use (6 terminal, 8 Python modules, 9 programming choice) and never lowers a newer format
 already declared. When a save upgrades the format, the previous file is kept as
 `.bak-vN`.
 
