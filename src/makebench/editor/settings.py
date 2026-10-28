@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QPlainTextEdit,
     QPushButton,
     QScrollArea,
@@ -118,7 +119,11 @@ class SettingsShell(QDialog):
         self.search.setPlaceholderText(tr("Search settings…"))
         self.search.setClearButtonEnabled(True)
         self.search.setMinimumWidth(260)
+        self.search_symbol = self.search.addAction(
+            icon("search"), QLineEdit.ActionPosition.LeadingPosition
+        )
         self.banner.add_widget(self.search)
+        manager().changed.connect(self.recolor_symbols)
         outer.addWidget(self.banner)
         body = QHBoxLayout()
         self.sections = QListWidget()
@@ -140,9 +145,21 @@ class SettingsShell(QDialog):
         self.no_results.hide()
         outer.insertWidget(2, self.no_results)
 
-    def add_page(self, title):
+    def recolor_symbols(self, *_):
+        """Redraw the search and section symbols in the new theme's colors."""
+        self.search_symbol.setIcon(icon("search"))
+        for row in range(self.sections.count()):
+            item = self.sections.item(row)
+            if item.data(Qt.ItemDataRole.UserRole):
+                item.setIcon(icon(item.data(Qt.ItemDataRole.UserRole)))
+
+    def add_page(self, title, symbol=None):
         """A scrollable page also works with larger fonts and a smaller window."""
-        self.sections.addItem(title)
+        item = QListWidgetItem(title)
+        if symbol:
+            item.setData(Qt.ItemDataRole.UserRole, symbol)
+            item.setIcon(icon(symbol))
+        self.sections.addItem(item)
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(8, 4, 8, 8)
@@ -238,13 +255,13 @@ class EditorPreferences(SettingsShell):
         self.window = window
         self.settings = window.settings
         self.controls = {}
-        for prefix, title in [
-            ("appearance", tr("Appearance")),
-            ("projects", tr("Projects")),
-            ("editor", tr("Editor")),
-            ("test", tr("Testing")),
+        for prefix, title, symbol in [
+            ("appearance", tr("Appearance"), "themes"),
+            ("projects", tr("Projects"), "open"),
+            ("editor", tr("Editor"), "edit"),
+            ("test", tr("Testing"), "run"),
         ]:
-            page = self.add_page(title)
+            page = self.add_page(title, symbol)
             group = self.group(page, title)
             self.populate(group, prefix)
             if prefix == "projects":
@@ -256,7 +273,7 @@ class EditorPreferences(SettingsShell):
             reset = QPushButton(tr("Restore this page's defaults"))
             reset.clicked.connect(lambda _, prefix=prefix: self.reset_page(prefix))
             page.addWidget(reset, 0, Qt.AlignmentFlag.AlignRight)
-        page = self.add_page(tr("Shortcuts"))
+        page = self.add_page(tr("Shortcuts"), "keyboard")
         group = self.group(
             page,
             tr("Commands"),
@@ -268,7 +285,7 @@ class EditorPreferences(SettingsShell):
         for action in window.commands:
             shortcut = QLabel(action.shortcut().toString() or tr("No shortcut"))
             self.row(group, action.text().replace("&", "").replace("…", ""), shortcut)
-        page = self.add_page(tr("Environment"))
+        page = self.add_page(tr("Environment"), "diagnostics")
         group = self.group(page, tr("Environment diagnostics"))
         self.report = QPlainTextEdit(diagnostic(window))
         self.report.setReadOnly(True)
@@ -277,7 +294,7 @@ class EditorPreferences(SettingsShell):
         copy = QPushButton(tr("Copy report"))
         copy.clicked.connect(lambda: QApplication.clipboard().setText(self.report.toPlainText()))
         group.addWidget(copy, 0, Qt.AlignmentFlag.AlignLeft)
-        page = self.add_page(tr("Plugins"))
+        page = self.add_page(tr("Plugins"), "plugins")
         group = self.group(
             page,
             tr("Plugins"),
@@ -288,7 +305,7 @@ class EditorPreferences(SettingsShell):
         manage = QPushButton(tr("Manage plugins…"))
         manage.clicked.connect(lambda: self._manage_plugins(window))
         group.addWidget(manage, 0, Qt.AlignmentFlag.AlignLeft)
-        page = self.add_page(tr("About"))
+        page = self.add_page(tr("About"), "about")
         group = self.group(page, "Makebench " + __version__)
         label = QLabel(
             tr(
@@ -510,7 +527,7 @@ class ApplicationSettings(SettingsShell):
         self.fields = {}
         self.validation_errors = {}
         app = window.project.application
-        page = self.add_page(tr("Identity"))
+        page = self.add_page(tr("Identity"), "properties")
         group = self.group(
             page, tr("Identity"), tr("This information ships with the exported application.")
         )
@@ -542,7 +559,7 @@ class ApplicationSettings(SettingsShell):
         self.identity_notice = QLabel()
         self.identity_notice.setWordWrap(True)
         group.addWidget(self.identity_notice)
-        page = self.add_page(tr("Icon"))
+        page = self.add_page(tr("Icon"), "image")
         group = self.group(page, tr("Application icon"), tr("PNG of at least 256 pixels, or SVG."))
         self.icon_preview = QLabel()
         self.icon_preview.setFixedSize(128, 128)
@@ -562,7 +579,7 @@ class ApplicationSettings(SettingsShell):
         choose.clicked.connect(self.choose_icon)
         group.addWidget(choose, 0, Qt.AlignmentFlag.AlignLeft)
         self.update_icon()
-        page = self.add_page(tr("Appearance"))
+        page = self.add_page(tr("Appearance"), "themes")
         group = self.group(
             page,
             tr("Application backend"),
@@ -598,7 +615,7 @@ class ApplicationSettings(SettingsShell):
             )
             notice.setWordWrap(True)
             group.addWidget(notice)
-        page = self.add_page(tr("Dependencies"))
+        page = self.add_page(tr("Dependencies"), "components")
         group = self.group(
             page,
             tr("Dependencies"),
@@ -620,7 +637,7 @@ class ApplicationSettings(SettingsShell):
         )
         label.setWordWrap(True)
         group.addWidget(label)
-        page = self.add_page(tr("Permissions"))
+        page = self.add_page(tr("Permissions"), "lock")
         group = self.group(page, tr("System access"))
         text = QLabel(
             tr(
@@ -641,7 +658,7 @@ class ApplicationSettings(SettingsShell):
         )
         text.setWordWrap(True)
         group.addWidget(text)
-        page = self.add_page(tr("Windows"))
+        page = self.add_page(tr("Windows"), "window")
         group = self.group(page, tr("Application windows"))
         initial = QComboBox()
         roots = [] if window.project.metadata.get("empty_map") else window.project.roots
@@ -711,7 +728,7 @@ class ApplicationSettings(SettingsShell):
                 lambda _, identifier=root.id: self.choose_window_icon(identifier)
             )
             group.addWidget(choose, 0, Qt.AlignmentFlag.AlignLeft)
-        page = self.add_page(tr("Data"))
+        page = self.add_page(tr("Data"), "data")
         group = self.group(
             page,
             tr("Variables and initial values"),
@@ -732,7 +749,7 @@ class ApplicationSettings(SettingsShell):
         row.addStretch()
         group.addLayout(row)
         self.refresh_variables()
-        page = self.add_page(tr("Targets"))
+        page = self.add_page(tr("Targets"), "export")
         group = self.group(
             page,
             tr("Exporters"),

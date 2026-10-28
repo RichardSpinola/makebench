@@ -119,6 +119,28 @@ class LookTests(unittest.TestCase):
         self.assertEqual(chooser.choice(), 2)
         chooser.deleteLater()
 
+    def test_preferences_sections_show_symbols_and_dark_check_boxes_stand_out(self):
+        from PySide6.QtGui import QPalette
+        from PySide6.QtWidgets import QCheckBox
+
+        from makebench.ui.theme import manager
+
+        theme = manager()
+        self.addCleanup(theme.set_mode, theme.mode)
+        self.addCleanup(theme.set_look, theme.look)
+        theme.set_look("makebench")
+        theme.set_mode("dark")
+        self.window.preferences()
+        dialog = self.window.preferences_dialog
+        self.addCleanup(dialog.close)
+        for row in range(dialog.sections.count()):
+            self.assertFalse(dialog.sections.item(row).icon().isNull())
+        self.assertFalse(dialog.search_symbol.icon().isNull())
+        self.app.processEvents()
+        check = dialog.findChildren(QCheckBox)[0]
+        box = check.palette().color(QPalette.ColorRole.Base).name()
+        self.assertNotEqual(box, theme.tokens["raised"])
+
     def test_makebench_look_draws_with_fusion_and_native_restores_the_style(self):
         from makebench.ui.theme import manager
 

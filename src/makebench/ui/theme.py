@@ -318,11 +318,19 @@ class ThemeManager(QObject):
             palette = look_palette(t)
             if self.app.palette() != palette:
                 self.app.setPalette(palette)
+            # Fusion fills check boxes with Base, which vanishes on dark cards.
+            box = QPalette(palette)
+            if t["dark"]:
+                box.setColor(QPalette.ColorRole.Base, QColor(blend(t["raised"], t["text"], 0.24)))
+            for name in ("QCheckBox", "QRadioButton"):
+                self.app.setPalette(box, name)
         else:
             if self.app.palette().resolveMask():
                 # Back from the Makebench look: an empty palette returns to the desktop's.
                 self.app.setPalette(QPalette())
                 self.system_palette = p = QPalette(self.app.palette())
+            for name in ("QCheckBox", "QRadioButton"):
+                self.app.setPalette(self.app.palette(), name)
             t = None
         self.tokens = t = t or {
             "dark": dark,
