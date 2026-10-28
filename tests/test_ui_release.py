@@ -2,6 +2,7 @@
 """Qt acceptance: native theme, navigation, start page, fields and preferences."""
 
 import support  # noqa: F401  (first: isolates settings and data)
+import json
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -10,7 +11,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from makebench.core.project import Project, ComponentKind, LayoutKind
-from makebench.core.storage import save_project
+from makebench.core.storage import load_project, save_project
 
 
 class NativeQtInterfaceTests(unittest.TestCase):
@@ -98,6 +99,30 @@ class NativeQtInterfaceTests(unittest.TestCase):
         w.undo()
         self.assertNotIn("name", w.project.application)
         settings.close()
+
+    def test_old_projects_get_a_programming_choice_or_a_question(self):
+        """Code-only projects become Python; empty ones ask without blocking."""
+        w = self.window
+        coded = self.root / "coded" / "project.makebench.json"
+        coded.parent.mkdir()
+        save_project(Project.empty(), coded)
+        (coded.parent / "project.actions.py").write_text("def save(ctx, value):\n    pass\n")
+        w._replace_project(load_project(coded), coded)
+        self.assertEqual(w.project.programming, "python")
+        self.assertFalse(w.programming_row.isVisibleTo(w))
+        empty = self.root / "empty" / "project.makebench.json"
+        empty.parent.mkdir()
+        save_project(Project.empty(), empty)
+        w._replace_project(load_project(empty), empty)
+        self.assertIsNone(w.project.programming)
+        self.assertTrue(w.programming_row.isVisibleTo(w))
+        from PySide6.QtWidgets import QPushButton
+
+        w.programming_row.findChild(QPushButton, "choose_programming_blocks").click()
+        self.assertEqual(w.project.programming, "blocks")
+        self.assertFalse(w.programming_row.isVisibleTo(w))
+        w.undo()
+        self.assertTrue(w.programming_row.isVisibleTo(w))
 
     def test_recent_project_delete_uses_trash_and_keeps_shared_assets(self):
         """The delete action moves only declared files by default and never uses rmtree."""
@@ -345,7 +370,13 @@ class NativeQtInterfaceTests(unittest.TestCase):
     def test_new_project_starts_empty_and_opens_first_interface_by_double_click(self):
         """Creation sets identity, an empty map and an explicit entry into the Designer."""
         from PySide6.QtCore import QTimer, Qt
-        from PySide6.QtWidgets import QApplication, QLineEdit, QComboBox, QDialogButtonBox
+        from PySide6.QtWidgets import (
+            QApplication,
+            QComboBox,
+            QDialogButtonBox,
+            QLineEdit,
+            QRadioButton,
+        )
         from PySide6.QtTest import QTest
         from makebench.core.exporter import verify
 
@@ -362,6 +393,7 @@ class NativeQtInterfaceTests(unittest.TestCase):
                 dialog.findChild(QLineEdit, key).setText(value)
             backend = dialog.findChild(QComboBox, "new_application_backend")
             backend.setCurrentIndex(backend.findData("qt"))
+            dialog.findChild(QRadioButton, "new_project_programming_python").setChecked(True)
             dialog.findChild(QDialogButtonBox).button(QDialogButtonBox.StandardButton.Save).click()
 
         QTimer.singleShot(30, create_project)
@@ -370,6 +402,10 @@ class NativeQtInterfaceTests(unittest.TestCase):
         self.assertTrue(w.project.metadata["empty_map"])
         self.assertEqual(w.project.application["id"], "br.exemplo.qa")
         self.assertEqual(w.project.application["version"], "0.2.0")
+        self.assertEqual(w.project.programming, "python")
+        saved = json.loads((self.root / "novo" / "project.makebench.json").read_text())
+        self.assertEqual(saved["format_version"], 9)
+        self.assertFalse(w.programming_row.isVisibleTo(w))
         self.assertEqual(w.map_panel.nodes, {})
         self.assertFalse(w.mode_buttons["design"].isEnabled())
         w.set_mode("code")

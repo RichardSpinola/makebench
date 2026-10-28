@@ -478,6 +478,8 @@ class MainWindow(StudioMixin, QMainWindow):
         """Reuse the composition if only logic/metadata changed; structure repaints atomically."""
         from .updates import hold_updates
 
+        if hasattr(self, "refresh_programming_banner"):
+            self.refresh_programming_banner()
         signature = self.presentation_signature()
         if signature == getattr(self, "_presentation_signature", None):
             for identifier, item in self._tree_items.items():
@@ -1412,6 +1414,12 @@ class MainWindow(StudioMixin, QMainWindow):
         """Swap the document and start an independent history."""
         path = path.resolve() if path else None
         source = SourceBuffer.load(path)
+        if path and project.programming is None:
+            from makebench.core.project import infer_programming
+
+            choice = infer_programming(project, source.text)
+            if choice:
+                project.metadata["programming"] = choice
         self._trusted_session = False
         self._created_here = False
         self.project = project

@@ -6835,3 +6835,27 @@ msgstr "Escolha de programação inválida; use blocks ou python (formato 9)."
 #: src/makebench/editor/studio.py
 msgid "{flow}: this block calls Python. Convert the project to Python or use a block function."
 msgstr "{flow}: este bloco chama Python. Converta o projeto para Python ou use uma função de blocos."
+
+#: src/makebench/editor/projects.py
+msgid "Choose how to program"
+msgstr "Escolher como programar"
+
+#: src/makebench/editor/projects.py
+msgid "How will you program this project? Blocks can be converted to Python later."
+msgstr "Como você vai programar este projeto? Blocos podem ser convertidos para Python depois."
+
+#: src/makebench/editor/projects.py
+msgid "Program with"
+msgstr "Programar com"
+
+#: src/makebench/editor/projects.py
+msgid "Python"
+msgstr "Python"
+
+#: src/makebench/editor/projects.py
+msgid "Snap pieces together, no typing code."
+msgstr "Monte encaixando peças, sem digitar código."
+
+#: src/makebench/editor/projects.py
+msgid "Write the code, with help from the editor."
+msgstr "Escreva o código, com ajuda do editor."

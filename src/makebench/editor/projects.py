@@ -298,6 +298,20 @@ class ProjectMixin:
         self.editor_page.layout().insertWidget(1, self.trust_row)
         self.trust_row.hide()
         self.refresh_trust_banner()
+        self.programming_row = QWidget()
+        programming_layout = QHBoxLayout(self.programming_row)
+        programming_label = QLabel(
+            tr("How will you program this project? Blocks can be converted to Python later.")
+        )
+        programming_label.setWordWrap(True)
+        programming_layout.addWidget(programming_label, 1)
+        for kind, text in (("blocks", tr("Blocks")), ("python", tr("Python"))):
+            button = QPushButton(text)
+            button.setObjectName("choose_programming_" + kind)
+            button.clicked.connect(lambda _=False, k=kind: self.choose_programming(k))
+            programming_layout.addWidget(button)
+        self.editor_page.layout().insertWidget(1, self.programming_row)
+        self.programming_row.hide()
 
     def reload_source(self):
         """Reload by explicit choice, without importing the Python file."""
@@ -620,6 +634,31 @@ class ProjectMixin:
         )
         about.setText(descriptions.get(model.currentData(), ""))
         form.addRow(about)
+        from PySide6.QtWidgets import QButtonGroup, QRadioButton, QVBoxLayout
+
+        programming = QButtonGroup(dialog)
+        programming_box = QWidget()
+        choices = QVBoxLayout(programming_box)
+        choices.setContentsMargins(0, 0, 0, 0)
+        preferred_programming = self.settings.value("v1/projects/programming", "blocks")
+        for kind, title, sentence in (
+            ("blocks", tr("Blocks"), tr("Snap pieces together, no typing code.")),
+            ("python", tr("Python"), tr("Write the code, with help from the editor.")),
+        ):
+            option = QRadioButton(title)
+            option.setObjectName("new_project_programming_" + kind)
+            option.setChecked(kind == preferred_programming)
+            programming.addButton(option)
+            option.setProperty("programming", kind)
+            choices.addWidget(option)
+            hint = QLabel(sentence)
+            hint.setWordWrap(True)
+            hint.setIndent(24)
+            make_muted(hint)
+            choices.addWidget(hint)
+        if programming.checkedButton() is None:
+            programming.buttons()[0].setChecked(True)
+        form.addRow(tr("Program with"), programming_box)
         backend = QComboBox()
         backend.addItem(tr("GTK — Adwaita look"), "gtk")
         backend.addItem(tr("Qt — desktop controls"), "qt")
@@ -766,6 +805,9 @@ class ProjectMixin:
                     "projects/templates/recent",
                     [model.currentData(), *[key for key in used if key != model.currentData()]][:5],
                 )
+                chosen = programming.checkedButton().property("programming")
+                project.metadata["programming"] = chosen
+                self.settings.setValue("v1/projects/programming", chosen)
                 if identifier.text().strip():
                     project.application["id"] = identifier.text().strip()
                 if icon_path.text():
@@ -1220,6 +1262,17 @@ class ProjectMixin:
         buttons.accepted.connect(save)
         dialog.exec()
         return bool(saved)
+
+    def choose_programming(self, kind):
+        """Record blocks or Python; afterwards only the explicit conversion changes it."""
+        self.project.metadata["programming"] = kind
+        self.history.push(self.project, tr("Choose how to program"))
+        self._refresh()
+
+    def refresh_programming_banner(self):
+        """Ask without blocking when an older, empty project has no choice yet."""
+        if hasattr(self, "programming_row"):
+            self.programming_row.setVisible(bool(self.path) and self.project.programming is None)
 
     def refresh_trust_banner(self):
         """Explain future execution without blocking reading and editing the project."""
