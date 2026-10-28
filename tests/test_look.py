@@ -39,10 +39,10 @@ class LookTests(unittest.TestCase):
 
     def test_every_menu_entry_has_its_own_symbol(self):
         """Each entry shows a drawn symbol, never the generic page fallback."""
-        from makebench.editor.commands import MENU_ICONS
+        from makebench.editor.commands import menu_icon_names
         from makebench.ui.icons import PATHS
 
-        self.assertFalse(set(MENU_ICONS.values()) - set(PATHS))
+        self.assertFalse(set(menu_icon_names().values()) - set(PATHS))
         missing = []
 
         def visit(menu):

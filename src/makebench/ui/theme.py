@@ -324,13 +324,17 @@ class ThemeManager(QObject):
                 box.setColor(QPalette.ColorRole.Base, QColor(blend(t["raised"], t["text"], 0.24)))
             for name in ("QCheckBox", "QRadioButton"):
                 self.app.setPalette(box, name)
+            self._class_palettes = True
         else:
             if self.app.palette().resolveMask():
                 # Back from the Makebench look: an empty palette returns to the desktop's.
                 self.app.setPalette(QPalette())
                 self.system_palette = p = QPalette(self.app.palette())
-            for name in ("QCheckBox", "QRadioButton"):
-                self.app.setPalette(self.app.palette(), name)
+            if getattr(self, "_class_palettes", False):
+                # Desktop colors are never replaced; only undo our own check box tint.
+                for name in ("QCheckBox", "QRadioButton"):
+                    self.app.setPalette(self.app.palette(), name)
+                self._class_palettes = False
             t = None
         self.tokens = t = t or {
             "dark": dark,
