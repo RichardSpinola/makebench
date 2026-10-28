@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 4,
+  "format_version": 9,
   "id": "project_script_center_runtime",
   "name": "Task center",
   "ui": {
@@ -347,13 +347,15 @@
         },
         {
           "id": "block_022",
-          "op": "call",
-          "function": "simulate_installation",
-          "value": {
-            "id": "block_021",
-            "op": "variable",
-            "name": "package"
-          }
+          "op": "call_function",
+          "function": "fn_simulate_installation",
+          "args": [
+            {
+              "id": "block_021",
+              "op": "variable",
+              "name": "package"
+            }
+          ]
         }
       ],
       "workspace": {}
@@ -403,13 +405,15 @@
       "body": [
         {
           "id": "block_029",
-          "op": "call",
-          "function": "long_task",
-          "value": {
-            "id": "block_028",
-            "op": "literal",
-            "value": ""
-          }
+          "op": "call_function",
+          "function": "fn_long_task",
+          "args": [
+            {
+              "id": "block_028",
+              "op": "literal",
+              "value": ""
+            }
+          ]
         }
       ],
       "workspace": {}
@@ -494,6 +498,271 @@
   ],
   "metadata": {
     "example": "Runnable task center; the installation simulation does not change the system.",
-    "logic_version": 1
-  }
+    "logic_version": 1,
+    "programming": "blocks",
+    "functions": [
+      {
+        "id": "fn_simulate_installation",
+        "name": "simulate_installation",
+        "params": [
+          "package"
+        ],
+        "body": [
+          {
+            "op": "log",
+            "value": {
+              "id": "block_001",
+              "op": "join",
+              "left": {
+                "id": "block_002",
+                "op": "literal",
+                "value": "Simulating installation: "
+              },
+              "right": {
+                "id": "block_003",
+                "op": "variable",
+                "name": "package",
+                "scope": "local"
+              }
+            },
+            "id": "block_004"
+          },
+          {
+            "op": "set_value",
+            "component": "progress_task",
+            "value": {
+              "id": "block_005",
+              "op": "literal",
+              "value": 0
+            },
+            "id": "block_006"
+          },
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_007",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_008",
+              "op": "literal",
+              "value": "sleep 0.15"
+            },
+            "id": "block_009"
+          },
+          {
+            "op": "set_value",
+            "component": "progress_task",
+            "value": {
+              "id": "block_010",
+              "op": "literal",
+              "value": 20
+            },
+            "id": "block_011"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_012",
+              "op": "literal",
+              "value": "Progress: 20%"
+            },
+            "id": "block_013"
+          },
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_014",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_015",
+              "op": "literal",
+              "value": "sleep 0.15"
+            },
+            "id": "block_016"
+          },
+          {
+            "op": "set_value",
+            "component": "progress_task",
+            "value": {
+              "id": "block_017",
+              "op": "literal",
+              "value": 40
+            },
+            "id": "block_018"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_019",
+              "op": "literal",
+              "value": "Progress: 40%"
+            },
+            "id": "block_020"
+          },
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_021",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_022",
+              "op": "literal",
+              "value": "sleep 0.15"
+            },
+            "id": "block_023"
+          },
+          {
+            "op": "set_value",
+            "component": "progress_task",
+            "value": {
+              "id": "block_024",
+              "op": "literal",
+              "value": 60
+            },
+            "id": "block_025"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_026",
+              "op": "literal",
+              "value": "Progress: 60%"
+            },
+            "id": "block_027"
+          },
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_028",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_029",
+              "op": "literal",
+              "value": "sleep 0.15"
+            },
+            "id": "block_030"
+          },
+          {
+            "op": "set_value",
+            "component": "progress_task",
+            "value": {
+              "id": "block_031",
+              "op": "literal",
+              "value": 80
+            },
+            "id": "block_032"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_033",
+              "op": "literal",
+              "value": "Progress: 80%"
+            },
+            "id": "block_034"
+          },
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_035",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_036",
+              "op": "literal",
+              "value": "sleep 0.15"
+            },
+            "id": "block_037"
+          },
+          {
+            "op": "set_value",
+            "component": "progress_task",
+            "value": {
+              "id": "block_038",
+              "op": "literal",
+              "value": 100
+            },
+            "id": "block_039"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_040",
+              "op": "literal",
+              "value": "Progress: 100%"
+            },
+            "id": "block_041"
+          },
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_042",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_043",
+              "op": "literal",
+              "value": "printf \"Example warning; the task still succeeds.\\n\" >&2"
+            },
+            "id": "block_044"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_045",
+              "op": "literal",
+              "value": "Simulation complete. No application was installed."
+            },
+            "id": "block_046"
+          }
+        ]
+      },
+      {
+        "id": "fn_long_task",
+        "name": "long_task",
+        "params": [
+          "value"
+        ],
+        "body": [
+          {
+            "op": "script",
+            "admin": false,
+            "arguments": {
+              "id": "block_001",
+              "op": "list",
+              "items": []
+            },
+            "source": {
+              "id": "block_002",
+              "op": "literal",
+              "value": "for i in $(seq 1 60); do echo \"Step $i/60\"; sleep 1; done"
+            },
+            "id": "block_003"
+          }
+        ]
+      }
+    ]
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_main",
+  "variables": [],
+  "map_layout": {},
+  "application": {}
 }

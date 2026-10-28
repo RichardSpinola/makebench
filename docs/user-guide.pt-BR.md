@@ -67,6 +67,14 @@ No Design você monta cada janela com controles nativos.
   GTK num processo privado, então o que você vê é o que o GTK vai mostrar.
 - Imagens são copiadas para a pasta `assets/` do projeto quando adicionadas.
 
+- Além de texto, botões e imagens há **número** e **controle deslizante** (mínimo,
+  máximo, passo), **texto longo**, **lista de escolha** (uma opção por linha),
+  **data** (`AAAA-MM-DD`) e **tabela** com as colunas que você nomear.
+- Uma janela pode ter **menus** (um título por linha, itens recuados, atalho depois
+  de `|`), **moldura** (normal, sem botões, sem moldura), **centralizada** e
+  **sempre na frente**. O GTK 4 no Wayland ignora as duas últimas; a verificação
+  da exportação avisa.
+
 ![Design](images/design.png)
 
 ## 3 · Lógica
@@ -88,6 +96,12 @@ executar programas ou scripts Bash como tarefas supervisionadas. Uma
 tarefa pode pedir permissão de administrador; nesse caso o Makebench usa o
 Polkit e o diálogo de autenticação do próprio sistema. Ele nunca pede nem guarda
 senhas.
+
+Além de *iniciar* e *clique*, um evento pode disparar quando um controle **muda**,
+quando a janela vai **fechar**, a cada alguns segundos (**timer**, definido na
+janela) ou quando um **item de menu** é escolhido. Mudanças feitas pelos seus
+próprios blocos nunca disparam *mudar*; só a pessoa. O fluxo de fechar roda
+primeiro e a janela fecha quando ele termina.
 
 As **Funções** juntam blocos que você usa em mais de um lugar. Escolha
 **Funções próprias › Nova função…** na paleta (ou no menu ⋯), dê um nome Python
@@ -183,6 +197,9 @@ e idioma do aplicativo em **Aplicativo…**.
 - **Aparência da janela:** selecione uma janela e escolha tema (Sistema, Claro,
   Escuro), cor de destaque e cor de fundo. Na lógica use `ctx.set_theme(...)` e
   `ctx.set_background(...)`.
+- **Exemplos básicos:** o assistente de boas-vindas, a central de tarefas e o
+  terminal vêm numa versão em blocos e noutra em Python, feita por *Converter
+  para Python*.
 - **Exemplos completos:** *Oficina completa* usa todos os tipos
   de componente, várias janelas com aparências diferentes, um estado, uma tarefa, um
   terminal, funções e módulos de blocos e um ponto de parada. Abra a janela *Roteiro* dentro

@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 6,
+  "format_version": 9,
   "id": "project_d85f0dbe0a5a",
   "name": "Terminal and debugging",
   "ui": {
@@ -84,20 +84,104 @@
       "body": [
         {
           "id": "call_demo",
-          "op": "call",
-          "function": "start_python",
-          "value": {
-            "id": "value_14a6ba203074",
-            "op": "literal",
-            "value": "Terminal ready"
-          }
+          "op": "call_function",
+          "function": "fn_start_python",
+          "args": [
+            {
+              "id": "value_14a6ba203074",
+              "op": "literal",
+              "value": "Terminal ready"
+            }
+          ]
         }
       ],
       "workspace": {}
     }
   ],
   "metadata": {
-    "logic_version": 1
+    "logic_version": 1,
+    "programming": "blocks",
+    "functions": [
+      {
+        "id": "fn_start_python",
+        "name": "start_python",
+        "params": [
+          "value"
+        ],
+        "body": [
+          {
+            "op": "terminal_start",
+            "component": "terminal_7b1f01c015ec",
+            "program": {
+              "id": "block_001",
+              "op": "literal",
+              "value": "python3"
+            },
+            "arguments": {
+              "id": "block_002",
+              "op": "list",
+              "items": [
+                {
+                  "id": "block_003",
+                  "op": "literal",
+                  "value": "-u"
+                },
+                {
+                  "id": "block_004",
+                  "op": "literal",
+                  "value": "-i"
+                },
+                {
+                  "id": "block_005",
+                  "op": "literal",
+                  "value": "-q"
+                }
+              ]
+            },
+            "id": "block_006"
+          },
+          {
+            "op": "terminal_send",
+            "component": "terminal_7b1f01c015ec",
+            "value": {
+              "id": "block_007",
+              "op": "join",
+              "left": {
+                "id": "block_008",
+                "op": "join",
+                "left": {
+                  "id": "block_009",
+                  "op": "literal",
+                  "value": "print('"
+                },
+                "right": {
+                  "id": "block_010",
+                  "op": "variable",
+                  "name": "value",
+                  "scope": "local"
+                }
+              },
+              "right": {
+                "id": "block_011",
+                "op": "literal",
+                "value": "'.upper())\n"
+              }
+            },
+            "id": "block_012"
+          },
+          {
+            "op": "log",
+            "value": {
+              "id": "block_013",
+              "op": "variable",
+              "name": "value",
+              "scope": "local"
+            },
+            "id": "block_014"
+          }
+        ]
+      }
+    ]
   },
   "windows": [],
   "states": {},

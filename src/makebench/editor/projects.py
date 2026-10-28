@@ -906,6 +906,11 @@ class ProjectMixin:
                 "project.makebench.json",
             ),
         ]
+        twins = [
+            (tr("{title} · Python").format(title=title), folder + "-python", name)
+            for title, folder, name in catalog[:3]
+        ]
+        catalog[3:3] = twins
         return [
             (title, base / folder, name)
             for title, folder, name in catalog

@@ -1,0 +1,250 @@
+{
+  "format": "makebench.project",
+  "format_version": 9,
+  "id": "project_welcome",
+  "name": "Boas-vindas",
+  "ui": {
+    "id": "window_welcome",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Bem-vindo ao seu Linux"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "pages_welcome",
+        "kind": "pages",
+        "layout": "vertical",
+        "properties": {
+          "initial_page": "page_start"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "page_start",
+            "kind": "page",
+            "layout": "free",
+            "properties": {
+              "title": "Primeiros passos"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "image_desktop",
+                "kind": "image",
+                "layout": "vertical",
+                "properties": {
+                  "source": "assets/53f6cb465cbe81595cdd9b3de6ba7dd75d85af5841f029601fea6da169bc7c3b.png",
+                  "alt_text": "Computador",
+                  "image_name": "desktop.png"
+                },
+                "geometry": {
+                  "x": 24,
+                  "y": 24,
+                  "width": 112,
+                  "height": 112
+                },
+                "children": []
+              },
+              {
+                "id": "label_title",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "O seu sistema começa aqui."
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 24,
+                  "width": 360,
+                  "height": 48
+                },
+                "children": []
+              },
+              {
+                "id": "label_intro",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Organize seus aplicativos, personalize o ambiente e descubra o que você pode criar."
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 80,
+                  "width": 360,
+                  "height": 72
+                },
+                "children": []
+              },
+              {
+                "id": "button_start",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Vamos começar"
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 176,
+                  "width": 216,
+                  "height": 48
+                },
+                "children": []
+              },
+              {
+                "id": "check_show_again",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Mostrar esta tela ao iniciar",
+                  "checked": true
+                },
+                "geometry": {
+                  "x": 160,
+                  "y": 240,
+                  "width": 360,
+                  "height": 48
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "page_options",
+            "kind": "page",
+            "layout": "vertical",
+            "properties": {
+              "title": "Preferências"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 360,
+              "height": 240
+            },
+            "children": [
+              {
+                "id": "label_options",
+                "kind": "label",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Deixe o ambiente com a sua cara."
+                },
+                "geometry": {
+                  "x": 16,
+                  "y": 16,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "field_name",
+                "kind": "text_input",
+                "layout": "vertical",
+                "properties": {
+                  "text": "",
+                  "placeholder": "Como você prefere ser chamado?"
+                },
+                "geometry": {
+                  "x": 32,
+                  "y": 32,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "check_updates",
+                "kind": "checkbox",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Receber lembretes de atualização",
+                  "checked": true
+                },
+                "geometry": {
+                  "x": 48,
+                  "y": 48,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              },
+              {
+                "id": "button_finish",
+                "kind": "button",
+                "layout": "vertical",
+                "properties": {
+                  "text": "Concluir configuração"
+                },
+                "geometry": {
+                  "x": 64,
+                  "y": 64,
+                  "width": 220,
+                  "height": 44
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_e249ec392f46",
+      "name": "Clique: Vamos começar",
+      "event": {
+        "kind": "click",
+        "component": "button_start"
+      },
+      "function": "on_vamos_comecar_click"
+    },
+    {
+      "id": "flow_5777d5d08711",
+      "name": "Clique: Concluir configuração",
+      "event": {
+        "kind": "click",
+        "component": "button_finish"
+      },
+      "function": "on_concluir_configuracao_click"
+    },
+    {
+      "id": "flow_592f560aa6bd",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_welcome"
+      },
+      "function": "on_bem_vindo_ao_seu_linux_start"
+    }
+  ],
+  "metadata": {
+    "example": "Páginas e edição livre; botões ainda não executam ações.",
+    "logic_version": 1,
+    "programming": "python"
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_welcome",
+  "variables": [],
+  "map_layout": {},
+  "application": {}
+}

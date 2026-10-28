@@ -7271,3 +7271,7 @@ msgstr "Sem botões"
 #: src/makebench/editor/inspector.py
 msgid "Without frame"
 msgstr "Sem moldura"
+
+#: src/makebench/editor/projects.py
+msgid "{title} · Python"
+msgstr "{title} · Python"

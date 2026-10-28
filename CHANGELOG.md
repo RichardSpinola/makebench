@@ -14,7 +14,17 @@
 - **Map:** the list shows each window's events and the functions they call.
 - **Removed:** the node editor. Projects made with it open with a clear message
   to use 0.9.
-- The complete workshop examples use block functions and modules only.
+- **New components:** number, slider, long text, choice list, date and table,
+  with blocks to read and change them (`ctx.set_value`, `ctx.set_text`,
+  `ctx.set_rows`, `ctx.add_row`) and Qt and GTK renderers.
+- **New events:** a control *changes*, a window *closes* or ticks on a *timer*,
+  and each *menu item* has its own event. Only the person fires *change*.
+- **Window:** application menus with shortcuts, a frame (normal, without
+  buttons, without frame), centered and always on top (Qt only on Wayland).
+- **Format 10** holds all of the above; older formats still open.
+- The complete workshop examples use block functions and modules only. The
+  welcome wizard, task center and terminal examples come in a blocks version
+  and a Python version.
 
 ## 0.9.0 — 2026-10-28
 

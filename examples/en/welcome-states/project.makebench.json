@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 5,
+  "format_version": 9,
   "id": "project_5e7e3c0296d5",
   "name": "Welcome in steps",
   "ui": {
@@ -193,7 +193,9 @@
     }
   ],
   "metadata": {
-    "logic_version": 1
+    "logic_version": 1,
+    "programming": "blocks",
+    "functions": []
   },
   "windows": [
     {
@@ -267,5 +269,6 @@
   },
   "entry_window": "window_ed50f920cdee",
   "variables": [],
-  "map_layout": {}
+  "map_layout": {},
+  "application": {}
 }

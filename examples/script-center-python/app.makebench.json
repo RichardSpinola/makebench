@@ -1,0 +1,288 @@
+{
+  "format": "makebench.project",
+  "format_version": 9,
+  "id": "project_script_center_runtime",
+  "name": "Central de tarefas",
+  "ui": {
+    "id": "window_main",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Central de tarefas — Makebench"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_welcome",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Suas tarefas, com controle e saída ao vivo."
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_description",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Experimente programas, perguntas e scripts. A instalação deste exemplo é uma simulação."
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_tasks",
+        "kind": "container",
+        "layout": "grid",
+        "properties": {
+          "columns": 2
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_setup",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Perguntar e simular instalação"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_install",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Testar argumento de script"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_check",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Informações do sistema"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_error",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Exemplo de erro"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_long",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Tarefa longa para cancelar"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_file",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Escolher arquivo"
+            },
+            "geometry": {
+              "x": 96,
+              "y": 96,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_admin",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Verificar autorização administrativa"
+            },
+            "geometry": {
+              "x": 112,
+              "y": 112,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "progress_task",
+        "kind": "progress",
+        "layout": "vertical",
+        "properties": {
+          "value": 0
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "output_task",
+        "kind": "output",
+        "layout": "vertical",
+        "properties": {
+          "text": "Saída do aplicativo:\n"
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_3ff99f40f025",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_main"
+      },
+      "function": "on_central_de_tarefas_makebench_start"
+    },
+    {
+      "id": "flow_4ded1dcedb2d",
+      "name": "Clique: Informações do sistema",
+      "event": {
+        "kind": "click",
+        "component": "button_check"
+      },
+      "function": "on_informacoes_do_sistema_click"
+    },
+    {
+      "id": "flow_e1473cbd6f6e",
+      "name": "Clique: Testar argumento de script",
+      "event": {
+        "kind": "click",
+        "component": "button_install"
+      },
+      "function": "on_testar_argumento_de_script_click"
+    },
+    {
+      "id": "flow_9a677193d807",
+      "name": "Clique: Perguntar e simular instalação",
+      "event": {
+        "kind": "click",
+        "component": "button_setup"
+      },
+      "function": "on_perguntar_e_simular_instalacao_click"
+    },
+    {
+      "id": "flow_a699be6306e3",
+      "name": "Clique: Exemplo de erro",
+      "event": {
+        "kind": "click",
+        "component": "button_error"
+      },
+      "function": "on_exemplo_de_erro_click"
+    },
+    {
+      "id": "flow_518fb5c3eae3",
+      "name": "Clique: Tarefa longa para cancelar",
+      "event": {
+        "kind": "click",
+        "component": "button_long"
+      },
+      "function": "on_tarefa_longa_para_cancelar_click"
+    },
+    {
+      "id": "flow_c2f2ea700e5f",
+      "name": "Clique: Escolher arquivo",
+      "event": {
+        "kind": "click",
+        "component": "button_file"
+      },
+      "function": "on_escolher_arquivo_click"
+    },
+    {
+      "id": "flow_af41bd46f83c",
+      "name": "Clique: Verificar autorização administrativa",
+      "event": {
+        "kind": "click",
+        "component": "button_admin"
+      },
+      "function": "on_verificar_autorizacao_administrativa_click"
+    }
+  ],
+  "metadata": {
+    "example": "Central executável; simulação de instalação não modifica o sistema.",
+    "logic_version": 1,
+    "programming": "python"
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_main",
+  "variables": [],
+  "map_layout": {},
+  "application": {}
+}

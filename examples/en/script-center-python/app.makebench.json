@@ -1,0 +1,288 @@
+{
+  "format": "makebench.project",
+  "format_version": 9,
+  "id": "project_script_center_runtime",
+  "name": "Task center",
+  "ui": {
+    "id": "window_main",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Task center — Makebench"
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_welcome",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Your tasks, with control and live output."
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_description",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Try programs, questions and scripts. The installation in this example is a simulation."
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_tasks",
+        "kind": "container",
+        "layout": "grid",
+        "properties": {
+          "columns": 2
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_setup",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Ask and simulate installation"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_install",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Test script argument"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_check",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "System information"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_error",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Error example"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_long",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Long task to cancel"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_file",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Choose file"
+            },
+            "geometry": {
+              "x": 96,
+              "y": 96,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_admin",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Check administrative authorization"
+            },
+            "geometry": {
+              "x": 112,
+              "y": 112,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "progress_task",
+        "kind": "progress",
+        "layout": "vertical",
+        "properties": {
+          "value": 0
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "output_task",
+        "kind": "output",
+        "layout": "vertical",
+        "properties": {
+          "text": "Application output:\n"
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_3ff99f40f025",
+      "name": "On start",
+      "event": {
+        "kind": "start",
+        "component": "window_main"
+      },
+      "function": "on_task_center_makebench_start"
+    },
+    {
+      "id": "flow_4ded1dcedb2d",
+      "name": "Click: System information",
+      "event": {
+        "kind": "click",
+        "component": "button_check"
+      },
+      "function": "on_system_information_click"
+    },
+    {
+      "id": "flow_e1473cbd6f6e",
+      "name": "Click: Test script argument",
+      "event": {
+        "kind": "click",
+        "component": "button_install"
+      },
+      "function": "on_test_script_argument_click"
+    },
+    {
+      "id": "flow_9a677193d807",
+      "name": "Click: Ask and simulate installation",
+      "event": {
+        "kind": "click",
+        "component": "button_setup"
+      },
+      "function": "on_ask_and_simulate_installation_click"
+    },
+    {
+      "id": "flow_a699be6306e3",
+      "name": "Click: Error example",
+      "event": {
+        "kind": "click",
+        "component": "button_error"
+      },
+      "function": "on_error_example_click"
+    },
+    {
+      "id": "flow_518fb5c3eae3",
+      "name": "Click: Long task to cancel",
+      "event": {
+        "kind": "click",
+        "component": "button_long"
+      },
+      "function": "on_long_task_to_cancel_click"
+    },
+    {
+      "id": "flow_c2f2ea700e5f",
+      "name": "Click: Choose file",
+      "event": {
+        "kind": "click",
+        "component": "button_file"
+      },
+      "function": "on_choose_file_click"
+    },
+    {
+      "id": "flow_af41bd46f83c",
+      "name": "Click: Check administrative authorization",
+      "event": {
+        "kind": "click",
+        "component": "button_admin"
+      },
+      "function": "on_check_administrative_authorization_click"
+    }
+  ],
+  "metadata": {
+    "example": "Runnable task center; the installation simulation does not change the system.",
+    "logic_version": 1,
+    "programming": "python"
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_main",
+  "variables": [],
+  "map_layout": {},
+  "application": {}
+}

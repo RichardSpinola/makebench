@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 4,
+  "format_version": 9,
   "id": "project_welcome",
   "name": "Boas-vindas",
   "ui": {
@@ -268,15 +268,17 @@
         },
         {
           "id": "greet",
-          "op": "call",
-          "function": "apresentar",
-          "value": {
-            "id": "read_name",
-            "op": "read",
-            "component": "field_name",
-            "attribute": "text"
-          },
-          "comment": "A função está no arquivo project.actions.py, editável na aba Código."
+          "op": "call_function",
+          "function": "fn_apresentar",
+          "comment": "A função apresentar é uma função de blocos; veja Lógica › Funções.",
+          "args": [
+            {
+              "id": "read_name",
+              "op": "read",
+              "component": "field_name",
+              "attribute": "text"
+            }
+          ]
         },
         {
           "id": "finish_message",
@@ -313,6 +315,103 @@
   ],
   "metadata": {
     "example": "Páginas e edição livre; botões ainda não executam ações.",
-    "logic_version": 1
-  }
+    "logic_version": 1,
+    "programming": "blocks",
+    "functions": [
+      {
+        "id": "fn_apresentar",
+        "name": "apresentar",
+        "params": [
+          "valor"
+        ],
+        "body": [
+          {
+            "op": "if",
+            "condition": {
+              "id": "block_001",
+              "op": "binary",
+              "operator": "==",
+              "left": {
+                "id": "block_002",
+                "op": "variable",
+                "name": "valor",
+                "scope": "local"
+              },
+              "right": {
+                "id": "block_003",
+                "op": "literal",
+                "value": ""
+              }
+            },
+            "then": [
+              {
+                "op": "log",
+                "value": {
+                  "id": "block_004",
+                  "op": "join",
+                  "left": {
+                    "id": "block_005",
+                    "op": "join",
+                    "left": {
+                      "id": "block_006",
+                      "op": "literal",
+                      "value": "Olá, "
+                    },
+                    "right": {
+                      "id": "block_007",
+                      "op": "literal",
+                      "value": "visitante"
+                    }
+                  },
+                  "right": {
+                    "id": "block_008",
+                    "op": "literal",
+                    "value": "! Bem-vindo ao seu Linux."
+                  }
+                },
+                "id": "block_009"
+              }
+            ],
+            "else": [
+              {
+                "op": "log",
+                "value": {
+                  "id": "block_010",
+                  "op": "join",
+                  "left": {
+                    "id": "block_011",
+                    "op": "join",
+                    "left": {
+                      "id": "block_012",
+                      "op": "literal",
+                      "value": "Olá, "
+                    },
+                    "right": {
+                      "id": "block_013",
+                      "op": "variable",
+                      "name": "valor",
+                      "scope": "local"
+                    }
+                  },
+                  "right": {
+                    "id": "block_014",
+                    "op": "literal",
+                    "value": "! Bem-vindo ao seu Linux."
+                  }
+                },
+                "id": "block_015"
+              }
+            ],
+            "id": "block_016"
+          }
+        ]
+      }
+    ]
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_welcome",
+  "variables": [],
+  "map_layout": {},
+  "application": {}
 }

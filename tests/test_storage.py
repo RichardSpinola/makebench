@@ -48,6 +48,21 @@ class StorageTests(unittest.TestCase):
             save_project(project, self.path)
         self.assertEqual(self.path.read_bytes(), original)
 
+    def test_every_bundled_example_loads_and_generates_without_problems(self):
+        from makebench.core.codegen import generate
+        from makebench.core.source import SourceBuffer
+
+        examples = sorted(
+            (Path(__file__).resolve().parents[1] / "examples").rglob("*.makebench.json")
+        )
+        self.assertGreater(len(examples), 20)
+        for path in examples:
+            if path.name == "project.makebench.json" and path.parent.name == "script-center":
+                continue  # the old format-1 fixture
+            with self.subTest(path=str(path)):
+                project = load_project(path)
+                self.assertEqual(generate(project, SourceBuffer.load(path).text).diagnostics, [])
+
     def test_format_upgrade_reports_the_backup_actually_created(self):
         """The upgrade notice uses the real name of the copy, from any previous format."""
         example = (

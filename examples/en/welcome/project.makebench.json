@@ -1,6 +1,6 @@
 {
   "format": "makebench.project",
-  "format_version": 4,
+  "format_version": 9,
   "id": "project_welcome",
   "name": "Welcome",
   "ui": {
@@ -268,15 +268,17 @@
         },
         {
           "id": "greet",
-          "op": "call",
-          "function": "introduce",
-          "value": {
-            "id": "read_name",
-            "op": "read",
-            "component": "field_name",
-            "attribute": "text"
-          },
-          "comment": "The function lives in project.actions.py, editable in the Code tab."
+          "op": "call_function",
+          "function": "fn_introduce",
+          "comment": "The introduce function is a block function; see Logic › Functions.",
+          "args": [
+            {
+              "id": "read_name",
+              "op": "read",
+              "component": "field_name",
+              "attribute": "text"
+            }
+          ]
         },
         {
           "id": "finish_message",
@@ -313,6 +315,103 @@
   ],
   "metadata": {
     "example": "Pages and free editing; buttons do not run actions in this example.",
-    "logic_version": 1
-  }
+    "logic_version": 1,
+    "programming": "blocks",
+    "functions": [
+      {
+        "id": "fn_introduce",
+        "name": "introduce",
+        "params": [
+          "value"
+        ],
+        "body": [
+          {
+            "op": "if",
+            "condition": {
+              "id": "block_001",
+              "op": "binary",
+              "operator": "==",
+              "left": {
+                "id": "block_002",
+                "op": "variable",
+                "name": "value",
+                "scope": "local"
+              },
+              "right": {
+                "id": "block_003",
+                "op": "literal",
+                "value": ""
+              }
+            },
+            "then": [
+              {
+                "op": "log",
+                "value": {
+                  "id": "block_004",
+                  "op": "join",
+                  "left": {
+                    "id": "block_005",
+                    "op": "join",
+                    "left": {
+                      "id": "block_006",
+                      "op": "literal",
+                      "value": "Hello, "
+                    },
+                    "right": {
+                      "id": "block_007",
+                      "op": "literal",
+                      "value": "visitor"
+                    }
+                  },
+                  "right": {
+                    "id": "block_008",
+                    "op": "literal",
+                    "value": "! Welcome to your Linux."
+                  }
+                },
+                "id": "block_009"
+              }
+            ],
+            "else": [
+              {
+                "op": "log",
+                "value": {
+                  "id": "block_010",
+                  "op": "join",
+                  "left": {
+                    "id": "block_011",
+                    "op": "join",
+                    "left": {
+                      "id": "block_012",
+                      "op": "literal",
+                      "value": "Hello, "
+                    },
+                    "right": {
+                      "id": "block_013",
+                      "op": "variable",
+                      "name": "value",
+                      "scope": "local"
+                    }
+                  },
+                  "right": {
+                    "id": "block_014",
+                    "op": "literal",
+                    "value": "! Welcome to your Linux."
+                  }
+                },
+                "id": "block_015"
+              }
+            ],
+            "id": "block_016"
+          }
+        ]
+      }
+    ]
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_welcome",
+  "variables": [],
+  "map_layout": {},
+  "application": {}
 }

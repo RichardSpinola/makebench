@@ -64,6 +64,13 @@ Design is where you build each window with native controls.
   private process, so what you see is what GTK will render.
 - Images are copied into the project's `assets/` folder when you add them.
 
+- Beside text, buttons and images there are a **number** and a **slider**
+  (minimum, maximum, step), a **long text** box, a **choice** list (one option per
+  line), a **date** (`YYYY-MM-DD`) and a **table** with the columns you name.
+- A window can have **menus** (one title per line, items indented, a shortcut after
+  `|`), a **frame** (normal, without buttons, without frame), **centered** and
+  **always on top**. GTK 4 on Wayland ignores the last two; the export check warns.
+
 ![Design](images/design.png)
 
 ## 3 · Logic
@@ -83,6 +90,12 @@ components, messages and questions, logging, calling functions, and running
 programs or Bash scripts as supervised tasks. A task can ask for
 administrator rights; Makebench then uses Polkit and the system's own
 authentication dialog. It never asks for or stores passwords.
+
+Besides *start* and *click*, an event can fire when a control **changes**, when a
+window is about to **close**, every few seconds (**timer**, set on the window) or
+when a **menu item** is chosen. A change made by your own blocks never fires
+*change*; only the person does. The close flow runs first and the window closes
+when it ends.
 
 **Functions** group blocks you use in more than one place. Choose **Your
 functions › New function…** in the palette (or the ⋯ menu), give it a Python
@@ -176,6 +189,8 @@ version, icon and language with **Application…**.
 - **Window look:** select a window and choose its theme (System, Light, Dark),
   accent colour and background colour. From the logic use `ctx.set_theme(...)` and
   `ctx.set_background(...)`.
+- **Basic examples:** the welcome wizard, task center and terminal examples each
+  come in a blocks version and a Python version made by *Convert to Python*.
 - **Complete examples:** *Complete workshop* uses every
   component kind, several windows with different looks, a state, a task, a terminal,
   block functions, block modules and a breakpoint. Open the *Guide* window inside them for a short tour.
