@@ -92,12 +92,19 @@ system's own authentication dialog; Makebench never asks for passwords. See
 - Visual QA used software rendering and a private compositor; not every GPU and
   compositor has been qualified.
 
+## How it was made
+
+Makebench was written with the help of AI coding assistants, reviewed and tested by
+its author. There is **no AI inside the program**: the editor and the applications
+it exports never call an AI service. The idea is the opposite — simple programs
+built by people, with blocks and a little Python, that anyone can read and change.
+
 ## License
 
 - The **editor** is free software under the [GNU GPL, version 3 or later](LICENSE).
 - The **runtime** that goes into the applications you export (`core`, `runtime`,
   `gtk_runtime`, `ui`, `terminal`, `portable`, `i18n.py` and the translations),
-  plus the templates and examples, is under the [MIT license](LICENSE-MIT). So
+  plus the templates, examples and official plugins, is under the [MIT license](LICENSE-MIT). So
   **you choose the license of your own applications**. Third-party components (Blockly, PySide6/Qt, pyte,
 wcwidth) keep their licenses; see
 [`src/makebench/notices/THIRD_PARTY.md`](src/makebench/notices/THIRD_PARTY.md).

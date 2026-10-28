@@ -85,12 +85,20 @@ Makebench nunca pede senhas. Veja [SECURITY.md](SECURITY.md).
 - A QA visual usou renderização por software e um compositor privado; nem toda
   GPU e todo compositor foram qualificados.
 
+## Como foi feito
+
+O Makebench foi escrito com a ajuda de assistentes de programação com IA, revisado e
+testado pelo autor. **Não há IA dentro do programa**: nem o editor nem os aplicativos
+que ele exporta chamam qualquer serviço de IA. A ideia é o contrário — programas
+simples feitos por pessoas, com blocos e um pouco de Python, que qualquer um pode ler
+e mudar.
+
 ## Licença
 
 - O **editor** é software livre sob a [GNU GPL, versão 3 ou posterior](LICENSE).
 - O **runtime** que vai dentro dos aplicativos que você exporta (`core`, `runtime`,
   `gtk_runtime`, `ui`, `terminal`, `portable`, `i18n.py` e as traduções), além dos
-  modelos e exemplos, usa a [licença MIT](LICENSE-MIT). Assim, **você escolhe a
+  modelos, exemplos e plugins oficiais, usa a [licença MIT](LICENSE-MIT). Assim, **você escolhe a
   licença dos seus próprios aplicativos**. Componentes de terceiros (Blockly,
 PySide6/Qt, pyte, wcwidth) mantêm suas licenças; veja
 [`src/makebench/notices/THIRD_PARTY.md`](src/makebench/notices/THIRD_PARTY.md).
