@@ -4423,8 +4423,8 @@ msgid "Show generated Python"
 msgstr "Ver Python gerado"
 
 #: src/makebench/editor/logic.py
-msgid "Show in Design"
-msgstr "Ver no Design"
+msgid "More flow actions"
+msgstr "Mais ações do fluxo"
 
 #: src/makebench/editor/map_panel.py
 msgid "Show in Logic"

@@ -157,12 +157,11 @@ class DevelopmentMixin:
             str(self.settings.value("workspace/logic_python", False)).lower() == "true"
         )
         self.toggle_logic_python(self.python_action.isChecked())
-        self.logic.layout().removeWidget(self.logic.edit_text)
-        commands.addWidget(self.logic.edit_text)
-        self.logic.layout().removeWidget(self.logic.context_widget)
-        commands.addSeparator()
-        commands.addWidget(self.logic.context_widget)
-        self.logic.layout().insertWidget(1, commands)
+        self.logic.edit_text_action = commands.addWidget(self.logic.edit_text)
+        self.logic._sync_edit_text()
+        # One bar: the event on the left, these tools in the middle, the editor on the right.
+        commands.setStyleSheet("QToolBar { border: 0; background: transparent; }")
+        self.logic.top_row.insertWidget(self.logic.tools_index, commands)
         # Bash highlighting in the drawer editor; applying it stays explicit.
         self.script_editor.highlighter.language = "bash"
         self.script_editor.highlighter.rehighlight()

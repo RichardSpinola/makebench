@@ -11,6 +11,7 @@ from uuid import uuid4
 from PySide6.QtCore import QEventLoop, QObject, Qt, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QCheckBox,
     QComboBox,
     QDialog,
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMenu,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
@@ -139,6 +141,19 @@ class LogicPanel(QWidget):
         self.add_event.setToolTip(tr("Connect a click or a window opening to the logic."))
         self.add_event.clicked.connect(self.new_event_dialog)
         row.addWidget(self.add_event)
+        from .theme import icon
+
+        back = QToolButton()
+        back.setIcon(icon("design"))
+        back.setAutoRaise(True)
+        back.setToolTip(tr("Select this event's origin in the Designer"))
+        back.setAccessibleName(tr("Show origin in the Designer"))
+        back.clicked.connect(self.show_origin)
+        row.addWidget(back)
+        self.show_origin_button = back
+        # The window puts its block tools here (search, behaviors, Python).
+        self.top_row = row
+        self.tools_index = row.count()
         row.addStretch(1)
         self.editor_kind = QComboBox()
         self.editor_kind.addItem(tr("Blocks"), "blocks")
@@ -151,14 +166,25 @@ class LogicPanel(QWidget):
                 else None
             )
         )
-        row.addWidget(self.editor_kind)
-        self.versions = QToolButton()
-        self.versions.setText(tr("Versions…"))
-        self.versions.setToolTip(tr("Recover the behavior from before the editor switch"))
-        self.versions.clicked.connect(
-            lambda: self.restore_requested.emit(self.flow_id) if self.flow_id else None
-        )
-        row.addWidget(self.versions)
+        # Blocks and Nodes side by side; the hidden list keeps the current choice.
+        self.editor_kind.hide()
+        self.kind_buttons = QButtonGroup(self)
+        for index, label in enumerate((tr("Blocks"), tr("Nodes"))):
+            button = QToolButton()
+            button.setText(label)
+            button.setCheckable(True)
+            button.setObjectName("segment")
+            button.setStyleSheet(
+                "QToolButton#segment { background: transparent; color: palette(text);"
+                " border: 1px solid palette(mid); border-radius: 4px; padding: 2px 8px; }"
+                " QToolButton#segment:checked { background: palette(highlight);"
+                " color: palette(highlighted-text); border-color: palette(highlight); }"
+            )
+            button.clicked.connect(lambda _=False, i=index: self.editor_kind.setCurrentIndex(i))
+            self.kind_buttons.addButton(button, index)
+            row.addWidget(button)
+        self.editor_kind.currentIndexChanged.connect(lambda _: self._sync_kind_buttons())
+        self._sync_kind_buttons()
 
         self.name = QLineEdit()
         self.name.setPlaceholderText(tr("Flow name"))
@@ -169,43 +195,36 @@ class LogicPanel(QWidget):
         self.state_filter.setAccessibleName(tr("Flow state filter"))
         self.state_filter.currentIndexChanged.connect(self._change_filter)
         row.addWidget(self.state_filter)
-        from .theme import icon
-
-        duplicate = QToolButton()
-        duplicate.setIcon(icon("duplicate"))
-        duplicate.setToolTip(tr("Duplicate flow…"))
-        duplicate.setAccessibleName(tr("Duplicate flow"))
-        duplicate.setAutoRaise(True)
-        duplicate.clicked.connect(
-            lambda: self.duplicate_requested.emit(self.flow_id) if self.flow_id else None
+        # Less frequent flow actions wait in one menu.
+        more = QToolButton()
+        more.setText("⋯")
+        more.setAutoRaise(True)
+        more.setToolTip(tr("More flow actions"))
+        more.setAccessibleName(tr("More flow actions"))
+        more.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        more.setStyleSheet("QToolButton::menu-indicator { image: none; }")
+        menu = QMenu(more)
+        self.versions = menu.addAction(tr("Versions…"))
+        self.versions.setToolTip(tr("Recover the behavior from before the editor switch"))
+        self.versions.triggered.connect(
+            lambda: self.restore_requested.emit(self.flow_id) if self.flow_id else None
         )
-        row.addWidget(duplicate)
-        self.remove = QToolButton()
-        self.remove.setIcon(icon("remove"))
-        self.remove.setToolTip(tr("Remove flow"))
-        self.remove.setAccessibleName(tr("Remove flow"))
-        self.remove.setAutoRaise(True)
-        self.remove.clicked.connect(
-            lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None
+        menu.addAction(
+            icon("duplicate"),
+            tr("Duplicate flow…"),
+            lambda: self.duplicate_requested.emit(self.flow_id) if self.flow_id else None,
         )
-        row.addWidget(self.remove)
+        menu.addSeparator()
+        self.remove = menu.addAction(
+            icon("remove"),
+            tr("Remove flow"),
+            lambda: self.remove_requested.emit(self.flow_id) if self.flow_id else None,
+        )
+        more.setMenu(menu)
+        row.addWidget(more)
         layout.addLayout(row)
-        self.context_widget = QWidget()
-        context_row = QHBoxLayout(self.context_widget)
-        context_row.setContentsMargins(0, 0, 0, 0)
+        # The sentence about the event shows as the list's tooltip, not as another row.
         self.context_label = make_muted(QLabel())
-        context_row.addWidget(self.context_label, 1)
-        back = QToolButton()
-        back.setIcon(icon("design"))
-        back.setText(tr("Show in Design"))
-        back.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        back.setAutoRaise(True)
-        back.setToolTip(tr("Select this event's origin in the Designer"))
-        back.setAccessibleName(tr("Show origin in the Designer"))
-        back.clicked.connect(self.show_origin)
-        context_row.addWidget(back)
-        self.show_origin_button = back
-        layout.addWidget(self.context_widget)
         self.targets = QComboBox(self)
         self.targets.hide()
         hint = QLabel(
@@ -222,7 +241,8 @@ class LogicPanel(QWidget):
         )
         self.edit_text.setEnabled(False)
         self.edit_text.clicked.connect(self._edit_text)
-        layout.addWidget(self.edit_text, 0, Qt.AlignmentFlag.AlignLeft)
+        self.edit_text.hide()
+        self.edit_text_action = None
         self.splitter = QSplitter()
         self.splitter.setHandleWidth(4)
         self.placeholder = QLabel(tr("The block editor loads when this tab opens."))
@@ -485,12 +505,15 @@ class LogicPanel(QWidget):
         self.editor_kind.setCurrentIndex(1 if nodes else 0)
         self.editor_kind.setEnabled(flow is not None)
         self.editor_kind.blockSignals(False)
+        self._sync_kind_buttons()
+        for button in self.kind_buttons.buttons():
+            button.setEnabled(flow is not None)
         self.versions.setEnabled(bool(flow and flow.get("behavior_backups")))
         self.surfaces.setCurrentWidget(
             self.graph_panel if nodes else self.view if self.view is not None else self.placeholder
         )
         self.graph_panel.sync(project, flow if nodes else None)
-        self.edit_text.setVisible(not nodes)
+        self._sync_edit_text()
 
         owner = (
             project.window_of(flow["event"]["component"])
@@ -628,7 +651,21 @@ class LogicPanel(QWidget):
             )
         else:
             self.context_label.setText(tr("Choose an event or connect a new one to start."))
+        self.events.setToolTip(self.context_label.text())
         self.update_code()
+
+    def _sync_kind_buttons(self):
+        button = self.kind_buttons.button(max(0, self.editor_kind.currentIndex()))
+        if button is not None and not button.isChecked():
+            button.setChecked(True)
+
+    def _sync_edit_text(self):
+        """The multi-line editor appears only while a block is selected in Blocks."""
+        visible = self.editor_kind.currentData() != "nodes" and bool(self.selected_block)
+        if self.edit_text_action is not None:
+            self.edit_text_action.setVisible(visible)
+        else:
+            self.edit_text.setVisible(visible)
 
     def show_origin(self):
         """Return to the component that fires the flow without changing its behavior."""
@@ -679,6 +716,7 @@ class LogicPanel(QWidget):
         """Show the generated line that matches the Blockly selection."""
         self.selected_block = block
         self.edit_text.setEnabled(bool(block))
+        self._sync_edit_text()
         line = self.generated.lines.get((flow, block))
         if line:
             self._selecting_code = True

@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, Signal, QTimer
+import shiboken6
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QDrag, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -26,10 +27,10 @@ from PySide6.QtWidgets import (
 
 from makebench.core.project import Component, ComponentKind, LayoutKind, Project
 from makebench.core.web import WEB_PAGE, is_web
-from makebench.ui import web
-from makebench.ui.renderer import ImageLabel, create_control, place_children
 from makebench.editor.drag import mime_for, read_payload
 from makebench.i18n import tr
+from makebench.ui import web
+from makebench.ui.renderer import ImageLabel, create_control, place_children
 
 EDGES = ("nw", "n", "ne", "e", "se", "s", "sw", "w")
 
@@ -361,12 +362,17 @@ class PreviewCanvas(QFrame):
                 return QRect(20, 20, native.width() - 40, native.height() - 40)
             return QRect(QPoint(20, 20), self.window_size())
         frame = getattr(self, "window_frame", None)
-        return frame.geometry() if frame is not None else QRect()
+        # While the editor closes, the frame may already be gone under its scene items.
+        if frame is None or not shiboken6.isValid(frame):
+            return QRect()
+        return frame.geometry()
 
     def place_window_grips(self):
         """Put the size grips on the window's right and bottom edges."""
         rect = self.window_rect()
         for grip in getattr(self, "window_grips", []):
+            if not shiboken6.isValid(grip):
+                continue
             if rect.isEmpty():
                 grip.hide()
             else:
