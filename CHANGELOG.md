@@ -13,8 +13,12 @@
 - **Plugin catalog index:** a checked JSON format for a future plugin store
   (`makebench-plugin-index`), with https downloads, SHA-256 and permissions.
 - **Plugin manual:** permissions, the catalog index and good practice.
-- **Documentation site:** the guides, plugin manual and compatibility notes
-  build with MkDocs and publish through GitHub Pages.
+- **Documentation site:** a Material site in English and Portuguese with a
+  language switch, light and dark modes and search: install, two tutorials,
+  data, appearance, export, examples, FAQ, keyboard shortcuts, and component,
+  block and Python API references generated from the code
+  (`checks/build_reference.py`). `checks/docs.py` runs in CI and fails on
+  broken links, missing translations or images, and invalid examples.
 - **New examples:** *My notes* (a saved list with CSV export) and *Bookshop*
   (books, clients and sales that update the stock and the cash), both in
   blocks and in Portuguese and English.
