@@ -110,6 +110,10 @@ PATHS = {
 }
 
 
+# Rendered icons by name and color; a theme with another text color renders anew.
+_rendered = {}
+
+
 def vector_icon(name):
     """Render the SVG at sharp sizes for common and HiDPI screens."""
     theme = getattr(QApplication.instance(), "makebench_theme", None)
@@ -118,6 +122,9 @@ def vector_icon(name):
         if theme
         else QApplication.palette().color(QPalette.ColorRole.Text).name()
     )
+    key = (name, color)
+    if key in _rendered:
+        return _rendered[key]
     content = PATHS.get(name, PATHS["page"])
     data = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">{content}</svg>'
     renderer = QSvgRenderer(QByteArray(data.encode("utf-8")))
@@ -130,4 +137,5 @@ def vector_icon(name):
         renderer.render(painter)
         painter.end()
         result.addPixmap(pixmap)
+    _rendered[key] = result
     return result

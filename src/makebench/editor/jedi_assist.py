@@ -11,11 +11,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-try:
-    import jedi
-    from jedi.api.environment import InterpreterEnvironment
-except ImportError:  # the editor still works with the built-in index
-    jedi = None
+# Imported on first use: Jedi (with pydoc) costs about 0.1 s at startup.
+jedi = None
+InterpreterEnvironment = None
+_missing = False
 
 STUBS = Path(__file__).with_name("stubs")
 PREAMBLE = "from makebench_ctx import Context as _MakebenchContext\n"
@@ -45,7 +44,16 @@ class Target:
 
 
 def available() -> bool:
-    """Whether Jedi can be imported in this editor."""
+    """Whether Jedi can be imported in this editor; the editor still works without it."""
+    global jedi, InterpreterEnvironment, _missing
+    if jedi is None and not _missing:
+        try:
+            import jedi as module
+            from jedi.api.environment import InterpreterEnvironment as environment
+        except ImportError:
+            _missing = True
+        else:
+            jedi, InterpreterEnvironment = module, environment
     return jedi is not None
 
 
@@ -71,7 +79,7 @@ def _script(source: str, root: Path, path: Path | None, line: int):
 
 def completions(source, root, path, line, column, limit=60) -> list[Suggestion]:
     """Suggestions at a 1-based line and 0-based column."""
-    if jedi is None:
+    if not available():
         return []
     try:
         found = _script(source, Path(root), path, line).complete(line + 1, column)
@@ -89,7 +97,7 @@ def completions(source, root, path, line, column, limit=60) -> list[Suggestion]:
 
 def documentation(source, root, path, line, column) -> str:
     """Docstring and signature of the name under the caret."""
-    if jedi is None:
+    if not available():
         return ""
     try:
         names = _script(source, Path(root), path, line).help(line + 1, column)
@@ -100,7 +108,7 @@ def documentation(source, root, path, line, column) -> str:
 
 def signature(source, root, path, line, column) -> str:
     """Call signature while typing arguments, or an empty text."""
-    if jedi is None:
+    if not available():
         return ""
     try:
         found = _script(source, Path(root), path, line).get_signatures(line + 1, column)
@@ -111,7 +119,7 @@ def signature(source, root, path, line, column) -> str:
 
 def definition(source, root, path, line, column) -> Target | None:
     """Where the name under the caret is defined, inside or outside the file."""
-    if jedi is None:
+    if not available():
         return None
     try:
         found = _script(source, Path(root), path, line).goto(line + 1, column, follow_imports=True)
@@ -125,7 +133,7 @@ def definition(source, root, path, line, column) -> Target | None:
 
 def rename(source, root, path, line, column, new_name) -> str | None:
     """The same file with the symbol renamed everywhere in it, or None when impossible."""
-    if jedi is None or not new_name.isidentifier():
+    if not available() or not new_name.isidentifier():
         return None
     try:
         script = _script(source, Path(root), path, line)

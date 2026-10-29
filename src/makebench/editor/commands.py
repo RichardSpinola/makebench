@@ -251,8 +251,10 @@ def register(window):
     candidates.extend(window.actions())
     from PySide6.QtWidgets import QToolBar
 
-    for toolbar in window.findChildren(QToolBar):
+    toolbars = window.findChildren(QToolBar)
+    for toolbar in toolbars:
         candidates.extend(toolbar.actions())
+    toggles = {bar.toggleViewAction() for bar in toolbars}
     for number, action in enumerate(candidates):
         if (
             action in actions
@@ -261,12 +263,7 @@ def register(window):
             or action.menu() is not None
         ):
             continue
-        if action in [
-            bar.toggleViewAction()
-            for bar in window.findChildren(
-                __import__("PySide6.QtWidgets", fromlist=["QToolBar"]).QToolBar
-            )
-        ]:
+        if action in toggles:
             continue
         action.setObjectName(action.objectName() or f"command_{number}")
         if action.icon().isNull() or action.property("makebenchIcon"):

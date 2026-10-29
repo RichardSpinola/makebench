@@ -80,5 +80,26 @@ class LineReaderTests(unittest.TestCase):
             LineReader(limit=3).feed(b"abcd\n")
 
 
+class IconCacheTests(unittest.TestCase):
+    def test_vector_icons_are_rendered_once_per_color(self):
+        from PySide6.QtWidgets import QApplication
+        from makebench.ui import icons
+
+        app = QApplication.instance() or QApplication([])
+        theme = type("Theme", (), {"tokens": {"text": "#112233"}})()
+        previous = getattr(app, "makebench_theme", None)
+        app.makebench_theme = theme
+        try:
+            first = icons.vector_icon("save")
+            self.assertIs(first, icons.vector_icon("save"))
+            theme.tokens = {"text": "#ddeeff"}
+            self.assertIsNot(first, icons.vector_icon("save"))
+        finally:
+            if previous is None:
+                del app.makebench_theme
+            else:
+                app.makebench_theme = previous
+
+
 if __name__ == "__main__":
     unittest.main()
