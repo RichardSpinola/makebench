@@ -1,0 +1,23 @@
+site_name: Makebench
+site_description: Build small Linux apps with blocks or Python.
+site_url: https://richardspinola.github.io/makebench/
+repo_url: https://github.com/RichardSpinola/makebench
+docs_dir: docs
+site_dir: site-build
+theme:
+  name: readthedocs
+  locale: en
+  highlightjs: true
+nav:
+  - Home: index.md
+  - User guide: user-guide.md
+  - Guia do usuário (pt-BR): user-guide.pt-BR.md
+  - Writing plugins: plugins.md
+  - Compatibility: compatibility.md
+  - Building and packaging: building.md
+  - Architecture: architecture.md
+markdown_extensions:
+  - tables
+  - fenced_code
+  - toc:
+      permalink: true

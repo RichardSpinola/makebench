@@ -19,3 +19,4 @@ dist/
 *.flatpak
 *.log
 .DS_Store
+site-build/
