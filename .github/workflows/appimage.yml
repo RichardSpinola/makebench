@@ -31,8 +31,11 @@ jobs:
           python - <<'EOF'
           from pathlib import Path
           from makebench import __version__
-          from makebench.core.portable import build_editor_appimage
+          from makebench.core.build_environment import prepare_tools
+          from makebench.core.portable import build_editor_appimage, editor_project, prepare
 
+          prepare_tools(print)
+          prepare(editor_project(), print, editor=True)
           build_editor_appimage(Path(f"dist/Makebench-{__version__}-x86_64.AppImage"))
           EOF
           cd dist && sha256sum *.AppImage > SHA256SUMS && cat SHA256SUMS
