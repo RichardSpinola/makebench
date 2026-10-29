@@ -49,6 +49,7 @@ class StorageTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), original)
 
     def test_every_bundled_example_loads_and_generates_without_problems(self):
+        from makebench.core.code_index import CodeIndex
         from makebench.core.codegen import generate
         from makebench.core.source import SourceBuffer
 
@@ -61,7 +62,11 @@ class StorageTests(unittest.TestCase):
                 continue  # the old format-1 fixture
             with self.subTest(path=str(path)):
                 project = load_project(path)
-                self.assertEqual(generate(project, SourceBuffer.load(path).text).diagnostics, [])
+                source = SourceBuffer.load(path).text
+                self.assertEqual(generate(project, source).diagnostics, [])
+                index = CodeIndex()
+                index.update(source, project.walk())
+                self.assertEqual(index.errors, [])
 
     def test_format_upgrade_reports_the_backup_actually_created(self):
         """The upgrade notice uses the real name of the copy, from any previous format."""

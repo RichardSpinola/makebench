@@ -122,6 +122,18 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.go_to_problem(item)
         self.assertIs(w.active_code_editor(), w.module_editors["makebench_user/helpers.py"])
 
+    def test_every_diagnostic_is_underlined_with_its_hint_and_listed(self):
+        w = self.window
+        w.add_code_module("makebench_user/helpers.py", "def go(ctx):\n    ctx.mesage(nome)\n")
+        w._update_actions()
+        editor = w.module_editors["makebench_user/helpers.py"]
+        self.assertEqual(len(editor._error_selections), 2)
+        self.assertTrue(any("message" in text for text in editor.diagnostics_at(2)))
+        labels = [w.problems.item(i).text() for i in range(w.problems.count())]
+        self.assertTrue(any("ctx has no mesage" in t and "Did you mean" in t for t in labels))
+        self.assertTrue(any("Name not defined: nome" in t for t in labels))
+        self.assertEqual(w.code_index_timer.interval(), 400)
+
     def test_blocks_project_flags_python_calls_in_problems(self):
         w = self.window
         w.project.metadata.update(programming="blocks", logic_version=1)

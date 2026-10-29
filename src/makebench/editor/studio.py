@@ -562,6 +562,7 @@ class StudioMixin(
             self.project.entry_window,
             self.project.programming,
             json.dumps(self.project.metadata.get("collections", []), sort_keys=True),
+            tuple(node.id for node in self.project.walk()),
         )
         if signature == getattr(self, "_problems_signature", None):
             return
@@ -573,7 +574,8 @@ class StudioMixin(
         self.refresh_code_index()
         for error in self.code_index.errors:
             self._add_problem(
-                f"{error['file']}:{error['line']}:{error['column']} · {error['message']}",
+                f"{error['file']}:{error['line']}:{error['column']} · {error['message']}"
+                + (f" — {error['hint']}" if error.get("hint") else ""),
                 {
                     "source_file": error["file"],
                     "source_line": error["line"],

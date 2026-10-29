@@ -360,22 +360,56 @@ class CodeEditor(CodeTools, QPlainTextEdit):
         super().keyPressEvent(event)
 
     def mark_syntax_error(self, line=None, message=""):
-        """Underline a static diagnostic without changing text, focus or the ability to save."""
-        self._error_selections = []
-        if line:
-            block = self.document().findBlockByNumber(line - 1)
-            if block.isValid():
-                cursor = QTextCursor(block)
-                cursor.select(QTextCursor.SelectionType.LineUnderCursor)
-                selection = QTextEdit.ExtraSelection()
-                selection.cursor = cursor
-                selection.format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.WaveUnderline)
-                from .theme import manager
+        """Underline one static diagnostic; kept for callers with a single message."""
+        self.mark_diagnostics([{"line": line, "message": message}] if line else [])
 
-                selection.format.setUnderlineColor(QColor(manager().tokens["error"]))
-                selection.format.setToolTip(message)
-                self._error_selections = [selection]
+    def mark_diagnostics(self, items):
+        """Underline each diagnostic without changing text, focus or the ability to save."""
+        from .theme import manager
+
+        tokens = manager().tokens
+        self._error_selections = []
+        self._diagnostics = {}
+        for item in items:
+            block = self.document().findBlockByNumber(item["line"] - 1)
+            if not block.isValid():
+                continue
+            text = item["message"] + ("\n" + item["hint"] if item.get("hint") else "")
+            self._diagnostics.setdefault(item["line"], []).append(text)
+            cursor = QTextCursor(block)
+            column = min(max(0, item.get("column", 1) - 1), max(0, block.length() - 1))
+            cursor.setPosition(block.position() + column)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.EndOfWord, QTextCursor.MoveMode.KeepAnchor
+            )
+            if not cursor.hasSelection():
+                cursor.select(QTextCursor.SelectionType.LineUnderCursor)
+            selection = QTextEdit.ExtraSelection()
+            selection.cursor = cursor
+            selection.format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.WaveUnderline)
+            key = "error" if item.get("severity", "error") == "error" else "warning"
+            selection.format.setUnderlineColor(QColor(tokens.get(key, tokens["error"])))
+            selection.format.setToolTip(text)
+            self._error_selections.append(selection)
         self.highlight_cursor()
+
+    def viewportEvent(self, event):
+        """Hovering an underlined line shows its message and the hint to fix it."""
+        if event.type() == QEvent.Type.ToolTip:
+            from PySide6.QtWidgets import QToolTip
+
+            line = self.cursorForPosition(event.pos()).blockNumber() + 1
+            texts = self.diagnostics_at(line)
+            if texts:
+                QToolTip.showText(event.globalPos(), "\n\n".join(texts), self.viewport())
+            else:
+                QToolTip.hideText()
+            return True
+        return super().viewportEvent(event)
+
+    def diagnostics_at(self, line):
+        """Messages and hints underlined on a 1-based line, for tooltips and tests."""
+        return list(getattr(self, "_diagnostics", {}).get(line, []))
 
     def changeEvent(self, event):
         """Recompute line highlights when the palette changes, so no stale color remains."""

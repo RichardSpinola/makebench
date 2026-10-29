@@ -76,7 +76,7 @@ class CodeWorkspaceMixin:
         self._entry_assist = CodeAssist(self, self.source_editor, ENTRY_FILE)
         self.code_index_timer = QTimer(self)
         self.code_index_timer.setSingleShot(True)
-        self.code_index_timer.setInterval(250)
+        self.code_index_timer.setInterval(400)
         self.code_index_timer.timeout.connect(self.refresh_code_index)
         self.source_editor.textChanged.connect(self.code_index_timer.start)
         self.code_files.currentChanged.connect(self.code_file_changed)
@@ -285,10 +285,7 @@ class CodeWorkspaceMixin:
         self._code_index_signature = signature
         self.code_index.update(self.source.text, self.project.walk())
         for name, editor in [(ENTRY_FILE, self.source_editor), *self.module_editors.items()]:
-            error = next((e for e in self.code_index.errors if e["file"] == name), None)
-            editor.mark_syntax_error(
-                error["line"] if error else None, error["message"] if error else ""
-            )
+            editor.mark_diagnostics([e for e in self.code_index.errors if e["file"] == name])
 
     def update_module_manifest(self):
         """Declare only the document's real files; older formats do not change on open."""
