@@ -1,7 +1,5 @@
 # Makebench user guide
 
-[Leia em português](user-guide.pt-BR.md)
-
 This guide walks through the four areas of the workbench in the order an
 application is usually built, then covers testing, debugging and exporting.
 Press **F1** in the editor to open the short getting-started guide, and

@@ -6,6 +6,8 @@
 - docs/reference/blocks.md: every block of the Logic palette, in palette order, with its
   label in both languages (from web/logic.js) and the Python that Makebench generates for it.
 - docs/reference/ctx.md: the `ctx` API, from editor/stubs/makebench_ctx.pyi.
+- docs/shortcuts.md: the editor's shortcuts, read from its real actions as Help › Keyboard
+  shortcuts does (in a separate offscreen process), plus those of the code editor.
 
 Run from the repository root: PYTHONPATH=src .venv/bin/python checks/build_reference.py
 `--check` only compares and fails when a page is out of date or a description is missing.
@@ -14,8 +16,11 @@ Run from the repository root: PYTHONPATH=src .venv/bin/python checks/build_refer
 import argparse
 import ast
 import json
+import os
 import re
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from makebench.core import logic
@@ -1016,6 +1021,139 @@ def ctx_page(language):
     return "\n".join(lines)
 
 
+# Keys handled inside the code editor (QShortcut and key events, not menu actions).
+CODE_KEYS = [
+    ("Ctrl+Space", "Suggestions", "Sugestões"),
+    ("Ctrl+Shift+Space", "Parameters of the call", "Parâmetros da chamada"),
+    ("F12", "Go to definition", "Ir para a definição"),
+    ("F2", "Rename in this file", "Renomear neste arquivo"),
+    ("Ctrl+F", "Find", "Localizar"),
+    ("Ctrl+H", "Replace", "Substituir"),
+    ("F3, Shift+F3", "Next and previous match", "Próxima e anterior ocorrência"),
+    ("Ctrl+G", "Go to line", "Ir para a linha"),
+    ("Esc", "Close the find bar", "Fechar a barra de busca"),
+    (
+        "F4",
+        "In View Python: go to the block of this line",
+        "Em Ver Python: ir ao bloco desta linha",
+    ),
+]
+
+
+def shortcut_rows(language):
+    """The editor's actions with shortcuts, read in a throwaway offscreen process."""
+    with tempfile.TemporaryDirectory(prefix="makebench-docs-") as base:
+        env = {
+            **os.environ,
+            "QT_QPA_PLATFORM": "offscreen",
+            "HOME": base,
+            "XDG_CONFIG_HOME": base,
+            "XDG_DATA_HOME": base,
+            "XDG_CACHE_HOME": base,
+        }
+        result = subprocess.run(
+            [sys.executable, __file__, "--shortcuts-json", language],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=True,
+        )
+    return json.loads(result.stdout.splitlines()[-1])
+
+
+def print_shortcuts(language):
+    """Child process: open the editor window and print its shortcuts as JSON."""
+    from PySide6.QtCore import QSettings
+    from PySide6.QtGui import QAction
+    from PySide6.QtWidgets import QApplication
+
+    for kind in (QSettings.Format.NativeFormat, QSettings.Format.IniFormat):
+        QSettings.setPath(kind, QSettings.Scope.UserScope, os.environ["XDG_CONFIG_HOME"])
+    app = QApplication([])
+    set_language(language)
+    from makebench.editor.window import MainWindow
+
+    window = MainWindow()
+    rows = {}
+    for action in window.findChildren(QAction):
+        keys = ", ".join(s.toString() for s in action.shortcuts() if not s.isEmpty())
+        name = action.text().replace("&", "").strip()
+        if keys and name:
+            rows[name] = keys
+    print(json.dumps(sorted(rows.items(), key=lambda item: item[0].casefold())), flush=True)
+    del app
+    os._exit(0)  # skip Qt WebEngine teardown, which can crash at exit
+
+
+def shortcuts_page(language):
+    pt = language != "en"
+    rows = shortcut_rows("pt_BR" if pt else "en")
+    if pt:
+        lines = [
+            GENERATED,
+            "",
+            "# Atalhos de teclado",
+            "",
+            "Os atalhos do editor, lidos das ações reais dele (como faz **Ajuda › Atalhos de "
+            "teclado**, que também permite buscar). **Ctrl+K** abre a paleta de comandos com "
+            "todas as ações, com ou sem atalho.",
+            "",
+            "## Editor",
+            "",
+            "| Atalho | Comando |",
+            "|---|---|",
+        ]
+    else:
+        lines = [
+            GENERATED,
+            "",
+            "# Keyboard shortcuts",
+            "",
+            "The editor's shortcuts, read from its real actions (as **Help › Keyboard shortcuts** "
+            "does, which can also search them). **Ctrl+K** opens the command palette with every "
+            "action, with or without a shortcut.",
+            "",
+            "## Editor",
+            "",
+            "| Shortcut | Command |",
+            "|---|---|",
+        ]
+
+    names = {",": "comma", "+": "plus", "esc": "escape"}
+
+    def keys(text):
+        """Qt's "Ctrl+Shift+Z, Ctrl+Y" as pymdownx.keys markup."""
+        result = []
+        for key in text.split(", "):
+            parts = re.findall(r"[^+]+|\+(?=$)", key)
+            result.append("++" + "+".join(names.get(p.lower(), p.lower()) for p in parts) + "++")
+        return ", ".join(result)
+
+    lines += [f"| {keys(k)} | {name} |" for name, k in rows]
+    title = "Editor de código" if pt else "Code editor"
+    header = lines[lines.index("## Editor") + 2 :][:2]
+    lines += ["", f"## {title}", "", *header]
+    lines += [f"| {keys(k)} | {ptext if pt else en} |" for k, en, ptext in CODE_KEYS]
+    if pt:
+        lines += [
+            "",
+            "## Apps exportados",
+            "",
+            "Em apps Qt, ++f11++ liga e desliga a tela cheia. Os atalhos dos menus que você "
+            "cria (depois de `|` em cada item) valem no app exportado.",
+        ]
+    else:
+        lines += [
+            "",
+            "## Exported apps",
+            "",
+            "In Qt apps, ++f11++ toggles full screen. The shortcuts of the menus you create "
+            "(after `|` on each item) work in the exported app.",
+        ]
+    return "\n".join(lines)
+
+
 def pages():
     result = {}
     for language, suffix in (("en", ""), ("pt-BR", ".pt-BR")):
@@ -1029,6 +1167,7 @@ def pages():
             else:
                 text = build(language)
             result[OUT / f"{name}{suffix}.md"] = text.rstrip() + "\n"
+        result[ROOT / "docs" / f"shortcuts{suffix}.md"] = shortcuts_page(language) + "\n"
     return result
 
 
@@ -1044,7 +1183,10 @@ def build_translated(language):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="fail if a page is out of date")
+    parser.add_argument("--shortcuts-json", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.shortcuts_json:
+        print_shortcuts(args.shortcuts_json)
     stale = []
     for path, text in pages().items():
         current = path.read_text() if path.exists() else None

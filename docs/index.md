@@ -9,7 +9,7 @@ runs without Makebench.
 ## Start here
 
 - **[User guide](user-guide.md)** — the workspace, one area at a time, from the Map to
-  exporting. In Portuguese: **[Guia do usuário](user-guide.pt-BR.md)**.
+  exporting.
 - **[Writing plugins](plugins.md)** — add commands, templates, pieces and snippets, and
   how permissions and the catalog work.
 - **[Compatibility](compatibility.md)** — what stays stable between releases.

@@ -1,7 +1,5 @@
 # Guia de uso do Makebench
 
-[Read in English](user-guide.md)
-
 Este guia percorre as quatro áreas da bancada na ordem em que um aplicativo
 costuma ser construído e depois mostra como testar, depurar e exportar. Os
 nomes de menus abaixo são os da interface em português (escolha o idioma em
