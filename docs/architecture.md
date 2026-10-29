@@ -119,6 +119,8 @@ so the worker imports the snapshot rather than the live folder. Invalid source
 stays editable and savable. External changes are detected against the original
 content. `core/code_index.py`, `editor/code_assist.py` and
 `editor/code_workspace.py` provide static suggestions, definitions and diagnostics.
+The index keeps each file's outline until its tree changes and hands its parsed tree
+to `diagnose`, so after an edit only that file is parsed and walked again.
 `core/python_check.py` (MIT, no imports of user code) finds every syntax error
 (Python's first, then parso's with error recovery), undefined names through
 `symtable`, `ctx`/`ctx.data` members missing from `runtime/worker.py`, and
@@ -131,7 +133,11 @@ holds the recipes of "Insert example".
 
 - `runtime/worker.py` runs handlers in a separate process. The control protocol
   is JSON on a duplicated stdout descriptor; fd 1 is redirected to stderr so
-  ordinary prints cannot be mistaken for control messages.
+  ordinary prints cannot be mistaken for control messages. `core/lines.py` splits
+  that stream into lines without rescanning old bytes, with a 64 MB limit per
+  message (enough for tables with hundreds of thousands of rows).
+- `ui/table.py` shows Qt tables through a `QAbstractTableModel`, so only visible
+  cells are drawn; 50,000 rows fill in a few hundredths of a second.
 - `runtime/session.py` supervises the worker with `QProcess` in its own session.
   Tasks run in separate `QProcess`es; a non-zero exit raises `TaskError`, and
   stderr alone is not a failure. Stop sends TERM, then KILL after 700 ms.
@@ -152,6 +158,12 @@ permissions.
 - `core/packages.py` and `core/exporter.py` build Python source, DEB, RPM,
   AppImage and Flatpak packages in an inert staging folder. Metadata is
   sanitised to one line so it cannot inject desktop entries or commands.
+- `core/build_environment.qt_packages()` asks for `PySide6-Essentials`, plus
+  `PySide6-Addons` (Qt WebEngine) only when a window is a Web view; the source
+  export, portable runtime and Flatpak all use it.
+- `checks/footprint.py` measures the editor opening, the exported apps, a
+  50,000-row table and the export size against `checks/footprint_limits.json`
+  in CI.
 - `core/build_environment.py` prepares tools explicitly in rootless Podman
   containers, with pinned official downloads and hash-checked wheels, under
   `~/.cache/makebench/builders`.

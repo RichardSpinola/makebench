@@ -7751,3 +7751,19 @@ msgstr "ctx.data não tem {name}"
 #: src/makebench/core/python_check.py
 msgid "return can only be used inside a function (def)."
 msgstr "return só pode ser usado dentro de uma função (def)."
+
+#: src/makebench/core/templates.py
+msgid "Clicked"
+msgstr "Cliques"
+
+#: src/makebench/core/templates.py
+msgid "Light HTML app"
+msgstr "App HTML leve"
+
+#: src/makebench/core/templates.py
+msgid "One HTML page on GTK: it uses the system's web engine, so the package has no Qt."
+msgstr "Uma página HTML no GTK: usa o motor web do sistema, então o pacote não leva Qt."
+
+#: src/makebench/core/exporter.py
+msgid "Web view windows add Qt WebEngine, which makes the Qt package much larger; with GTK they use the system's WebKitGTK."
+msgstr "Janelas de Visão web acrescentam o Qt WebEngine, que deixa o pacote Qt bem maior; com GTK elas usam o WebKitGTK do sistema."

@@ -42,6 +42,15 @@
   `ctx`, components and collections; **Insert example** adds task recipes;
   **Open in external editor** reloads the file when you save there; and
   Preferences can clean up Python on save.
+- **Lighter and faster:** the editor window opens in about half the time; tables
+  show 50,000 rows in a few hundredths of a second (also through `ctx.set_rows`
+  from the worker); Python checks on long files only re-read the edited file.
+- **Smaller Qt packages:** Qt exports ask for PySide6 Essentials and add Qt
+  WebEngine only when a window is a Web view. This also fixes Web view windows
+  in portable and Flatpak Qt packages, which lacked it.
+- **Light HTML app:** a new template with one HTML page on GTK, shown by the
+  system's WebKitGTK; the user guide compares Qt, GTK and HTML apps.
+- **Size and speed checks** (`checks/footprint.py`) run in CI.
 - **Fixed:** a collection field called `name` no longer clashes in `ctx.data`.
 - The complete workshop examples use block functions and modules only. The
   welcome wizard, task center and terminal examples come in a blocks version
