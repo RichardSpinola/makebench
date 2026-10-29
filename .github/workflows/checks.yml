@@ -43,3 +43,5 @@ jobs:
         run: python checks/i18n.py
       - name: Test real Blockly and WebEngine
         run: python checks/blockly_smoke.py
+      - name: Check size and speed limits
+        run: python checks/footprint.py
