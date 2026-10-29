@@ -214,6 +214,21 @@ testing them.
 - **Makebench editor (AppImage)** in the **Export** field builds the editor
   itself as an AppImage, with the examples included.
 
+### Qt, GTK or a light HTML app
+
+- **Qt** looks the same on every desktop and its packages carry their own Qt
+  (PySide6 Essentials). On the Oficina example it opens in about 0.6 s and uses
+  about 125 MB with its worker.
+- **GTK 4** follows the GNOME look and uses the system's GTK, so packages carry
+  less; on the same example it took about 2 s and 185 MB.
+- **Light HTML app** (a template under **New project…**) is a GTK window that
+  shows one HTML page with the system's WebKitGTK, so nothing like a browser
+  goes into the package. Edit the page with the official **Web view** plugin
+  (**Plugins › Edit Web view page…**).
+- A **Web view** window on **Qt** adds Qt WebEngine, which makes the package
+  much larger; **Verify** warns about it. Use GTK for HTML pages when size
+  matters.
+
 Building never runs your project. Edit the application's name, identifier,
 version, icon and language with **Application…**.
 

@@ -49,6 +49,27 @@ class WebWindowTests(unittest.TestCase):
         with self.assertRaises(ProjectError):
             Project.from_dict(data)
 
+    def test_light_html_template_is_a_gtk_web_view_without_qt(self):
+        import zipfile
+
+        from makebench.core.exporter import export_source
+        from makebench.core.templates import MODELS, make_template
+        from makebench.core.web import is_web
+
+        self.assertIn("html", [key for key, _, _ in MODELS])
+        project = Project.from_dict(make_template("html", "Light").to_dict())
+        self.assertEqual(project.application["backend"], "gtk")
+        self.assertTrue(is_web(project.root))
+        project.application.update(name="Light", id="org.example.light", version="0.1.0")
+        project.application["icon"] = "assets/icon.svg"
+        icon = b'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256"/></svg>'
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "light.zip"
+            export_source(project, "", lambda name: icon, path)
+            with zipfile.ZipFile(path) as archive:
+                self.assertNotIn("PySide6", archive.read("requirements.txt").decode())
+                self.assertNotIn("makebench/runtime/window.py", archive.namelist())
+
     def test_images_used_by_the_page_are_kept_and_written_beside_it(self):
         project = self.web_project(f'<img src="{IMAGE}">')
         self.assertIn(IMAGE, project.asset_paths())

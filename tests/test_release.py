@@ -58,19 +58,22 @@ class PaletteTests(unittest.TestCase):
 class TemplateTests(unittest.TestCase):
     """Templates are independent documents and keep the chosen backend."""
 
-    def test_five_models_and_backend_roundtrip(self):
-        """Every template validates without running code and legacy ones stay Qt."""
+    def test_six_models_and_backend_roundtrip(self):
+        """Every template validates without running code; only the light HTML app is GTK."""
         from makebench.core.templates import MODELS, make_template
         from makebench.core.project import Project
         from makebench.core.codegen import generate
 
-        self.assertEqual(len(MODELS), 5)
+        self.assertEqual(len(MODELS), 6)
         for key, _, _ in MODELS:
             if key == "tasks":
                 continue
             p = make_template(key, "Testing")
             self.assertEqual(generate(p, "").diagnostics, [])
-            self.assertEqual(Project.from_dict(p.to_dict()).application.get("backend", "qt"), "qt")
+            self.assertEqual(
+                Project.from_dict(p.to_dict()).application.get("backend", "qt"),
+                "gtk" if key == "html" else "qt",
+            )
             for backend in ("gtk", "qt"):
                 p.application["backend"] = backend
                 q = Project.from_dict(p.to_dict())

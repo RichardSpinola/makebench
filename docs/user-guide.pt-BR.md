@@ -223,6 +223,21 @@ testá-los.
 - **Editor Makebench (AppImage)** no campo **Exportar** constrói o próprio editor
   como AppImage, já com os exemplos.
 
+### Qt, GTK ou app HTML leve
+
+- **Qt** tem a mesma aparência em todo desktop e os pacotes levam o próprio Qt
+  (PySide6 Essentials). No exemplo Oficina ele abre em cerca de 0,6 s e usa cerca
+  de 125 MB com o processo de trabalho.
+- **GTK 4** segue o visual do GNOME e usa o GTK do sistema, então os pacotes levam
+  menos; no mesmo exemplo levou cerca de 2 s e 185 MB.
+- **App HTML leve** (um modelo em **Novo projeto…**) é uma janela GTK que mostra
+  uma página HTML com o WebKitGTK do sistema, então nada parecido com um navegador
+  entra no pacote. Edite a página com o plugin oficial **Visão web**
+  (**Plugins › Editar página da Visão web…**).
+- Uma janela de **Visão web** no **Qt** acrescenta o Qt WebEngine, que deixa
+  o pacote bem maior; **Verificar** avisa sobre isso. Use GTK para páginas HTML
+  quando o tamanho importa.
+
 Construir nunca executa o seu projeto. Edite nome, identificador, versão, ícone
 e idioma do aplicativo em **Aplicativo…**.
 

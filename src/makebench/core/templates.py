@@ -12,7 +12,49 @@ MODELS = [
     ("tasks", tr("Task center / utility"), tr("Scripts, progress and output.")),
     ("multi", tr("Multi-window application"), tr("Sidebar and a preferences window.")),
     ("blank", tr("Blank"), tr("One window to start your own way.")),
+    (
+        "html",
+        tr("Light HTML app"),
+        tr("One HTML page on GTK: it uses the system's web engine, so the package has no Qt."),
+    ),
 ]
+
+
+def light_page(title):
+    """Starting page of the light HTML app: plain HTML, CSS and a little JavaScript."""
+    from html import escape
+
+    return f"""<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{escape(title)}</title>
+<style>
+  :root {{ color-scheme: light dark; --accent: #3584e4; }}
+  body {{ margin: 0; font-family: system-ui, sans-serif; display: grid;
+         place-items: center; min-height: 100vh; }}
+  main {{ max-width: 34rem; padding: 2rem; text-align: center; }}
+  h1 {{ color: var(--accent); }}
+  button {{ font: inherit; padding: .5rem 1.5rem; border: 0; border-radius: .5rem;
+           background: var(--accent); color: white; cursor: pointer; }}
+</style>
+</head>
+<body>
+<main>
+  <h1>{escape(title)}</h1>
+  <p>{escape(tr("This window is a web page. Edit it with Plugins › Edit Web view page…"))}</p>
+  <button id="count">{escape(tr("Clicked"))} <span>0</span></button>
+</main>
+<script>
+  const button = document.getElementById("count");
+  let clicks = 0;
+  button.addEventListener("click", () => {{
+    button.querySelector("span").textContent = ++clicks;
+  }});
+</script>
+</body>
+</html>
+"""
 
 
 def make_template(key, name):
@@ -24,6 +66,11 @@ def make_template(key, name):
     p = Project.empty(name)
     p.root.properties.update(width=720, height=480, padding=24, spacing=18)
     if key == "blank":
+        return p
+    if key == "html":
+        # GTK shows the page with the system's WebKitGTK; Qt would need Qt WebEngine.
+        p.application["backend"] = "gtk"
+        p.root.properties.update(width=760, height=520, web_page=light_page(name))
         return p
     if key == "simple":
         text = p.add(p.root.id, ComponentKind.LABEL)
