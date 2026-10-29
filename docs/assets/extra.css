@@ -43,3 +43,21 @@
   max-width: 38rem;
   margin: 0.5rem auto 1.2rem;
 }
+
+/* Dark mode: the primary color is a dark header blue, too dim for buttons. */
+[data-md-color-scheme="slate"] .md-typeset .md-button {
+  color: var(--md-typeset-a-color);
+  border-color: var(--md-typeset-a-color);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .md-button--primary {
+  color: #fff;
+  background-color: #2968c6;
+  border-color: #2968c6;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .md-button:is(:focus, :hover) {
+  color: #fff;
+  background-color: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+}
