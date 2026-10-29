@@ -71,8 +71,8 @@ No Design você monta cada janela com controles nativos.
   máximo, passo), **texto longo**, **lista de escolha** (uma opção por linha),
   **data** (`AAAA-MM-DD`) e **tabela** com as colunas que você nomear.
 - Uma janela pode ter **menus** (um título por linha, itens recuados, atalho depois
-  de `|`), **moldura** (normal, sem botões, sem moldura), **centralizada** e
-  **sempre na frente** ou **tela cheia** (F11 alterna no Qt). O GTK 4 no Wayland ignora as duas últimas; a verificação
+  de `|`), **moldura** (normal, sem botões, sem moldura), **tela cheia** (F11 alterna
+  no Qt), **centralizada** e **sempre na frente**. O GTK 4 no Wayland ignora as duas últimas; a verificação
   da exportação avisa.
 - A aparência da janela pode ter uma **imagem de fundo**, que cobre a janela atrás
   dos controles (ela é copiada para `assets/`).
