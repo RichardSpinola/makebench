@@ -69,6 +69,7 @@ class CodeWorkspaceMixin:
         self.code_splitter.insertWidget(0, pane)
         self.code_reference = CodeReference()
         self.code_reference.insert_requested.connect(self.insert_code_reference)
+        self.code_reference.example_requested.connect(self.insert_code_example)
         self.code_splitter.addWidget(self.code_reference)
         self.code_splitter.setSizes([260, 900, 240])
         self.code_signature = QLabel()
@@ -216,6 +217,14 @@ class CodeWorkspaceMixin:
         if editor.isReadOnly():
             return
         editor.insertPlainText(text)
+        editor.setFocus()
+
+    def insert_code_example(self, code):
+        """Insert a task recipe at the cursor of the file being edited."""
+        editor = self.active_code_editor()
+        if editor.isReadOnly():
+            return
+        editor.insert_example(code)
         editor.setFocus()
 
     def active_code_editor(self):

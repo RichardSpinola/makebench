@@ -6,7 +6,17 @@ from functools import lru_cache
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QLabel, QLineEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from makebench.core.project import KIND_LABELS
 from makebench.i18n import tr
@@ -44,12 +54,29 @@ class CodeReference(QWidget):
     """Searchable list; double-click (or Enter) inserts the item at the code cursor."""
 
     insert_requested = Signal(str)
+    example_requested = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(QLabel(tr("What can I use")))
+        header = QHBoxLayout()
+        header.addWidget(QLabel(tr("What can I use")), 1)
+        from .code_examples import examples
+        from .theme import icon
+
+        self.examples = QToolButton()
+        self.examples.setIcon(icon("code"))
+        self.examples.setText(tr("Insert example"))
+        self.examples.setToolTip(tr("Insert example"))
+        self.examples.setAccessibleName(tr("Insert example"))
+        self.examples.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(self.examples)
+        for title, code in examples():
+            menu.addAction(title, lambda code=code: self.example_requested.emit(code))
+        self.examples.setMenu(menu)
+        header.addWidget(self.examples)
+        layout.addLayout(header)
         self.search = QLineEdit()
         self.search.setPlaceholderText(tr("Filter"))
         self.search.setAccessibleName(tr("Filter what can I use"))

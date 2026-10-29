@@ -36,8 +36,11 @@ def release_widgets():
     if app is None or not hasattr(app, "topLevelWidgets"):
         return
     for widget in app.topLevelWidgets():
-        widget.close()
-        widget.deleteLater()
+        try:
+            widget.close()
+            widget.deleteLater()
+        except RuntimeError:
+            pass  # already (partly) deleted by Qt; nothing left to release
     QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
     app.processEvents()
 

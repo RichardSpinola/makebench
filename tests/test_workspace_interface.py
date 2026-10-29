@@ -167,6 +167,9 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         self.assertEqual(
             w.module_editors["makebench_user/helpers.py"].toPlainText(), f'"{label.id}"'
         )
+        self.assertGreaterEqual(len(w.code_reference.examples.menu().actions()), 12)
+        w.code_reference.examples.menu().actions()[1].trigger()
+        self.assertIn("ctx.message(", w.module_editors["makebench_user/helpers.py"].toPlainText())
 
     def test_blocks_project_flags_python_calls_in_problems(self):
         w = self.window

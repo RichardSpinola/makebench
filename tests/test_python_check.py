@@ -54,5 +54,56 @@ class PythonCheckTests(unittest.TestCase):
         self.assertIs(index.checks["@actions"], cached)
 
 
+class ExampleTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import os
+
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        from PySide6.QtWidgets import QApplication
+
+        cls.app = QApplication.instance() or QApplication([])
+
+    def test_every_recipe_is_valid_python_inside_a_function(self):
+        from makebench.editor.code_examples import examples
+
+        recipes = examples()
+        self.assertGreaterEqual(len(recipes), 12)
+        for title, code in recipes:
+            with self.subTest(title=title):
+                body = "".join("    " + line + "\n" for line in code.splitlines())
+                found = diagnose("def go(ctx):\n" + body)
+                self.assertEqual([e for e in found if e["severity"] == "error"], [])
+                self.assertFalse(any("ctx" in e["message"] for e in found))
+
+    def test_insert_example_follows_the_cursor_indentation(self):
+        from PySide6.QtGui import QTextCursor
+
+        from makebench.editor.code import CodeEditor
+
+        editor = CodeEditor()
+        recipe = "if ok:\n    done()\n"
+        editor.setPlainText("def go(ctx):\n    ")
+        editor.moveCursor(QTextCursor.MoveOperation.End)
+        editor.insert_example(recipe)
+        self.assertEqual(editor.toPlainText(), "def go(ctx):\n    if ok:\n        done()")
+        editor.setPlainText("def go(ctx):\n    x = 1")
+        editor.moveCursor(QTextCursor.MoveOperation.End)
+        editor.insert_example(recipe)
+        self.assertEqual(
+            editor.toPlainText(), "def go(ctx):\n    x = 1\n    if ok:\n        done()"
+        )
+        editor.undo()
+        self.assertEqual(editor.toPlainText(), "def go(ctx):\n    x = 1")
+        cursor = editor.textCursor()
+        cursor.setPosition(len("def go(ctx):\n"))
+        editor.setTextCursor(cursor)
+        editor.insert_example(recipe)
+        self.assertEqual(
+            editor.toPlainText(), "def go(ctx):\n    if ok:\n        done()\n    x = 1"
+        )
+        editor.deleteLater()
+
+
 if __name__ == "__main__":
     unittest.main()

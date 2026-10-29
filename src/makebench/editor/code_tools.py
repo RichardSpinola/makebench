@@ -147,8 +147,43 @@ class CodeTools:
         elif not self.isReadOnly():
             menu.addSeparator()
             menu.addAction(tr("Replace… · Ctrl+H"), self.open_replace)
+            self.add_examples_menu(menu)
         menu.addAction(tr("Go to line… · Ctrl+G"), self.go_to_line)
         menu.exec(event.globalPos())
+
+    def add_examples_menu(self, menu):
+        """An "Insert example" submenu whose recipes go in at the cursor."""
+        from .code_examples import examples
+
+        examples_menu = menu.addMenu(tr("Insert example"))
+        for title, code in examples():
+            examples_menu.addAction(title, lambda code=code: self.insert_example(code))
+        return examples_menu
+
+    def insert_example(self, code):
+        """Insert a recipe on its own lines, indented like the cursor's line, as one undo."""
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        cursor.removeSelectedText()
+        line = cursor.block().text()
+        before = line[: cursor.positionInBlock()]
+        indent = line[: len(line) - len(line.lstrip(" "))]
+        lines = code.rstrip("\n").split("\n")
+        if before.strip():
+            # After code on this line: the recipe starts on the next line.
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock)
+            prefix, suffix = "\n" + indent, ""
+        elif line.strip():
+            # Before code on this line: the recipe goes above it.
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+            prefix, suffix = indent, "\n"
+        else:
+            # A blank line: keep the spaces typed so far as the indentation.
+            indent, prefix, suffix = before, "", ""
+        body = "\n".join([lines[0]] + [indent + item if item else "" for item in lines[1:]])
+        cursor.insertText(prefix + body + suffix)
+        cursor.endEditBlock()
+        self.setTextCursor(cursor)
 
     def indent_selection(self, reverse=False):
         """Indent selected lines without replacing their text, with a single undo."""
