@@ -248,7 +248,10 @@ class ProjectMixin:
         outer.addLayout(bottom)
         from .theme import manager as theme_manager
 
-        theme_manager().changed.connect(lambda *_: style_home(self))
+        import shiboken6
+
+        # The theme manager outlives windows: skip a home page that is already deleted.
+        theme_manager().changed.connect(lambda *_: shiboken6.isValid(home) and style_home(self))
         self.home_page = home
         self.pages.addWidget(home)
         style_home(self)
