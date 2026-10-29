@@ -17,7 +17,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QComboBox,
     QDateEdit,
-    QTableWidget,
     QDoubleSpinBox,
     QPlainTextEdit,
     QSlider,
@@ -45,6 +44,7 @@ from makebench.ui.renderer import (
     set_table_rows,
 )
 from makebench.ui.chart import ChartWidget
+from makebench.ui.table import RecordTable
 from .view import RuntimeView
 from makebench.i18n import tr
 
@@ -362,15 +362,15 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                         else widget.text()
                     )
                 elif attribute == "selected":
-                    if not isinstance(widget, QTableWidget):
+                    if not isinstance(widget, RecordTable):
                         raise ValueError(tr("Unknown property."))
                     value = selected_table_row(widget)
                 elif attribute == "table":
-                    if not isinstance(widget, QTableWidget):
+                    if not isinstance(widget, RecordTable):
                         raise ValueError(tr("Unknown property."))
                     value = table_contents(widget)
                 elif attribute == "record":
-                    if isinstance(widget, QTableWidget):
+                    if isinstance(widget, RecordTable):
                         value = selected_table_record(widget)
                     elif isinstance(widget, QComboBox):
                         value = widget.currentData()
@@ -407,7 +407,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                     widget.setText(request["value"])
                 self.session.reply(identifier)
             elif method in {"set_rows", "add_row"}:
-                if not isinstance(widget, QTableWidget):
+                if not isinstance(widget, RecordTable):
                     raise ValueError(tr("The component does not exist."))
                 if method == "set_rows":
                     set_table_rows(widget, request["value"])
@@ -423,7 +423,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
                 self.session.reply(identifier)
             elif method == "show_records":
                 listing = request["value"]
-                if isinstance(widget, QTableWidget):
+                if isinstance(widget, RecordTable):
                     configure_table(widget, listing["headers"])
                     set_table_rows(widget, listing["rows"], listing["ids"])
                 elif isinstance(widget, QComboBox):

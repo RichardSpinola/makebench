@@ -242,7 +242,9 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue(data_path(self.project, True).is_file())
 
     def test_table_and_choice_show_records_and_read_the_selected_record(self):
-        from PySide6.QtWidgets import QComboBox, QTableWidget
+        from PySide6.QtWidgets import QComboBox
+
+        from makebench.ui.table import RecordTable
 
         table = self.project.add(self.project.root.id, ComponentKind.TABLE)
         choice = self.project.add(self.project.root.id, ComponentKind.CHOICE)
@@ -284,12 +286,12 @@ class RuntimeTests(unittest.TestCase):
         ]
         w = self.window("")
         widget, combo = w.view.widgets[table.id], w.view.widgets[choice.id]
-        self.assertIsInstance(widget, QTableWidget)
+        self.assertIsInstance(widget, RecordTable)
         self.assertIsInstance(combo, QComboBox)
         self.click(w)
         self.assertEqual(widget.columnCount(), 2)
-        self.assertEqual(widget.horizontalHeaderItem(1).text(), "autor")
-        self.assertEqual([widget.item(r, 1).text() for r in range(2)], ["Ana", "Ana"])
+        self.assertEqual(widget.rows_model.headers[1], "autor")
+        self.assertEqual([widget.text(r, 1) for r in range(2)], ["Ana", "Ana"])
         self.assertEqual(combo.itemText(0), "Ana")
         self.assertEqual(combo.currentData(), 1)
         widget.selectRow(1)
@@ -539,7 +541,7 @@ class RuntimeTests(unittest.TestCase):
         self.wait(lambda: "changed" in w.output.toPlainText())
 
     def test_table_sets_adds_and_reads_rows_and_fires_change_for_the_person(self):
-        from PySide6.QtWidgets import QTableWidget
+        from makebench.ui.table import RecordTable
 
         table = self.project.add(self.project.root.id, ComponentKind.TABLE)
         table.properties["headers"] = ["Name", "Age"]
@@ -577,10 +579,10 @@ class RuntimeTests(unittest.TestCase):
         ]
         w = self.window("")
         widget = w.view.widgets[table.id]
-        self.assertIsInstance(widget, QTableWidget)
+        self.assertIsInstance(widget, RecordTable)
         self.click(w)
         self.assertEqual(widget.rowCount(), 3)
-        self.assertEqual(widget.item(2, 1).text(), "7")
+        self.assertEqual(widget.text(2, 1), "7")
         self.assertNotIn("picked", w.output.toPlainText())
         widget.selectRow(1)
         self.wait(lambda: "picked" in w.output.toPlainText())

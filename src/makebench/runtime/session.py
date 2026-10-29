@@ -11,6 +11,7 @@ import sys
 import time
 
 from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signal
+from makebench.core.lines import LineReader
 from makebench.i18n import language, tr
 from .process import TaskProcess, signal_group
 
@@ -66,7 +67,7 @@ class RuntimeSession(QObject):
         self.process.errorOccurred.connect(self._process_error)
         self.process.finished.connect(self._finished)
         self.stderr_decoder = codecs.getincrementaldecoder("utf-8")("replace")
-        self.buffer = b""
+        self.lines = LineReader()
         self.reported_error = False
         self.pgid = 0
         self.task = None
@@ -140,13 +141,13 @@ class RuntimeSession(QObject):
 
     def _read(self):
         """Reassemble messages split in the pipe and keep a per-message limit."""
-        self.buffer += bytes(self.process.readAllStandardOutput())
-        while b"\n" in self.buffer:
-            line, self.buffer = self.buffer.split(b"\n", 1)
-            if len(line) > 2_000_000:
-                self.error.emit({"message": tr("The process reply exceeded the limit.")})
-                self.stop()
-                return
+        try:
+            lines = self.lines.feed(bytes(self.process.readAllStandardOutput()))
+        except ValueError:
+            self.error.emit({"message": tr("The process reply exceeded the limit.")})
+            self.stop()
+            return
+        for line in lines:
             try:
                 self._message(json.loads(line))
             except (ValueError, KeyError, TypeError, AttributeError) as exc:
@@ -155,9 +156,6 @@ class RuntimeSession(QObject):
                 )
                 self.stop()
                 return
-        if len(self.buffer) > 2_000_000:
-            self.error.emit({"message": tr("Incomplete reply exceeded the limit.")})
-            self.stop()
 
     def _message(self, message):
         """Forward only known protocol types; messages are never evaluated."""

@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDateEdit,
-    QTableWidget,
     QDoubleSpinBox,
     QFrame,
     QLineEdit,
@@ -20,6 +19,7 @@ from makebench.core.project import ComponentKind
 from makebench.core.style import qt_stylesheet, window_style
 from makebench.core.web import WEB_PAGE, is_web
 from makebench.ui import web
+from makebench.ui.table import RecordTable
 from makebench.ui.renderer import (
     TextArea,
     apply_component_style,
@@ -136,7 +136,7 @@ class RuntimeView(QFrame):
                 )
             if isinstance(widget, QCheckBox):
                 widget.clicked.connect(lambda _, identifier=node.id: self.changed.emit(identifier))
-            if isinstance(widget, QTableWidget):
+            if isinstance(widget, RecordTable):
                 widget.itemSelectionChanged.connect(
                     lambda identifier=node.id: self.changed.emit(identifier)
                 )

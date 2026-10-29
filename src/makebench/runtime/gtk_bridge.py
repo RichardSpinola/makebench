@@ -9,6 +9,7 @@ from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, Signal
 from makebench.core.project import Project, ProjectError
 from makebench.core.codegen import generate
 from makebench.core.environment import gtk_support, GTK_HELP
+from makebench.core.lines import LineReader
 from makebench.i18n import language, tr
 
 
@@ -104,7 +105,7 @@ class GtkRuntimeBridge(QObject):
                 str(source_filename or directory / "project.actions.py"),
             ]
         )
-        self.buffer = b""
+        self.lines = LineReader()
         self._stderr = b""
         self.debug_config = None
         self.process.readyReadStandardOutput.connect(self.read)
@@ -142,13 +143,13 @@ class GtkRuntimeBridge(QObject):
 
     def read(self):
         """Reassemble the JSON protocol; project code is never evaluated in the editor."""
-        self.buffer += bytes(self.process.readAllStandardOutput())
-        if len(self.buffer) > 2_000_000:
+        try:
+            lines = self.lines.feed(bytes(self.process.readAllStandardOutput()))
+        except ValueError:
             self.session.error.emit({"message": tr("GTK reply exceeded the limit.")})
             self.stop()
             return
-        while b"\n" in self.buffer:
-            line, self.buffer = self.buffer.split(b"\n", 1)
+        for line in lines:
             try:
                 self.message(json.loads(line))
             except (ValueError, KeyError, TypeError) as exc:

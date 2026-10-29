@@ -6,7 +6,6 @@ from PySide6.QtGui import QPainter, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QAbstractItemView,
     QDateEdit,
     QDoubleSpinBox,
     QGridLayout,
@@ -18,8 +17,6 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QSlider,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
     QFrame,
     QWidget,
@@ -29,6 +26,7 @@ from makebench.core.storage import StorageError
 from makebench.core.style import component_qss
 from makebench.i18n import tr
 from .chart import ChartWidget
+from .table import RecordTable
 
 
 def range_properties(node):
@@ -52,66 +50,40 @@ def fill_choice(widget, options, text, ids=None):
 
 def configure_table(widget, columns):
     """Show the columns of a table; rows are added later by the application."""
-    widget.setColumnCount(len(columns))
-    widget.setHorizontalHeaderLabels(list(columns))
-    widget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-    widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-    widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-    widget.horizontalHeader().setStretchLastSection(True)
-    widget.verticalHeader().setVisible(False)
+    widget.rows_model.set_headers(columns)
 
 
 def append_table_row(widget, row, record=None):
-    """Add a row of texts; `record` hides a record id in its first cell."""
-    index = widget.rowCount()
-    widget.insertRow(index)
-    for column in range(widget.columnCount()):
-        item = QTableWidgetItem(str(row[column]) if column < len(row) else "")
-        if column == 0:
-            item.setData(Qt.ItemDataRole.UserRole, record)
-        widget.setItem(index, column, item)
+    """Add a row of texts; `record` hides a record id in the row."""
+    widget.rows_model.append(row, record)
 
 
 def set_table_rows(widget, rows, ids=None):
     """Replace every row without telling the application the person did it."""
     blocked = widget.blockSignals(True)
     try:
-        widget.setRowCount(0)
-        for index, row in enumerate(rows):
-            append_table_row(widget, row, ids[index] if ids else None)
+        widget.rows_model.set_rows(rows, ids)
     finally:
         widget.blockSignals(blocked)
 
 
 def selected_table_record(widget):
     """The record id hidden in the selected row, or None."""
-    row = widget.currentRow() if widget.selectedItems() else -1
-    item = widget.item(row, 0) if row >= 0 else None
-    return item.data(Qt.ItemDataRole.UserRole) if item else None
+    row = widget.selected_row()
+    return widget.rows_model.records[row] if row >= 0 else None
 
 
 def selected_table_row(widget):
-    row = widget.currentRow() if widget.selectedItems() else -1
-    if row < 0:
-        return []
-    return [
-        widget.item(row, column).text() if widget.item(row, column) else ""
-        for column in range(widget.columnCount())
-    ]
+    row = widget.selected_row()
+    return [] if row < 0 else [widget.text(row, c) for c in range(widget.columnCount())]
 
 
 def table_contents(widget):
     """Headers and every row of a table, as texts (what a CSV export writes)."""
-    columns = range(widget.columnCount())
-    headers = []
-    for column in columns:
-        header = widget.horizontalHeaderItem(column)
-        headers.append(header.text() if header else "")
-    rows = [
-        [widget.item(row, column).text() if widget.item(row, column) else "" for column in columns]
-        for row in range(widget.rowCount())
-    ]
-    return {"headers": headers, "rows": rows}
+    model = widget.rows_model
+    width = len(model.headers)
+    rows = [(row + [""] * width)[:width] for row in model.rows]
+    return {"headers": list(model.headers), "rows": rows}
 
 
 def set_date(widget, iso):
@@ -249,7 +221,7 @@ def create_control(node, read_asset, editing=False):
             widget = QComboBox()
             fill_choice(widget, node.properties.get("options", []), node.properties.get("text", ""))
         case ComponentKind.TABLE:
-            widget = QTableWidget()
+            widget = RecordTable()
             configure_table(widget, node.properties.get("headers", []))
             widget.setMinimumHeight(70)
         case ComponentKind.DATE:

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import shiboken6
+from shiboken6 import isValid
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QDrag, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
@@ -501,7 +502,7 @@ class PreviewCanvas(QFrame):
 
         def position():
             """Position handles after the Qt layout computed their geometries."""
-            if self._frames.get(identifier) is not parent:
+            if self._frames.get(identifier) is not parent or not isValid(parent):
                 return
             for handle in self._layout_handles:
                 if handle.key == "padding":

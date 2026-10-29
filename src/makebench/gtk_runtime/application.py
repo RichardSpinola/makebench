@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 from makebench.core.codegen import generate
+from makebench.core.lines import MESSAGE_LIMIT
 from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, ProjectError
 from makebench.i18n import language, tr
 from .renderer import GtkView
@@ -164,10 +165,10 @@ class GtkRuntime:
         """Read in a thread and deliver to GTK only through idle_add, without blocking drawing."""
         try:
             while True:
-                line = self.process.stdout.readline(2_000_001)
+                line = self.process.stdout.readline(MESSAGE_LIMIT + 1)
                 if not line:
                     break
-                if len(line) > 2_000_000:
+                if len(line) > MESSAGE_LIMIT:
                     raise ValueError(tr("The worker reply exceeded the limit."))
                 self.GLib.idle_add(self.message, json.loads(line))
         except (ValueError, OSError) as exc:
