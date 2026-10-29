@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Callable
 
 from makebench.core import pieces as piece_library
+from makebench.core import plugin_scan
 from makebench.core.project import Project, ProjectError
 from makebench.i18n import tr
 
@@ -48,6 +49,11 @@ class Plugin:
     error: str = ""
     incompatible: bool = False
     official: bool = False
+    license: str = ""
+    source: str = ""
+    declared: list[str] = field(default_factory=list)
+    detected: list[str] = field(default_factory=list)
+    fingerprint: str = ""
     commands: list[tuple[str, Callable]] = field(default_factory=list)
     pieces: list[dict] = field(default_factory=list)
     snippets: dict[str, str] = field(default_factory=dict)
@@ -163,6 +169,13 @@ class PluginManager:
                     author=str(data.get("author", "")),
                     folder=folder,
                     official=official,
+                    license=str(data.get("license", "")),
+                    source=str(data.get("source", "")),
+                    declared=[str(item) for item in data.get("permissions", [])]
+                    if isinstance(data.get("permissions", []), list)
+                    else [],
+                    detected=sorted(plugin_scan.scan_folder(folder)),
+                    fingerprint=plugin_scan.folder_hash(folder),
                 )
                 if data.get("api") not in SUPPORTED_APIS:
                     plugin.incompatible = True

@@ -7771,3 +7771,143 @@ msgstr "Janelas de Visão web acrescentam o Qt WebEngine, que deixa o pacote Qt 
 #: src/makebench/editor/inspector.py
 msgid "Full screen"
 msgstr "Tela cheia"
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry with an invalid id."
+msgstr "Entrada do catálogo com id inválido."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: downloads must use https."
+msgstr "Entrada {id} do catálogo: o download precisa usar https."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: invalid api or sha256."
+msgstr "Entrada {id} do catálogo: api ou sha256 inválido."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: invalid permissions."
+msgstr "Entrada {id} do catálogo: permissões inválidas."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: invalid {key}."
+msgstr "Entrada {id} do catálogo: {key} inválido."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog lists {id} twice."
+msgstr "O catálogo lista {id} duas vezes."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Fingerprint (SHA-256):"
+msgstr "Impressão digital (SHA-256):"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Its code can: {list}."
+msgstr "O código dele pode: {list}."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "License:"
+msgstr "Licença:"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Not declared in plugin.json: {list}. Turn it on only if you trust the author."
+msgstr "Não declarado no plugin.json: {list}. Ligue só se confiar em quem fez."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Source:"
+msgstr "Fonte:"
+
+#: src/makebench/core/catalog.py
+msgid "The code uses permissions the catalog does not list: {list}."
+msgstr "O código usa permissões que o catálogo não lista: {list}."
+
+#: src/makebench/core/catalog.py
+msgid "The download does not match the catalog's fingerprint."
+msgstr "O download não bate com a impressão digital do catálogo."
+
+#: src/makebench/core/catalog.py
+msgid "This is not a plugin catalog this Makebench can read."
+msgstr "Este não é um catálogo de plugins que este Makebench consiga ler."
+
+#: src/makebench/core/catalog.py
+msgid "This plugin needs plugin API {api}."
+msgstr "Este plugin precisa da API de plugins {api}."
+
+#: src/makebench/core/plugin_scan.py
+msgid "Builds and runs code at run time"
+msgstr "Monta e executa código durante o uso"
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry with an invalid id."
+msgstr "Entrada do catálogo com id inválido."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: downloads must use https."
+msgstr "Entrada {id} do catálogo: o download precisa usar https."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: invalid api or sha256."
+msgstr "Entrada {id} do catálogo: api ou sha256 inválido."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: invalid permissions."
+msgstr "Entrada {id} do catálogo: permissões inválidas."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog entry {id}: invalid {key}."
+msgstr "Entrada {id} do catálogo: {key} inválido."
+
+#: src/makebench/core/catalog.py
+msgid "Catalog lists {id} twice."
+msgstr "O catálogo lista {id} duas vezes."
+
+#: src/makebench/core/plugin_scan.py
+msgid "Connects to the network"
+msgstr "Conecta à rede"
+
+#: src/makebench/core/plugin_scan.py
+msgid "Deletes files"
+msgstr "Apaga arquivos"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Fingerprint (SHA-256):"
+msgstr "Impressão digital (SHA-256):"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Its code can: {list}."
+msgstr "O código dele pode: {list}."
+
+#: src/makebench/editor/plugins_ui.py
+msgid "License:"
+msgstr "Licença:"
+
+#: src/makebench/core/plugin_scan.py
+msgid "Loads native code"
+msgstr "Carrega código nativo"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Not declared in plugin.json: {list}. Turn it on only if you trust the author."
+msgstr "Não declarado no plugin.json: {list}. Ligue só se confiar em quem fez."
+
+#: src/makebench/core/plugin_scan.py
+msgid "Runs other programs"
+msgstr "Executa outros programas"
+
+#: src/makebench/editor/plugins_ui.py
+msgid "Source:"
+msgstr "Fonte:"
+
+#: src/makebench/core/catalog.py
+msgid "The code uses permissions the catalog does not list: {list}."
+msgstr "O código usa permissões que o catálogo não lista: {list}."
+
+#: src/makebench/core/catalog.py
+msgid "The download does not match the catalog's fingerprint."
+msgstr "O download não bate com a impressão digital do catálogo."
+
+#: src/makebench/core/catalog.py
+msgid "This is not a plugin catalog this Makebench can read."
+msgstr "Este não é um catálogo de plugins que este Makebench consiga ler."
+
+#: src/makebench/core/catalog.py
+msgid "This plugin needs plugin API {api}."
+msgstr "Este plugin precisa da API de plugins {api}."

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from makebench.core.project import ProjectError
 from makebench.i18n import tr
 
+from makebench.core import plugin_scan
 from .errors import show_error
 from .look import button_row, empty_hint, header, make_muted
 from .plugins import CommandContext, PluginManager
@@ -163,6 +164,25 @@ class PluginsDialog(QDialog):
         lines = [plugin.description, plugin.author]
         if plugin.official:
             lines.append(tr("Ships with Makebench. Its code is also an example of a plugin."))
+        if plugin.license:
+            lines.append(tr("License:") + " " + plugin.license)
+        if plugin.source:
+            lines.append(tr("Source:") + " " + plugin.source)
+        if plugin.detected:
+            lines.append(
+                tr("Its code can: {list}.").format(
+                    list="; ".join(plugin_scan.describe(plugin.detected)).lower()
+                )
+            )
+        hidden = sorted(set(plugin.detected) - set(plugin.declared))
+        if hidden and not plugin.official:
+            lines.append(
+                tr(
+                    "Not declared in plugin.json: {list}. Turn it on only if you trust the author."
+                ).format(list=", ".join(hidden))
+            )
+        if plugin.fingerprint:
+            lines.append(tr("Fingerprint (SHA-256):") + " " + plugin.fingerprint[:16])
         if plugin.error:
             lines.append(tr("Problem:") + " " + plugin.error)
         self.details.setText("\n".join(line for line in lines if line))

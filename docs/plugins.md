@@ -29,6 +29,9 @@ turn each plugin on or off. Nothing from a plugin is imported until you turn it 
 }
 ```
 
+Optional fields that Makebench shows before you turn a plugin on: `"license"`,
+`"source"` (a web address of the code) and `"permissions"` (see below).
+
 `id` must match the folder name (lowercase letters, digits, `-` and `_`). `api`
 is `1` or `2`; any other value is shown as incompatible and never loaded.
 
@@ -78,6 +81,42 @@ edge to edge, and holds no components; links to websites open in the browser.
 Makebench itself shows, saves and exports these windows, so projects made with the
 plugin keep working with it turned off. The exported Qt app needs Qt WebEngine, and
 the GTK runtime needs WebKitGTK 6.
+
+## Permissions
+
+A plugin runs with your permissions, so declare what it does. Makebench reads the
+plugin's Python without running it and shows what it plainly can do. Declare these in
+`plugin.json` as `"permissions": [...]`:
+
+| Permission | Found when the code |
+|---|---|
+| `network` | imports `socket`, `urllib`, `http`, `requests`… |
+| `programs` | imports `subprocess` or calls `os.system`… |
+| `native-code` | imports `ctypes` |
+| `dynamic-code` | calls `eval`, `exec`, `compile` or `__import__` |
+| `files-outside` | deletes files (`shutil.rmtree`, `os.remove`…) |
+
+**Manage plugins…** also shows the license, the source, and a SHA-256 fingerprint of
+all the plugin's files. If the code uses something the plugin did not declare, you see a
+warning. The scan finds plain cases only: it is a help, not a guarantee, so read the
+code of a plugin you do not know.
+
+## Catalog index
+
+A catalog is a JSON file (`"format": "makebench-plugin-index"`, `"version": 1`) listing
+plugins with `id`, `name`, `version`, `api`, `license`, `source`, `download` (https),
+`sha256` (the fingerprint above), `permissions` and `reviewed`. Makebench rejects a
+download whose fingerprint, API or permissions differ from the index. `reviewed` means
+someone read the code; it is not a guarantee.
+
+## Good practice
+
+- Keep `register` fast and free of side effects; do the work inside commands.
+- Never write outside the project you are given; work on the copy and return it.
+- Raise `api.Refusal` for expected problems instead of letting an exception turn the
+  plugin off.
+- Pick the lowest `api` you need, so more releases can load the plugin.
+- Declare every permission, and say why in the description.
 
 ## Safety and failures
 
