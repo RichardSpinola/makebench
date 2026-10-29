@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Full screen:** a window can start in full screen (Qt and GTK); F11 toggles it with Qt.
 - **Blocks or Python:** each project chooses how it is programmed when it is
   created (format 9). Logic and Code are now one Logic area with Events,
   Functions and Modules in the sidebar; block projects can show the generated

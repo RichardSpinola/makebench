@@ -158,7 +158,7 @@ def validate_navigation(project):
                 raise ProjectError(tr("The window icon must be in assets."))
         if not isinstance(p.get("tooltip", ""), str):
             raise ProjectError(tr("The component tooltip must be text."))
-        for key in ("visible", "enabled", "resizable", "centered", "on_top"):
+        for key in ("visible", "enabled", "resizable", "centered", "on_top", "fullscreen"):
             if key in p and type(p[key]) is not bool:
                 raise ProjectError(tr("Invalid boolean property: {key}").format(key=key))
         if "timer_seconds" in p and (
@@ -170,7 +170,7 @@ def validate_navigation(project):
         if "frame" in p and p["frame"] not in WINDOW_FRAMES:
             raise ProjectError(tr("The window frame must be normal, no_buttons or none."))
         if node.kind != ComponentKind.WINDOW and any(
-            k in p for k in ("frame", "centered", "on_top")
+            k in p for k in ("frame", "centered", "on_top", "fullscreen")
         ):
             raise ProjectError(tr("Only a window has a frame, position and stacking."))
         for key in ("width", "height"):

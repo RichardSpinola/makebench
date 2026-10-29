@@ -137,7 +137,7 @@ class RuntimeWindow(RuntimeNavigation, QMainWindow):
             except (OSError, ProjectError):
                 pass
         self.resize(width, height)
-        if not initial.properties.get("resizable", True):
+        if not initial.properties.get("resizable", True) and not initial.properties.get("fullscreen"):
             self.setFixedSize(width, height)
         central = QWidget()
         layout = QVBoxLayout(central)

@@ -527,6 +527,9 @@ class Inspector(QWidget):
             self._boolean_field(
                 tr("Always on top"), node.id, "on_top", node.properties.get("on_top", False)
             )
+            self._boolean_field(
+                tr("Full screen"), node.id, "fullscreen", node.properties.get("fullscreen", False)
+            )
             self._number_field(
                 tr("Timer every (seconds, 0 = off)"),
                 node.id,

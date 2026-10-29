@@ -332,6 +332,8 @@ class GtkRuntime:
                 root.properties.get("width", 640), root.properties.get("height", 480)
             )
             window.set_resizable(root.properties.get("resizable", True))
+            if root.properties.get("fullscreen"):
+                window.fullscreen()
             window.connect("close-request", lambda _window: self.window_close(identifier))
             self.windows[identifier] = window
             self.states[identifier] = root.properties.get("initial_state", "@default")

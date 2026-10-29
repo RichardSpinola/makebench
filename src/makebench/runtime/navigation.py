@@ -2,7 +2,7 @@
 """Coordination of real windows and states over a single run session."""
 
 from PySide6.QtCore import QEvent, QObject, QTimer, Qt
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import QMainWindow, QScrollArea
 from makebench.core.menus import menu_items
 from makebench.core.project import RANGE_DEFAULTS, RANGE_KINDS, ComponentKind, ProjectError
@@ -43,6 +43,12 @@ def apply_frame(window, root, draggable=()):
     if properties.get("on_top"):
         flags |= Qt.WindowType.WindowStaysOnTopHint
     window.setWindowFlags(flags)
+    if properties.get("fullscreen"):
+        window.setWindowState(window.windowState() | Qt.WindowState.WindowFullScreen)
+        shortcut = QShortcut(QKeySequence("F11"), window)
+        shortcut.activated.connect(
+            lambda: window.showNormal() if window.isFullScreen() else window.showFullScreen()
+        )
     if properties.get("centered") and window.screen():
         area = window.screen().availableGeometry()
         window.move(area.center() - window.rect().center())
@@ -83,7 +89,7 @@ class AppWindow(QMainWindow):
             self.setWindowIcon(QIcon(pixmap))
         self.setWindowTitle(root.properties.get("title", owner.project.name))
         self.resize(root.properties.get("width", 640), root.properties.get("height", 480))
-        if not root.properties.get("resizable", True):
+        if not root.properties.get("resizable", True) and not root.properties.get("fullscreen"):
             self.setFixedSize(self.size())
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)

@@ -7767,3 +7767,7 @@ msgstr "Uma página HTML no GTK: usa o motor web do sistema, então o pacote nã
 #: src/makebench/core/exporter.py
 msgid "Web view windows add Qt WebEngine, which makes the Qt package much larger; with GTK they use the system's WebKitGTK."
 msgstr "Janelas de Visão web acrescentam o Qt WebEngine, que deixa o pacote Qt bem maior; com GTK elas usam o WebKitGTK do sistema."
+
+#: src/makebench/editor/inspector.py
+msgid "Full screen"
+msgstr "Tela cheia"

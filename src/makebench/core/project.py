@@ -583,6 +583,7 @@ class Project:
                 or root.properties.get("frame", "normal") != "normal"
                 or root.properties.get("centered")
                 or root.properties.get("on_top")
+                or root.properties.get("fullscreen")
                 for root in self.roots
             )
         )

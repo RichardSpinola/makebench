@@ -411,6 +411,13 @@ class RuntimeTests(unittest.TestCase):
         self.assertFalse(flags & Qt.WindowType.WindowCloseButtonHint)
         self.assertFalse(flags & Qt.WindowType.WindowStaysOnTopHint)
 
+    def test_fullscreen_window_starts_full_screen(self):
+        self.project.root.properties["fullscreen"] = True
+        w = self.window("")
+        self.assertTrue(w.windowState() & Qt.WindowState.WindowFullScreen)
+        self.project.root.properties["fullscreen"] = False
+        self.assertFalse(self.window("").windowState() & Qt.WindowState.WindowFullScreen)
+
     def test_menu_item_fires_its_flow(self):
         from makebench.core.menus import parse_menus
 

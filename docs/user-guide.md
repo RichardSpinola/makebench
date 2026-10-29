@@ -69,7 +69,7 @@ Design is where you build each window with native controls.
   line), a **date** (`YYYY-MM-DD`) and a **table** with the columns you name.
 - A window can have **menus** (one title per line, items indented, a shortcut after
   `|`), a **frame** (normal, without buttons, without frame), **centered** and
-  **always on top**. GTK 4 on Wayland ignores the last two; the export check warns.
+  **always on top** or **full screen** (F11 toggles it with Qt). GTK 4 on Wayland ignores the last two; the export check warns.
 - The window look can add a **background image**, which covers the window behind
   the controls (it is copied into `assets/`).
 - Each component has a **Style** section: text color, fill color, font size, bold,

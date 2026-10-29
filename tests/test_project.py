@@ -85,7 +85,7 @@ class ProjectTests(unittest.TestCase):
         project.root.properties.update(frame="no_buttons", centered=True, on_top=True)
         self.assertEqual(project.to_dict()["format_version"], 10)
         Project.from_dict(project.to_dict())
-        for bad in ({"frame": "round"}, {"centered": "yes"}, {"on_top": 1}):
+        for bad in ({"frame": "round"}, {"centered": "yes"}, {"on_top": 1}, {"fullscreen": 1}):
             data = project.to_dict()
             data["ui"]["properties"].update(bad)
             with self.assertRaises(ProjectError):
