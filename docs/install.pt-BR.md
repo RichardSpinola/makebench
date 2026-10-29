@@ -72,6 +72,12 @@ vez que o Makebench abrir.
 
 ## Próximos passos
 
+O Makebench abre na tela inicial: crie um projeto a partir de um modelo, abra
+um, abra um exemplo ou baixe um do Git.
+
+![A tela inicial](images/start.png)
+
+
 - [Crie seu primeiro app com blocos](tutorial-blocks.md), ou o mesmo
   [com Python](tutorial-python.md).
 - Abra um projeto pronto nos [exemplos](examples.md).

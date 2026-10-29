@@ -72,6 +72,12 @@ time Makebench starts.
 
 ## Next steps
 
+Makebench opens on the start screen: create a project from a template, open
+one, open an example or download one from Git.
+
+![The start screen](images/start.png)
+
+
 - [Build your first app with blocks](tutorial-blocks.md), or the same
   [with Python](tutorial-python.md).
 - Open a ready-made project from the [examples](examples.md).

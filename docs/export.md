@@ -9,6 +9,8 @@ Building never runs your project: Makebench only packs its files.
 
 The window starts by asking who will use the app; each answer is a format.
 
+![The Export window](images/export.png)
+
 | Answer | Format | What you get |
 |---|---|---|
 | **Anyone on Linux** | AppImage | one file that runs without installing |

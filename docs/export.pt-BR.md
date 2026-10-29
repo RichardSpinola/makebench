@@ -9,6 +9,8 @@ Construir nunca executa o projeto: o Makebench só empacota os arquivos dele.
 
 A janela começa perguntando quem vai usar o app; cada resposta é um formato.
 
+![A janela Exportar](images/export.png)
+
 | Resposta | Formato | O que você recebe |
 |---|---|---|
 | **Qualquer pessoa no Linux** | AppImage | um arquivo que roda sem instalar |

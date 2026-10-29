@@ -19,6 +19,8 @@ Choose **Plugins › Themes…**. The window lists:
 Pick one and click **Apply**. The light/dark switch in the status bar chooses
 which half of the theme is used.
 
+![The editor in dark mode](images/design-dark.png)
+
 ### Making a theme
 
 Click **New theme…**, give it a name and pick the colors of each surface

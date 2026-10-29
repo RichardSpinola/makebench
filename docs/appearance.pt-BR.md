@@ -19,6 +19,8 @@ Escolha **Plugins › Temas…**. A janela lista:
 Escolha um e clique em **Aplicar**. O botão claro/escuro da barra de status
 escolhe qual metade do tema é usada.
 
+![O editor no modo escuro](images/design-dark.png)
+
 ### Criando um tema
 
 Clique em **Novo tema…**, dê um nome e escolha as cores de cada superfície
