@@ -908,6 +908,12 @@ class ProjectMixin:
                 "full-blocks",
                 "project.makebench.json",
             ),
+            (tr("My notes — a saved list, CSV export"), "my-notes", "project.makebench.json"),
+            (
+                tr("Bookshop — books, clients, sales and stock"),
+                "bookshop",
+                "project.makebench.json",
+            ),
         ]
         twins = [
             (tr("{title} · Python").format(title=title), folder + "-python", name)

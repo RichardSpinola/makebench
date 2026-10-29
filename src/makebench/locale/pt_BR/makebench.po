@@ -7767,3 +7767,11 @@ msgstr "Carrega código nativo"
 #: src/makebench/core/plugin_scan.py
 msgid "Runs other programs"
 msgstr "Executa outros programas"
+
+#: src/makebench/editor/projects.py
+msgid "My notes — a saved list, CSV export"
+msgstr "Minhas notas — lista salva, exportar CSV"
+
+#: src/makebench/editor/projects.py
+msgid "Bookshop — books, clients, sales and stock"
+msgstr "Livraria — livros, clientes, vendas e estoque"

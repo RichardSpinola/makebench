@@ -108,9 +108,8 @@ class LookTests(unittest.TestCase):
 
     def test_example_chooser_lists_every_example_with_its_description(self):
         titles = [title for title, _, _ in self.window.available_examples()]
-        self.assertTrue(
-            any("full" in str(folder) for _, folder, _ in self.window.available_examples())
-        )
+        folders = {folder.name for _, folder, _ in self.window.available_examples()}
+        self.assertTrue({"full-blocks", "my-notes", "bookshop"} <= folders, folders)
         chooser = ExampleChooser(titles)
         self.assertEqual(chooser.list.count(), len(titles))
         for row in range(chooser.list.count()):
