@@ -81,6 +81,31 @@ def prune(po: Path, unused: set[str]) -> int:
     return len(blocks) - len(kept)
 
 
+def duplicates(po: Path) -> list[str]:
+    """Msgids that appear in more than one entry of a catalog."""
+    seen, repeated = set(), []
+    for block in po.read_text(encoding="utf-8").split("\n\n"):
+        msgid = block_msgid(block)
+        if msgid:
+            if msgid in seen:
+                repeated.append(msgid)
+            seen.add(msgid)
+    return repeated
+
+
+def dedupe(po: Path) -> int:
+    """Drop later entries that repeat a msgid; the first one wins."""
+    blocks, seen, kept = po.read_text(encoding="utf-8").split("\n\n"), set(), []
+    for block in blocks:
+        msgid = block_msgid(block)
+        if msgid and msgid in seen:
+            continue
+        seen.add(msgid)
+        kept.append(block)
+    po.write_text("\n\n".join(kept), encoding="utf-8")
+    return len(blocks) - len(kept)
+
+
 def main() -> int:
     """Report catalog coverage and optionally append missing entries."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -99,6 +124,12 @@ def main() -> int:
         print(
             f"{po.relative_to(ROOT)}: {len(catalog)} entries, {len(missing)} missing, {len(unused)} unused"
         )
+        repeated = duplicates(po)
+        if repeated and (args.update or args.prune):
+            print("  removed", dedupe(po), "duplicate entries")
+        elif repeated:
+            print("  duplicated:", ", ".join(repr(m) for m in repeated[:10]))
+            status = 1
         if unused and args.prune:
             print("  removed", prune(po, set(unused)), "unused entries")
         for msgid in missing[:50]:
