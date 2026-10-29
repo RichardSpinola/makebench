@@ -1,0 +1,1173 @@
+{
+  "format": "makebench.project",
+  "format_version": 11,
+  "id": "project_1fbe1cc84840",
+  "name": "Livraria",
+  "ui": {
+    "id": "window_afd637d724fc",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Livraria",
+      "width": 780,
+      "height": 760,
+      "padding": 16,
+      "spacing": 8
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_0f95716bdab5",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Livraria",
+          "code_name": "heading"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_0025cbb1d0f4",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Cadastre livros e clientes, registre vendas: o estoque e o caixa se atualizam.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_36e8efcc70ee",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Livros",
+          "code_name": "books_heading"
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_dc9b759c4133",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "text_input_4151a5051c9c",
+            "kind": "text_input",
+            "layout": "vertical",
+            "properties": {
+              "text": "",
+              "placeholder": "Título do livro",
+              "code_name": "title_input"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "label_7293b1dda7fe",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Preço:"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "number_a36c150ceef0",
+            "kind": "number",
+            "layout": "vertical",
+            "properties": {
+              "value": 0,
+              "minimum": 0,
+              "maximum": 100000,
+              "step": 1,
+              "decimals": 2,
+              "code_name": "price_input"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "label_2b42133d66c8",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Estoque:"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "number_304b9490322f",
+            "kind": "number",
+            "layout": "vertical",
+            "properties": {
+              "value": 0,
+              "minimum": 0,
+              "maximum": 100000,
+              "step": 1,
+              "decimals": 0,
+              "code_name": "stock_input"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_2782bd04dd1f",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Adicionar livro",
+              "code_name": "add_book_button"
+            },
+            "geometry": {
+              "x": 96,
+              "y": 96,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "table_52a073d5398d",
+        "kind": "table",
+        "layout": "vertical",
+        "properties": {
+          "headers": [
+            "Column 1",
+            "Column 2"
+          ],
+          "code_name": "books_table"
+        },
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "label_5f3963684251",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Clientes",
+          "code_name": "clients_heading"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_2a4a671cfd93",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 112,
+          "y": 112,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "text_input_d7ba6e1ccb20",
+            "kind": "text_input",
+            "layout": "vertical",
+            "properties": {
+              "text": "",
+              "placeholder": "Nome do cliente",
+              "code_name": "name_input"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_0837a24c6d96",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Adicionar cliente",
+              "code_name": "add_client_button"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "label_71bbd620b0f1",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Vendas",
+          "code_name": "sales_heading"
+        },
+        "geometry": {
+          "x": 128,
+          "y": 128,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "container_828383b081dc",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 144,
+          "y": 144,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "choice_32b566c1d0cc",
+            "kind": "choice",
+            "layout": "vertical",
+            "properties": {
+              "options": [],
+              "text": "",
+              "code_name": "client_choice"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "choice_97622a2da2fc",
+            "kind": "choice",
+            "layout": "vertical",
+            "properties": {
+              "options": [],
+              "text": "",
+              "code_name": "book_choice"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "label_3089a1087454",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Quantidade:"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "number_445e9c7cf7d5",
+            "kind": "number",
+            "layout": "vertical",
+            "properties": {
+              "value": 1,
+              "minimum": 1,
+              "maximum": 1000,
+              "step": 1,
+              "decimals": 0,
+              "code_name": "quantity_input"
+            },
+            "geometry": {
+              "x": 64,
+              "y": 64,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_a0f987aaab2a",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Registrar venda",
+              "code_name": "sell_button"
+            },
+            "geometry": {
+              "x": 80,
+              "y": 80,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "table_543e42a282c1",
+        "kind": "table",
+        "layout": "vertical",
+        "properties": {
+          "headers": [
+            "Column 1",
+            "Column 2"
+          ],
+          "code_name": "sales_table"
+        },
+        "geometry": {
+          "x": 160,
+          "y": 160,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "container_3435b827773a",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 176,
+          "y": 176,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_bbbb7deaa313",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Marcar entregue",
+              "code_name": "deliver_button"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_79c3f11466ba",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "label_94db42366184",
+            "kind": "label",
+            "layout": "vertical",
+            "properties": {
+              "text": "Caixa: ",
+              "code_name": "cash_label"
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "label_a7d4d1da9f9f",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Pronto.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 192,
+          "y": 192,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_afd637d724fc"
+      },
+      "body": [
+        {
+          "op": "show_records",
+          "component": "table_52a073d5398d",
+          "collection": "books",
+          "id": "block_001"
+        },
+        {
+          "op": "show_records",
+          "component": "choice_97622a2da2fc",
+          "collection": "books",
+          "id": "block_002"
+        },
+        {
+          "op": "show_records",
+          "component": "choice_32b566c1d0cc",
+          "collection": "clients",
+          "id": "block_003"
+        },
+        {
+          "op": "show_records",
+          "component": "table_543e42a282c1",
+          "collection": "sales",
+          "id": "block_004"
+        },
+        {
+          "op": "set_text",
+          "component": "label_94db42366184",
+          "value": {
+            "id": "block_005",
+            "op": "join",
+            "left": {
+              "id": "block_006",
+              "op": "literal",
+              "value": "Caixa: "
+            },
+            "right": {
+              "id": "block_007",
+              "op": "data_sum",
+              "collection": "sales",
+              "sum": "total"
+            }
+          },
+          "id": "block_008"
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Clique: Adicionar livro",
+      "event": {
+        "kind": "click",
+        "component": "button_2782bd04dd1f"
+      },
+      "body": [
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "==",
+            "left": {
+              "id": "block_002",
+              "op": "read",
+              "component": "text_input_4151a5051c9c",
+              "attribute": "text"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "literal",
+              "value": ""
+            }
+          },
+          "then": [
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_004",
+                "op": "literal",
+                "value": "Escreva o título do livro."
+              },
+              "id": "block_005"
+            }
+          ],
+          "else": [
+            {
+              "op": "data_add",
+              "collection": "books",
+              "values": [
+                {
+                  "field": "title",
+                  "value": {
+                    "id": "block_006",
+                    "op": "read",
+                    "component": "text_input_4151a5051c9c",
+                    "attribute": "text"
+                  }
+                },
+                {
+                  "field": "price",
+                  "value": {
+                    "id": "block_007",
+                    "op": "read",
+                    "component": "number_a36c150ceef0",
+                    "attribute": "value"
+                  }
+                },
+                {
+                  "field": "stock",
+                  "value": {
+                    "id": "block_008",
+                    "op": "read",
+                    "component": "number_304b9490322f",
+                    "attribute": "value"
+                  }
+                }
+              ],
+              "id": "block_009"
+            },
+            {
+              "op": "set_text",
+              "component": "text_input_4151a5051c9c",
+              "value": {
+                "id": "block_010",
+                "op": "literal",
+                "value": ""
+              },
+              "id": "block_011"
+            },
+            {
+              "op": "show_records",
+              "component": "table_52a073d5398d",
+              "collection": "books",
+              "id": "block_012"
+            },
+            {
+              "op": "show_records",
+              "component": "choice_97622a2da2fc",
+              "collection": "books",
+              "id": "block_013"
+            },
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_014",
+                "op": "literal",
+                "value": "Livro salvo."
+              },
+              "id": "block_015"
+            }
+          ],
+          "id": "block_016"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Clique: Adicionar cliente",
+      "event": {
+        "kind": "click",
+        "component": "button_0837a24c6d96"
+      },
+      "body": [
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "==",
+            "left": {
+              "id": "block_002",
+              "op": "read",
+              "component": "text_input_d7ba6e1ccb20",
+              "attribute": "text"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "literal",
+              "value": ""
+            }
+          },
+          "then": [
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_004",
+                "op": "literal",
+                "value": "Escreva o nome do cliente."
+              },
+              "id": "block_005"
+            }
+          ],
+          "else": [
+            {
+              "op": "data_add",
+              "collection": "clients",
+              "values": [
+                {
+                  "field": "name",
+                  "value": {
+                    "id": "block_006",
+                    "op": "read",
+                    "component": "text_input_d7ba6e1ccb20",
+                    "attribute": "text"
+                  }
+                }
+              ],
+              "id": "block_007"
+            },
+            {
+              "op": "set_text",
+              "component": "text_input_d7ba6e1ccb20",
+              "value": {
+                "id": "block_008",
+                "op": "literal",
+                "value": ""
+              },
+              "id": "block_009"
+            },
+            {
+              "op": "show_records",
+              "component": "choice_32b566c1d0cc",
+              "collection": "clients",
+              "id": "block_010"
+            },
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_011",
+                "op": "literal",
+                "value": "Cliente salvo."
+              },
+              "id": "block_012"
+            }
+          ],
+          "id": "block_013"
+        }
+      ]
+    },
+    {
+      "id": "flow_03_click",
+      "name": "Clique: Registrar venda",
+      "event": {
+        "kind": "click",
+        "component": "button_a0f987aaab2a"
+      },
+      "body": [
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "or",
+            "left": {
+              "id": "block_002",
+              "op": "binary",
+              "operator": "==",
+              "left": {
+                "id": "block_003",
+                "op": "read",
+                "component": "choice_32b566c1d0cc",
+                "attribute": "text"
+              },
+              "right": {
+                "id": "block_004",
+                "op": "literal",
+                "value": ""
+              }
+            },
+            "right": {
+              "id": "block_005",
+              "op": "binary",
+              "operator": "==",
+              "left": {
+                "id": "block_006",
+                "op": "read",
+                "component": "choice_97622a2da2fc",
+                "attribute": "text"
+              },
+              "right": {
+                "id": "block_007",
+                "op": "literal",
+                "value": ""
+              }
+            }
+          },
+          "then": [
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_008",
+                "op": "literal",
+                "value": "Escolha um cliente e um livro."
+              },
+              "id": "block_009"
+            }
+          ],
+          "else": [
+            {
+              "op": "if",
+              "condition": {
+                "id": "block_010",
+                "op": "binary",
+                "operator": "<",
+                "left": {
+                  "id": "block_011",
+                  "op": "record_field",
+                  "collection": "books",
+                  "field": "stock",
+                  "record": {
+                    "id": "block_012",
+                    "op": "data_get",
+                    "collection": "books",
+                    "record_id": {
+                      "id": "block_013",
+                      "op": "read",
+                      "component": "choice_97622a2da2fc",
+                      "attribute": "record"
+                    }
+                  }
+                },
+                "right": {
+                  "id": "block_014",
+                  "op": "read",
+                  "component": "number_445e9c7cf7d5",
+                  "attribute": "value"
+                }
+              },
+              "then": [
+                {
+                  "op": "set_text",
+                  "component": "label_a7d4d1da9f9f",
+                  "value": {
+                    "id": "block_015",
+                    "op": "literal",
+                    "value": "Estoque insuficiente."
+                  },
+                  "id": "block_016"
+                }
+              ],
+              "else": [
+                {
+                  "op": "data_add",
+                  "collection": "sales",
+                  "values": [
+                    {
+                      "field": "client",
+                      "value": {
+                        "id": "block_017",
+                        "op": "read",
+                        "component": "choice_32b566c1d0cc",
+                        "attribute": "record"
+                      }
+                    },
+                    {
+                      "field": "book",
+                      "value": {
+                        "id": "block_018",
+                        "op": "read",
+                        "component": "choice_97622a2da2fc",
+                        "attribute": "record"
+                      }
+                    },
+                    {
+                      "field": "quantity",
+                      "value": {
+                        "id": "block_019",
+                        "op": "read",
+                        "component": "number_445e9c7cf7d5",
+                        "attribute": "value"
+                      }
+                    },
+                    {
+                      "field": "total",
+                      "value": {
+                        "id": "block_020",
+                        "op": "binary",
+                        "operator": "*",
+                        "left": {
+                          "id": "block_021",
+                          "op": "record_field",
+                          "collection": "books",
+                          "field": "price",
+                          "record": {
+                            "id": "block_022",
+                            "op": "data_get",
+                            "collection": "books",
+                            "record_id": {
+                              "id": "block_023",
+                              "op": "read",
+                              "component": "choice_97622a2da2fc",
+                              "attribute": "record"
+                            }
+                          }
+                        },
+                        "right": {
+                          "id": "block_024",
+                          "op": "read",
+                          "component": "number_445e9c7cf7d5",
+                          "attribute": "value"
+                        }
+                      }
+                    },
+                    {
+                      "field": "delivered",
+                      "value": {
+                        "id": "block_025",
+                        "op": "literal",
+                        "value": false
+                      }
+                    }
+                  ],
+                  "id": "block_026"
+                },
+                {
+                  "op": "data_update",
+                  "collection": "books",
+                  "values": [
+                    {
+                      "field": "stock",
+                      "value": {
+                        "id": "block_027",
+                        "op": "binary",
+                        "operator": "-",
+                        "left": {
+                          "id": "block_028",
+                          "op": "record_field",
+                          "collection": "books",
+                          "field": "stock",
+                          "record": {
+                            "id": "block_029",
+                            "op": "data_get",
+                            "collection": "books",
+                            "record_id": {
+                              "id": "block_030",
+                              "op": "read",
+                              "component": "choice_97622a2da2fc",
+                              "attribute": "record"
+                            }
+                          }
+                        },
+                        "right": {
+                          "id": "block_031",
+                          "op": "read",
+                          "component": "number_445e9c7cf7d5",
+                          "attribute": "value"
+                        }
+                      }
+                    }
+                  ],
+                  "record_id": {
+                    "id": "block_032",
+                    "op": "read",
+                    "component": "choice_97622a2da2fc",
+                    "attribute": "record"
+                  },
+                  "id": "block_033"
+                },
+                {
+                  "op": "show_records",
+                  "component": "table_52a073d5398d",
+                  "collection": "books",
+                  "id": "block_034"
+                },
+                {
+                  "op": "show_records",
+                  "component": "table_543e42a282c1",
+                  "collection": "sales",
+                  "id": "block_035"
+                },
+                {
+                  "op": "set_text",
+                  "component": "label_94db42366184",
+                  "value": {
+                    "id": "block_036",
+                    "op": "join",
+                    "left": {
+                      "id": "block_037",
+                      "op": "literal",
+                      "value": "Caixa: "
+                    },
+                    "right": {
+                      "id": "block_038",
+                      "op": "data_sum",
+                      "collection": "sales",
+                      "sum": "total"
+                    }
+                  },
+                  "id": "block_039"
+                },
+                {
+                  "op": "set_text",
+                  "component": "label_a7d4d1da9f9f",
+                  "value": {
+                    "id": "block_040",
+                    "op": "literal",
+                    "value": "Venda registrada."
+                  },
+                  "id": "block_041"
+                }
+              ],
+              "id": "block_042"
+            }
+          ],
+          "id": "block_043"
+        }
+      ]
+    },
+    {
+      "id": "flow_04_click",
+      "name": "Clique: Marcar entregue",
+      "event": {
+        "kind": "click",
+        "component": "button_bbbb7deaa313"
+      },
+      "body": [
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "==",
+            "left": {
+              "id": "block_002",
+              "op": "read",
+              "component": "table_543e42a282c1",
+              "attribute": "selected"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "list",
+              "items": []
+            }
+          },
+          "then": [
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_004",
+                "op": "literal",
+                "value": "Selecione uma venda na tabela."
+              },
+              "id": "block_005"
+            }
+          ],
+          "else": [
+            {
+              "op": "data_update",
+              "collection": "sales",
+              "values": [
+                {
+                  "field": "delivered",
+                  "value": {
+                    "id": "block_006",
+                    "op": "literal",
+                    "value": true
+                  }
+                }
+              ],
+              "record_id": {
+                "id": "block_007",
+                "op": "read",
+                "component": "table_543e42a282c1",
+                "attribute": "record"
+              },
+              "id": "block_008"
+            },
+            {
+              "op": "show_records",
+              "component": "table_543e42a282c1",
+              "collection": "sales",
+              "id": "block_009"
+            },
+            {
+              "op": "set_text",
+              "component": "label_a7d4d1da9f9f",
+              "value": {
+                "id": "block_010",
+                "op": "literal",
+                "value": "Venda marcada como entregue."
+              },
+              "id": "block_011"
+            }
+          ],
+          "id": "block_012"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "collections": [
+      {
+        "id": "books",
+        "name": "Livros",
+        "fields": [
+          {
+            "id": "title",
+            "name": "Título",
+            "type": "text"
+          },
+          {
+            "id": "price",
+            "name": "Preço",
+            "type": "number"
+          },
+          {
+            "id": "stock",
+            "name": "Estoque",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "id": "clients",
+        "name": "Clientes",
+        "fields": [
+          {
+            "id": "name",
+            "name": "Nome",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "sales",
+        "name": "Vendas",
+        "fields": [
+          {
+            "id": "client",
+            "name": "Cliente",
+            "type": "ref",
+            "target": "clients"
+          },
+          {
+            "id": "book",
+            "name": "Livro",
+            "type": "ref",
+            "target": "books"
+          },
+          {
+            "id": "quantity",
+            "name": "Quantidade",
+            "type": "number"
+          },
+          {
+            "id": "total",
+            "name": "Total",
+            "type": "number"
+          },
+          {
+            "id": "delivered",
+            "name": "Entregue",
+            "type": "bool"
+          }
+        ]
+      }
+    ],
+    "logic_version": 1,
+    "example": "Cadastre livros e clientes, registre vendas: o estoque e o caixa se atualizam."
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_afd637d724fc",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.bookshop",
+    "name": "Livraria",
+    "version": "0.1.0",
+    "backend": "qt",
+    "language": "pt_BR"
+  }
+}

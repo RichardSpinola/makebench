@@ -221,6 +221,23 @@ def block_expr(e, ids):
             "left": block_expr(e[1], ids),
             "right": block_expr(e[2], ids),
         }
+    if kind == "record_field":
+        return {
+            "id": ids("block"),
+            "op": "record_field",
+            "collection": e[1],
+            "field": e[2],
+            "record": block_expr(e[3], ids),
+        }
+    if kind == "get":
+        return {
+            "id": ids("block"),
+            "op": "data_get",
+            "collection": e[1],
+            "record_id": block_expr(e[2], ids),
+        }
+    if kind == "sum":
+        return {"id": ids("block"), "op": "data_sum", "collection": e[1], "sum": e[2]}
     if kind == "last_id":
         return {"id": ids("block"), "op": "data_last_id"}
     if kind == "count":
@@ -281,6 +298,12 @@ def block_stmt(s, ids):
         b.update(
             collection=s[1],
             values=[{"field": f, "value": block_expr(v, ids)} for f, v in s[2]],
+        )
+    elif op == "data_update":
+        b.update(
+            collection=s[1],
+            values=[{"field": f, "value": block_expr(v, ids)} for f, v in s[2]],
+            record_id=block_expr(s[3], ids),
         )
     elif op == "show_records":
         b.update(component=s[1], collection=s[2])
