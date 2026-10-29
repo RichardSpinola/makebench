@@ -219,6 +219,19 @@ class CodeWorkspaceMixin:
         editor.insertPlainText(text)
         editor.setFocus()
 
+    def tidy_code_files(self):
+        """Clean up every editable Python file before saving, when Preferences ask for it."""
+        from makebench.core.python_check import tidy
+        from .settings import preference
+
+        if not preference("editor/format_on_save"):
+            return
+        for editor in [self.source_editor, *self.module_editors.values()]:
+            text = editor.toPlainText()
+            clean = tidy(text)
+            if clean != text:
+                editor.replace_all_text(clean)
+
     def insert_code_example(self, code):
         """Insert a task recipe at the cursor of the file being edited."""
         editor = self.active_code_editor()

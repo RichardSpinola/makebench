@@ -171,6 +171,26 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         w.code_reference.examples.menu().actions()[1].trigger()
         self.assertIn("ctx.message(", w.module_editors["makebench_user/helpers.py"].toPlainText())
 
+    def test_format_on_save_cleans_python_only_when_enabled(self):
+        from PySide6.QtCore import QSettings
+
+        from makebench.core.python_check import tidy
+
+        w = self.window
+        messy = "def go(ctx):\t\n\tx = 1   \n\n\n\n\n    return x"
+        w.add_code_module("makebench_user/helpers.py", messy)
+        editor = w.module_editors["makebench_user/helpers.py"]
+        self.assertTrue(w.save_to(self.root / "a.makebench.json"))
+        self.assertEqual(editor.toPlainText(), messy)
+        settings = QSettings("Makebench", "Makebench")
+        settings.setValue("v1/editor/format_on_save", True)
+        self.addCleanup(settings.remove, "v1/editor/format_on_save")
+        self.assertTrue(w.save_to(self.root / "a.makebench.json"))
+        self.assertEqual(editor.toPlainText(), tidy(messy))
+        self.assertEqual(w.source.modules["makebench_user/helpers.py"].text, tidy(messy))
+        editor.undo()
+        self.assertEqual(editor.toPlainText(), messy)
+
     def test_blocks_project_flags_python_calls_in_problems(self):
         w = self.window
         w.project.metadata.update(programming="blocks", logic_version=1)

@@ -114,6 +114,8 @@ class ProjectFilesMixin:
         if not self._finish_field_edit():
             return False
         path = path.resolve()
+        if hasattr(self, "tidy_code_files"):
+            self.tidy_code_files()
         try:
             saved = self._saved_document if path == self.path else None
             self._saved_document, backup = save_workspace(

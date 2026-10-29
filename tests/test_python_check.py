@@ -53,6 +53,15 @@ class PythonCheckTests(unittest.TestCase):
         index.update("def f(ctx):\n    ctx.mesage(nome)\n")
         self.assertIs(index.checks["@actions"], cached)
 
+    def test_tidy_cleans_lines_but_keeps_strings_and_broken_files(self):
+        from makebench.core.python_check import tidy
+
+        text = 'def f():\t\n\tx = 1   \n\n\n\n\n\ts = """a  \n\tb\t\n"""\n\n\n'
+        self.assertEqual(tidy(text), 'def f():\n    x = 1\n\n\n\ts = """a  \n\tb\t\n"""\n')
+        self.assertEqual(tidy('x = f"""{1}  \n"""'), 'x = f"""{1}  \n"""\n')
+        self.assertEqual(tidy("def (\n  "), "def (\n  ")
+        self.assertEqual(tidy(""), "")
+
 
 class ExampleTests(unittest.TestCase):
     @classmethod

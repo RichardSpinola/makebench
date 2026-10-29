@@ -52,6 +52,8 @@ DEFAULTS = {
     "editor/wrap": False,
     "editor/recovery": 30,
     "editor/grid": True,
+    "editor/format_on_save": False,
+    "editor/external": "",
     "test/clear": True,
     "test/confirm_restart": True,
     "test/duration": True,
@@ -345,6 +347,8 @@ class EditorPreferences(SettingsShell):
             "editor/wrap": tr("Wrap code lines"),
             "editor/recovery": tr("Automatic recovery"),
             "editor/grid": tr("Snap to grid by default"),
+            "editor/format_on_save": tr("Clean up Python on save"),
+            "editor/external": tr("External editor command"),
             "test/clear": tr("Clear output on start"),
             "test/confirm_restart": tr("Confirm restart during a task"),
             "test/duration": tr("Show run time"),
@@ -395,6 +399,12 @@ class EditorPreferences(SettingsShell):
                 field,
                 tr("Fixed 4-space indentation.")
                 if key == "editor/code_font"
+                else tr(
+                    "Removes trailing spaces, turns tabs into 4 spaces, keeps at most two blank lines and ends with a newline."
+                )
+                if key == "editor/format_on_save"
+                else tr("For example code or gedit. Empty opens the default app for .py files.")
+                if key == "editor/external"
                 else tr("Desktop colors keep your system's palette, as in other KDE or GNOME apps.")
                 if key == "appearance/look"
                 else tr("Takes effect the next time Makebench starts.")

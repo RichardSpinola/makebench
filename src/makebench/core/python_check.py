@@ -256,3 +256,46 @@ def diagnose(text, component_ids=()):
             )
     found.sort(key=lambda item: (item["line"], item["column"]))
     return found[:LIMIT]
+
+
+def tidy(text):
+    """Simple cleanup for save: no trailing spaces, tabs in indentation become 4 spaces,
+    at most two blank lines in a row and one final newline.
+
+    Lines inside multi-line strings keep their exact text, and a file Python cannot
+    tokenize is returned unchanged.
+    """
+    import io
+    import tokenize
+
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, SyntaxError):
+        return text
+    starts = {getattr(tokenize, name, None) for name in ("FSTRING_START", "TSTRING_START")}
+    ends = {getattr(tokenize, name, None) for name in ("FSTRING_END", "TSTRING_END")}
+    frozen = set()
+    opened = []
+    for token in tokens:
+        if token.type in starts:
+            opened.append(token.start[0])
+            continue
+        first = opened.pop() if token.type in ends and opened else token.start[0]
+        if (token.type == tokenize.STRING or token.type in ends) and token.end[0] > first:
+            frozen.update(range(first, token.end[0] + 1))
+    result = []
+    blanks = 0
+    for number, line in enumerate(text.splitlines(), 1):
+        if number in frozen:
+            result.append(line)
+            blanks = 0
+            continue
+        line = line.rstrip()
+        body = line.lstrip(" \t")
+        line = line[: len(line) - len(body)].replace("\t", "    ") + body
+        blanks = blanks + 1 if not line else 0
+        if blanks <= 2:
+            result.append(line)
+    while result and not result[-1]:
+        result.pop()
+    return "\n".join(result) + "\n" if result else ""

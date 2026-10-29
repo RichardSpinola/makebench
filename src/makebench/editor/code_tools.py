@@ -160,6 +160,18 @@ class CodeTools:
             examples_menu.addAction(title, lambda code=code: self.insert_example(code))
         return examples_menu
 
+    def replace_all_text(self, text):
+        """Replace the whole text as one undo step, keeping the cursor's line and column."""
+        cursor = self.textCursor()
+        line, column = cursor.blockNumber(), cursor.positionInBlock()
+        cursor.beginEditBlock()
+        cursor.select(QTextCursor.SelectionType.Document)
+        cursor.insertText(text)
+        cursor.endEditBlock()
+        block = self.document().findBlockByNumber(min(line, self.document().blockCount() - 1))
+        cursor.setPosition(block.position() + min(column, block.length() - 1))
+        self.setTextCursor(cursor)
+
     def insert_example(self, code):
         """Insert a recipe on its own lines, indented like the cursor's line, as one undo."""
         cursor = self.textCursor()
