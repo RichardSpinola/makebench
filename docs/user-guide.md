@@ -134,6 +134,22 @@ and actions file are kept next to it with a `.bak-blocks` suffix.
 
 - Suggestions, **F12** to go to a definition, and diagnostics as you type.
   Analysis is static: your code is parsed, never imported or run.
+- Every problem is underlined, red for errors and yellow for warnings, and
+  listed in **Problems**: all syntax errors with a short explanation of how to
+  fix them, names that are not defined, `ctx` methods that do not exist and
+  component ids that are not in the project, with a “Did you mean…?” hint.
+  Hover the underline to read it; click it in Problems to jump to the line.
+- **What can I use** (right of the code) lists the `ctx` and `ctx.data`
+  methods with their documentation, the project's components and its
+  collections and fields. Type to filter; double-click to insert at the cursor.
+- **Insert example** (in the same panel and in the code's right-click menu)
+  adds a short recipe — read a field, show a message, fill a table, find
+  records, export CSV, run a program… — indented to the cursor. Ids in quotes
+  are placeholders: replace them with your own.
+- **Open in external editor** (next to the module buttons) saves the project
+  and opens the current file in the command set in Preferences (for example
+  `code`) or the default app for `.py` files. When you save there, Makebench
+  reloads the file unless it has unsaved edits of its own; then it asks.
 - **Ctrl+Shift+F** searches every Python file of the project, using what is
   open in the editor rather than what is on disk.
 - **Ctrl+Z** in a code file undoes inside that file; elsewhere it undoes the
@@ -229,6 +245,9 @@ version, icon and language with **Application…**.
 
 **View › Preferences…** (**Ctrl+,**) holds the editor settings: interface
 language, theme, text size, code font, the folder for new projects and more.
+**Clean up Python on save** (off by default) removes trailing spaces, turns
+indentation tabs into four spaces, keeps at most two blank lines in a row and
+ends each file with a newline; text inside multi-line strings is left alone.
 The interface language applies the next time Makebench starts. The **About**
 page has a button that opens this guide.
 

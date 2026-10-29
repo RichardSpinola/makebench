@@ -7555,3 +7555,199 @@ msgstr "A imagem de fundo de {id} precisa estar na pasta assets do projeto."
 #: src/makebench/core/project.py
 msgid "The style of {id} is invalid: {key}."
 msgstr "O estilo de {id} é inválido: {key}."
+
+#: src/makebench/core/python_check.py
+msgid "A comma may be missing between two items."
+msgstr "Pode estar faltando uma vírgula entre dois itens."
+
+#: src/makebench/core/python_check.py
+msgid "A parenthesis, bracket or brace opened here is never closed."
+msgstr "Um parêntese, colchete ou chave aberto aqui nunca é fechado."
+
+#: src/makebench/editor/code_examples.py
+msgid "Add a record and show the collection"
+msgstr "Adicionar um registro e mostrar a coleção"
+
+#: src/makebench/core/python_check.py
+msgid "After a line ending in ':' the next line must be indented (4 spaces)."
+msgstr "Depois de uma linha que termina em ':' a linha seguinte precisa de recuo (4 espaços)."
+
+#: src/makebench/editor/code_examples.py
+msgid "Ask before continuing"
+msgstr "Perguntar antes de continuar"
+
+#: src/makebench/editor/code_examples.py
+msgid "Ask for a text"
+msgstr "Pedir um texto"
+
+#: src/makebench/core/python_check.py
+msgid "Check the id in the Design properties."
+msgstr "Confira o id nas propriedades do Design."
+
+#: src/makebench/editor/settings.py
+msgid "Clean up Python on save"
+msgstr "Limpar o Python ao salvar"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Could not open the external editor. Check the command in Preferences."
+msgstr "Não foi possível abrir o editor externo. Confira o comando nas Preferências."
+
+#: src/makebench/core/python_check.py
+msgid "Define it before using it, import it, or check the spelling."
+msgstr "Defina antes de usar, importe ou confira a grafia."
+
+#: src/makebench/core/python_check.py
+msgid "Did you mean {name}?"
+msgstr "Você quis dizer {name}?"
+
+#: src/makebench/editor/code_reference.py
+msgid "Double-click to insert at the cursor."
+msgstr "Dois cliques inserem no cursor."
+
+#: src/makebench/editor/code_workspace.py
+msgid "Editing {file} outside Makebench; saved changes reload here."
+msgstr "Editando {file} fora do Makebench; o que for salvo lá é recarregado aqui."
+
+#: src/makebench/editor/code_examples.py
+msgid "Export a CSV file"
+msgstr "Exportar um arquivo CSV"
+
+#: src/makebench/editor/settings.py
+msgid "External editor command"
+msgstr "Comando do editor externo"
+
+#: src/makebench/editor/code_examples.py
+msgid "Fill a table"
+msgstr "Preencher uma tabela"
+
+#: src/makebench/editor/code_reference.py
+msgid "Filter"
+msgstr "Filtrar"
+
+#: src/makebench/editor/code_reference.py
+msgid "Filter what can I use"
+msgstr "Filtrar o que posso usar"
+
+#: src/makebench/editor/code_examples.py
+msgid "Find records"
+msgstr "Buscar registros"
+
+#: src/makebench/editor/settings.py
+msgid "For example code or gedit. Empty opens the default app for .py files."
+msgstr "Por exemplo code ou gedit. Vazio abre o aplicativo padrão para arquivos .py."
+
+#: src/makebench/editor/code_examples.py
+msgid "Handle an error"
+msgstr "Tratar um erro"
+
+#: src/makebench/editor/code_reference.py src/makebench/editor/code_tools.py
+msgid "Insert example"
+msgstr "Inserir exemplo"
+
+#: src/makebench/core/python_check.py
+msgid "Lines that open a block (if, for, while, def…) end with a colon."
+msgstr "Linhas que abrem um bloco (if, for, while, def…) terminam com dois-pontos."
+
+#: src/makebench/core/python_check.py
+msgid "Name not defined: {name}"
+msgstr "Nome não definido: {name}"
+
+#: src/makebench/core/python_check.py
+msgid "No component with the id {id}"
+msgstr "Nenhum componente com o id {id}"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Open in external editor"
+msgstr "Abrir no editor externo"
+
+#: src/makebench/core/python_check.py
+msgid "Put arguments without a name before the ones written as name=value."
+msgstr "Coloque os argumentos sem nome antes dos escritos como nome=valor."
+
+#: src/makebench/core/python_check.py
+msgid "Python cannot read this line: look for a missing or extra symbol."
+msgstr "O Python não consegue ler esta linha: procure um símbolo faltando ou sobrando."
+
+#: src/makebench/editor/code_examples.py
+msgid "Read a text field"
+msgstr "Ler um campo de texto"
+
+#: src/makebench/editor/code_examples.py
+msgid "Read and write a file"
+msgstr "Ler e gravar um arquivo"
+
+#: src/makebench/editor/code_examples.py
+msgid "Read the selected record"
+msgstr "Ler o registro selecionado"
+
+#: src/makebench/editor/code_workspace.py
+msgid "Reloaded {path} after an external edit."
+msgstr "{path} recarregado depois de uma edição externa."
+
+#: src/makebench/editor/settings.py
+msgid "Removes trailing spaces, turns tabs into 4 spaces, keeps at most two blank lines and ends with a newline."
+msgstr "Tira espaços no fim, troca tabs por 4 espaços, deixa no máximo duas linhas em branco e termina com uma quebra de linha."
+
+#: src/makebench/core/code_index.py
+msgid "Rename the import to match the module, or create the module."
+msgstr "Renomeie o import para bater com o módulo, ou crie o módulo."
+
+#: src/makebench/editor/code_examples.py
+msgid "Run a program"
+msgstr "Executar um programa"
+
+#: src/makebench/core/python_check.py
+msgid "See “What can I use” for the list."
+msgstr "Veja a lista em “O que posso usar”."
+
+#: src/makebench/editor/code_examples.py
+msgid "Show a message"
+msgstr "Mostrar uma mensagem"
+
+#: src/makebench/editor/code_examples.py
+msgid "Show progress"
+msgstr "Mostrar progresso"
+
+#: src/makebench/core/python_check.py
+msgid "Tabs and spaces are mixed: indent with spaces only."
+msgstr "Tabs e espaços estão misturados: use só espaços no recuo."
+
+#: src/makebench/core/python_check.py
+msgid "The left side of = must be a name."
+msgstr "O lado esquerdo do = precisa ser um nome."
+
+#: src/makebench/core/python_check.py
+msgid "The spaces at the start of this line do not match any block above."
+msgstr "Os espaços no início desta linha não batem com nenhum bloco acima."
+
+#: src/makebench/core/python_check.py
+msgid "The text in quotes is not closed: add the closing quote."
+msgstr "O texto entre aspas não foi fechado: acrescente a aspa de fechamento."
+
+#: src/makebench/core/python_check.py
+msgid "This closing symbol has no matching opening one."
+msgstr "Este símbolo de fechamento não tem um de abertura correspondente."
+
+#: src/makebench/core/python_check.py
+msgid "This line starts with more spaces than the code around it."
+msgstr "Esta linha começa com mais espaços que o código ao redor."
+
+#: src/makebench/editor/code_reference.py
+msgid "What can I use"
+msgstr "O que posso usar"
+
+#: src/makebench/core/python_check.py
+msgid "break and continue only work inside a for or while loop."
+msgstr "break e continue só funcionam dentro de um laço for ou while."
+
+#: src/makebench/core/python_check.py
+msgid "ctx has no {name}"
+msgstr "ctx não tem {name}"
+
+#: src/makebench/core/python_check.py
+msgid "ctx.data has no {name}"
+msgstr "ctx.data não tem {name}"
+
+#: src/makebench/core/python_check.py
+msgid "return can only be used inside a function (def)."
+msgstr "return só pode ser usado dentro de uma função (def)."

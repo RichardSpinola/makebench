@@ -36,6 +36,12 @@
   italic and rounded corners, and **Edit → Copy style / Paste style** copies
   them between components. Blocks change the window theme, accent and
   background while the app runs. Format 12.
+- **Python editor:** every syntax error is underlined and listed in Problems
+  with a short explanation, plus undefined names, unknown `ctx` methods and
+  component ids, with “Did you mean…?” hints. A **What can I use** panel lists
+  `ctx`, components and collections; **Insert example** adds task recipes;
+  **Open in external editor** reloads the file when you save there; and
+  Preferences can clean up Python on save.
 - **Fixed:** a collection field called `name` no longer clashes in `ctx.data`.
 - The complete workshop examples use block functions and modules only. The
   welcome wizard, task center and terminal examples come in a blocks version

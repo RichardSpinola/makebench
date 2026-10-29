@@ -119,6 +119,13 @@ so the worker imports the snapshot rather than the live folder. Invalid source
 stays editable and savable. External changes are detected against the original
 content. `core/code_index.py`, `editor/code_assist.py` and
 `editor/code_workspace.py` provide static suggestions, definitions and diagnostics.
+`core/python_check.py` (MIT, no imports of user code) finds every syntax error
+(Python's first, then parso's with error recovery), undefined names through
+`symtable`, `ctx`/`ctx.data` members missing from `runtime/worker.py`, and
+unknown component ids, each with a translatable hint; it also holds `tidy()`,
+the optional cleanup on save. `editor/code_reference.py` builds the "What can I
+use" panel from `editor/stubs/makebench_ctx.pyi`, and `editor/code_examples.py`
+holds the recipes of "Insert example".
 
 ## Running and debugging
 

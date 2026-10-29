@@ -143,6 +143,22 @@ projeto e o arquivo de ações anteriores ficam ao lado, com o sufixo
 
 - Sugestões, **F12** para ir à definição e diagnósticos enquanto você digita. A
   análise é estática: o código é lido, nunca importado ou executado.
+- Cada problema fica sublinhado, em vermelho para erros e amarelo para avisos, e
+  aparece em **Problemas**: todos os erros de sintaxe, com uma explicação curta de
+  como corrigir, nomes não definidos, métodos do `ctx` que não existem e ids de
+  componente que não estão no projeto, com a dica “Você quis dizer…?”. Passe o
+  mouse sobre o sublinhado para ler; clique em Problemas para ir à linha.
+- **O que posso usar** (à direita do código) lista os métodos de `ctx` e
+  `ctx.data` com a documentação, os componentes do projeto e as coleções com
+  seus campos. Digite para filtrar; dois cliques inserem no cursor.
+- **Inserir exemplo** (no mesmo painel e no menu do botão direito do código)
+  acrescenta uma receita curta — ler um campo, mostrar uma mensagem, preencher
+  uma tabela, buscar registros, exportar CSV, executar um programa… — com o recuo
+  do cursor. Os ids entre aspas são exemplos: troque pelos seus.
+- **Abrir no editor externo** (ao lado dos botões de módulo) salva o projeto e
+  abre o arquivo atual no comando definido nas Preferências (por exemplo `code`)
+  ou no aplicativo padrão para `.py`. Quando você salva lá, o Makebench recarrega
+  o arquivo, a menos que tenha edições próprias não salvas; nesse caso, ele pergunta.
 - **Ctrl+Shift+F** busca em todos os arquivos Python do projeto, usando o que
   está aberto no editor, e não o que está no disco.
 - **Ctrl+Z** num arquivo de código desfaz dentro daquele arquivo; nas outras áreas,
@@ -241,7 +257,11 @@ e idioma do aplicativo em **Aplicativo…**.
 
 **Exibir › Preferências…** (**Ctrl+,**) reúne as configurações do editor: idioma
 da interface, tema, tamanho do texto, fonte do código, pasta para novos projetos
-e mais. O idioma da interface vale a partir da próxima vez que o Makebench abrir.
+e mais. **Limpar o Python ao salvar** (desligado por padrão) tira espaços no fim das
+linhas, troca tabs do recuo por quatro espaços, deixa no máximo duas linhas em
+branco seguidas e termina cada arquivo com uma quebra de linha; o texto dentro de
+strings de várias linhas não muda. O idioma da interface vale a partir da próxima
+vez que o Makebench abrir.
 A página **Sobre** tem um botão que abre este guia.
 
 ## Arquivos e salvamento
