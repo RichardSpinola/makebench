@@ -109,7 +109,7 @@ def verify(project, source, read_asset):
             add(
                 "error", tr("Invalid Python dependency: {name}").format(name=dependency), "packages"
             )
-    from .build_environment import flatpak_requirements
+    from .build_environment import flatpak_requirements, uses_web
 
     try:
         flatpak_requirements(project)
@@ -129,6 +129,14 @@ def verify(project, source, read_asset):
                 "Administrative actions require Polkit/pkexec and an authentication agent on the target system."
             ),
             "permissions",
+        )
+    if uses_web(project) and app.get("backend", "qt") == "qt":
+        add(
+            "warning",
+            tr(
+                "Web view windows add Qt WebEngine, which makes the Qt package much larger; with GTK they use the system's WebKitGTK."
+            ),
+            "windows",
         )
     if any(r.properties.get("on_top") or r.properties.get("centered") for r in project.roots):
         add(
@@ -278,9 +286,11 @@ def export_source(project, source, read_asset, destination, progress=None, cance
         (stage / "run.py").write_text(
             GTK_RUNNER if backend == "gtk" else QT_RUNNER, encoding="utf-8"
         )
+        from .build_environment import qt_packages
+
         dependencies = [
             "pyte==0.8.2",
-            *(["PyGObject>=3.48"] if backend == "gtk" else ["PySide6==6.11.2"]),
+            *(["PyGObject>=3.48"] if backend == "gtk" else qt_packages(project)),
             *project.application.get("packages", []),
         ]
         from .compatibility import minimum_minor

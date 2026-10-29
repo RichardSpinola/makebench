@@ -338,6 +338,24 @@ def prepare_flatpak(project, progress=None, cancelled=None):
     return {"status": tr("Flatpak environment ready."), "sdk": sdk}
 
 
+QT_VERSION = "6.11.2"
+
+
+def uses_web(project):
+    """Whether any window is a Web view, which needs the large Qt WebEngine on Qt."""
+    from .web import is_web
+
+    return any(is_web(node) for node in project.walk())
+
+
+def qt_packages(project):
+    """Qt Essentials always; the Addons wheel (Qt WebEngine) only when a Web view needs it."""
+    packages = [f"PySide6-Essentials=={QT_VERSION}"]
+    if uses_web(project):
+        packages.append(f"PySide6-Addons=={QT_VERSION}")
+    return packages
+
+
 def flatpak_requirements(project):
     """Only PyPI names/constraints; rejects URLs, paths and pip options."""
     import re
@@ -351,7 +369,7 @@ def flatpak_requirements(project):
             raise ProjectError(tr("Invalid Python dependency: {name}").format(name=package))
     packages.insert(0, "pyte==0.8.2")
     if project.application.get("backend", "qt") == "qt":
-        packages.insert(0, "PySide6-Essentials==6.11.2")
+        packages[:0] = qt_packages(project)
     return packages
 
 

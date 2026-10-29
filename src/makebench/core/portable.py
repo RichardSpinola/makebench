@@ -51,7 +51,7 @@ def requirements(project, editor=False):
 
     declared = flatpak_requirements(project)
     if editor:
-        declared = [package for package in declared if not package.startswith("PySide6-Essentials")]
+        declared = [package for package in declared if not package.startswith("PySide6-")]
         declared.insert(0, "PySide6==6.11.2")
         declared.extend(["jedi==0.20.1", "parso==0.8.7"])
     return sorted(set(["pyte==0.8.2", *declared]))

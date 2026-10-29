@@ -112,6 +112,27 @@ class NativeReleaseTests(unittest.TestCase):
                     self.assertIn("PySide6", requirements)
                 self.assertFalse(any("/editor/" in n or "/gtk_editor/" in n for n in names))
 
+    def test_qt_webengine_is_required_only_by_web_view_windows(self):
+        from makebench.core.build_environment import flatpak_requirements
+        from makebench.core.exporter import verify
+        from makebench.core.web import WEB_PAGE
+
+        p, assets = self.fixture("qt")
+        path = self.root / "plain.zip"
+        export_source(p, "", assets.__getitem__, path)
+        with zipfile.ZipFile(path) as z:
+            requirements = z.read("requirements.txt").decode().split()
+        self.assertIn("PySide6-Essentials==6.11.2", requirements)
+        self.assertFalse(any(r.startswith(("PySide6-Addons", "PySide6==")) for r in requirements))
+        self.assertNotIn("PySide6-Addons==6.11.2", flatpak_requirements(p))
+        p.roots[0].properties[WEB_PAGE] = "<p>Hi</p>"
+        self.assertIn("PySide6-Addons==6.11.2", flatpak_requirements(p))
+        self.assertTrue(any("WebEngine" in i["message"] for i in verify(p, "", assets.get)))
+        path = self.root / "web.zip"
+        export_source(p, "", assets.__getitem__, path)
+        with zipfile.ZipFile(path) as z:
+            self.assertIn("PySide6-Addons==6.11.2", z.read("requirements.txt").decode())
+
     def test_each_recipe_contains_metadata_launchers_and_no_execution(self):
         """Control, spec, manifest and AppDir are inspectable, inert files."""
         p, assets = self.fixture()
