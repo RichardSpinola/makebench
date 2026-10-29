@@ -1,0 +1,5 @@
+# Tools that build the documentation site (mkdocs.yml). Kept in sync with checks/docs.py.
+mkdocs==1.6.1
+mkdocs-material==9.8.0
+mkdocs-static-i18n==1.3.1
+pymdown-extensions==12.3

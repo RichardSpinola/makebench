@@ -1,0 +1,45 @@
+/* Makebench colors on top of Material: the editor's own accent (ui/theme.py). */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #2968c6;
+  --md-primary-fg-color--light: #5a8ad6;
+  --md-primary-fg-color--dark: #1d4f99;
+  --md-accent-fg-color: #e66100;
+  --md-typeset-a-color: #2968c6;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #1d3f73;
+  --md-primary-fg-color--light: #2968c6;
+  --md-primary-fg-color--dark: #132136;
+  --md-accent-fg-color: #ffa348;
+  --md-typeset-a-color: #82b1ff;
+}
+
+/* Screenshots: a soft frame so they stand out from the page. */
+.md-typeset img[src*="images/"] {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 18%);
+}
+
+/* Reference tables: keep the first column (names) on one line. */
+.md-typeset table:not([class]) td:first-child code {
+  white-space: nowrap;
+}
+
+/* Home page hero. */
+.mb-hero {
+  text-align: center;
+  margin: 1rem 0 2rem;
+}
+
+.mb-hero img {
+  width: 96px;
+  box-shadow: none !important;
+}
+
+.mb-hero p {
+  font-size: 1.15rem;
+  max-width: 38rem;
+  margin: 0.5rem auto 1.2rem;
+}
