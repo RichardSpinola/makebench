@@ -1,0 +1,386 @@
+{
+  "format": "makebench.project",
+  "format_version": 11,
+  "id": "project_7fff00bf5145",
+  "name": "Minhas notas",
+  "ui": {
+    "id": "window_efd0751fb41a",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "Minhas notas",
+      "width": 640,
+      "height": 520,
+      "padding": 16,
+      "spacing": 10
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_bb09eedcff92",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Minhas notas",
+          "code_name": "heading"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_c88b7d426414",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Escreva uma nota e ela fica salva no app, sem programar o banco de dados.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "text_input_9c4981f76aea",
+        "kind": "text_input",
+        "layout": "vertical",
+        "properties": {
+          "text": "",
+          "placeholder": "Título da nota",
+          "code_name": "title_input"
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "text_area_84ad17935af9",
+        "kind": "text_area",
+        "layout": "vertical",
+        "properties": {
+          "text": "",
+          "placeholder": "Escreva aqui…",
+          "code_name": "text_input"
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "container_f5568080cbdf",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_652b9cc2234d",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Adicionar nota",
+              "code_name": "add_button"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_040b32a0597b",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Exportar CSV",
+              "code_name": "export_button"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_22e85373c073",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "table_8a572140aeca",
+        "kind": "table",
+        "layout": "vertical",
+        "properties": {
+          "headers": [
+            "Column 1",
+            "Column 2"
+          ],
+          "code_name": "notes_table"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "label_8f7d82c883cd",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Pronto.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 112,
+          "y": 112,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "Ao iniciar",
+      "event": {
+        "kind": "start",
+        "component": "window_efd0751fb41a"
+      },
+      "body": [
+        {
+          "op": "show_records",
+          "component": "table_8a572140aeca",
+          "collection": "notes",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Clique: Adicionar nota",
+      "event": {
+        "kind": "click",
+        "component": "button_652b9cc2234d"
+      },
+      "body": [
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "==",
+            "left": {
+              "id": "block_002",
+              "op": "read",
+              "component": "text_input_9c4981f76aea",
+              "attribute": "text"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "literal",
+              "value": ""
+            }
+          },
+          "then": [
+            {
+              "op": "set_text",
+              "component": "label_8f7d82c883cd",
+              "value": {
+                "id": "block_004",
+                "op": "literal",
+                "value": "Escreva um título primeiro."
+              },
+              "id": "block_005"
+            }
+          ],
+          "else": [
+            {
+              "op": "data_add",
+              "collection": "notes",
+              "values": [
+                {
+                  "field": "title",
+                  "value": {
+                    "id": "block_006",
+                    "op": "read",
+                    "component": "text_input_9c4981f76aea",
+                    "attribute": "text"
+                  }
+                },
+                {
+                  "field": "text",
+                  "value": {
+                    "id": "block_007",
+                    "op": "read",
+                    "component": "text_area_84ad17935af9",
+                    "attribute": "text"
+                  }
+                }
+              ],
+              "id": "block_008"
+            },
+            {
+              "op": "set_text",
+              "component": "text_input_9c4981f76aea",
+              "value": {
+                "id": "block_009",
+                "op": "literal",
+                "value": ""
+              },
+              "id": "block_010"
+            },
+            {
+              "op": "set_text",
+              "component": "text_area_84ad17935af9",
+              "value": {
+                "id": "block_011",
+                "op": "literal",
+                "value": ""
+              },
+              "id": "block_012"
+            },
+            {
+              "op": "show_records",
+              "component": "table_8a572140aeca",
+              "collection": "notes",
+              "id": "block_013"
+            },
+            {
+              "op": "set_text",
+              "component": "label_8f7d82c883cd",
+              "value": {
+                "id": "block_014",
+                "op": "literal",
+                "value": "Nota salva."
+              },
+              "id": "block_015"
+            }
+          ],
+          "id": "block_016"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Clique: Exportar CSV",
+      "event": {
+        "kind": "click",
+        "component": "button_040b32a0597b"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "save_file",
+          "name": "csv_path",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "Salvar as notas em"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "export_table",
+          "component": "table_8a572140aeca",
+          "path": {
+            "id": "block_004",
+            "op": "variable",
+            "name": "csv_path",
+            "scope": "project"
+          },
+          "id": "block_005"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "collections": [
+      {
+        "id": "notes",
+        "name": "Notas",
+        "fields": [
+          {
+            "id": "title",
+            "name": "Título",
+            "type": "text"
+          },
+          {
+            "id": "text",
+            "name": "Texto",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "logic_version": 1,
+    "example": "Escreva uma nota e ela fica salva no app, sem programar o banco de dados."
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_efd0751fb41a",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.notes",
+    "name": "Minhas notas",
+    "version": "0.1.0",
+    "backend": "qt",
+    "language": "pt_BR"
+  }
+}

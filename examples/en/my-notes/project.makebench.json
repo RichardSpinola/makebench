@@ -1,0 +1,386 @@
+{
+  "format": "makebench.project",
+  "format_version": 11,
+  "id": "project_1777055d3c92",
+  "name": "My notes",
+  "ui": {
+    "id": "window_fdc92c78fd1c",
+    "kind": "window",
+    "layout": "vertical",
+    "properties": {
+      "title": "My notes",
+      "width": 640,
+      "height": 520,
+      "padding": 16,
+      "spacing": 10
+    },
+    "geometry": {
+      "x": 16,
+      "y": 16,
+      "width": 360,
+      "height": 240
+    },
+    "children": [
+      {
+        "id": "label_5d87d0b629fc",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "My notes",
+          "code_name": "heading"
+        },
+        "geometry": {
+          "x": 16,
+          "y": 16,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "label_94aee3049f9b",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Write a note and the app keeps it, with no database to program.",
+          "code_name": "subtitle"
+        },
+        "geometry": {
+          "x": 32,
+          "y": 32,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "text_input_ac959e73cad0",
+        "kind": "text_input",
+        "layout": "vertical",
+        "properties": {
+          "text": "",
+          "placeholder": "Note title",
+          "code_name": "title_input"
+        },
+        "geometry": {
+          "x": 48,
+          "y": 48,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      },
+      {
+        "id": "text_area_91ba351842ea",
+        "kind": "text_area",
+        "layout": "vertical",
+        "properties": {
+          "text": "",
+          "placeholder": "Write here…",
+          "code_name": "text_input"
+        },
+        "geometry": {
+          "x": 64,
+          "y": 64,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "container_57c4a2df8e91",
+        "kind": "container",
+        "layout": "horizontal",
+        "properties": {},
+        "geometry": {
+          "x": 80,
+          "y": 80,
+          "width": 360,
+          "height": 240
+        },
+        "children": [
+          {
+            "id": "button_9a5673708095",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Add note",
+              "code_name": "add_button"
+            },
+            "geometry": {
+              "x": 16,
+              "y": 16,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "button_c1041e4c162a",
+            "kind": "button",
+            "layout": "vertical",
+            "properties": {
+              "text": "Export CSV",
+              "code_name": "export_button"
+            },
+            "geometry": {
+              "x": 32,
+              "y": 32,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          },
+          {
+            "id": "spacer_b3e20b3b7b5e",
+            "kind": "spacer",
+            "layout": "vertical",
+            "properties": {
+              "size_mode": {
+                "width": "fill",
+                "height": "fill"
+              }
+            },
+            "geometry": {
+              "x": 48,
+              "y": 48,
+              "width": 220,
+              "height": 44
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "table_dfbc9c99373e",
+        "kind": "table",
+        "layout": "vertical",
+        "properties": {
+          "headers": [
+            "Column 1",
+            "Column 2"
+          ],
+          "code_name": "notes_table"
+        },
+        "geometry": {
+          "x": 96,
+          "y": 96,
+          "width": 360,
+          "height": 140
+        },
+        "children": []
+      },
+      {
+        "id": "label_e15dabc499f6",
+        "kind": "label",
+        "layout": "vertical",
+        "properties": {
+          "text": "Ready.",
+          "code_name": "status"
+        },
+        "geometry": {
+          "x": 112,
+          "y": 112,
+          "width": 220,
+          "height": 44
+        },
+        "children": []
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "flow_00_start",
+      "name": "On start",
+      "event": {
+        "kind": "start",
+        "component": "window_fdc92c78fd1c"
+      },
+      "body": [
+        {
+          "op": "show_records",
+          "component": "table_dfbc9c99373e",
+          "collection": "notes",
+          "id": "block_001"
+        }
+      ]
+    },
+    {
+      "id": "flow_01_click",
+      "name": "Click: Add note",
+      "event": {
+        "kind": "click",
+        "component": "button_9a5673708095"
+      },
+      "body": [
+        {
+          "op": "if",
+          "condition": {
+            "id": "block_001",
+            "op": "binary",
+            "operator": "==",
+            "left": {
+              "id": "block_002",
+              "op": "read",
+              "component": "text_input_ac959e73cad0",
+              "attribute": "text"
+            },
+            "right": {
+              "id": "block_003",
+              "op": "literal",
+              "value": ""
+            }
+          },
+          "then": [
+            {
+              "op": "set_text",
+              "component": "label_e15dabc499f6",
+              "value": {
+                "id": "block_004",
+                "op": "literal",
+                "value": "Write a title first."
+              },
+              "id": "block_005"
+            }
+          ],
+          "else": [
+            {
+              "op": "data_add",
+              "collection": "notes",
+              "values": [
+                {
+                  "field": "title",
+                  "value": {
+                    "id": "block_006",
+                    "op": "read",
+                    "component": "text_input_ac959e73cad0",
+                    "attribute": "text"
+                  }
+                },
+                {
+                  "field": "text",
+                  "value": {
+                    "id": "block_007",
+                    "op": "read",
+                    "component": "text_area_91ba351842ea",
+                    "attribute": "text"
+                  }
+                }
+              ],
+              "id": "block_008"
+            },
+            {
+              "op": "set_text",
+              "component": "text_input_ac959e73cad0",
+              "value": {
+                "id": "block_009",
+                "op": "literal",
+                "value": ""
+              },
+              "id": "block_010"
+            },
+            {
+              "op": "set_text",
+              "component": "text_area_91ba351842ea",
+              "value": {
+                "id": "block_011",
+                "op": "literal",
+                "value": ""
+              },
+              "id": "block_012"
+            },
+            {
+              "op": "show_records",
+              "component": "table_dfbc9c99373e",
+              "collection": "notes",
+              "id": "block_013"
+            },
+            {
+              "op": "set_text",
+              "component": "label_e15dabc499f6",
+              "value": {
+                "id": "block_014",
+                "op": "literal",
+                "value": "Note saved."
+              },
+              "id": "block_015"
+            }
+          ],
+          "id": "block_016"
+        }
+      ]
+    },
+    {
+      "id": "flow_02_click",
+      "name": "Click: Export CSV",
+      "event": {
+        "kind": "click",
+        "component": "button_c1041e4c162a"
+      },
+      "body": [
+        {
+          "op": "ask",
+          "kind": "save_file",
+          "name": "csv_path",
+          "scope": "project",
+          "prompt": {
+            "id": "block_001",
+            "op": "literal",
+            "value": "Save the notes to"
+          },
+          "options": {
+            "id": "block_002",
+            "op": "list",
+            "items": []
+          },
+          "id": "block_003"
+        },
+        {
+          "op": "export_table",
+          "component": "table_dfbc9c99373e",
+          "path": {
+            "id": "block_004",
+            "op": "variable",
+            "name": "csv_path",
+            "scope": "project"
+          },
+          "id": "block_005"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "collections": [
+      {
+        "id": "notes",
+        "name": "Notes",
+        "fields": [
+          {
+            "id": "title",
+            "name": "Title",
+            "type": "text"
+          },
+          {
+            "id": "text",
+            "name": "Text",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "logic_version": 1,
+    "example": "Write a note and the app keeps it, with no database to program."
+  },
+  "windows": [],
+  "states": {},
+  "entry_window": "window_fdc92c78fd1c",
+  "variables": [],
+  "map_layout": {},
+  "application": {
+    "id": "org.makebench.notes",
+    "name": "My notes",
+    "version": "0.1.0",
+    "backend": "qt",
+    "language": "en"
+  }
+}
