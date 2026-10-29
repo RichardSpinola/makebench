@@ -5,6 +5,7 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 import re
+from .python_check import diagnose
 from .source import ENTRY_FILE, source_files
 from makebench.i18n import tr
 
@@ -35,6 +36,7 @@ class CodeIndex:
         self.trees = {}
         self.texts = {}
         self.errors = []
+        self.checks = {}
         self.definitions = {}
         self.imports = {}
         self.components = []
@@ -65,20 +67,19 @@ class CodeIndex:
         for name in set(self.trees) - set(files):
             self.trees.pop(name, None)
             self.texts.pop(name, None)
+        ids = frozenset(getattr(node, "id", node) for node in self.components)
+        for name in set(self.checks) - set(files):
+            self.checks.pop(name)
         for name, text in files.items():
             try:
                 if self.texts.get(name) != text:
                     self.trees[name] = ast.parse(text)
                     self.texts[name] = text
-            except (SyntaxError, ValueError) as exc:
-                self.errors.append(
-                    {
-                        "file": name,
-                        "line": getattr(exc, "lineno", 1) or 1,
-                        "column": getattr(exc, "offset", 1) or 1,
-                        "message": str(exc),
-                    }
-                )
+            except (SyntaxError, ValueError):
+                pass
+            if self.checks.get(name, (None,))[0] != (text, ids):
+                self.checks[name] = ((text, ids), diagnose(text, ids))
+            self.errors.extend({"file": name, **item} for item in self.checks[name][1])
         self.definitions = {}
         self.imports = {}
         known = {module_name(name): name for name in files if name != ENTRY_FILE}
@@ -166,6 +167,8 @@ class CodeIndex:
                 "line": node.lineno,
                 "column": node.col_offset + 1,
                 "message": tr("Local reference not found: {module}").format(module=module),
+                "hint": tr("Rename the import to match the module, or create the module."),
+                "severity": "error",
             }
         )
 
