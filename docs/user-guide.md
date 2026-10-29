@@ -27,7 +27,7 @@ you can detach, dock elsewhere or close; **View › Panels › Restore layout** 
 them back. The status bar shows whether the project is saved, its problems, the
 toolkit, the zoom and a light/dark switch.
 
-Makebench draws with its own colors by default. **Preferences › Appearance ›
+Makebench draws with its own colors by default. **View › Preferences… › Appearance ›
 Look** switches to the desktop's own colors, and **Plugins › Themes…** picks,
 creates or imports `.mbtheme` color themes.
 
@@ -54,7 +54,8 @@ for the transitions between them.
 
 Design is where you build each window with native controls.
 
-- Drag components from **Insert** onto the canvas or onto the component tree.
+- Drag components from the **Components** panel onto the canvas or onto the
+  component tree, or select one and click **Insert**.
 - Arrange them in rows, columns, grids, pages or free positioning. The
   selection can be moved, resized, duplicated and aligned; with several
   components selected, **Properties** shows what they have in common.
@@ -120,7 +121,8 @@ empty to take it out. Right-click a block to add a comment or collapse it.
 
 A Python project keeps its code in the project's `.actions.py` file and any
 modules in `makebench_user/`. Each event is bound to a function by name:
-double-click a button (or the window) in Design and Makebench adds
+select a button (or the window) in Design, click **+ On click** (or
+**+ On start**) in Properties, and Makebench adds
 `def on_save_click(ctx):` to the actions file and opens it. The **Events** list
 shows every binding; `ctx` gives access to the application (read and change
 components, show pages, log, ask questions, run tasks). If the function is
@@ -228,11 +230,12 @@ testing them.
   matters.
 
 Building never runs your project. Edit the application's name, identifier,
-version, icon and language with **Application…**.
+version, icon and language with **Application…** in the Export window or
+**Project › Application settings…**.
 
 ## Version history, cloud and pieces
 
-- **Version history** (Project › Version history): turn it on once and every save
+- **Version history** (File › Version history…): turn it on once and every save
   becomes a version kept with Git in the project folder. Open the window to see
   versions by day, name one, or restore it. Restoring never deletes anything: the
   current state is saved first and the old files come back as a new version.
@@ -242,7 +245,7 @@ version, icon and language with **Application…**.
   or stores a password: it uses the login your computer already has (`gh`, SSH or
   the credential helper).
 - **Reusable pieces:** right-click a component › *Save as reusable piece*. Your
-  pieces appear under *My pieces* in Insert and can be inserted as independent
+  pieces are inserted with **Edit › Insert piece** as independent
   copies, renamed, exported and imported.
 - **Plugins:** see [plugins.md](plugins.md). They are off until you turn each one on.
 - **Window look:** select a window and choose its theme (System, Light, Dark),

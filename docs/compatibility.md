@@ -26,7 +26,7 @@ What stays stable, what may change, and how Makebench tells you.
 
 ## Themes
 
-A theme (`.mbtheme`) is data only: colors and sizes. It cannot run code.
+A theme (`.mbtheme`) is data only: colors. It cannot run code.
 
 ## Exported apps
 

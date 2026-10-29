@@ -72,7 +72,7 @@ To build the **editor itself as an AppImage**, open the Export window and choose
 .venv/bin/python checks/build_portable_examples.py ~/makebench-builds --backend qt --editor --prepare
 ```
 
-## Translations
+## Translations { #translations }
 
 English strings in the source are the message ids. Each language has one
 gettext catalog, `src/makebench/locale/<code>/makebench.po`, read directly at

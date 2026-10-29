@@ -21,9 +21,10 @@
 ## Projects and files
 
 **Makebench asked to upgrade my project.**
-:   Projects made with an older Makebench open normally. When you save, the
-    file moves to the current format and the previous file is kept next to it
-    as `<name>.makebench.json.bak-vN` (N is the old format number). A project
+:   Projects made with an older Makebench open normally. Saving writes the
+    lowest format that holds the features the project uses; when that is newer
+    than the file's format, the previous file is kept next to it as
+    `<name>.makebench.json.bak-vN` (N is the old format number). A project
     made by a newer Makebench is refused with a clear message instead of being
     damaged. See [Compatibility](compatibility.md).
 

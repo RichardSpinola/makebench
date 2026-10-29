@@ -29,7 +29,7 @@ pode soltar, encaixar em outro lugar ou fechar; **Exibir › Painéis › Restau
 layout** os devolve. A barra de status mostra se o projeto está salvo, os problemas,
 o toolkit, o zoom e um botão de claro/escuro.
 
-O Makebench usa cores próprias por padrão. **Preferências › Aparência › Visual**
+O Makebench usa cores próprias por padrão. **Exibir › Preferências… › Aparência › Visual**
 troca para as cores do desktop, e **Plugins › Temas…** escolhe, cria ou importa
 temas de cores `.mbtheme`.
 
@@ -57,7 +57,8 @@ as transições entre eles.
 
 No Design você monta cada janela com controles nativos.
 
-- Arraste componentes de **Inserir** para a tela ou para a árvore de componentes.
+- Arraste componentes do painel **Componentes** para a tela ou para a árvore de
+  componentes, ou selecione um e clique em **Inserir**.
 - Organize-os em linhas, colunas, grades, páginas ou posicionamento livre. A
   seleção pode ser movida, redimensionada, duplicada e alinhada; com vários
   componentes selecionados, **Propriedades** mostra o que eles têm em comum.
@@ -127,8 +128,9 @@ para comentar ou recolher.
 ### Projetos em Python
 
 Um projeto em Python guarda o código no arquivo `.actions.py` do projeto e nos
-módulos em `makebench_user/`. Cada evento é ligado a uma função pelo nome: dê
-dois cliques num botão (ou na janela) no Design e o Makebench acrescenta
+módulos em `makebench_user/`. Cada evento é ligado a uma função pelo nome:
+selecione um botão (ou a janela) no Design, clique em **+ Ao clicar** (ou
+**+ Ao iniciar**) em Propriedades, e o Makebench acrescenta
 `def on_salvar_click(ctx):` ao arquivo de ações e o abre. A lista **Eventos**
 mostra todas as ligações; `ctx` dá acesso ao aplicativo (ler e alterar
 componentes, mostrar páginas, registrar saída, fazer perguntas, executar
@@ -237,11 +239,12 @@ testá-los.
   quando o tamanho importa.
 
 Construir nunca executa o seu projeto. Edite nome, identificador, versão, ícone
-e idioma do aplicativo em **Aplicativo…**.
+e idioma do aplicativo em **Aplicativo…**, na janela Exportar, ou em
+**Projeto › Configurações do aplicativo…**.
 
 ## Histórico de versões, nuvem e peças
 
-- **Histórico de versões** (Projeto › Histórico de versões): ative uma vez e cada
+- **Histórico de versões** (Arquivo › Histórico de versões…): ative uma vez e cada
   salvamento vira uma versão guardada com Git na pasta do projeto. Na janela você vê
   as versões por dia, dá nome a uma ou restaura. Restaurar nunca apaga nada: o estado
   atual é salvo antes e os arquivos antigos voltam como uma versão nova.
@@ -251,9 +254,9 @@ e idioma do aplicativo em **Aplicativo…**.
   pede nem guarda senha: usa o login que o computador já tem (`gh`, SSH ou o
   chaveiro de credenciais).
 - **Peças reutilizáveis:** botão direito num componente › *Salvar como peça
-  reutilizável*. Suas peças aparecem em *Minhas peças* na aba Inserir e entram como
+  reutilizável*. Suas peças entram por **Editar › Inserir peça** como
   cópias independentes; dá para renomear, exportar e importar.
-- **Plugins:** veja [plugins.md](plugins.md) (em inglês). Todos vêm desligados até
+- **Plugins:** veja [Plugins](plugins.md). Todos vêm desligados até
   você ligar cada um.
 - **Aparência da janela:** selecione uma janela e escolha tema (Sistema, Claro,
   Escuro), cor de destaque e cor de fundo. Na lógica use `ctx.set_theme(...)` e

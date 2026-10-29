@@ -21,8 +21,9 @@
 ## Projetos e arquivos
 
 **O Makebench pediu para atualizar meu projeto.**
-:   Projetos feitos com um Makebench mais antigo abrem normalmente. Ao salvar,
-    o arquivo passa para o formato atual e o anterior fica guardado ao lado
+:   Projetos feitos com um Makebench mais antigo abrem normalmente. Salvar
+    grava o formato mais baixo que comporta os recursos usados no projeto;
+    quando ele é mais novo que o do arquivo, o anterior fica guardado ao lado
     como `<nome>.makebench.json.bak-vN` (N é o número do formato antigo). Um
     projeto feito por um Makebench mais novo é recusado com uma mensagem clara,
     em vez de ser estragado. Veja [Compatibilidade](compatibility.md).
