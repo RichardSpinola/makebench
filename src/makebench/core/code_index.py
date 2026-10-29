@@ -37,6 +37,7 @@ class CodeIndex:
         self.texts = {}
         self.errors = []
         self.checks = {}
+        self.outlines = {}
         self.definitions = {}
         self.imports = {}
         self.components = []
@@ -78,86 +79,89 @@ class CodeIndex:
             except (SyntaxError, ValueError):
                 pass
             if self.checks.get(name, (None,))[0] != (text, ids):
-                self.checks[name] = ((text, ids), diagnose(text, ids))
+                # The last valid tree only matches when this exact text parsed.
+                tree = self.trees.get(name) if self.texts.get(name) == text else None
+                self.checks[name] = ((text, ids), diagnose(text, ids, tree))
             self.errors.extend({"file": name, **item} for item in self.checks[name][1])
+        for name in set(self.outlines) - set(self.trees):
+            self.outlines.pop(name)
         self.definitions = {}
         self.imports = {}
         known = {module_name(name): name for name in files if name != ENTRY_FILE}
         for name, tree in self.trees.items():
-            definitions = {}
-            imports = {}
-            for node in tree.body:
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                    signature = (
-                        node.name + "(" + ast.unparse(node.args) + ")"
-                        if hasattr(node, "args")
-                        else "class " + node.name
-                    )
-                    definitions[node.name] = Definition(
-                        node.name,
-                        name,
-                        node.lineno,
-                        node.col_offset + 1,
-                        signature,
-                        ast.get_docstring(node) or "",
-                    )
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    for alias in node.names:
-                        imports[alias.asname or alias.name.split(".")[0]] = (
-                            alias.name if alias.asname else alias.name.split(".")[0],
-                            None,
-                        )
-                        if alias.name.startswith("makebench_user") and alias.name not in known:
-                            self._missing(name, node, alias.name)
-                elif isinstance(node, ast.ImportFrom):
-                    base = node.module or ""
-                    if node.level and name != ENTRY_FILE:
-                        package = module_name(name).split(".")
-                        if not name.endswith("/__init__.py"):
-                            package = package[:-1]
-                        base = ".".join(
-                            package[: len(package) - node.level + 1] + ([base] if base else [])
-                        )
-                    for alias in node.names:
-                        imports[alias.asname or alias.name] = (base, alias.name)
-                        if base.startswith("makebench_user"):
-                            if base not in known:
-                                self._missing(name, node, base)
-                            elif base + "." + alias.name not in known:
-                                target = self.trees.get(known[base])
-                                symbols = (
-                                    {
-                                        n.name
-                                        for n in target.body
-                                        if isinstance(
-                                            n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-                                        )
-                                    }
-                                    if target
-                                    else set()
-                                )
-                                assigned = (
-                                    {
-                                        n.id
-                                        for n in ast.walk(target)
-                                        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)
-                                    }
-                                    if target
-                                    else set()
-                                )
-                                if (
-                                    alias.name not in symbols | assigned
-                                    and alias.name != "*"
-                                    and not any(
-                                        isinstance(n, (ast.Import, ast.ImportFrom))
-                                        for n in (target.body if target else [])
-                                    )
-                                ):
-                                    self._missing(name, node, base + "." + alias.name)
+            _, definitions, imports, references, _ = self._outline_of(name)
             self.definitions[name] = definitions
             self.imports[name] = imports
+            for node, base, alias in references:
+                if alias is None:
+                    if base not in known:
+                        self._missing(name, node, base)
+                elif base not in known:
+                    self._missing(name, node, base)
+                elif base + "." + alias not in known:
+                    target = self._outline_of(known[base])
+                    names, star = target[4] if target else (set(), False)
+                    if alias not in names and alias != "*" and not star:
+                        self._missing(name, node, base + "." + alias)
         self.known = known
+
+    def _outline_of(self, name):
+        """The cached outline of a file's current tree, or None when it never parsed."""
+        tree = self.trees.get(name)
+        if tree is None:
+            return None
+        if self.outlines.get(name, (None,))[0] is not tree:
+            self.outlines[name] = (tree, *self._outline(name, tree))
+        return self.outlines[name]
+
+    def _outline(self, name, tree):
+        """What one file defines, imports and exports; kept until its tree changes."""
+        definitions = {}
+        imports = {}
+        references = []
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                signature = (
+                    node.name + "(" + ast.unparse(node.args) + ")"
+                    if hasattr(node, "args")
+                    else "class " + node.name
+                )
+                definitions[node.name] = Definition(
+                    node.name,
+                    name,
+                    node.lineno,
+                    node.col_offset + 1,
+                    signature,
+                    ast.get_docstring(node) or "",
+                )
+        assigned = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                assigned.add(node.id)
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    imports[alias.asname or alias.name.split(".")[0]] = (
+                        alias.name if alias.asname else alias.name.split(".")[0],
+                        None,
+                    )
+                    if alias.name.startswith("makebench_user"):
+                        references.append((node, alias.name, None))
+            elif isinstance(node, ast.ImportFrom):
+                base = node.module or ""
+                if node.level and name != ENTRY_FILE:
+                    package = module_name(name).split(".")
+                    if not name.endswith("/__init__.py"):
+                        package = package[:-1]
+                    base = ".".join(
+                        package[: len(package) - node.level + 1] + ([base] if base else [])
+                    )
+                for alias in node.names:
+                    imports[alias.asname or alias.name] = (base, alias.name)
+                    if base.startswith("makebench_user"):
+                        references.append((node, base, alias.name))
+        # A module that imports anything may re-export names, so it is never reported.
+        star = any(isinstance(n, (ast.Import, ast.ImportFrom)) for n in tree.body)
+        return definitions, imports, references, (set(definitions) | assigned, star)
 
     def _missing(self, name, node, module):
         """Record a broken local reference, common after renaming a module."""

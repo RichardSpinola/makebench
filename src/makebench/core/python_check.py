@@ -150,11 +150,11 @@ def syntax_errors(text):
     return found[:LIMIT]
 
 
-def _undefined(text, tree):
+def _undefined(text, nodes):
     """Names read somewhere that nothing defines, imports or provides as a builtin."""
     if any(
         isinstance(node, ast.ImportFrom) and any(a.name == "*" for a in node.names)
-        for node in ast.walk(tree)
+        for node in nodes
     ):
         return set()
     try:
@@ -180,22 +180,28 @@ def _undefined(text, tree):
     return candidates - defined
 
 
-def diagnose(text, component_ids=()):
-    """Problems in one Python file, sorted by line; an empty list when all is well."""
-    found = syntax_errors(text)
-    if found:
-        return found
-    tree = ast.parse(text)
-    missing = _undefined(text, tree)
+def diagnose(text, component_ids=(), tree=None):
+    """Problems in one Python file, sorted by line; an empty list when all is well.
+
+    `tree` is the file's AST when the caller already parsed this exact text."""
+    if tree is None:
+        try:
+            tree = ast.parse(text)
+        except (SyntaxError, ValueError):
+            return syntax_errors(text)
+    # One walk, shared by every check below: large files are walked once, not three times.
+    nodes = list(ast.walk(tree))
+    found = []
+    missing = _undefined(text, nodes)
     context, data = ctx_api()
     components = set(component_ids)
     known = set(dir(builtins))
-    for node in ast.walk(tree):
+    for node in nodes:
         if isinstance(node, ast.Name):
             known.add(node.id)
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             known.add(node.name)
-    for node in ast.walk(tree):
+    for node in nodes:
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id in missing:
             found.append(
                 _entry(

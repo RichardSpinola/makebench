@@ -84,7 +84,7 @@ class CodeWorkspaceMixin:
         self.code_index_timer.setSingleShot(True)
         self.code_index_timer.setInterval(400)
         self.code_index_timer.timeout.connect(self.refresh_code_index)
-        self.source_editor.textChanged.connect(self.code_index_timer.start)
+        self.source_editor.textChanged.connect(lambda: self.defer_code_index(self.source_editor))
         self.code_files.currentChanged.connect(self.code_file_changed)
         self.sync_code_workspace()
 
@@ -297,12 +297,17 @@ class CodeWorkspaceMixin:
             iterator += 1
         self.code_tree.blockSignals(blocked)
 
+    def defer_code_index(self, editor):
+        """Analyze after typing pauses; a long file (about 0.1 s per 3,000 lines) waits longer."""
+        self.code_index_timer.setInterval(1000 if editor.blockCount() > 1500 else 400)
+        self.code_index_timer.start()
+
     def module_changed(self, name, editor):
         """Commit text to the buffer and defer analysis so the UI is not walked on every key."""
         if name not in self.source.modules:
             return
         self.source.modules[name].text = editor.toPlainText()
-        self.code_index_timer.start()
+        self.defer_code_index(editor)
         self.source_timer.start()
         self.setWindowModified(True)
         self.code_files.setTabText(self.code_files.indexOf(editor), Path(name).name + " •")

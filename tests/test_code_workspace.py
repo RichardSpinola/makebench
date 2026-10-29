@@ -220,6 +220,20 @@ class CodeIndexTests(unittest.TestCase):
         self.assertIsNone(self.index.resolve("@actions", "add"))
         self.assertTrue(any("Local reference" in e["message"] for e in self.index.errors))
 
+    def test_cached_outlines_follow_edits_to_the_imported_module(self):
+        """Unchanged files are not walked again, yet a renamed function is still reported."""
+        self.index.update(self.source)
+        self.assertEqual(self.index.errors, [])
+        outline = self.index.outlines["@actions"]
+        self.index.update(self.source)
+        self.assertIs(self.index.outlines["@actions"], outline)
+        self.source.modules["makebench_user/helpers.py"] = "def total(a):\n    return a\n"
+        self.index.update(self.source)
+        self.assertTrue(any("helpers.soma" in e["message"] for e in self.index.errors))
+        self.source.modules["makebench_user/helpers.py"] = "def soma(a):\n    return a\n"
+        self.index.update(self.source)
+        self.assertEqual(self.index.errors, [])
+
     def test_index_does_not_execute_top_level(self):
         source = SourceText(
             'raise RuntimeError("não executar")\nimport makebench_user.helpers\n',
