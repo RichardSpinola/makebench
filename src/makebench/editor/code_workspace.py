@@ -51,6 +51,7 @@ class CodeWorkspaceMixin:
             ("add", tr("New module"), self.new_module_dialog),
             ("edit", tr("Rename module"), self.rename_module_dialog),
             ("remove", tr("Delete module"), self.delete_module_dialog),
+            ("external", tr("Open in external editor"), self.open_external_editor),
         ]:
             button = QToolButton()
             button.setIcon(icon(symbol))
@@ -430,12 +431,61 @@ class CodeWorkspaceMixin:
                     )
                 except OSError:
                     changed = True
+                if changed and getattr(self, "_external_editing", False) and not self.source.dirty:
+                    # Edited in the external editor we opened, with nothing to lose here.
+                    current = self.current_code_file()
+                    line = self.active_code_editor().textCursor().blockNumber() + 1
+                    self.reload_source()
+                    if current in self.source.modules or current == ENTRY_FILE:
+                        self.open_code_file(current, line)
+                    self.statusBar().showMessage(
+                        tr("Reloaded {path} after an external edit.").format(path=path), 8000
+                    )
+                    return
                 if changed:
                     self.external_change_row.show()
                     self.statusBar().showMessage(
                         tr("Python changed outside Makebench: {path}").format(path=path), 15000
                     )
         self.watch_source()
+
+    def open_external_editor(self):
+        """Save, then open the current Python file in the command from Preferences or the default app."""
+        import shlex
+
+        from PySide6.QtCore import QProcess, QUrl
+        from PySide6.QtGui import QDesktopServices
+
+        from .settings import preference
+
+        if (self.path is None or self.source.dirty or self.history.dirty) and not self.save():
+            return
+        name = self.current_code_file()
+        buffer = self.source.modules.get(name, self.source)
+        if not buffer.path:
+            return
+        command = preference("editor/external").strip()
+        if command:
+            try:
+                program, *arguments = shlex.split(command)
+            except ValueError:
+                program = ""
+            result = program and QProcess.startDetached(program, [*arguments, str(buffer.path)])
+            opened = result[0] if isinstance(result, tuple) else bool(result)
+        else:
+            opened = QDesktopServices.openUrl(QUrl.fromLocalFile(str(buffer.path)))
+        if not opened:
+            self.statusBar().showMessage(
+                tr("Could not open the external editor. Check the command in Preferences."), 10000
+            )
+            return
+        self._external_editing = True
+        self.statusBar().showMessage(
+            tr("Editing {file} outside Makebench; saved changes reload here.").format(
+                file=buffer.path.name
+            ),
+            10000,
+        )
 
     def reload_source(self):
         """An explicit reload keeps error notices and updates the module tabs."""

@@ -28,6 +28,7 @@ PATHS = {
     "map": '<rect x="2" y="3" width="7" height="6" rx="1"/><rect x="15" y="15" width="7" height="6" rx="1"/><path d="M6 9v9h9"/>',
     "logic": '<path d="M4 4h12v5h4v6h-4v5H4zM8 8h4M8 16h4"/>',
     "code": '<path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18"/>',
+    "external": '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
     "export": '<path d="M12 16V2M7 7l5-5 5 5M4 13v8h16v-8"/>',
     "new": '<path d="M12 4v16M4 12h16"/>',
     "add": '<path d="M12 4v16M4 12h16"/>',

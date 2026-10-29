@@ -191,6 +191,40 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         editor.undo()
         self.assertEqual(editor.toPlainText(), messy)
 
+    def test_external_editor_saves_opens_and_reloads_when_clean(self):
+        from PySide6.QtCore import QSettings
+
+        w = self.window
+        w.add_code_module("makebench_user/helpers.py", "x = 1\n")
+        w.open_code_file("makebench_user/helpers.py")
+        project = self.root / "ext.makebench.json"
+        self.assertTrue(w.save_to(project))
+        w.module_editors["makebench_user/helpers.py"].insertPlainText("# edit\n")
+        settings = QSettings("Makebench", "Makebench")
+        settings.setValue("v1/editor/external", "myeditor --wait")
+        self.addCleanup(settings.remove, "v1/editor/external")
+        with patch("PySide6.QtCore.QProcess.startDetached", return_value=(True, 1)) as start:
+            w.open_external_editor()
+        path = w.source.modules["makebench_user/helpers.py"].path
+        start.assert_called_once_with("myeditor", ["--wait", str(path)])
+        self.assertFalse(w.source.dirty)
+        self.assertIn("# edit", path.read_text())
+        path.write_text("x = 2\n")
+        w.source_changed_externally(str(path))
+        self.assertEqual(w.module_editors["makebench_user/helpers.py"].toPlainText(), "x = 2\n")
+        self.assertEqual(w.current_code_file(), "makebench_user/helpers.py")
+        self.assertTrue(w.external_change_row.isHidden())
+        w.module_editors["makebench_user/helpers.py"].insertPlainText("y = 3\n")
+        path.write_text("x = 4\n")
+        w.source_changed_externally(str(path))
+        self.assertFalse(w.external_change_row.isHidden())
+        self.assertIn("y = 3", w.module_editors["makebench_user/helpers.py"].toPlainText())
+        settings.remove("v1/editor/external")
+        w.keep_source()
+        with patch("PySide6.QtGui.QDesktopServices.openUrl", return_value=True) as open_url:
+            w.open_external_editor()
+        self.assertEqual(open_url.call_args[0][0].toLocalFile(), str(path))
+
     def test_blocks_project_flags_python_calls_in_problems(self):
         w = self.window
         w.project.metadata.update(programming="blocks", logic_version=1)
