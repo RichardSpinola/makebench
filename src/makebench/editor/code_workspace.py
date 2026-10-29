@@ -23,6 +23,7 @@ from makebench.core.source import ENTRY_FILE, SourceBuffer, source_signature
 from makebench.core.project import ProjectError
 from .code import CodeEditor
 from .code_assist import CodeAssist
+from .code_reference import CodeReference
 from .theme import icon
 from makebench.i18n import tr
 
@@ -66,7 +67,10 @@ class CodeWorkspaceMixin:
         layout.insertWidget(0, QLabel(tr("Events")))
         layout.insertWidget(1, self.code_events, 1)
         self.code_splitter.insertWidget(0, pane)
-        self.code_splitter.setSizes([260, 900])
+        self.code_reference = CodeReference()
+        self.code_reference.insert_requested.connect(self.insert_code_reference)
+        self.code_splitter.addWidget(self.code_reference)
+        self.code_splitter.setSizes([260, 900, 240])
         self.code_signature = QLabel()
         self.code_signature.setAccessibleName(tr("Call signature"))
         self.code_signature.setTextFormat(Qt.TextFormat.PlainText)
@@ -206,6 +210,14 @@ class CodeWorkspaceMixin:
             "@generated" if self.code_files.currentIndex() == 0 else ENTRY_FILE,
         )
 
+    def insert_code_reference(self, text):
+        """Insert an item of "What can I use" at the cursor of the file being edited."""
+        editor = self.active_code_editor()
+        if editor.isReadOnly():
+            return
+        editor.insertPlainText(text)
+        editor.setFocus()
+
     def active_code_editor(self):
         """Return the active editor for position, outline and undo/redo."""
         if not hasattr(self, "code_files"):
@@ -284,6 +296,7 @@ class CodeWorkspaceMixin:
             return
         self._code_index_signature = signature
         self.code_index.update(self.source.text, self.project.walk())
+        self.code_reference.sync(self.project)
         for name, editor in [(ENTRY_FILE, self.source_editor), *self.module_editors.items()]:
             editor.mark_diagnostics([e for e in self.code_index.errors if e["file"] == name])
 

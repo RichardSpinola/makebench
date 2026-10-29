@@ -134,6 +134,40 @@ class CodeWorkspaceInterfaceTests(unittest.TestCase):
         self.assertTrue(any("Name not defined: nome" in t for t in labels))
         self.assertEqual(w.code_index_timer.interval(), 400)
 
+    def test_what_can_i_use_lists_ctx_components_and_inserts(self):
+        from makebench.editor.code_reference import api_entries
+
+        w = self.window
+        calls = {call for _p, _n, call, _s, _d in api_entries()}
+        self.assertIn("ctx.set_text(component, value)", calls)
+        self.assertIn("ctx.data.add(collection)", calls)
+        label = w.project.add(w.project.root.id, ComponentKind.LABEL)
+        w.project.metadata["collections"] = [
+            {"id": "c1", "name": "books", "fields": [{"id": "f1", "name": "title", "type": "text"}]}
+        ]
+        w.add_code_module("makebench_user/helpers.py", "")
+        w._update_actions()
+        tree = w.code_reference.tree
+        groups = {
+            tree.topLevelItem(i).text(0): tree.topLevelItem(i)
+            for i in range(tree.topLevelItemCount())
+        }
+        self.assertIn("ctx", groups)
+        components = groups["Components"]
+        item = next(
+            components.child(i)
+            for i in range(components.childCount())
+            if components.child(i).text(0).startswith(label.id + " ")
+        )
+        self.assertEqual(groups["Collections"].child(0).text(0), "books")
+        w.code_reference.search.setText("set_tex")
+        self.assertTrue(groups["Collections"].isHidden())
+        self.assertFalse(groups["ctx"].isHidden())
+        w.code_reference._activated(item)
+        self.assertEqual(
+            w.module_editors["makebench_user/helpers.py"].toPlainText(), f'"{label.id}"'
+        )
+
     def test_blocks_project_flags_python_calls_in_problems(self):
         w = self.window
         w.project.metadata.update(programming="blocks", logic_version=1)
