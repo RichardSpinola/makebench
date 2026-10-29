@@ -1,7 +1,23 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-rc.1 — Unreleased
 
+- **Compatibility promises:** `docs/compatibility.md` says how long project
+  files, plugins, themes and exported apps keep working; tests check that
+  every older format opens, that a newer one is refused clearly and that
+  exported apps carry no editor, plugin or theme code.
+- **Plugin permissions:** Manage plugins reads a plugin's code without running
+  it and shows what it can do (network, other programs, native code, code
+  built at run time, deleting files), its license, source and fingerprint, and
+  warns when `plugin.json` does not declare what the code uses.
+- **Plugin catalog index:** a checked JSON format for a future plugin store
+  (`makebench-plugin-index`), with https downloads, SHA-256 and permissions.
+- **Plugin manual:** permissions, the catalog index and good practice.
+- **Documentation site:** the guides, plugin manual and compatibility notes
+  build with MkDocs and publish through GitHub Pages.
+- **New examples:** *My notes* (a saved list with CSV export) and *Bookshop*
+  (books, clients and sales that update the stock and the cash), both in
+  blocks and in Portuguese and English.
 - **Full screen:** a window can start in full screen (Qt and GTK); F11 toggles it with Qt.
 - **Blocks or Python:** each project chooses how it is programmed when it is
   created (format 9). Logic and Code are now one Logic area with Events,

@@ -436,13 +436,15 @@ def build_native(
 
 def editor_project():
     """Metadata of the editor itself, used when building the editor AppImage."""
+    from makebench import __version__
+
     from .project import Project
 
     project = Project.empty("Makebench")
     project.application = {
         "id": "org.makebench.editor",
         "name": "Makebench",
-        "version": "0.9.0",
+        "version": __version__,
         "backend": "qt",
         "icon": "assets/editor.svg",
         "license": "GPL-3.0-or-later",
